@@ -26,7 +26,6 @@
 
 #include "basis/seadNew.h"
 #include "server/hns/HideAndSeekConfigMenu.hpp"
-int endDemoCooldown = -1;
 
 HideAndSeekMode::HideAndSeekMode(const char* name) : GameModeBase(name) {}
 
@@ -189,22 +188,15 @@ void HideAndSeekMode::update() {
                             if(pupDist < 200.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D) {
                                 if(!PlayerFunction::isPlayerDeadStatus(playerBase)) {
 
-                                    playerBase->startDemoPuppetable();
-                                    al::setVelocityZero(playerBase);
-                                    rs::faceToCamera(playerBase);
+                                    ((PlayerActorHakoniwa*)playerBase)->startDemoPuppetable();
                                     ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->endSubAnim();
-                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("DemoJangoCapSearch");
-                                    if(endDemoCooldown == 0){
-                                     playerBase->endDemoPuppetable();
-                                     endDemoCooldown = -1;
-                                    } else if(endDemoCooldown == -1){
-                                        endDemoCooldown = 300;
+                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startSubAnim("DemoJangoCapSearch");
+                                    if(((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isSubAnimEnd()){
+                                        ((playerBase)->endDemoPuppetable());
+                                        ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->endSubAnim();
+                                        ((PlayerActorHakoniwa*)playerBase)->endDemoPuppetable();
                                     }
 
-                                    if(endDemoCooldown != -1){
-                                        endDemoCooldown--;
-                                    }
-                                    
                                 
                                     mInfo->mIsPlayerIt = true;
                                     mModeTimer->disableTimer();
