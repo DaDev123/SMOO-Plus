@@ -27,6 +27,7 @@
 #include "basis/seadNew.h"
 #include "server/hns/HideAndSeekConfigMenu.hpp"
 
+
 HideAndSeekMode::HideAndSeekMode(const char* name) : GameModeBase(name) {}
 
 void HideAndSeekMode::init(const GameModeInitInfo& info) {
@@ -188,13 +189,14 @@ void HideAndSeekMode::update() {
                             if(pupDist < 200.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D) {
                                 if(!PlayerFunction::isPlayerDeadStatus(playerBase)) {
 
-                                    ((PlayerActorHakoniwa*)playerBase)->startDemoPuppetable();
+                                    playerBase->startDemoPuppetable();
+                                    al::setVelocityZero(playerBase);
+                                    rs::faceToCamera(playerBase);
                                     ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->endSubAnim();
-                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startSubAnim("DemoJangoCapSearch");
-                                    if(((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isSubAnimEnd()){
-                                        ((playerBase)->endDemoPuppetable());
-                                        ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->endSubAnim();
-                                        ((PlayerActorHakoniwa*)playerBase)->endDemoPuppetable();
+                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("DemoJangoCapSearch");
+                                    
+                                    if(((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isAnimEnd()){
+                                        (playerBase->endDemoPuppetable());
                                     }
 
                                 
