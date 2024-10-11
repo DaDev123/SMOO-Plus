@@ -148,9 +148,16 @@ void HideAndSeekMode::unpause() {
     }
 }
 
+bool isInInfectAnim = false;
+
 void HideAndSeekMode::update() {
 
     PlayerActorBase* playerBase = rs::getPlayerActor(mCurScene);
+
+    if(isInInfectAnim && ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isAnimEnd()){
+        playerBase->endDemoPuppetable();
+        isInInfectAnim = false;
+    }
 
     bool isYukimaru = !playerBase->getPlayerInfo(); // if PlayerInfo is a nullptr, that means we're dealing with the bound bowl racer
 
@@ -187,17 +194,16 @@ void HideAndSeekMode::update() {
 
                         if (!isYukimaru) {
                             if(pupDist < 200.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D) {
-                                if(!PlayerFunction::isPlayerDeadStatus(playerBase)) {
+                                if(!PlayerFunction::isPlayerDeadStatus(playerBase) && !rs::isActiveDemoPlayerPuppetable(playerBase)) {
 
                                     playerBase->startDemoPuppetable();
                                     al::setVelocityZero(playerBase);
                                     rs::faceToCamera(playerBase);
                                     ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->endSubAnim();
                                     ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("DemoJangoCapSearch");
+                                    isInInfectAnim = true;
                                     
-                                    if(((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isAnimEnd()){
-                                        (playerBase->endDemoPuppetable());
-                                    }
+                                    
 
                                 
                                     mInfo->mIsPlayerIt = true;
