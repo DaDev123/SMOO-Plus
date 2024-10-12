@@ -35,8 +35,9 @@
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
+#include "server/inf/InfectionMode.hpp"
+#include "layouts/InfectionIcon.h"
 
-// balls
 static int pInfSendTimer = 0;
 static int gameInfSendTimer = 0;
 
@@ -121,7 +122,6 @@ void drawMainHook(HakoniwaSequence *curSequence, sead::Viewport *viewport, sead:
     sead::Heap *gmHeap = GameModeManager::instance()->getHeap();
 
     if (clientHeap) {
-
         gTextWriter->printf("Client Heap Free Size: %f/%f\n", clientHeap->getFreeSize() * 0.001f, clientHeap->getSize() * 0.001f);
         gTextWriter->printf("Gamemode Heap Free Size: %f/%f\n", gmHeap->getFreeSize() * 0.001f, gmHeap->getSize()* 0.001f);
     }
@@ -132,7 +132,7 @@ void drawMainHook(HakoniwaSequence *curSequence, sead::Viewport *viewport, sead:
     
     gTextWriter->printf("Send Queue Count: %d/%d\n", Client::instance()->mSocket->getSendCount(), Client::instance()->mSocket->getSendMaxCount());
     gTextWriter->printf("Recv Queue Count: %d/%d\n", Client::instance()->mSocket->getRecvCount(), Client::instance()->mSocket->getRecvMaxCount());
-
+    
     if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
         FreezeTagInfo* inf = GameModeManager::instance()->getInfo<FreezeTagInfo>();
         gTextWriter->printf("Is Runner: %s\n", BTOC(inf->mIsPlayerRunner));
@@ -201,8 +201,6 @@ void drawMainHook(HakoniwaSequence *curSequence, sead::Viewport *viewport, sead:
                             gTextWriter->printf("Animation Index: %d\n", curPupInfo->curAnim);
                             if (curModel) {
                                 gTextWriter->printf("Current Animation: %s\n", al::getActionName(curModel));
-                                gTextWriter->printf(" -------------  Current Version  --------------- \n", pageIndex);
-                                gTextWriter->printf("        Infection Gamemode | Secret Dev");
                             }
                         }
                     }

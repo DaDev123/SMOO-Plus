@@ -20,7 +20,6 @@ class PlayerAnimator {
         bool isSubAnim(sead::SafeString const &subAnimName) const;
         bool isSubAnimEnd(void) const;
         bool isUpperBodyAnimAttached(void) const;
-        bool isAnimEnd() const;
 
         float getAnimFrame() const;
         float getAnimFrameMax() const;

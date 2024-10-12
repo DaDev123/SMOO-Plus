@@ -25,6 +25,7 @@
 #include "sead/prim/seadSafeString.h"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
+#include "server/inf/InfectionMode.hpp"
 
 bool checkpointPatch()
 {

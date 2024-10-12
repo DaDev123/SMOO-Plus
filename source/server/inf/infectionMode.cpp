@@ -1,4 +1,4 @@
-#include "server/hns/HideAndSeekMode.hpp"
+#include "server/inf/InfectionMode.hpp"
 #include <cmath>
 #include "al/async/FunctorV0M.hpp"
 #include "al/util.hpp"
@@ -10,14 +10,14 @@
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "heap/seadHeapMgr.h"
-#include "layouts/HideAndSeekIcon.h"
+#include "layouts/InfectionIcon.h"
 #include "logger.hpp"
 #include "math/seadVector.h"
 #include "packets/Packet.h"
 #include "rs/util.hpp"
 #include "rs/util/PlayerUtil.h"
 #include "server/gamemode/GameModeBase.hpp"
-#include "server/Client.hpp"
+#include "server/Client2.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
 #include <heap/seadHeap.h>
 #include <math.h>
@@ -25,33 +25,34 @@
 #include "server/gamemode/GameModeFactory.hpp"
 
 #include "basis/seadNew.h"
-#include "server/hns/HideAndSeekConfigMenu.hpp"
+#include "server/inf/InfectionConfigMenu.hpp"
 
-HideAndSeekMode::HideAndSeekMode(const char* name) : GameModeBase(name) {}
 
-void HideAndSeekMode::init(const GameModeInitInfo& info) {
+InfectionMode::InfectionMode(const char* name) : GameModeBase(name) {}
+
+void InfectionMode::init(const GameModeInitInfo& info) {
     mSceneObjHolder = info.mSceneObjHolder;
     mMode = info.mMode;
     mCurScene = (StageScene*)info.mScene;
     mPuppetHolder = info.mPuppetHolder;
 
-    GameModeInfoBase* curGameInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
+    GameModeInfoBase* curGameInfo = GameModeManager::instance()->getInfo<InfectionInfo>();
 
     if (curGameInfo) Logger::log("Gamemode info found: %s %s\n", GameModeFactory::getModeString(curGameInfo->mMode), GameModeFactory::getModeString(info.mMode));
     else Logger::log("No gamemode info found\n");
     if (curGameInfo && curGameInfo->mMode == mMode) {
-        mInfo = (HideAndSeekInfo*)curGameInfo;
+        mInfo = (InfectionInfo*)curGameInfo;
         mModeTimer = new GameModeTimer(mInfo->mHidingTime);
         Logger::log("Reinitialized timer with time %d:%.2d\n", mInfo->mHidingTime.mMinutes, mInfo->mHidingTime.mSeconds);
     } else {
         if (curGameInfo) delete curGameInfo;  // attempt to destory previous info before creating new one
         
-        mInfo = GameModeManager::instance()->createModeInfo<HideAndSeekInfo>();
+        mInfo = GameModeManager::instance()->createModeInfo<InfectionInfo>();
         
         mModeTimer = new GameModeTimer();
     }
 
-    mModeLayout = new HideAndSeekIcon("HideAndSeekIcon", *info.mLayoutInitInfo);
+    mModeLayout = new InfectionIcon("InfectionIcon", *info.mLayoutInitInfo);
 
     mModeLayout->showSeeking();
 
@@ -59,14 +60,14 @@ void HideAndSeekMode::init(const GameModeInitInfo& info) {
 
 }
 
-void HideAndSeekMode::processPacket(Packet *packet) {
-    HideAndSeekPacket* tagPacket = (HideAndSeekPacket*)packet;
+void InfectionMode::processPacket(Packet *packet) {
+    InfectionPacket* tagPacket = (InfectionPacket*)packet;
 
     // if the packet is for our player, edit info for our player
-    if (tagPacket->mUserID == Client::getClientId() && GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
+    if (tagPacket->mUserID == Client::getClientId() && GameModeManager::instance()->isMode(GameMode::Infection)) {
 
-        HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-        HideAndSeekInfo* curInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
+        InfectionMode* mode = GameModeManager::instance()->getMode<InfectionMode>();
+        InfectionInfo* curInfo = GameModeManager::instance()->getInfo<InfectionInfo>();
 
         if (tagPacket->updateType & TagUpdateType::STATE) {
             mode->setPlayerTagState(tagPacket->isIt);
@@ -92,9 +93,9 @@ void HideAndSeekMode::processPacket(Packet *packet) {
     curInfo->minutes = tagPacket->minutes;
 }
 
-Packet *HideAndSeekMode::createPacket() {
+Packet *InfectionMode::createPacket() {
 
-    HideAndSeekPacket *packet = new HideAndSeekPacket();
+    InfectionPacket *packet = new InfectionPacket();
 
     packet->mUserID = Client::getClientId();
 
@@ -107,7 +108,7 @@ Packet *HideAndSeekMode::createPacket() {
     return packet;
 }
 
-void HideAndSeekMode::begin() {
+void InfectionMode::begin() {
 
     unpause();
 
@@ -119,21 +120,21 @@ void HideAndSeekMode::begin() {
 }
 
 
-void HideAndSeekMode::end() {
+void InfectionMode::end() {
 
     pause();
 
     GameModeBase::end();
 }
 
-void HideAndSeekMode::pause() {
+void InfectionMode::pause() {
     GameModeBase::pause();
 
     mModeLayout->tryEnd();
     mModeTimer->disableTimer();
 }
 
-void HideAndSeekMode::unpause() {
+void InfectionMode::unpause() {
     GameModeBase::unpause();
 
     mModeLayout->appear();
@@ -147,9 +148,16 @@ void HideAndSeekMode::unpause() {
     }
 }
 
-void HideAndSeekMode::update() {
+bool isInInfectAnim = false;
+
+void InfectionMode::update() {
 
     PlayerActorBase* playerBase = rs::getPlayerActor(mCurScene);
+
+    if(isInInfectAnim && ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isAnimEnd()){
+        playerBase->endDemoPuppetable();
+        isInInfectAnim = false;
+    }
 
     bool isYukimaru = !playerBase->getPlayerInfo(); // if PlayerInfo is a nullptr, that means we're dealing with the bound bowl racer
 
@@ -165,7 +173,6 @@ void HideAndSeekMode::update() {
     if (rs::isActiveDemoPlayerPuppetable(playerBase)) {
         mInvulnTime = 0.0f; // if player is in a demo, reset invuln time
     }
-
     if (!mInfo->mIsPlayerIt) {
         if (mInvulnTime >= 5) {  
 
@@ -187,15 +194,18 @@ void HideAndSeekMode::update() {
 
                         if (!isYukimaru) {
                             if(pupDist < 200.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D) {
-                                if(!PlayerFunction::isPlayerDeadStatus(playerBase)) {
-                                    
-                                    GameDataFunction::killPlayer(GameDataHolderAccessor(this));
+                                if(!PlayerFunction::isPlayerDeadStatus(playerBase) && !rs::isActiveDemoPlayerPuppetable(playerBase)) {
+
                                     playerBase->startDemoPuppetable();
                                     al::setVelocityZero(playerBase);
                                     rs::faceToCamera(playerBase);
                                     ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->endSubAnim();
-                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnimDead();
+                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("DeadSand");
+                                    isInInfectAnim = true;
+                                    
+                                    
 
+                                
                                     mInfo->mIsPlayerIt = true;
                                     mModeTimer->disableTimer();
                                     mModeLayout->showSeeking();
@@ -279,8 +289,8 @@ namespace al {
 }
 
 bool skateFloorCodeHook(al::Triangle const& tri, char const* code) {
-    if (GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK)) {
-        return GameModeManager::instance()->getInfo<HideAndSeekInfo>()->mIsUseSlipperyGround;
+    if (GameModeManager::instance()->isModeAndActive(GameMode::Infection)) {
+        return GameModeManager::instance()->getInfo<InfectionInfo>()->mIsUseSlipperyGround;
     }
     return al::isFloorCode(tri, code);
 }

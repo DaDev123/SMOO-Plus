@@ -6,6 +6,7 @@
 #include "logger.hpp"
 #include "packets/Packet.h"
 #include "server/hns/HideAndSeekMode.hpp"
+#include "server/inf/InfectionMode.hpp"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
