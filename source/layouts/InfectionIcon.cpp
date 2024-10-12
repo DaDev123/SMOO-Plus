@@ -20,8 +20,8 @@ InfectionIcon::InfectionIcon(const char* name, const al::LayoutInitInfo& initInf
 
     initNerve(&nrvInfectionIconEnd, 0);
 
-    al::hidePane(this, "InfectedIcon");
-    al::hidePane(this, "RunnerIcon");
+    al::hidePane(this, "SeekingIcon");
+    al::hidePane(this, "HidingIcon");
 
     
     kill();
@@ -123,13 +123,13 @@ void InfectionIcon::exeEnd() {
 }
 
 void InfectionIcon::showHiding() {
-    al::hidePane(this, "InfectedIcon");
-    al::showPane(this, "RunnerIcon");
+    al::hidePane(this, "SeekingIcon");
+    al::showPane(this, "HidingIcon");
 }
 
 void InfectionIcon::showSeeking() {
-    al::hidePane(this, "RunnerIcon");
-    al::showPane(this, "InfectedIcon");
+    al::hidePane(this, "HidingIcon");
+    al::showPane(this, "SeekingIcon");
 }
 
 namespace {

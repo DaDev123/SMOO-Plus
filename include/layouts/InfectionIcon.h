@@ -5,7 +5,6 @@
 #include "al/util/NerveUtil.h"
 
 #include "logger.hpp"
-#include "server/gamemode/GameModeTimer.hpp"
 
 // TODO: kill layout if going through loading zone or paused
 

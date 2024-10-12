@@ -9,16 +9,25 @@
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
 #include "server/inf/InfectionConfigMenu.hpp"
+#include "server/hns/HideAndSeekMode.hpp"
 
 #include "packets/Packet.h"
 
 struct InfectionInfo : GameModeInfoBase {
-    InfectionInfo() { mMode = GameMode::INFECTION; }
+    InfectionInfo() { mMode = GameMode::Infection; }
     bool mIsPlayerIt = false;
     bool mIsUseGravity = false;
     bool mIsUseGravityCam = false;
     bool mIsUseSlipperyGround = true;
     GameTime mHidingTime;
+};
+
+struct PACKED InfectionPacket : Packet {
+    InfectionPacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(InfectionPacket) - sizeof(Packet);};
+    TagUpdateType updateType;
+    bool1 isIt = false;
+    u8 seconds;
+    u16 minutes;
 };
 
 class InfectionMode : public GameModeBase {

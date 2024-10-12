@@ -34,13 +34,13 @@ bool InfectionConfigMenu::updateMenu(int selectIndex) {
     
     switch (selectIndex) {
         case 0: {
-            if (GameModeManager::instance()->isMode(GameMode::INFECTION)) {
+            if (GameModeManager::instance()->isMode(GameMode::Infection)) {
                 curMode->mIsUseGravity = true;
             }
             return true;
         }
         case 1: {
-            if (GameModeManager::instance()->isMode(GameMode::INFECTION)) {
+            if (GameModeManager::instance()->isMode(GameMode::Infection)) {
                 curMode->mIsUseGravity = false;
             }
             return true;

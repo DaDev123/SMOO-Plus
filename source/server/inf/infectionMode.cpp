@@ -17,12 +17,12 @@
 #include "rs/util.hpp"
 #include "rs/util/PlayerUtil.h"
 #include "server/gamemode/GameModeBase.hpp"
-#include "server/Client2.hpp"
-#include "server/gamemode/GameModeTimer.hpp"
+#include "server/Client.hpp"
 #include <heap/seadHeap.h>
 #include <math.h>
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
+#include "server/hns/HideAndSeekMode.hpp"
 
 #include "basis/seadNew.h"
 #include "server/inf/InfectionConfigMenu.hpp"
@@ -154,7 +154,7 @@ void InfectionMode::update() {
 
     PlayerActorBase* playerBase = rs::getPlayerActor(mCurScene);
 
-    if(isInInfectAnim && ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isAnimEnd()){
+    if(isInInfectAnim && ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isSubAnimEnd()){
         playerBase->endDemoPuppetable();
         isInInfectAnim = false;
     }
@@ -200,7 +200,7 @@ void InfectionMode::update() {
                                     al::setVelocityZero(playerBase);
                                     rs::faceToCamera(playerBase);
                                     ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->endSubAnim();
-                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("DeadSand");
+                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startSubAnim("DeadSand");
                                     isInInfectAnim = true;
                                     
                                     
@@ -278,19 +278,4 @@ void InfectionMode::update() {
     }
 
     mInfo->mHidingTime = mModeTimer->getTime();
-}
-
-
-// Hooks
-
-namespace al {
-    class Triangle;
-    bool isFloorCode(al::Triangle const&,char const*);
-}
-
-bool skateFloorCodeHook(al::Triangle const& tri, char const* code) {
-    if (GameModeManager::instance()->isModeAndActive(GameMode::Infection)) {
-        return GameModeManager::instance()->getInfo<InfectionInfo>()->mIsUseSlipperyGround;
-    }
-    return al::isFloorCode(tri, code);
 }
