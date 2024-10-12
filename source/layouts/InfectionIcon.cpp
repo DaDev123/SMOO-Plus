@@ -4,7 +4,6 @@
 #include "puppets/PuppetInfo.h"
 #include "al/string/StringTmp.h"
 #include "prim/seadSafeString.h"
-#include "server/gamemode/GameModeTimer.hpp"
 #include "server/inf/InfectionMode.hpp"
 #include "server/Client.hpp"
 #include "al/util.hpp"
@@ -66,16 +65,6 @@ void InfectionIcon::exeAppear() {
 void InfectionIcon::exeWait() {
     if (al::isFirstStep(this)) {
         al::startAction(this, "Wait", 0);
-    }
-
-    GameTime &curTime = mInfo->mHidingTime;
-
-    if (curTime.mHours > 0) {
-        al::setPaneStringFormat(this, "TxtCounter", "%01d:%02d:%02d", curTime.mHours, curTime.mMinutes,
-                            curTime.mSeconds);
-    } else {
-        al::setPaneStringFormat(this, "TxtCounter", "%02d:%02d", curTime.mMinutes,
-                            curTime.mSeconds);
     }
 
     
