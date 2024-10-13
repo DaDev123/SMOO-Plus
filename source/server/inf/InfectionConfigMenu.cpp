@@ -15,8 +15,8 @@ const sead::WFixedSafeString<0x200> *InfectionConfigMenu::getStringData() {
     sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>* gamemodeConfigOptions =
         new sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>();
 
-    gamemodeConfigOptions->mBuffer[0].copy(u"Toggle H&S Gravity On");
-    gamemodeConfigOptions->mBuffer[1].copy(u"Toggle H&S Gravity Off");
+    gamemodeConfigOptions->mBuffer[0].copy(u"Toggle Infection Gravity On");
+    gamemodeConfigOptions->mBuffer[1].copy(u"Toggle Infection Gravity Off");
 
     return gamemodeConfigOptions->mBuffer;
 }

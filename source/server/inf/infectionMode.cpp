@@ -23,7 +23,6 @@
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
-
 #include "basis/seadNew.h"
 #include "server/inf/InfectionConfigMenu.hpp"
 
@@ -154,7 +153,7 @@ void InfectionMode::update() {
 
     PlayerActorBase* playerBase = rs::getPlayerActor(mCurScene);
 
-    if(isInInfectAnim && ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isSubAnimEnd()){
+    if(isInInfectAnim && ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isAnimEnd()){
         playerBase->endDemoPuppetable();
         isInInfectAnim = false;
     }
@@ -200,7 +199,7 @@ void InfectionMode::update() {
                                     al::setVelocityZero(playerBase);
                                     rs::faceToCamera(playerBase);
                                     ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->endSubAnim();
-                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startSubAnim("DeadSand");
+                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("DemoJangoCapSearch");
                                     isInInfectAnim = true;
                                     
                                     
