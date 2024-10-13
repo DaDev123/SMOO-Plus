@@ -47,11 +47,6 @@ public:
     void pause() override;
     void unpause() override;
 
-    bool isUseNormalUI() const override { return false; }
-
-    void processPacket(Packet* packet) override;
-    Packet* createPacket() override;
-
     bool isPlayerIt() const { return mInfo->mIsIt; };
 
     void setPlayerTagState(bool state) { mInfo->mIsIt = state; }

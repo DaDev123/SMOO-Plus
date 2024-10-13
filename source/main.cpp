@@ -106,7 +106,7 @@ void drawMainHook(HakoniwaSequence *curSequence, sead::Viewport *viewport, sead:
 
     gTextWriter->mViewport = viewport;
 
-    gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 0.8f);
+    gTextWriter->mColor = sead::Color4f(3.f, 3.f, 3.f, 0.8f);
 
     drawBackground((agl::DrawContext *)drawContext);
 
@@ -201,6 +201,8 @@ void drawMainHook(HakoniwaSequence *curSequence, sead::Viewport *viewport, sead:
                             gTextWriter->printf("Animation Index: %d\n", curPupInfo->curAnim);
                             if (curModel) {
                                 gTextWriter->printf("Current Animation: %s\n", al::getActionName(curModel));
+                                gTextWriter->printf("---------------- Currrent Version ---------------\n");
+                                gTextWriter->printf("------------- Infection | Secret Dev ------------");
                             }
                         }
                     }

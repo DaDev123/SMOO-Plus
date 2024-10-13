@@ -1,20 +1,18 @@
 #include "layouts/SardineIcon.h"
-#include "al/string/StringTmp.h"
-#include "al/util.hpp"
-#include "logger.hpp"
-#include "main.hpp"
-#include "prim/seadSafeString.h"
-#include "puppets/PuppetInfo.h"
-#include "rs/util.hpp"
-#include "server/Client.hpp"
-#include "server/gamemode/GameModeTimer.hpp"
-#include "server/snh/SardineMode.hpp"
 #include <cstdio>
 #include <cstring>
+#include "puppets/PuppetInfo.h"
+#include "al/string/StringTmp.h"
+#include "prim/seadSafeString.h"
+#include "server/gamemode/GameModeTimer.hpp"
+#include "server/snh/SardineMode.hpp"
+#include "server/Client.hpp"
+#include "al/util.hpp"
+#include "logger.hpp"
+#include "rs/util.hpp"
+#include "main.hpp"
 
-SardineIcon::SardineIcon(const char* name, const al::LayoutInitInfo& initInfo)
-    : al::LayoutActor(name)
-{
+SardineIcon::SardineIcon(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
 
     al::initLayoutActor(this, initInfo, "SardineIcon", 0);
 
@@ -25,11 +23,12 @@ SardineIcon::SardineIcon(const char* name, const al::LayoutInitInfo& initInfo)
     al::hidePane(this, "SoloIcon");
     al::hidePane(this, "PackIcon");
 
+    
     kill();
+
 }
 
-void SardineIcon::appear()
-{
+void SardineIcon::appear() {
 
     al::startAction(this, "Appear", 0);
 
@@ -38,8 +37,7 @@ void SardineIcon::appear()
     al::LayoutActor::appear();
 }
 
-bool SardineIcon::tryEnd()
-{
+bool SardineIcon::tryEnd() {
     if (!al::isNerve(this, &nrvSardineIconEnd)) {
         al::setNerve(this, &nrvSardineIconEnd);
         return true;
@@ -47,8 +45,7 @@ bool SardineIcon::tryEnd()
     return false;
 }
 
-bool SardineIcon::tryStart()
-{
+bool SardineIcon::tryStart() {
 
     if (!al::isNerve(this, &nrvSardineIconWait) && !al::isNerve(this, &nrvSardineIconAppear)) {
 
@@ -60,28 +57,28 @@ bool SardineIcon::tryStart()
     return false;
 }
 
-void SardineIcon::exeAppear()
-{
+void SardineIcon::exeAppear() {
     if (al::isActionEnd(this, 0)) {
         al::setNerve(this, &nrvSardineIconWait);
     }
 }
 
-void SardineIcon::exeWait()
-{
+void SardineIcon::exeWait() {
     if (al::isFirstStep(this)) {
         al::startAction(this, "Wait", 0);
     }
 
-    GameTime& curTime = mInfo->mHidingTime;
+    GameTime &curTime = mInfo->mHidingTime;
 
     if (curTime.mHours > 0) {
         al::setPaneStringFormat(this, "TxtCounter", "%01d:%02d:%02d", curTime.mHours, curTime.mMinutes,
-            curTime.mSeconds);
+                            curTime.mSeconds);
     } else {
         al::setPaneStringFormat(this, "TxtCounter", "%02d:%02d", curTime.mMinutes,
-            curTime.mSeconds);
+                            curTime.mSeconds);
     }
+
+    
 
     int playerCount = Client::getMaxPlayerCount();
 
@@ -111,10 +108,10 @@ void SardineIcon::exeWait()
         
         al::setPaneStringFormat(this, "TxtPlayerList", playerList.cstr());
     }
+    
 }
 
-void SardineIcon::exeEnd()
-{
+void SardineIcon::exeEnd() {
 
     if (al::isFirstStep(this)) {
         al::startAction(this, "End", 0);
@@ -125,14 +122,12 @@ void SardineIcon::exeEnd()
     }
 }
 
-void SardineIcon::showSolo()
-{
+void SardineIcon::showSolo() {
     al::hidePane(this, "PackIcon");
     al::showPane(this, "SoloIcon");
 }
 
-void SardineIcon::showPack()
-{
+void SardineIcon::showPack() {
     al::hidePane(this, "SoloIcon");
     al::showPane(this, "PackIcon");
 }
