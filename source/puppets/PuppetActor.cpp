@@ -17,13 +17,10 @@
 #include "actors/PuppetActor.h"
 #include "math/seadQuat.h"
 #include "math/seadVector.h"
-#include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/snh/SardineMode.hpp"
-#include "server/inf/InfectionMode.hpp"
-// #include "server/manhunt/ManhuntMode.hpp"
 
 static const char *subActorNames[] = {
     "顔", // Face
@@ -92,10 +89,6 @@ void PuppetActor::init(al::ActorInitInfo const &initInfo) {
     al::validateClipping(normalModel);
     al::validateClipping(normal2DModel);
 
-    if(GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
-        mFreezeTagIceBlock = new FreezePlayerBlock("PuppetIceBlock");
-        mFreezeTagIceBlock->init(initInfo);
-    }
 }
 
 void PuppetActor::initAfterPlacement() { al::LiveActor::initAfterPlacement(); }
@@ -109,20 +102,6 @@ void PuppetActor::initOnline(PuppetInfo *pupInfo) {
 
 void PuppetActor::movement() {
     al::LiveActor::movement();
-
-    if(mFreezeTagIceBlock) {
-        if(mInfo->isFreezeTagFreeze && mInfo->isConnected && mInfo->isInSameStage && !al::isAlive(mFreezeTagIceBlock))
-            mFreezeTagIceBlock->appear();
-        
-        if((!mInfo->isFreezeTagFreeze || !mInfo->isConnected || !mInfo->isInSameStage) && al::isAlive(mFreezeTagIceBlock)
-            && !al::isNerve(mFreezeTagIceBlock, &nrvFreezePlayerBlockDisappear))
-        {
-            mFreezeTagIceBlock->end();
-        }
-        
-        al::setTrans(mFreezeTagIceBlock, mInfo->playerPos);
-        al::setQuat(mFreezeTagIceBlock, mInfo->playerRot);
-    }
 }
 
 void PuppetActor::calcAnim() {
@@ -218,32 +197,17 @@ void PuppetActor::control() {
             }
         }
 
-        if(mNameTag && !GameModeManager::instance()->isActive())
-            if(!mNameTag->mIsAlive)
-                mNameTag->appear();
-
-        if (mNameTag && GameModeManager::instance()->isActive()) {
-            GameMode curMode = GameModeManager::instance()->getGameMode();
-            switch(curMode) {
-                case GameMode::HIDEANDSEEK:
-                    mNameTag->mIsAlive = GameModeManager::instance()->getMode<HideAndSeekMode>()->isPlayerIt() && mInfo->isIt;
-                    break;
-                case GameMode::SARDINE:
-                    mNameTag->mIsAlive = GameModeManager::instance()->getMode<SardineMode>()->isPlayerIt() && mInfo->isIt;
-                    break;
-                case GameMode::FREEZETAG: {
-                    bool isRun = GameModeManager::instance()->getInfo<FreezeTagInfo>()->mIsPlayerRunner;
-                    mNameTag->mIsAlive = (isRun && mInfo->isFreezeTagRunner) || (!isRun && !mInfo->isFreezeTagRunner);
-                    break;
-                }
-                case GameMode::Infection:
-                    mNameTag->mIsAlive = GameModeManager::instance()->getMode<InfectionMode>()->isPlayerIt() && mInfo->isIt;
-                    break;
-
-                default:
-                    Logger::log("Name tag display failed due to unknown active game mode!\n");
-                    break;
-            };
+        if (mNameTag) {
+            if (GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK)) {
+                mNameTag->mIsAlive =
+                    GameModeManager::instance()->getMode<HideAndSeekMode>()->isPlayerIt() && mInfo->isIt;
+            } else if (GameModeManager::instance()->isModeAndActive(GameMode::SARDINE)) {
+                mNameTag->mIsAlive =
+                    GameModeManager::instance()->getMode<SardineMode>()->isPlayerIt() && mInfo->isIt;
+            } else {
+                if(!mNameTag->mIsAlive)
+                    mNameTag->appear();
+            }
         }
 
         // Sub-Actor Updating
@@ -285,9 +249,6 @@ void PuppetActor::makeActorDead() {
     }
 
     mPuppetCap->makeActorDead();
-
-    if(mFreezeTagIceBlock)
-        mFreezeTagIceBlock->makeActorDead();
     
     al::LiveActor::makeActorDead();
 }
@@ -434,17 +395,6 @@ void PuppetActor::emitJoinEffect() {
     al::tryDeleteEffect(this, "Disappear"); // remove previous effect (if played previously)
 
     al::tryEmitEffect(this, "Disappear", nullptr);
-}
-
-void PuppetActor::debugThrowCap() {
-    mInfo->isCapThrow = !mInfo->isCapThrow;
-
-    if (mInfo->isCapThrow) {
-        sead::Vector3f &fowardDir = al::getFront(this);
-        sead::Vector3f &curPos = al::getTrans(this);
-
-        mInfo->capPos = sead::Vector3f(curPos.x - (fowardDir.x * 500.0f), curPos.y + 80.0f, curPos.z - (fowardDir.z * 500.0f));
-    }
 }
 
 const char *executorName = "ＮＰＣ";
