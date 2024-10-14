@@ -36,7 +36,6 @@
 #include "heap/seadExpHeap.h"
 #include "layouts/HideAndSeekIcon.h"
 #include "layouts/InfectionIcon.h"
-#include "layouts/SpeedrunIcon.h"
 #include "rs/util.hpp"
 
 #include "sead/heap/seadDisposer.h"

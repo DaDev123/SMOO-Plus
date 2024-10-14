@@ -26,7 +26,6 @@
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/inf/InfectionMode.hpp"
-#include "server/spe/SpeedrunMode.hpp"
 
 bool checkpointPatch()
 {

@@ -7,7 +7,6 @@
 #include "packets/Packet.h"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/inf/InfectionMode.hpp"
-#include "server/spe/SpeedrunMode.hpp"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 

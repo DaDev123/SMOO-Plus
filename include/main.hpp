@@ -1,5 +1,3 @@
-#pragma once
-
 #include "al/LiveActor/LiveActor.h"
 #include "al/camera/CameraTicket.h"
 #include "al/util.hpp"

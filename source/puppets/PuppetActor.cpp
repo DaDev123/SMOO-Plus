@@ -23,7 +23,6 @@
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/snh/SardineMode.hpp"
 #include "server/inf/InfectionMode.hpp"
-#include "server/spe/SpeedrunMode.hpp"
 // #include "server/manhunt/ManhuntMode.hpp"
 
 static const char *subActorNames[] = {
@@ -239,9 +238,6 @@ void PuppetActor::control() {
                 }
                 case GameMode::Infection:
                     mNameTag->mIsAlive = GameModeManager::instance()->getMode<InfectionMode>()->isPlayerIt() && mInfo->isIt;
-                    break;
-                case GameMode::SPEEDRUN:
-                    mNameTag->mIsAlive = GameModeManager::instance()->getMode<SpeedrunMode>()->isPlayerIt() && mInfo->isIt;
                     break;
 
                 default:

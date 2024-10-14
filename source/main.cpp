@@ -10,6 +10,7 @@
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Player/PlayerHackKeeper.h"
+#include "game/Input/InputSeparator.h"
 #include "heap/seadHeap.h"
 #include "math/seadVector.h"
 #include "server/Client.hpp"
@@ -399,6 +400,14 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
             if (debugPuppetIndex >= Client::getMaxPlayerCount() - 1)
                 debugPuppetIndex = 0;
         }
+
+    } else if (al::isPadHoldR(-1)) {
+        if (al::isPadTriggerLeft(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWaitDance01");
+        if (al::isPadTriggerUp(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWaitSayCheese");
+        if (al::isPadTriggerRight(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("RaceResultWin");
+        if (al::isPadHoldL(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWaitSitDown");
+        if (al::isPadTriggerDown(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("RaceResultLose");
+
 
     } else if (al::isPadHoldL(-1)) {
         if (al::isPadTriggerLeft(-1)) GameModeManager::instance()->toggleActive();
