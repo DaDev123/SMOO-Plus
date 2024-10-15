@@ -2,52 +2,47 @@
 #include <cmath>
 #include "logger.hpp"
 #include "server/gamemode/GameModeManager.hpp"
-#include "server/inf/InfectionMode.hpp"
+#include "server/inf/InfectionInfo.hpp"
 #include "server/Client.hpp"
 
-InfectionConfigMenu::InfectionConfigMenu() : GameModeConfigMenu() {}
-
-void InfectionConfigMenu::initMenu(const al::LayoutInitInfo &initInfo) {
-    
+InfectionConfigMenu::InfectionConfigMenu() : GameModeConfigMenu() {
+    mItems = new sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>();
+    mItems->mBuffer[0].copy(u"Toggle H&S Gravity (OFF)"); // TBD
 }
 
-const sead::WFixedSafeString<0x200> *InfectionConfigMenu::getStringData() {
-    sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>* gamemodeConfigOptions =
-        new sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>();
+void InfectionConfigMenu::initMenu(const al::LayoutInitInfo &initInfo) {}
 
-    gamemodeConfigOptions->mBuffer[0].copy(u"Toggle Infection Gravity On");
-    gamemodeConfigOptions->mBuffer[1].copy(u"Toggle Infection Gravity Off");
+const sead::WFixedSafeString<0x200>* InfectionConfigMenu::getStringData() {
+    InfectionInfo* hns = GameModeManager::instance()->getInfo<InfectionInfo>();
+    bool isMode = hns != nullptr && GameModeManager::instance()->isMode(GameMode::INFECTION);
 
-    return gamemodeConfigOptions->mBuffer;
+    mItems->mBuffer[0].copy(
+        isMode && hns->mIsUseGravity
+        ? u"Toggle H&S Gravity (ON) "
+        : u"Toggle H&S Gravity (OFF)"
+    );
+
+    return mItems->mBuffer;
 }
 
-bool InfectionConfigMenu::updateMenu(int selectIndex) {
-
-    InfectionInfo *curMode = GameModeManager::instance()->getInfo<InfectionInfo>();
-
-    Logger::log("Setting Gravity Mode.\n");
-
-    if (!curMode) {
-        Logger::log("Unable to Load Mode info!\n");
-        return true;   
-    }
-    
+GameModeConfigMenu::UpdateAction InfectionConfigMenu::updateMenu(int selectIndex) {
     switch (selectIndex) {
         case 0: {
-            if (GameModeManager::instance()->isMode(GameMode::Infection)) {
-                curMode->mIsUseGravity = true;
+            InfectionInfo* hns = GameModeManager::instance()->getInfo<InfectionInfo>();
+            if (!hns) {
+                Logger::log("Unable to Load Mode info!\n");
+                return UpdateAction::NOOP;
             }
-            return true;
-        }
-        case 1: {
-            if (GameModeManager::instance()->isMode(GameMode::Infection)) {
-                curMode->mIsUseGravity = false;
+            if (GameModeManager::instance()->isMode(GameMode::INFECTION)) {
+                Logger::log("Setting Gravity Mode.\n");
+                hns->mIsUseGravity = !hns->mIsUseGravity;
+                return UpdateAction::REFRESH;
             }
-            return true;
+            return UpdateAction::NOOP;
         }
-        default:
+        default: {
             Logger::log("Failed to interpret Index!\n");
-            return false;
+            return UpdateAction::NOOP;
+        }
     }
-    
 }

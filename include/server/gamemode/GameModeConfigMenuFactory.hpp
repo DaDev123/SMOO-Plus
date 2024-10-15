@@ -2,8 +2,8 @@
 
 #include "al/factory/Factory.h"
 #include "server/hns/HideAndSeekConfigMenu.hpp"
-#include "server/freeze/FreezeTagConfigMenu.hpp"
-#include "server/snh/SardineConfigMenu.hpp"
+#include "server/sardines/SardineConfigMenu.hpp"
+#include "server/freeze-tag/FreezeTagConfigMenu.hpp"
 #include "server/inf/InfectionConfigMenu.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
 
@@ -15,27 +15,28 @@ GameModeConfigMenu* createGameModeConfigMenu(const char* name) {
 };
 
 __attribute((used)) constexpr al::NameToCreator<createMenu> menuTable[] = {
-    {"HideAndSeek", &createGameModeConfigMenu<HideAndSeekConfigMenu>},
-    {"Sardine", &createGameModeConfigMenu<SardineConfigMenu>},
-    {"FreezeTag", &createGameModeConfigMenu<FreezeTagConfigMenu>},
-    {"Infection", &createGameModeConfigMenu<InfectionConfigMenu>},
+    { "HideAndSeek", &createGameModeConfigMenu<HideAndSeekConfigMenu> },
+    { "Sardine",     &createGameModeConfigMenu<SardineConfigMenu>     },
+    { "FreezeTag",   &createGameModeConfigMenu<FreezeTagConfigMenu>   },
+    { "Infection",   &createGameModeConfigMenu<InfectionConfigMenu>   },
 };
 
 class GameModeConfigMenuFactory : public al::Factory<createMenu> {
-public:
-    GameModeConfigMenuFactory(const char* fName) {
-        this->factoryName = fName;
-        this->actorTable = menuTable;
-        this->factoryCount = sizeof(menuTable) / sizeof(menuTable[0]);
-    };
+    public:
+        GameModeConfigMenuFactory(const char* fName) {
+            this->factoryName = fName;
+            this->actorTable = menuTable;
+            this->factoryCount = sizeof(menuTable) / sizeof(menuTable[0]);
+        };
 
-    constexpr static const char* getMenuName(int idx);
-    constexpr static int getMenuCount();
+        constexpr static const char* getMenuName(int idx);
+        constexpr static int getMenuCount();
 };
 
 constexpr const char* GameModeConfigMenuFactory::getMenuName(int idx) {
-    if (idx >= 0 && idx < sizeof(menuTable) / sizeof(menuTable[0]))
+    if (idx >= 0 && idx < sizeof(menuTable) / sizeof(menuTable[0])) {
         return menuTable[idx].creatorName;
+    }
     return nullptr;
 }
 

@@ -35,6 +35,7 @@ namespace al {
     class CameraPoserFix;
     class CameraPoserFix;
 }
+
 // 0xE in size
 static al::NameToCreator<al::createCameraPoser> poserEntries[] = {
     {"制限付きフォロー", &al::createCameraPoserFunction<CameraPoserFollowLimit>},
@@ -53,7 +54,7 @@ static al::NameToCreator<al::createCameraPoser> poserEntries[] = {
     {"映像撮影レール", &al::createCameraPoserFunction<al::CameraPoserRailMoveMovie>},
     // Custom Posers
     {"CameraPoserCustom", &cc::createCustomCameraPoser<cc::CameraPoserCustom>}, // al::CameraPoserFollowSimple
-    {"CameraPoserActorSpectate", &cc::createCustomCameraPoser<cc::CameraPoserActorSpectate>} // al::CameraPoserFollowSimple
+    {"CameraPoserActorSpectate", &cc::createCustomCameraPoser<cc::CameraPoserActorSpectate>}, // al::CameraPoserFollowSimple
 };
 
 // 0xB in size

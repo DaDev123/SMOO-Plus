@@ -1,35 +1,35 @@
 [version=100, target=main]
-//StageScene::control+18 BL stageSceneHook
+// StageScene::control+18 BL stageSceneHook
 4C8DD0 BL stageInitHook // hook to the init of a stage to modify certain conditions (we also have access to SceneInitInfo)
 50F928 BL hakoniwaSequenceHook
 
 // hooks to start logger
-5359D8 BL tryInitSocket // GameSystem::init 
-B59E28 B seadPrintHook // sead::system::print
+5359D8 BL tryInitSocket // GameSystem::init
+B59E28 B seadPrintHook  // sead::system::print
 
 // Debug Stuff
 5359DC:
     MOV X0, X19 // move GameSystem to arg register
     BL setupDebugMenu
-    
-50F258: // HakoniwaSequence::drawMain+80
+
+50F258:         // HakoniwaSequence::drawMain+80
     MOV X0, X19 // HakoniwaSequence
-    MOV X1, SP // viewport
+    MOV X1, SP  // viewport
     MOV X2, X20 // drawContext
     BL drawMainHook
 
 // Main Stuff
 
 50E89C BL constructHook // HakoniwaSequence::init+1F4
-50EF2C: // HakoniwaSequence::init+884
-    MOV X0, X19 // move HakoniwaSequence ptr to arg register
+50EF2C:                 // HakoniwaSequence::init+884
+    MOV X0, X19         // move HakoniwaSequence ptr to arg register
     BL threadInit
 
 41B4E4 BL setPlayerModel
 
-1B3F0C NOP // disables call to open HTML viewer during first time odyssey flight
-1f2998 B checkpointPatch // Patches checkpoint system to always allow warping
-216FAC MOV W0, #0 // disables AppearSwitchTimer's camera switch
+1B3F0C NOP                             // disables call to open HTML viewer during first time odyssey flight
+1F2998 B freezeIsCheckpointWarpAllowed // Patches checkpoint system to always allow warping, disable in freeze tag
+216FAC MOV W0, #0                      // disables AppearSwitchTimer's camera switch
 
 // Puppet Actor Setup
 4B5E30 B ProjectActorFactory // patches actor factory ctor with custom matching factory
@@ -38,23 +38,23 @@ B59E28 B seadPrintHook // sead::system::print
 // Shine Syncing
 // 1CF470 BL shineHook
 
-//Shine::get
+// Shine::get
 1D03EC MOV X1, X19
 1D03F4 BL sendShinePacket
 
-//Shine::getWithDemo
+// Shine::getWithDemo
 1D1378 MOV X1, X19
 1D1380 BL sendShinePacket
 
-//Shine::exeWaitRequestDemo
+// Shine::exeWaitRequestDemo
 1D14C8 MOV X1, X19
 1D14D0 BL sendShinePacket
 
-//Shine::receiveMsg
+// Shine::receiveMsg
 1D0188 MOV X1, X19
 1D0190 BL sendShinePacket
 
-//Shine::getDirect
+// Shine::getDirect
 1CF124 MOV X1, X19
 1CF12C BL sendShinePacket
 
@@ -100,18 +100,18 @@ B59E28 B seadPrintHook // sead::system::print
 // Pause Menu Changes
 
 // 4EAEC4 B overrideNerveHook // makes any button on pause menu run a specific nerve
-4EA104 MOV W2, #5 // update state count to account for new custom state
-4EA1F0 BL initNerveStateHook // inits options nerve state and server config state
-4EA174 MOV X0, X20 // moves StageSceneStatePauseMenu to first arg
-4EA17C NOP // prevents first new of StageSceneStateOption
-4EA1A8 BL initStateHook // inits StageSceneStateOption and StageSceneStateServerConfig
-4EA1C0 NOP // prevents mStateOption ptr from being overriden
+4EA104 MOV W2, #5             // update state count to account for new custom state
+4EA1F0 BL initNerveStateHook  // inits options nerve state and server config state
+4EA174 MOV X0, X20            // moves StageSceneStatePauseMenu to first arg
+4EA17C NOP                    // prevents first new of StageSceneStateOption
+4EA1A8 BL initStateHook       // inits StageSceneStateOption and StageSceneStateServerConfig
+4EA1C0 NOP                    // prevents mStateOption ptr from being overriden
 4EAFA4 B overrideHelpFadeNerve
 
 // Gravity hooks
 
-455230 NOP // PlayerJointControlKeeper::update+C0 prevents PlayerJointControlGroundPose from updating 
-4B5E30 B ProjectActorFactory // patches actor factory ctor with custom matching factory
+455230 NOP                         // PlayerJointControlKeeper::update+C0 prevents PlayerJointControlGroundPose from updating
+4B5E30 B ProjectActorFactory       // patches actor factory ctor with custom matching factory
 4BE628 B ProjectCameraPoserFactory // patches camera poser factory with custom matching factory
 
 4463D8 BL initHackCapHook
@@ -127,14 +127,19 @@ B59E28 B seadPrintHook // sead::system::print
 // 891394 BL drawInitHook
 // 91328 BL updateInitHook
 
-//Unlocks costume doors
-262850 MOV W0, #0
-2609b4 MOV W0, #0
-25ff74 MOV X0, #1
-25ffac MOV X0, #0
+// Unlocks costume doors
+262850 MOV W0, #0 // Sand, DeepWoods, Snow, Seaside, Luncheon, Bowser, Mushroom
+2609B4 MOV W0, #0 // Lake
+25FF74 MOV X0, #1 // Metro (open w/ doors)
+25FFAC MOV X0, #0 // Metro (open w/o doors) (not needed?)
 
 // Freeze tag hooks
-4272f0 BL freezeDeathArea // Replaces functionality of death areas in freeze tag
-538a94 B playerHitPointDamage // Reimplements the damage function, disabling it's functionality in Freeze Tag
-51b280 B freezeKidsMode // Forces kids mode to be enabled during Freeze Tag
-1cfba0 BL freezeMoonHitboxDisable // When mode enabled, disable hitboxes with moons to avoid softlocks
+4272F0 BL freezeDeathArea            // Replaces functionality of death areas in freeze tag
+538A94 B  freezePlayerHitPointDamage // Reimplements the damage function, disabling it's functionality in Freeze Tag
+51B280 B  freezeKidsMode             // Forces kids mode to be enabled during Freeze Tag
+1CFBA0 BL freezeMoonHitboxDisable    // When mode enabled, disable hitboxes with moons to avoid softlocks
+
+// custom bootscreen hooks
+50EF28 BL speedboot::hakoniwaSetNerveSetup
+50EB88 ORR w2, wzr, #0x1f // nerve state count
+50EB64 BL speedboot::prepareLayoutInitInfo

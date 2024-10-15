@@ -16,22 +16,22 @@
 
 bool isPartOf(const char* w1, const char* w2);
 
-int indexOf(char *w1, char c1);
+int indexOf(char* w1, char c1);
 
 void logVector(const char* vectorName, sead::Vector3f vector);
 
-void logQuat(const char *quatName, sead::Quatf quat);
+void logQuat(const char* quatName, sead::Quatf quat);
 
-sead::Vector3f QuatToEuler(sead::Quatf *quat);
+sead::Vector3f QuatToEuler(sead::Quatf* quat);
 
 float vecMagnitude(sead::Vector3f const& input);
 float vecDistance(sead::Vector3f const& a, sead::Vector3f const& b);
 
-float quatAngle(sead::Quatf const &q1, sead::Quatf &q2);
+float quatAngle(sead::Quatf const& q1, sead::Quatf& q2);
 
-bool isInCostumeList(const char *costumeName);
+bool isInCostumeList(const char* costumeName);
 
-const char *tryGetPuppetCapName(PuppetInfo *info);
+const char* tryGetPuppetCapName(PuppetInfo* info);
 const char* tryGetPuppetBodyName(PuppetInfo* info);
 
 const char* tryConvertName(const char* className);
@@ -100,11 +100,11 @@ __attribute__((used)) static const char* costumeNames[] = {
     "MarioSunshine",
     "MarioTopper",
     "MarioZombie"
- };
+};
 
 struct HackActorName {
-    const char *className;
-    const char *hackName;
+    const char* className;
+    const char* hackName;
 };
 
 // attribute otherwise the build log is spammed with unused warnings
@@ -125,25 +125,29 @@ __attribute__((used)) static HackActorName classHackNames[] = {
 
 struct Transform
 {
-    sead::Vector3f *position;
-    sead::Quatf *rotation;
+    sead::Vector3f* position;
+    sead::Quatf* rotation;
 };
 
 // From Boss Room Unity Example
 class VisualUtils
 {
-
 public:
-    /* 
+    /*
     * @brief Smoothly interpolates towards the parent transform.
     * @param moveTransform The transform to interpolate
     * @param targetTransform The transform to interpolate towards.
     * @param timeDelta Time in seconds that has elapsed, for purposes of interpolation.
-    * @param closingSpeed The closing speed in m/s. This is updated by SmoothMove every time it is called, and will drop to 0 whenever the moveTransform has "caught up". 
+    * @param closingSpeed The closing speed in m/s. This is updated by SmoothMove every time it is called, and will drop to 0 whenever the moveTransform has "caught up".
     * @param maxAngularSpeed The max angular speed to to rotate at, in degrees/s.
     */
-    static float SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta,
-                            float closingSpeed, float maxAngularSpeed);
+    static float SmoothMove(
+        Transform moveTransform,
+        Transform targetTransform,
+        float timeDelta,
+        float closingSpeed,
+        float maxAngularSpeed
+    );
 
     constexpr static const float k_MinSmoothSpeed = 0.1f;
     constexpr static const float k_TargetCatchupTime = 0.2f;

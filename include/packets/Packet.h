@@ -26,11 +26,13 @@ enum PacketType : short {
     CAPTUREINF,
     CHANGESTAGE,
     CMD,
+    UDPINIT,
+    HOLEPUNCH,
     End // end of enum for bounds checking
 };
 
 // attribute otherwise the build log is spammed with unused warnings
-USED static const char *packetNames[] = {
+USED static const char* packetNames[] = {
     "Unknown",
     "Client Initialization",
     "Player Info",
@@ -43,7 +45,9 @@ USED static const char *packetNames[] = {
     "Moon Collection",
     "Capture Info",
     "Change Stage",
-    "Server Command"
+    "Server Command",
+    "Udp Initialization",
+    "Hole punch",
 };
 
 enum SenderType {
@@ -55,14 +59,6 @@ enum ConnectionTypes {
     INIT,
     RECONNECT
 };
-
-// unused
-/*
-static const char *senderNames[] = {
-    "Server",
-    "Client"
-};
-*/
 
 struct PACKED Packet {
     nn::account::Uid mUserID; // User ID of the packet owner
@@ -83,3 +79,5 @@ struct PACKED Packet {
 #include "packets/HackCapInf.h"
 #include "packets/ChangeStagePacket.h"
 #include "packets/InitPacket.h"
+#include "packets/UdpPacket.h"
+#include "packets/HolePunchPacket.h"

@@ -4,14 +4,12 @@
 #include "CameraOffsetPreset.h"
 
 namespace al {
+    class CameraOffsetCtrlPreset {
+        public:
+            float getOffset() const;
+            void load(al::ByamlIter const&);
 
-class CameraOffsetCtrlPreset {
-public:
-    float getOffset() const;
-    void load(al::ByamlIter const&);
-
-    const char* mUnkVTable;
-    CameraOffsetPreset* mOffsetPreset;
-
-};
+            const char* mUnkVTable;
+            CameraOffsetPreset* mOffsetPreset;
+    };
 }

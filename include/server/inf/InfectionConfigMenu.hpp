@@ -7,13 +7,14 @@
 class InfectionConfigMenu : public GameModeConfigMenu {
 public:
     InfectionConfigMenu();
-    
-    void initMenu(const al::LayoutInitInfo &initInfo) override;
-    const sead::WFixedSafeString<0x200> *getStringData() override;
-    bool updateMenu(int selectIndex) override;
+
+    void initMenu(const al::LayoutInitInfo& initInfo) override;
+    const sead::WFixedSafeString<0x200>* getStringData() override;
+    GameModeConfigMenu::UpdateAction updateMenu(int selectIndex) override;
 
     const int getMenuSize() override { return mItemCount; }
 
 private:
-    static constexpr int mItemCount = 2;
+    static constexpr int mItemCount = 1;
+    sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>* mItems = nullptr;
 };
