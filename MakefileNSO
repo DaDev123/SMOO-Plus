@@ -40,6 +40,7 @@ SOURCES		:=  \
 			source/server/hns  \
 			source/server/sardines  \
 			source/server/freeze-tag  \
+			source/server/inf  \
 			source/server/gamemode  \
 			source/server/gamemode/modifiers  \
 			source/server  \

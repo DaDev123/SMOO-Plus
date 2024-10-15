@@ -408,24 +408,36 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
     static bool isDisableMusic = false;
 
     if (al::isPadHoldZR(-1)) {
-        if (al::isPadTriggerUp(-1)) { // ZR + Up => Debug menu
-            debugMode = !debugMode;
+        if (al::isPadTriggerUp(-1)) debugMode = !debugMode;
+        if (al::isPadTriggerLeft(-1)) pageIndex--;
+        if (al::isPadTriggerRight(-1)) pageIndex++;
+        if(pageIndex < 0) {
+            pageIndex = maxPages - 1;
         }
+        if(pageIndex >= maxPages) pageIndex = 0;
+
+    } else if (al::isPadHoldR(-1)) {
+
         if (debugMode) {
-            if (al::isPadTriggerLeft(-1)) { // [Debug menu] ZR + Left => Previous page
-                pageIndex--;
-                if (pageIndex < 0) {
-                    pageIndex = maxPages - 1;
-                }
+            if (al::isPadTriggerLeft(-1)) debugPuppetIndex--;
+            if (al::isPadTriggerRight(-1)) debugPuppetIndex++;
+
+            if(debugPuppetIndex < 0) {
+                debugPuppetIndex = Client::getMaxPlayerCount() - 2;
             }
-            if (al::isPadTriggerRight(-1)) { // [Debug menu] ZR + Right => Next page
-                pageIndex++;
-                if (pageIndex >= maxPages) {
-                    pageIndex = 0;
-                }
-            }
+            if (debugPuppetIndex >= Client::getMaxPlayerCount() - 1)
+                debugPuppetIndex = 0;
         }
+
     } else if (al::isPadHoldZL(-1)) {
+        if (al::isPadTriggerLeft(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWaitDance01");
+        if (al::isPadTriggerUp(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWait64");
+        if (al::isPadTriggerRight(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("RaceResultWin");
+        if (al::isPadTriggerL(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWaitSitDown");
+        if (al::isPadTriggerDown(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("RaceResultLose");
+
+        
+    } else if (al::isPadHoldZR(-1)) {
         if (debugMode && pageIndex == 0) {
             if (al::isPadTriggerLeft(-1)) { // [Debug menu] ZL + Left => Previous player
                 debugPuppetIndex--;
