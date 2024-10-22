@@ -41,6 +41,8 @@ void killMainPlayer(PlayerActorHakoniwa* mainPlayer);
 
 __attribute__((used)) static const char* costumeNames[] = {
     "Mario",
+    "MarioCaptain",
+    "MarioDot3d",
     "Mario64",
     "Mario64Metal",
     "MarioAloha",
@@ -116,6 +118,10 @@ __attribute__((used)) static HackActorName classHackNames[] = {
     {"FireBrosPossessed", "FireBros"},
     {"HammerBrosPossessed", "HammerBros"},
     {"ElectricWire", "ElectricWireMover"},
+    {"Fastener", "FastenerKnobOrientation"},
+    {"FastenerKnobOrientation", "Fastener"},
+    {"Fastener", "Fastener"},
+    {"FastenerKnobOrientation", "FastenerKnobOrientation"},
     {"TRexSleep", "TRex"},
     {"TRexPatrol", "TRex"},
     {"WanwanBig", "Wanwan"},  // FIXME: this will make chain chomp captures always be the small
