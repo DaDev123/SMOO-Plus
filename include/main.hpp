@@ -55,6 +55,20 @@ static bool isInGame = false;
 
 static bool debugMode = false;
 
+static float scale = 0.3f;
+
+enum PlayerSize {
+    NORMAL,
+    SMALL,
+    BIG,
+    VERYBIG
+};
+extern int curSize;
+
+extern float scale;
+
+extern float camDist;
+
 constexpr const char* captureNames[] = {
     "AnagramAlphabetCharacter", "Byugo", "Bubble", "Bull", "Car", "ElectricWire",
     "KillerLauncherMagnum", "KuriboPossessed",
@@ -65,9 +79,10 @@ constexpr const char* captureNames[] = {
     "Gamane",  // has sub-actors
     "FireBrosPossessed", "PackunFire", "Frog", "Kakku", "Hosui", "HammerBrosPossessed", "Megane",
     "KaronWing", "KuriboWing", "PackunPoison", "Radicon", "Tank", "Tsukkun", "TRex", "TRexSleep",
+    "FastenerKnobOrientation", "Fastener",
     "TRexPatrol",
-    // "Yukimaru", (is a player actor)
+    "Yukimaru",
     "Imomu", "SenobiGeneratePoint"
-    // "HackFork",
-    // "Yoshi" (is a player actor)
+    "HackFork",
+    "Yoshi"
 };

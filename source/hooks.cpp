@@ -212,3 +212,61 @@ void updateDrawHook(al::ExecuteDirector* thisPtr, const char* listName, const ch
     Logger::log("Updating Draw List for: %s %s\n", listName, kit);
     thisPtr->drawList(listName, kit);
 }
+
+void sensorHook(al::LiveActor *actor, al::ActorInitInfo const &initInfo, char const *sensorName, uint typeEnum, float radius, ushort maxCount, sead::Vector3f const& position) {
+    sead::Vector3f newPos = sead::Vector3f(position);
+    if(position.y > 0)
+        newPos.y = position.y * 0.3f;
+
+    al::addHitSensor(actor, initInfo, sensorName, typeEnum, radius, maxCount, newPos);
+}
+
+float followDistHook() {
+            return 270.f;
+}
+
+void playerSizeHook(PlayerActorHakoniwa* player){
+  al::setScaleAll(player, 0.3f);
+}
+
+
+void effectHook(al::ActionEffectCtrl* effectController, char const* effectName) {
+    {
+        if(al::isEqualString(effectName, "RollingStart") || al::isEqualString(effectName, "Rolling") || al::isEqualString(effectName, "RollingStandUp") || al::isEqualString(effectName, "Jump") || al::isEqualString(effectName, "LandDownFall")|| al::isEqualString(effectName, "SpinCapStart") || al::isEqualString(effectName, "FlyingWaitR") || al::isEqualString(effectName, "StayR")|| al::isEqualString(effectName, "SpinGroundR")|| al::isEqualString(effectName, "StartSpinJumpR")|| al::isEqualString(effectName, "SpinJumpDownFallR")|| al::isEqualString(effectName, "Move")|| al::isEqualString(effectName, "Brake")) {
+            al::tryDeleteEffect(effectController->mEffectKeeper, effectName);
+            return;
+        }
+    }
+
+    effectController->startAction(effectName);
+    
+
+}
+
+void capVelScaleHook(al::LiveActor* hackCap, sead::Vector3f const& addition) {
+    al::setVelocity(hackCap, addition * (scale * 0.8f));
+}
+
+
+void spinFlowerHook(al::LiveActor* actor, float velocity) {
+    al::addVelocityToGravity(actor, velocity * scale);
+}
+
+float fpHook() {
+    return 300.0f * scale;
+}
+
+float fpScaleHook() {
+            return 0.94f;
+}
+
+
+PlayerConst* createPlayerConstHook(char const* suffix) {
+            PlayerConst* cons = PlayerFunction::createMarioConst(al::StringTmp<0x20>("Small%s", suffix).cstr());
+            return cons;
+}
+
+const char* offsetOverideHook(al::ByamlIter const& iter, char const* key) {
+             return "Y0.5m";
+             return al::tryGetByamlKeyStringOrNULL(iter, key);
+    }

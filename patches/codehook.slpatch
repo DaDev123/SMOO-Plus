@@ -144,3 +144,88 @@ B59E28 B seadPrintHook  // sead::system::print
 50EB88 ORR w2, wzr, #0x1f // nerve state count
 50EB64 BL speedboot::prepareLayoutInitInfo
 
+// Mario Collider changes (for map collision, not hit sensors)
+435E88 FMOV S8, #16.0 // body collider radius
+435E80 FMOV S0, #19.0 // body sphere shape? (vec::ey * this value)
+435ED8 FMOV S10, #30.0 // height
+
+// InitSensors hook (basicly Mario's Collisions)
+4464F4:
+    BL sensorHook
+446538:
+    BL sensorHook
+44657C:
+    BL sensorHook
+4465C0:
+    BL sensorHook
+446604:
+    BL sensorHook
+446648:
+    BL sensorHook
+446674:
+    BL sensorHook
+4466BC:
+    BL sensorHook
+4466E4:
+    BL sensorHook
+44670C:
+    BL sensorHook
+
+// Cap and Mario's Physics
+
+41B7F4: // sets the dither anim sphere for mario to a size of 10
+    FMOV S0, #10.0
+
+3FF3F4: // sets the cap throw height to 210
+    FMOV S17, #21
+
+3FFC24:
+    BL capVelScaleHook
+
+472D78:
+    BL spinFlowerHook
+
+4466A8:
+    BL fpHook
+48DFC8:
+    MOV W0, #0
+
+4018C4:
+    BL fpScaleHook
+
+4018D4:
+    MOV W1, #2
+    
+4464BC:
+    FMOV S8, #30
+
+
+// Effects 
+7FF4A4:
+    BL effectHook
+470908: // hipdropland
+    NOP
+47BCB8: // restartRolling
+    NOP
+47B12C: // rollingBoostStart
+    NOP
+47AE80: // rollingControl
+    NOP
+
+44038C: // tryStartRunEffectRun
+    NOP
+4402AC: // tryStartRunEffectRunStart
+    NOP
+44046C: // tryStartRunEffectDash
+    NOP
+44054C: // tryStartRunEffectDashFast
+    NOP
+44062C: // tryStartRunEffectDashWaterSurface
+    NOP
+4406A0: // tryEmitRollingEffect
+    MOV W0, #0
+    RET
+
+// camera
+C8B9C B followDistHook
+A4BC70 BL offsetOverideHook

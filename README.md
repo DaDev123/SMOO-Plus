@@ -1,11 +1,13 @@
 # Super Mario Odyssey - Online Multiplayer Mod
 
-Welcome to the official repository for the Super Mario Odyssey Online mod! Have fun exploring kingdoms with friends, playing gamemodes, or beating the game as fast as possible! This mod is still early in development, so expect bugs and un-refined aspects as we work hard to improve it and make the mod as polished as possible.
+Welcome to the unofficial repository for the Super Mario Odyssey Online mod! Have fun exploring kingdoms with friends, playing gamemodes, or beating the game as fast as possible! This mod is still early in development, so expect bugs and un-refined aspects as we work hard to improve it and make the mod as polished as possible.
 
 ## Features
 
-* Explore Kingdoms together with up to 10 People
+* Explore Kingdoms together with up to 16 People
 * Almost every capture in the game is synced between players
+* Emotes
+* 1.3 Costumes
 * Full 2D and Costume models syncing
 * Moon Collection is shared between all players
 * Custom Configuration Menu (Accessible by holding ZL and selecting any option in the pause/start menu)

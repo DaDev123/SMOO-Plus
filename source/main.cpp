@@ -144,9 +144,9 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     );
 
 #if EMU
-    gTextWriter->printf("Mod version: 1.0 SMOO-Remade for Emulators\n", TOSTRING(BUILDVERSTR));
+    gTextWriter->printf("Mod version: 1.2 SMOO-Remade for Emulators\n", TOSTRING(BUILDVERSTR));
 #else
-    gTextWriter->printf("Mod version: 1.0 SMOO-Remade for Switch\n", TOSTRING(BUILDVERSTR));
+    gTextWriter->printf("Mod version: 1.2 SMOO-Remade for Switch\n", TOSTRING(BUILDVERSTR));
 #endif
 
     al::Scene* curScene = curSequence->curScene;
@@ -178,7 +178,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
         case 0:
             {
                 gTextWriter->printf(
-                    "(ZL ←)----------%s Player %d/%d %s-----------(ZL →)\n\n",
+                    "(R ←)----------%s Player %d/%d %s-----------(R →)\n\n",
                     debugPuppetIndex + 1 < 10 ? "-" : "",
                     debugPuppetIndex + 1,
                     Client::getMaxPlayerCount(),

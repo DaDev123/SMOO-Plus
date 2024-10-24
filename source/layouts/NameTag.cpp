@@ -67,9 +67,9 @@ void NameTag::control() {
 void NameTag::updateTrans() {
     sead::Vector2f newTrans = sead::Vector2f::zero;
 
-    sead::Vector3f targetOffset(0, 130, 0);
-
     al::LiveActor* puppetModel = mPuppet->getCurrentModel();
+
+    sead::Vector3f targetOffset(0, 130 * *al::getScaleY(puppetModel), 0);
 
     al::calcLayoutPosFromWorldPos(&newTrans, puppetModel, al::getTrans(puppetModel) + targetOffset);
 

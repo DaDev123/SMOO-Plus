@@ -90,9 +90,13 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
     al::validateClipping(normalModel);
     al::validateClipping(normal2DModel);
 
+    al::setScaleAll(normalModel, 0.3f);
+
     if (GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
         mFreezeTagIceBlock = new FreezePlayerBlock("PuppetIceBlock");
         mFreezeTagIceBlock->init(initInfo);
+
+        al::setScaleAll(normalModel, 0.3f);
     }
 }
 
