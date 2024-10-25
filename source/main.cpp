@@ -37,6 +37,9 @@
 static int pInfSendTimer = 0;
 static int gameInfSendTimer = 0;
 
+int curSize = PlayerSize::SMALL;
+float scale = 0.3f;
+
 void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru) {
     if (pInfSendTimer >= 3) {
         Client::sendPlayerInfPacket(playerBase, isYukimaru);

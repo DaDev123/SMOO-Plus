@@ -55,14 +55,13 @@ static bool isInGame = false;
 
 static bool debugMode = false;
 
-static float scale = 0.3f;
-
 enum PlayerSize {
     NORMAL,
     SMALL,
     BIG,
     VERYBIG
 };
+
 extern int curSize;
 
 extern float scale;

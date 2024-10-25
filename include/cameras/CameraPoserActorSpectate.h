@@ -29,8 +29,8 @@ namespace cc {
             void calcRotVec(sead::Vector3f targetDir, sead::Vector3f* rotatedVec, sead::Vector3f* rightVec);
 
             float mAngle        = 20.f;
-            float mDistMax      = 1400.f;
-            float mDistLerp     = 1400.f;
+            float mDistMax      = 400.f;
+            float mDistLerp     = 400.f;
             float mYOffset      = 100.f;
             float mDefaultFovy  = 35.f;
             int   mFrameCounter = 0;
