@@ -267,6 +267,7 @@ bool InfectionMode::showNameTag(PuppetInfo* other) {
 void InfectionMode::debugMenuControls(sead::TextWriter* gTextWriter) {
     gTextWriter->printf("- L + ← | Enable/disable Infection [Inf]\n");
     gTextWriter->printf("- [Inf] ↑ | Switch between Non-Infected and Infected\n");
+    gTextWriter->printf("- [Inf][Runer] L + ↓ | Reset time\n");
     gTextWriter->printf("- [Inf][Gravity] L + → | Toggle gravity camera\n");
 }
 
