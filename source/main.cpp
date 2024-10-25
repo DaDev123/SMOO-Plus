@@ -147,9 +147,9 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     );
 
 #if EMU
-    gTextWriter->printf("Mod version: 1.2 SMOO-Remade for Emulators\n", TOSTRING(BUILDVERSTR));
+    gTextWriter->printf("Mod version: 1.2 SMOO-Plus (Small) for Emulators\n", TOSTRING(BUILDVERSTR));
 #else
-    gTextWriter->printf("Mod version: 1.2 SMOO-Remade for Switch\n", TOSTRING(BUILDVERSTR));
+    gTextWriter->printf("Mod version: 1.2 SMOO-Plus (Small) for Switch\n", TOSTRING(BUILDVERSTR));
 #endif
 
     al::Scene* curScene = curSequence->curScene;
@@ -397,6 +397,7 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
 
     al::PlayerHolder* pHolder    = al::getScenePlayerHolder(stageScene);
     PlayerActorBase*  playerBase = al::tryGetPlayerActor(pHolder, 0);
+    PlayerActorHakoniwa* p1 = (PlayerActorHakoniwa*)al::tryGetPlayerActor(pHolder, 0);
 
     bool isYukimaru = !playerBase->getPlayerInfo();
 
@@ -478,6 +479,30 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
         }
     }
 
+    sead::Vector3f* pScale = al::getScale(p1);
+    sead::Vector3f *capScale = al::getScale(p1->mHackCap);
+    switch(curSize){
+        case NORMAL:
+            scale = 1.f;   
+            break;
+        case SMALL:
+            scale = 0.3f;
+            break;
+        case BIG:
+            scale = 4.f;
+            break;
+        case VERYBIG:
+            scale = 8.f;
+            break;
+    }
+    
+    if(pScale->x != scale) {
+        al::setScaleAll(p1, scale);
+    }
+    if(capScale->x != scale) {
+        al::setScaleAll(p1->mHackCap, scale);
+    }
+
     return isFirstStep;
 }
 
@@ -489,3 +514,6 @@ void seadPrintHook(const char* fmt, ...) {
 
     va_end(args);
 }
+
+
+
