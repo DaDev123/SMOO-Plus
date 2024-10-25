@@ -201,7 +201,7 @@ void SardineMode::update() {
             if (
                 !mInfo->mIsIt
                 && !isYukimaru
-                && pupDist < 300.0f
+                && pupDist < 80.0f
                 && other->is2D == ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel
                 && !PlayerFunction::isPlayerDeadStatus(playerBase)
             ) {

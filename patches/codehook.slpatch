@@ -177,7 +177,7 @@ B59E28 B seadPrintHook  // sead::system::print
     FMOV S0, #10.0
 
 3FF3F4: // sets the cap throw height to 210
-    FMOV S17, #21
+    FMOV S17, #51
 
 3FFC24:
     BL capVelScaleHook

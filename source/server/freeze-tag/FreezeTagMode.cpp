@@ -290,7 +290,7 @@ void FreezeTagMode::update() {
             // Check if the chaser freezes us
             if (   !mInfo->mIsPlayerFreeze   // we're an unfrozen runner
                 && isPlayerAlive             // that is alive
-                && distance < 250.f          // and near
+                && distance < 50.f          // and near
                 && !other->isFreezeTagRunner // a chaser
                 && other->is2D == isPlayer2D // that has the same dimension (2D/3D) as us
             ) {
@@ -302,7 +302,7 @@ void FreezeTagMode::update() {
             if (   mInfo->mIsPlayerFreeze       // we're a frozen runner
                 && freezeMinTime <= mInvulnTime // since some time (cooldown)
                 && isPlayerAlive                // that is alive
-                && distance < 200.f             // and near
+                && distance < 40.f             // and near
                 && other->isFreezeTagRunner     // another runner
                 && !other->isFreezeTagFreeze    // that isn't frozen
                 && other->is2D == isPlayer2D    // and has the same dimension (2D/3D) as us

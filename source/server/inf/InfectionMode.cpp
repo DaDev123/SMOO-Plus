@@ -203,7 +203,7 @@ void InfectionMode::update() {
                 sead::Vector3f offset = sead::Vector3f(0.0f, 80.0f, 0.0f);
                 float pupDist = vecDistance(other->playerPos + offset, al::getTrans(playerBase) + offset); // TODO: remove distance calculations and use hit sensors to determine this
 
-                if (pupDist < 200.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == other->is2D) {
+                if (pupDist < 40.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == other->is2D) {
                     if (!PlayerFunction::isPlayerDeadStatus(playerBase)) {
 
                         playerBase->startDemoPuppetable();

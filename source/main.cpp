@@ -247,6 +247,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
                     if (hackKeeper->currentHackActor) {
                         al::LiveActor* curHack = hackKeeper->currentHackActor;
 
+
                         gTextWriter->printf("Current Hack Animation: %s\n", al::getActionName(curHack));
                         gTextWriter->printf("Current Hack Name: %s\n", hackKeeper->getCurrentHackName());
                         sead::Quatf captureRot = curHack->mPoseKeeper->getQuat();
