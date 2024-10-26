@@ -45,7 +45,7 @@ namespace speedboot {
             float mFreezeBGTransXTarget = 0.f;
 
         private:
-            float mAutoCloseAfter = 10.f0;
+            float mAutoCloseAfter = 10.f;
             WorldResourceLoader* worldResourceLoader;
     };
 
