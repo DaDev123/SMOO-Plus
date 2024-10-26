@@ -209,3 +209,31 @@ A4BC70 BL offsetOverideHook
 0041DBEC:
     fmov S0, #0.328125
     bl 0x71008EEF84
+
+
+// Effects 
+7FF4A4:
+    BL effectHook
+
+470908: // hipdropland
+    NOP
+47BCB8: // restartRolling
+    NOP
+47B12C: // rollingBoostStart
+    NOP
+47AE80: // rollingControl
+    NOP
+
+44038C: // tryStartRunEffectRun
+    NOP
+4402AC: // tryStartRunEffectRunStart
+    NOP
+44046C: // tryStartRunEffectDash
+    NOP
+44054C: // tryStartRunEffectDashFast
+    NOP
+44062C: // tryStartRunEffectDashWaterSurface
+    NOP
+4406A0: // tryEmitRollingEffect
+    MOV W0, #0
+    RET

@@ -39,8 +39,8 @@ namespace speedboot {
         mTime += 0.016666f;
 
         mProgression = (
-            mAutoCloseAfter <= 0.1f
-            ? worldResourceLoader->calcLoadPercent() / 100.0f
+            mAutoCloseAfter <= 10.0f
+            ? worldResourceLoader->calcLoadPercent() / 200.0f
             : mTime / mAutoCloseAfter
         );
 
