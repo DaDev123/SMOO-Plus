@@ -31,7 +31,7 @@ constexpr const char* modeNames[] = {
     "Sardines",
     "Freeze-Tag",
     "Infection",
-    "CoinRunner",
+    "Coin Runners (WIP)",
 };
 
 class GameModeFactory : public al::Factory<createMode> {
