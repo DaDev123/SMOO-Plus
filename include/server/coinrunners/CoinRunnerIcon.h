@@ -20,7 +20,7 @@ class CoinRunnerIcon : public al::LayoutActor {
         void appear() override;
 
         void setSpectateString(const char* spec) { mSpectateName = spec; }
-        void setFreezeOverlayHeight();
+        void setCoinOverlayHeight();
         void setSpectateOverlayHeight();
         void setRoundTimerOverlay();
 
@@ -69,7 +69,7 @@ class CoinRunnerIcon : public al::LayoutActor {
         // UI positioning and angle calculations
         float mRunnerFreezeIconAngle = 0.f;
 
-        float mFreezeOverlayHeight = 415.f;
+        float mCoinOverlayHeight = 415.f;
 
         float mSpectateOverlayHeight = -400.f;
 

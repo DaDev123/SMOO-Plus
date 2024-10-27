@@ -30,8 +30,8 @@ class CoinRunnerChaserSlot : public al::LayoutActor {
         bool mIsVisible = false;
         bool mIsPlayer  = false;
 
-        float mFreezeIconSize = 0.f;
-        float mFreezeIconSpin = 0.f;
+        float mCoinIconSize = 0.f;
+        float mCoinIconSpin = 0.f;
         int mChaserIndex;
 
     private:

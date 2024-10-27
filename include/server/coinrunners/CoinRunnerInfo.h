@@ -16,7 +16,7 @@ struct CoinRunnerInfo : GameModeInfoBase {
     }
 
     bool        mIsPlayerRunner = true;
-    float       mFreezeIconSize = 0.f;
+    float       mCoinIconSize = 0.f;
     CoinState mIsPlayerCoin = CoinState::ALIVECoin;
 
     bool     mIsRound     = false;
