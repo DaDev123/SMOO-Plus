@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-#include <cstring>
 #include "types.h"
 
 #include "sead/math/seadVector.h"
@@ -9,10 +7,7 @@
 
 #include "al/util.hpp"
 
-#include "logger.hpp"
 #include "puppets/PuppetInfo.h"
-
-#include "game/GameData/GameDataFunction.h"
 
 bool isPartOf(const char* w1, const char* w2);
 
@@ -26,6 +21,7 @@ sead::Vector3f QuatToEuler(sead::Quatf* quat);
 
 float vecMagnitude(sead::Vector3f const& input);
 float vecDistance(sead::Vector3f const& a, sead::Vector3f const& b);
+float vecDistanceSq(sead::Vector3f const& a, sead::Vector3f const& b);
 
 float quatAngle(sead::Quatf const& q1, sead::Quatf& q2);
 
@@ -118,10 +114,6 @@ __attribute__((used)) static HackActorName classHackNames[] = {
     {"FireBrosPossessed", "FireBros"},
     {"HammerBrosPossessed", "HammerBros"},
     {"ElectricWire", "ElectricWireMover"},
-    {"Fastener", "FastenerKnobOrientation"},
-    {"FastenerKnobOrientation", "Fastener"},
-    {"Fastener", "Fastener"},
-    {"FastenerKnobOrientation", "FastenerKnobOrientation"},
     {"TRexSleep", "TRex"},
     {"TRexPatrol", "TRex"},
     {"WanwanBig", "Wanwan"},  // FIXME: this will make chain chomp captures always be the small

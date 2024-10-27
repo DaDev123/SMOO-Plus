@@ -1,16 +1,7 @@
 #include "server/sardines/SardineIcon.h"
-#include "al/string/StringTmp.h"
+
 #include "al/util.hpp"
-#include "logger.hpp"
-#include "main.hpp"
-#include "prim/seadSafeString.h"
-#include "puppets/PuppetInfo.h"
-#include "rs/util.hpp"
-#include "server/Client.hpp"
 #include "server/gamemode/GameModeManager.hpp"
-#include "server/gamemode/GameModeTimer.hpp"
-#include <cstdio>
-#include <cstring>
 
 SardineIcon::SardineIcon(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
     al::initLayoutActor(this, initInfo, "SardineIcon", 0);

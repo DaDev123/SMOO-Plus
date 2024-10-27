@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include "crc32.h"
-#include "basis/seadTypes.h"
+#include "sead/basis/seadTypes.h"
 
 namespace PlayerAnims {
 

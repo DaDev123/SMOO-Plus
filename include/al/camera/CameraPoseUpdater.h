@@ -1,6 +1,5 @@
 #pragma once
 
-#include "al/camera/CameraPoser.h"
 #include "al/camera/CameraTicket.h"
 
 namespace al

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "game/Interfaces/ByamlSave.h"
-#include "types.h"
 
 class PlayerHitPointData : public ByamlSave {
     public:

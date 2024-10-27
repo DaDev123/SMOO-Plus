@@ -1,15 +1,13 @@
 #include "server/freeze-tag/FreezeTagChaserSlot.h"
+
 #include "al/string/StringTmp.h"
 #include "al/util.hpp"
-#include "al/util/MathUtil.h"
-#include "main.hpp"
+
 #include "puppets/PuppetInfo.h"
-#include "rs/util.hpp"
+
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/freeze-tag/FreezeTagInfo.h"
-#include <cstdio>
-#include <cstring>
 
 FreezeTagChaserSlot::FreezeTagChaserSlot(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
     al::initLayoutActor(this, initInfo, "FreezeTagChaserSlot", 0);
@@ -65,10 +63,10 @@ void FreezeTagChaserSlot::exeWait() {
         al::startAction(this, "Wait", 0);
     }
 
-    mIsPlayer = mChaserIndex == 0 && !mInfo->mIsPlayerRunner;
+    mIsPlayer = mChaserIndex == 0 && mInfo->isPlayerChaser();
 
     // Show/hide icon if player doesn't exist in this slot
-    if (mInfo->mChaserPlayers.size() + !mInfo->mIsPlayerRunner <= mChaserIndex) {
+    if (mInfo->chasers() <= mChaserIndex) {
         if (mIsVisible) {
             hideSlot();
         }
@@ -83,11 +81,11 @@ void FreezeTagChaserSlot::exeWait() {
     // Update name info in this slot
     if (mIsPlayer) {
         setSlotName(Client::instance()->getClientName());
-        setSlotScore(mInfo->mPlayerTagScore.mScore);
+        setSlotScore(mInfo->getScore());
     } else {
-        PuppetInfo* other = mInfo->mChaserPlayers.at(mChaserIndex - !mInfo->mIsPlayerRunner);
+        PuppetInfo* other = mInfo->mChaserPlayers.at(mChaserIndex - mInfo->isPlayerChaser());
         setSlotName(other->puppetName);
-        setSlotScore(other->freezeTagScore);
+        setSlotScore(other->ftGetScore());
     }
 }
 

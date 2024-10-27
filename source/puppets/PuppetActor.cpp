@@ -1,24 +1,28 @@
+#include "actors/PuppetActor.h"
+
 #include <cmath>
 #include <cstddef>
-#include "al/model/PartsModel.h"
-#include "al/util/SensorUtil.h"
-#include "game/Player/PlayerCostumeFunction.h"
-#include "game/Player/PlayerCostumeInfo.h"
-#include "rs/util/SensorUtil.h"
-#include "server/Client.hpp"
-#include "al/LiveActor/LiveActor.h"
-#include "al/layout/BalloonMessage.h"
+
 #include "al/layout/LayoutInitInfo.h"
+#include "al/model/PartsModel.h"
 #include "al/string/StringTmp.h"
 #include "al/util.hpp"
-#include "al/util/LiveActorUtil.h"
+#include "al/util/SensorUtil.h"
+
 #include "algorithms/CaptureTypes.h"
+
+#include "game/Player/PlayerCostumeFunction.h"
+#include "game/Player/PlayerCostumeInfo.h"
+#include "game/Player/PlayerFunction.h"
+
 #include "logger.hpp"
-#include "actors/PuppetActor.h"
-#include "math/seadQuat.h"
-#include "math/seadVector.h"
+
+#include "rs/util/SensorUtil.h"
+
+#include "sead/math/seadQuat.h"
+
+#include "server/DeltaTime.hpp"
 #include "server/gamemode/GameModeManager.hpp"
-#include "server/gamemode/GameModeBase.hpp"
 
 static const char* subActorNames[] = {
     "顔", // Face
@@ -108,15 +112,15 @@ void PuppetActor::movement() {
     al::LiveActor::movement();
 
     if (mFreezeTagIceBlock) {
-        if (mInfo->isFreezeTagFreeze && mInfo->isConnected && mInfo->isInSameStage && !al::isAlive(mFreezeTagIceBlock)) {
-            mFreezeTagIceBlock->appear();
-        }
-
-        if (
-            (!mInfo->isFreezeTagFreeze || !mInfo->isConnected || !mInfo->isInSameStage)
-            && al::isAlive(mFreezeTagIceBlock)
-            && !al::isNerve(mFreezeTagIceBlock, &nrvFreezePlayerBlockDisappear)
+        bool isAlive = al::isAlive(mFreezeTagIceBlock);
+        if (   mInfo->ftIsFrozen()
+            && mInfo->isConnected
+            && mInfo->isInSameStage
         ) {
+            if (!isAlive) {
+                mFreezeTagIceBlock->appear();
+            }
+        } else if (isAlive && !al::isNerve(mFreezeTagIceBlock, &nrvFreezePlayerBlockDisappear)) {
             mFreezeTagIceBlock->end();
         }
 
@@ -251,6 +255,28 @@ void PuppetActor::makeActorDead() {
     }
 
     al::LiveActor::makeActorDead();
+}
+
+void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
+    if (!GameModeManager::hasMarioCollision()) {
+        return;
+    }
+
+    if (!al::sendMsgPush(target, source)) {
+        rs::sendMsgPushToPlayer(target, source);
+        rs::sendMsgPlayerDisregardTargetMarker(target, source);
+    }
+}
+
+bool PuppetActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* source, al::HitSensor* target) {
+    if (GameModeManager::hasMarioBounce()) {
+        if ((al::isMsgPlayerTrampleReflect(msg) || rs::isMsgPlayerAndCapObjHipDropReflectAll(msg)) && al::isSensorName(target, "Body")) {
+            rs::requestHitReactionToAttacker(msg, target, source);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 // this is more or less how nintendo does it with marios demo puppet

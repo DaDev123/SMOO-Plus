@@ -8,66 +8,41 @@
  */
 #pragma once
 
-#include "Keyboard.hpp"
-#include "al/actor/ActorInitInfo.h"
-#include "al/actor/ActorSceneInfo.h"
 #include "al/async/AsyncFunctorThread.h"
-#include "al/async/FunctorV0M.hpp"
-#include "al/LiveActor/LiveActor.h"
-#include "al/layout/LayoutInitInfo.h"
 #include "al/layout/SimpleLayoutAppearWaitEnd.h"
 #include "al/layout/WindowConfirmWait.h"
 #include "al/util.hpp"
-#include "al/layout/LayoutActor.h"
-#include "al/gamepad/util.h"
-#include "al/camera/CameraPoser.h"
-#include "al/camera/alCameraPoserFunction.h"
 
-#include "container/seadPtrArray.h"
 #include "game/Actors/Shine.h"
 #include "game/GameData/GameDataHolderAccessor.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/StageScene/StageScene.h"
-#include "game/Layouts/CoinCounter.h"
-#include "game/Player/PlayerFunction.h"
-#include "game/GameData/GameDataHolderWriter.h"
-#include "game/GameData/GameDataFunction.h"
 
-#include "heap/seadExpHeap.h"
-#include "server/hns/HideAndSeekIcon.h"
-#include "rs/util.hpp"
+#include "helpers.hpp"
 
-#include "sead/heap/seadDisposer.h"
-#include "sead/math/seadVector.h"
-#include "sead/math/seadMatrix.h"
-#include "sead/prim/seadSafeString.h"
-#include "sead/prim/seadSafeString.hpp"
-#include "sead/gfx/seadCamera.h"
-#include "sead/basis/seadNew.h"
-#include "sead/container/seadSafeArray.h"
-#include "sead/thread/seadMutex.h"
+#include "Keyboard.hpp"
 
 #include "nn/account.h"
 
-#include "server/gamemode/GameModeBase.hpp"
-#include "server/gamemode/GameModeConfigMenu.hpp"
-#include "server/gamemode/GameModeInfoBase.hpp"
-#include "server/gamemode/GameModeTimer.hpp"
-#include "types.h"
+#include "sead/container/seadPtrArray.h"
+#include "sead/container/seadSafeArray.h"
+#include "sead/heap/seadDisposer.h"
+#include "sead/heap/seadExpHeap.h"
+#include "sead/prim/seadSafeString.hpp"
 
-#include "logger.hpp"
 #include "server/SocketClient.hpp"
-#include "helpers.hpp"
-#include "puppets/HackModelHolder.hpp"
+
+#include "packets/CaptureInf.h"
+#include "packets/ChangeStagePacket.h"
+#include "packets/CostumeInf.h"
+#include "packets/GameInf.h"
+#include "packets/HackCapInf.h"
+#include "packets/PlayerConnect.h"
+#include "packets/PlayerDC.h"
+#include "packets/PlayerInfPacket.h"
+#include "packets/ShineCollect.h"
+
 #include "puppets/PuppetHolder.hpp"
-#include "syssocket/sockdefines.h"
-#include "debugMenu.hpp"
-#include "Keyboard.hpp"
-
-#include "puppets/PuppetInfo.h"
-
-#include <cstddef>
-#include <stdlib.h>
 
 #define MAXPUPINDEX 32
 
@@ -75,8 +50,6 @@ struct UIDIndexNode {
     nn::account::Uid uid;
     int puppetIndex;
 };
-
-class HideAndSeekIcon;
 
 class Client {
     SEAD_SINGLETON_DISPOSER(Client)

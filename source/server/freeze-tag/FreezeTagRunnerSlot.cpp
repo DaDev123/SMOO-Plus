@@ -1,15 +1,10 @@
 #include "server/freeze-tag/FreezeTagRunnerSlot.h"
-#include "al/string/StringTmp.h"
+
 #include "al/util.hpp"
-#include "al/util/MathUtil.h"
-#include "main.hpp"
 #include "puppets/PuppetInfo.h"
-#include "rs/util.hpp"
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/freeze-tag/FreezeTagInfo.h"
-#include <cstdio>
-#include <cstring>
 
 FreezeTagRunnerSlot::FreezeTagRunnerSlot(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
     al::initLayoutActor(this, initInfo, "FreezeTagRunnerSlot", 0);
@@ -65,10 +60,10 @@ void FreezeTagRunnerSlot::exeWait() {
         al::startAction(this, "Wait", 0);
     }
 
-    mIsPlayer = mRunnerIndex == 0 && mInfo->mIsPlayerRunner;
+    mIsPlayer = mRunnerIndex == 0 && mInfo->isPlayerRunner();
 
     // Show/hide icon if player doesn't exist in this slot
-    if (mInfo->mRunnerPlayers.size() + mInfo->mIsPlayerRunner <= mRunnerIndex) {
+    if (mInfo->runners() <= mRunnerIndex) {
         if (mIsVisible) {
             hideSlot();
         }
@@ -90,11 +85,11 @@ void FreezeTagRunnerSlot::exeWait() {
     // Update name info in this slot
     if (mIsPlayer) {
         setSlotName(Client::instance()->getClientName());
-        setSlotScore(mInfo->mPlayerTagScore.mScore);
+        setSlotScore(mInfo->getScore());
     } else {
-        PuppetInfo* other = mInfo->mRunnerPlayers.at(mRunnerIndex - mInfo->mIsPlayerRunner);
+        PuppetInfo* other = mInfo->mRunnerPlayers.at(mRunnerIndex - mInfo->isPlayerRunner());
         setSlotName(other->puppetName);
-        setSlotScore(other->freezeTagScore);
+        setSlotScore(other->ftGetScore());
     }
 }
 
@@ -122,15 +117,15 @@ void FreezeTagRunnerSlot::setFreezeAngle() {
     al::setPaneLocalRotate(this, "PicRunnerFreeze", { 0.f, 0.f, mFreezeIconSpin + (mRunnerIndex * 7.5f) });
 
     if (mIsPlayer) {
-        float targetSize = mInfo->mIsPlayerFreeze ? 1.f : 0.f;
+        float targetSize = mInfo->isPlayerFrozen() ? 1.f : 0.f;
         mInfo->mFreezeIconSize = al::lerpValue(mInfo->mFreezeIconSize, targetSize, 0.05f);
         al::setPaneLocalScale(this, "PicRunnerFreeze", { mInfo->mFreezeIconSize, mInfo->mFreezeIconSize });
-    } else if (mInfo->mRunnerPlayers.size() + mInfo->mIsPlayerRunner <= mRunnerIndex) {
+    } else if (mInfo->runners() <= mRunnerIndex) {
         return;
     } else {
-        PuppetInfo* other = mInfo->mRunnerPlayers.at(mRunnerIndex - mInfo->mIsPlayerRunner);
+        PuppetInfo* other = mInfo->mRunnerPlayers.at(mRunnerIndex - mInfo->isPlayerRunner());
 
-        float targetSize = other->isFreezeTagFreeze ? 1.f : 0.f;
+        float targetSize = other->ftIsFrozen() ? 1.f : 0.f;
         other->freezeIconSize = al::lerpValue(other->freezeIconSize, targetSize, 0.05f);
         al::setPaneLocalScale(this, "PicRunnerFreeze", { other->freezeIconSize, other->freezeIconSize });
     }

@@ -2,7 +2,7 @@
 
 #include <cstddef>
 #include "crc32.h"
-#include "basis/seadTypes.h"
+#include "sead/basis/seadTypes.h"
 
 namespace CaptureTypes {
 

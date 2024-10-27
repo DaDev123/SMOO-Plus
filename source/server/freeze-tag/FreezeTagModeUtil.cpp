@@ -1,36 +1,24 @@
 #include "server/freeze-tag/FreezeTagMode.hpp"
+
 #include "rs/util.hpp"
 
-bool FreezeTagMode::isPlayerLastSurvivor(PuppetInfo* player) {
-    if (!mInfo->mIsPlayerRunner) {
-        return false; // If player is on the chaser team, just return false instantly
-    }
-
-    if (mInfo->mRunnerPlayers.size() == 0) {
-        return false; // If there's no other player on the runner team, last survivor stuff is disabled
-    }
-
-    for (int i = 0; i < mInfo->mRunnerPlayers.size(); i++) {
-        PuppetInfo* other = mInfo->mRunnerPlayers.at(i);
-        if (other == player) {
-            continue; // If the puppet getting updated is the one currently being checked, skip this one
-        }
-
-        if (!other->isFreezeTagFreeze) {
-            return false; // Found another non-frozen player, not last survivor
-        }
-    }
-
-    return true; // Last survivor check passed!
-}
-
 bool FreezeTagMode::areAllOtherRunnersFrozen(PuppetInfo* player) {
-    if (mInfo->mRunnerPlayers.size() < 2 - mInfo->mIsPlayerRunner) {
-        return false; // Verify there is at least two runners (including yourself), otherwise disable this functionality
-        // RCL TODO: if there are only two players, then the round can never be won by chasers?
+    if (runners() < 1) {
+        return false; // Verify there is at least one runners (including yourself), otherwise disable this functionality
+        /**
+         * old legacy clients used a minimum size of 2 runners here.
+         *
+         * this lead to a bug that if there was only one runner a round could never be won by chasers.
+         * changing this breaks compatibility with legacy clients about when a round ends or not.
+         *
+         * therefore legacy clients will reveice an extra ROUNDCANCEL packet that only affects them.
+         * ending a round in this way will prevent legacy clients from getting score points for a WIPEOUT
+         * in this situation (only one runner), though that's better than it was before (round continues even
+         * though the only runner is frozen already).
+         */
     }
 
-    if (mInfo->mIsPlayerRunner && !mInfo->mIsPlayerFreeze) {
+    if (isPlayerRunner() && isPlayerUnfrozen()) {
         return false; // If you are a runner but aren't frozen then skip
     }
 
@@ -40,7 +28,7 @@ bool FreezeTagMode::areAllOtherRunnersFrozen(PuppetInfo* player) {
             continue; // If the puppet getting updated is the one currently being checked, skip this one
         }
 
-        if (!other->isFreezeTagFreeze) {
+        if (other->ftIsUnfrozen()) {
             return false; // Found a non-frozen player on the runner team, cancel
         }
     }

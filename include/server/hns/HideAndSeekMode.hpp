@@ -1,9 +1,7 @@
 #pragma once
 
-#include <math.h>
-#include <basis/seadTypes.h>
-
 #include "al/camera/CameraTicket.h"
+
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
 #include "server/hns/HideAndSeekIcon.h"
@@ -31,11 +29,10 @@ class HideAndSeekMode : public GameModeBase {
         void processPacket(Packet* packet) override;
         Packet* createPacket() override;
 
-        bool isPlayerIt() const { return mInfo->mIsPlayerIt; }
+        inline bool isPlayerSeeking() const { return mInfo->isPlayerSeeking(); }
+        inline bool isPlayerHiding()  const { return mInfo->isPlayerHiding();  }
 
         float getInvulnTime() const { return mInvulnTime; }
-
-        void setPlayerTagState(bool state) { mInfo->mIsPlayerIt = state; }
 
         void enableGravityMode() { mInfo->mIsUseGravity = true; }
         void disableGravityMode() { mInfo->mIsUseGravity = false; }
@@ -44,6 +41,11 @@ class HideAndSeekMode : public GameModeBase {
 
         bool hasCustomCamera() const override { return true; }
         void createCustomCameraTicket(al::CameraDirector* director) override;
+
+        bool hasMarioCollision() override { return HideAndSeekInfo::mHasMarioCollision; }
+        bool hasMarioBounce()    override { return HideAndSeekInfo::mHasMarioBounce;    }
+        bool hasCappyCollision() override { return HideAndSeekInfo::mHasCappyCollision; }
+        bool hasCappyBounce()    override { return HideAndSeekInfo::mHasCappyBounce;    }
 
     private:
         float             mInvulnTime = 0.0f;

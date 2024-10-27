@@ -3,8 +3,8 @@
 #include "al/camera/CameraTicket.h"
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
-#include "math/seadVector.h"
 #include "puppets/PuppetInfo.h"
+#include "sead/math/seadVector.h"
 #include "server/freeze-tag/FreezeTagInfo.h"
 #include "server/freeze-tag/FreezeTagPackets.hpp"
 #include "server/gamemode/GameModeBase.hpp"
@@ -44,15 +44,22 @@ class FreezeTagMode : public GameModeBase {
         void onHakoniwaSequenceFirstStep(HakoniwaSequence* sequence) override; // Called with HakoniwaSequence hook, wipe used in recovery event
 
         // implemented here:
-        bool ignoreComboBtn() const override           { return true;                          }
-        bool pauseTimeWhenPaused() const override      { return true;                          }
-        bool isUseNormalUI() const override            { return false;                         }
-        bool isScoreEventsEnabled() const              { return mIsScoreEventsValid;           }
-        bool isPlayerRunner() const                    { return mInfo->mIsPlayerRunner;        }
-        bool isPlayerFreeze() const                    { return mInfo->mIsPlayerFreeze;        }
-        bool isEndgameActive()                         { return mIsEndgameActive;              } // The endgame is the time during the WIPEOUT message is on screen
-        uint16_t getScore()                            { return mInfo->mPlayerTagScore.mScore; }
-        bool hasCustomCamera() const override          { return true;                          }
+        inline bool     ignoreComboBtn()       const override { return true;  }
+        inline bool     pauseTimeWhenPaused()  const override { return true;  }
+        inline bool     isUseNormalUI()        const override { return false; }
+        inline bool     hasCustomCamera()      const override { return true;  }
+        inline bool     isScoreEventsEnabled() const { return mIsScoreEventsValid;       }
+        inline bool     isHost()               const { return mInfo->isHost();           }
+        inline bool     isRound()              const { return mInfo->isRound();          }
+        inline bool     isPlayerRunner()       const { return mInfo->isPlayerRunner();   }
+        inline bool     isPlayerChaser()       const { return mInfo->isPlayerChaser();   }
+        inline bool     isPlayerFrozen()       const { return mInfo->isPlayerFrozen();   }
+        inline bool     isPlayerUnfrozen()     const { return mInfo->isPlayerUnfrozen(); }
+        inline bool     isWipeout()            const { return mIsEndgameActive;          }
+        inline uint16_t getScore()             const { return mInfo->getScore();         }
+        inline int      runners()              const { return mInfo->runners();          }
+        inline int      chasers()              const { return mInfo->chasers();          }
+        inline int      others()               const { return mInfo->others();           }
 
         // implemented in FreezeTagModeTrigger.cpp:
         void startRound(int roundMinutes);                              // Actives round on this specific client
@@ -70,9 +77,13 @@ class FreezeTagMode : public GameModeBase {
         void updateSpectateCam(PlayerActorBase* playerBase); // Updates the frozen spectator camera
 
         // implemented in FreezeTagModeUtil.cpp:
-        bool isPlayerLastSurvivor(PuppetInfo* player);     // Only meant to be called on getting a packet
         bool areAllOtherRunnersFrozen(PuppetInfo* player); // Only meant to be called on getting a packet, starts the endgame
         PlayerActorHakoniwa* getPlayerActorHakoniwa();     // Returns nullptr if the player is not a PlayerActorHakoniwa
+
+        bool hasMarioCollision() override { return FreezeTagInfo::mHasMarioCollision; }
+        bool hasMarioBounce()    override { return FreezeTagInfo::mHasMarioBounce;    }
+        bool hasCappyCollision() override { return FreezeTagInfo::mHasCappyCollision; }
+        bool hasCappyBounce()    override { return FreezeTagInfo::mHasCappyBounce;    }
 
     private:
         FreezeUpdateType         mNextUpdateType     = FreezeUpdateType::PLAYER;             // Set for the sendPacket funtion to know what packet type is sent
@@ -87,20 +98,23 @@ class FreezeTagMode : public GameModeBase {
         FreezePlayerBlock* mMainPlayerIceBlock = nullptr; // Visual block around player's when frozen
         FreezeHintArrow*   mHintArrow          = nullptr; // Arrow that points to nearest runner while being a chaser too far away from runners
 
-        // Recovery event info
+        // Recovery event info (when falling off)
         int            mRecoveryEventFrames = 0;
         const int      mRecoveryEventLength = 60; // Length of recovery event in frames
         sead::Vector3f mRecoverySafetyPoint = sead::Vector3f::zero;
 
-        // Endgame info
-        bool  mIsEndgameActive = false;
-        float mEndgameTimer    = -1.f;
+        // Endgame info (wipeout)
+        bool  mIsEndgameActive  = false;
+        bool  mCancelOnlyLegacy = false; // option to send a ROUNDCANCEL packet that only affects legacy clients
+        float mEndgameTimer     = -1.0f; // timer to track how long wipeout is shown
+        float mDisconnectTimer  =  0.0f; // timer to track how long to wait for a reconnect from disconnected players before cancelling the round  
 
         float mInvulnTime         = 0.0f;
         bool  mIsScoreEventsValid = false;
 
         // Spectate camera ticket and target information
         al::CameraTicket* mTicket            = nullptr;
+        int               mPrevSpectateCount =  0;
         int               mPrevSpectateIndex = -2;
         int               mSpectateIndex     = -1;
 };

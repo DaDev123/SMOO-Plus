@@ -1,11 +1,9 @@
 #include "server/freeze-tag/FreezeHintArrow.h"
-#include "al/util.hpp"
-#include "al/util/LiveActorUtil.h"
-#include "al/util/MathUtil.h"
-#include "al/util/NerveUtil.h"
+
 #include "al/util/VectorUtil.h"
-#include "math/seadQuat.h"
-#include "rs/util.hpp"
+
+#include "sead/math/seadQuat.h"
+
 #include "server/gamemode/GameMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/freeze-tag/FreezeTagInfo.h"
@@ -59,8 +57,8 @@ void FreezeHintArrow::exeWait() {
     }
 
     if (   !GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) // we're not in freeze-tag mode
-        || mInfo->mIsPlayerRunner                                             // or we're a runner
-        || !mInfo->mIsRound                                                   // or we're outside of a round
+        || mInfo->isPlayerRunner()                                            // or we're a runner
+        || !mInfo->isRound()                                                  // or we're outside of a round
         || !mTargetTrans                                                      // or there is no runner far enough away
         || mPlayer->getPlayerHackKeeper()->currentHackActor                   // or the target hides in a capture
     ) {
@@ -86,8 +84,8 @@ void FreezeHintArrow::exeWait() {
     mVisibilityCooldown = al::clamp(mVisibilityCooldown - 1, 0, 255); // Decrease visiblity cooldown, capped at zero
 
     if (mVisibilityCooldown == 0) {
-        mDistance = al::calcDistance(this, *mTargetTrans);
-        mIsVisible = mDistance > mMinDistance;
+        mDistanceSq = vecDistanceSq(al::getTrans(this), *mTargetTrans);
+        mIsVisible  = mMinDistanceSq < mDistanceSq;
 
         if (mIsVisible != mWasVisible) {
             mWasVisible = mIsVisible;

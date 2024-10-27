@@ -1,5 +1,5 @@
 #include "server/freeze-tag/FreezeTagMode.hpp"
-#include "server/freeze-tag/FreezeTagIcon.h"
+
 #include "cameras/CameraPoserActorSpectate.h"
 
 void FreezeTagMode::createCustomCameraTicket(al::CameraDirector* director) {
@@ -25,53 +25,62 @@ void FreezeTagMode::updateSpectateCam(PlayerActorBase* playerBase) {
 
         // Increase or decrease spectate index, followed by clamping it
         int indexDirection = 0;
-        if (!mIsEndgameActive && al::isPadTriggerRight(-1)) { indexDirection =  1; } // Move index right
-        if (!mIsEndgameActive && al::isPadTriggerLeft(-1))  { indexDirection = -1; } // Move index left
+        if (!isWipeout() && al::isPadTriggerRight(-1)) { indexDirection =  1; } // Move index right
+        if (!isWipeout() && al::isPadTriggerLeft(-1))  { indexDirection = -1; } // Move index left
 
-        // Force index towards ourself (-1) during endgame if we aren't already spectating ourselves
-        // Force index to decrease if our current index is higher than the current runner count
-        if ((mIsEndgameActive && mSpectateIndex != -1) || mInfo->mRunnerPlayers.size() <= mSpectateIndex) {
+        // Force index towards ourself (-1) during endgame (wipeout) if we aren't already spectating ourselves
+        if (isWipeout() && mSpectateIndex != -1) { indexDirection = -1; } // Move index left
+
+        s32 size = mInfo->mRunnerPlayers.size();
+
+        // Force index to decrease if our current index got out of bounds
+        if (size <= mSpectateIndex) {
+            mSpectateIndex = size;
             indexDirection = -1; // Move index left
         }
+
+        PuppetInfo* other = (
+            0 <= mSpectateIndex && mSpectateIndex < size
+            ? mInfo->mRunnerPlayers.at(mSpectateIndex)
+            : nullptr
+        );
 
         // Force index to decrease if our current target is not ourself and changes to another stage
-        if (indexDirection == 0 && mSpectateIndex != -1 && !mInfo->mRunnerPlayers.at(mSpectateIndex)->isInSameStage) {
+        if (indexDirection == 0 && other && (!other->isInSameStage || !other->isConnected)) {
             indexDirection = -1; // Move index left
-            // RCL TODO: what happens if they disconnect but aren't the last one in the list??
         }
 
-        // no direction, end here
-        if (indexDirection == 0) {
-            return;
+        if (indexDirection != 0) {
+            // Loop over indicies until we find a runner in the same stage as the player or the player itself (-1 => spectate our own player)
+            do {
+                mSpectateIndex += indexDirection;
+
+                // Circular loop the index around
+                if (mSpectateIndex < -1) {
+                    mSpectateIndex = size - 1;
+                } else if (size <= mSpectateIndex) {
+                    mSpectateIndex = -1;
+                }
+
+                other = (0 <= mSpectateIndex ? mInfo->mRunnerPlayers.at(mSpectateIndex) : nullptr);
+            } while (other && (!other->isInSameStage || !other->isConnected));
         }
 
-        // Loop over indicies until we find a runner in the same stage as the player or the player itself (-1 => spectate our own player)
-        do {
-            mSpectateIndex += indexDirection;
-
-            // Circular loop the index around
-            if (mSpectateIndex < -1) {
-                mSpectateIndex = mInfo->mRunnerPlayers.size() - 1;
-            } else if (mInfo->mRunnerPlayers.size() <= mSpectateIndex) {
-                mSpectateIndex = -1;
-            }
-        } while (mSpectateIndex != -1 && !mInfo->mRunnerPlayers.at(mSpectateIndex)->isInSameStage);
-
-        // If no index change is happening, end here
-        if (mPrevSpectateIndex == mSpectateIndex) {
+        // If no index and no size change is happening, end here (a size change could still be a player change at the same index)
+        if (mPrevSpectateIndex == mSpectateIndex && mPrevSpectateCount == size) {
             return;
         }
 
         // Apply index to target actor and HUD
-        if (mSpectateIndex == -1) {
-            spectatePoser->setTargetActor(al::getTransPtr(playerBase));
-            mModeLayout->setSpectateString("Spectate");
-        } else {
-            PuppetInfo* other = mInfo->mRunnerPlayers.at(mSpectateIndex);
+        if (other) {
             spectatePoser->setTargetActor(&other->playerPos);
             mModeLayout->setSpectateString(other->puppetName);
+        } else {
+            spectatePoser->setTargetActor(al::getTransPtr(playerBase));
+            mModeLayout->setSpectateString("Spectate");
         }
 
         mPrevSpectateIndex = mSpectateIndex;
+        mPrevSpectateCount = size;
     }
 }

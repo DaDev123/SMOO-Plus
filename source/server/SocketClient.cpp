@@ -1,19 +1,13 @@
 #include "server/SocketClient.hpp"
-#include <cstdlib>
-#include <cstring>
-#include <basis/seadNew.h>
 
-#include "SocketBase.hpp"
+#include <cstring>
 #include "al/async/FunctorV0M.hpp"
 #include "logger.hpp"
-#include "nn/result.h"
 #include "nn/socket.h"
-#include "packets/Packet.h"
-#include "packets/UdpPacket.h"
+#include "packets/GameModeInf.h"
+#include "sead/basis/seadNew.h"
 #include "server/Client.hpp"
-#include "server/hns/HideAndSeekPacket.hpp"
-#include "thread/seadMessageQueue.h"
-#include "types.h"
+#include "syssocket/sockdefines.h"
 
 SocketClient::SocketClient(const char* name, sead::Heap* heap, Client* client) : mHeap(heap), SocketBase(name) {
     this->client = client;
@@ -127,14 +121,8 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
         client->resendInitPackets();
     } else {
         // empty Gamemode
-        HideAndSeekPacket tagInf;
-        tagInf.mUserID = initPacket.mUserID;
-        tagInf.isIt = false;
-        tagInf.minutes = 0;
-        tagInf.seconds = 0;
-        tagInf.setGameMode(GameMode::LEGACY);
-        tagInf.setUpdateType(static_cast<HnSUpdateType>(HnSUpdateType::STATE | HnSUpdateType::TIME));
-        send(&tagInf);
+        DisabledGameModeInf* tagInf = new (mHeap) DisabledGameModeInf(initPacket.mUserID);
+        send(tagInf);
 
         // empty CaptureInf
         CaptureInf capInf;
@@ -436,6 +424,8 @@ bool SocketClient::tryReconnect() {
         if (init(sock_ip, port).isSuccess()) { // call init again
             Logger::log("Reconnect Successful.\n");
             return true;
+        } else {
+            nn::os::SleepThread(nn::TimeSpan::FromSeconds(1));
         }
     }
 

@@ -1,15 +1,13 @@
 #include "cameras/CameraPoserActorSpectate.h"
+
 #include "al/alCollisionUtil.h"
 #include "al/camera/CameraPoser.h"
 #include "al/camera/alCameraPoserFunction.h"
 #include "al/util.hpp"
-#include "al/util/ControllerUtil.h"
-#include "al/util/LiveActorUtil.h"
-#include "al/util/MathUtil.h"
 #include "al/util/VectorUtil.h"
-#include "logger.hpp"
-#include "math/seadMathCalcCommon.h"
+
 #include "sead/gfx/seadCamera.h"
+#include "sead/math/seadMathCalcCommon.h"
 #include "sead/math/seadVector.h"
 
 namespace cc {
@@ -123,7 +121,7 @@ namespace cc {
         );
 
         mAngle += mInterpRStick.y * -2.0f;
-        mAngle = al::clamp(mAngle, -89.0f, 89.0f);
+        mAngle  = al::clamp(mAngle, -89.0f, 89.0f);
 
         *rotatedVec = targetDir;
 

@@ -1,10 +1,7 @@
 #pragma once
 
-#include <string>
-#include <cstring>
 #include "types.h"
-#include "nn.h"
-#include "sead/basis/seadNew.h"
+#include "nn/result.h"
 
 class SocketBase {
 

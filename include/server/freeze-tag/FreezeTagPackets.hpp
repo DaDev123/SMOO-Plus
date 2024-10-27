@@ -1,8 +1,6 @@
 #pragma once
 
-#include "types.h"
 #include "packets/GameModeInf.h"
-#include "server/gamemode/GameMode.hpp"
 
 struct FreezeUpdateTypes {
     enum Type : u8 { // Type of packets to send between players
@@ -24,11 +22,22 @@ struct PACKED FreezeTagPacket : GameModeInf<FreezeUpdateType> {
     uint16_t score    = 0;
 };
 
-struct PACKED FreezeTagRoundPacket : GameModeInf<FreezeUpdateType> {
-    FreezeTagRoundPacket() : GameModeInf() {
+struct PACKED FreezeTagRoundStartPacket : GameModeInf<FreezeUpdateType> {
+    FreezeTagRoundStartPacket() : GameModeInf() {
         setGameMode(GameMode::FREEZETAG);
-        mPacketSize = sizeof(FreezeTagRoundPacket) - sizeof(Packet);
+        setUpdateType(FreezeUpdateType::ROUNDSTART);
+        mPacketSize = sizeof(FreezeTagRoundStartPacket) - sizeof(Packet);
     };
     uint8_t    roundTime  = 10;
     const char padding[3] = "\0\0"; // to not break compatibility with old clients/servers that assume a size of 4 bytes minimum for GameModeInf packets
+};
+
+struct PACKED FreezeTagRoundCancelPacket : GameModeInf<FreezeUpdateType> {
+    FreezeTagRoundCancelPacket() : GameModeInf() {
+        setGameMode(GameMode::FREEZETAG);
+        setUpdateType(FreezeUpdateType::ROUNDCANCEL);
+        mPacketSize = sizeof(FreezeTagRoundCancelPacket) - sizeof(Packet);
+    };
+    const char padding[4]    = "\0\0\0"; // to not break compatibility with old clients/servers that assume a size of 4 bytes minimum for GameModeInf packets
+    bool       onlyForLegacy = false;    // extra added byte only used by newer clients to ignore this packet conditionally
 };

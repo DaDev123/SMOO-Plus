@@ -4,8 +4,6 @@
 #include "algorithms/PlayerAnims.h"
 #include "packets/Packet.h"
 
-#include "al/LiveActor/LiveActor.h"
-
 #include "nn/account.h"
 
 #include "sead/math/seadVector.h"
@@ -54,15 +52,35 @@ struct PuppetInfo {
     bool           isCapThrow           = false;
     bool           isHoldThrow          = false;
 
-    // Hide and Seek Gamemode Info
+    // Hide and Seek & Sardines Gamemode Info
     bool isIt    = false;
     u8   seconds = 0;
     u16  minutes = 0;
 
+    inline bool hnsIsSeeking() const { return  isIt; }
+    inline bool hnsIsHiding()  const { return !isIt; }
+    inline bool snhIsPack()    const { return  isIt; }
+    inline bool snhIsAlone()   const { return !isIt; }
+
     // Freeze Tag Gamemode Info
     uint16_t freezeTagScore       = 0;
+    bool     isFreezeInRound      = false;
     bool     isFreezeTagRunner    = true;
     bool     isFreezeTagFreeze    = false;
     bool     isFreezeTagFallenOff = false; // When runner falls off and is automatically frozen, this flag is set
     float    freezeIconSize       = 0.f;
+
+    // Coin Runner Gamemode Info
+    uint16_t coinRunnerScore       = 0;
+    bool     isCoinRunnerRunner    = true;
+    bool     isCoinRunnerFreeze    = false;
+    bool     isCoinRunnerFallenOff = false; // When runner falls off and is automatically frozen, this flag is set
+    float    coinIconSize       = 0.f;
+
+    inline uint16_t ftGetScore()     const { return  freezeTagScore;       }
+    inline bool     ftIsRunner()     const { return  isFreezeTagRunner;    }
+    inline bool     ftIsChaser()     const { return !isFreezeTagRunner;    }
+    inline bool     ftIsFrozen()     const { return  isFreezeTagFreeze;    }
+    inline bool     ftIsUnfrozen()   const { return !isFreezeTagFreeze;    }
+    inline bool     ftHasFallenOff() const { return  isFreezeTagFallenOff; }
 };

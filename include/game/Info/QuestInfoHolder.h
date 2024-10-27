@@ -7,7 +7,7 @@
 #include "al/scene/ISceneObj.h"
 #include "al/scene/SceneObjHolder.h"
 #include "al/string/StringTmp.h"
-#include "container/seadPtrArray.h"
+#include "sead/container/seadPtrArray.h"
 
 class QuestInfoHolder : public al::ISceneObj, public al::HioNode {
 public:

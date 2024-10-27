@@ -1,11 +1,14 @@
 #include "speedboot/SpeedbootLoad.hpp"
+
 #include "al/util.hpp"
 #include "al/util/LayoutUtil.h"
 #include "al/util/LiveActorUtil.h"
 #include "al/util/MathUtil.h"
-#include "gfx/seadColor.h"
-#include "math/seadMathCalcCommon.h"
-#include "prim/seadSafeString.h"
+
+#include "sead/gfx/seadColor.h"
+#include "sead/math/seadMathCalcCommon.h"
+#include "sead/prim/seadSafeString.h"
+
 #include "server/DeltaTime.hpp"
 
 namespace speedboot {

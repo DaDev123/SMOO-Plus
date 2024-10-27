@@ -1,10 +1,22 @@
 #include "server/Client.hpp"
+
+#include <stdlib.h>
+
+#include "al/async/FunctorV0M.hpp"
 #include "al/layout/SimpleLayoutAppearWaitEnd.h"
 #include "al/util/LiveActorUtil.h"
+
+#include "game/GameData/GameDataFunction.h"
 #include "game/SaveData/SaveDataAccessFunction.h"
-#include "heap/seadHeapMgr.h"
+
 #include "logger.hpp"
-#include "packets/Packet.h"
+
+#include "packets/HolePunchPacket.h"
+#include "packets/InitPacket.h"
+#include "packets/UdpPacket.h"
+
+#include "sead/heap/seadHeapMgr.h"
+
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 
@@ -235,7 +247,7 @@ bool Client::openKeyboardPort() {
     while (true) {
         if (sInstance->mKeyboard->isThreadDone()) {
             if (!sInstance->mKeyboard->isKeyboardCancelled()) {
-                sInstance->mServerPort = ::atoi(sInstance->mKeyboard->getResult());
+                sInstance->mServerPort = std::atoi(sInstance->mKeyboard->getResult());
             }
             break;
         }
@@ -709,8 +721,16 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
     curInfo->playerPos = packet->playerPos;
 
     // check if rotation is larger than zero and less than or equal to 1
-    if (abs(packet->playerRot.x) > 0.f || abs(packet->playerRot.y) > 0.f || abs(packet->playerRot.z) > 0.f || abs(packet->playerRot.w) > 0.f) {
-        if (abs(packet->playerRot.x) <= 1.f || abs(packet->playerRot.y) <= 1.f || abs(packet->playerRot.z) <= 1.f || abs(packet->playerRot.w) <= 1.f) {
+    if (   std::abs(packet->playerRot.x) > 0.f
+        || std::abs(packet->playerRot.y) > 0.f
+        || std::abs(packet->playerRot.z) > 0.f
+        || std::abs(packet->playerRot.w) > 0.f
+    ) {
+        if (   std::abs(packet->playerRot.x) <= 1.f
+            || std::abs(packet->playerRot.y) <= 1.f
+            || std::abs(packet->playerRot.z) <= 1.f
+            || std::abs(packet->playerRot.w) <= 1.f
+        ) {
             curInfo->playerRot = packet->playerRot;
         }
     }

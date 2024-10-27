@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Packet.h"
-#include "sead/basis/seadTypes.h"
 #include "server/Client.hpp"
 
 template <typename UpdateType>
@@ -77,7 +76,7 @@ struct PACKED GameModeInf : Packet {
 struct PACKED DisabledGameModeInf : GameModeInf<u8> {
     DisabledGameModeInf(nn::account::Uid userID) : GameModeInf() {
         setGameMode(GameMode::NONE);
-        setUpdateType(0);
+        setUpdateType(3); // so that legacy Hide&Seek and Sardines clients will parse isIt = false
         mUserID     = userID;
         mPacketSize = sizeof(DisabledGameModeInf) - sizeof(Packet);
     };

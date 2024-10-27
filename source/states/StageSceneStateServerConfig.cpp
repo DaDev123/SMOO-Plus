@@ -1,18 +1,25 @@
 #include "game/StageScene/StageSceneStateServerConfig.hpp"
+
 #include <cstdlib>
 #include <cstring>
 #include <math.h>
+
 #include "al/string/StringTmp.h"
 #include "al/util.hpp"
-#include "basis/seadNew.h"
+
 #include "game/SaveData/SaveDataAccessFunction.h"
-#include "server/Client.hpp"
-#include "container/seadPtrArray.h"
-#include "container/seadSafeArray.h"
+
 #include "logger.hpp"
-#include "prim/seadSafeString.h"
-#include "prim/seadStringUtil.h"
+
 #include "rs/util/InputUtil.h"
+
+#include "sead/basis/seadNew.h"
+#include "sead/container/seadPtrArray.h"
+#include "sead/container/seadSafeArray.h"
+#include "sead/prim/seadSafeString.h"
+#include "sead/prim/seadStringUtil.h"
+
+#include "server/Client.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
@@ -44,7 +51,7 @@ StageSceneStateServerConfig::StageSceneStateServerConfig(
 
     mMainMenuOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, mMainMenuOptionsCount>();
     mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODECONFIG].copy(u"Gamemode Config");
-    mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODESWITCH].copy(u"Change Gamemode (needs reload)");
+    mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODESWITCH].copy(u"Change Gamemode               "); // TBD
     mMainMenuOptions->mBuffer[ServerConfigOption::SETIP].copy(u"Change Server (needs restart)");
     mMainMenuOptions->mBuffer[ServerConfigOption::SETPORT].copy(u"Change Port (needs restart)");
     mMainMenuOptions->mBuffer[ServerConfigOption::HIDESERVER].copy(u"Hide Server in Debug (OFF)"); // TBD
@@ -365,6 +372,12 @@ const sead::WFixedSafeString<0x200>* StageSceneStateServerConfig::getMainMenuOpt
     strcpy(gameModeConfig, gameModeName);
     strcat(gameModeConfig, " Config");
     mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODECONFIG].convertFromMultiByteString(gameModeConfig, size);
+
+    mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODESWITCH].copy(
+        GameModeManager::instance()->getInfo<GameModeInfoBase>()
+        ? u"Change Gamemode (needs reload)"
+        : u"Change Gamemode               "
+    );
 
     // "Hide Server in Debug" option
     mMainMenuOptions->mBuffer[ServerConfigOption::HIDESERVER].copy(

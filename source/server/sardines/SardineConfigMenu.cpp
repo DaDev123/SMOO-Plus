@@ -1,72 +1,101 @@
 #include "server/sardines/SardineConfigMenu.hpp"
-#include "logger.hpp"
-#include "server/Client.hpp"
-#include "server/gamemode/GameModeManager.hpp"
-#include "server/sardines/SardineInfo.hpp"
-#include <cmath>
 
 SardineConfigMenu::SardineConfigMenu() : GameModeConfigMenu() {
     mItems = new sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>();
-    mItems->mBuffer[0].copy(u"Sardine Gravity (OFF)"); // TBD
-    mItems->mBuffer[1].copy(u"Sardine Tether (OFF)");  // TBD
-    mItems->mBuffer[2].copy(u"Tether Snapping (OFF)"); // TBD
+    mItems->mBuffer[0].copy(u"Sardine Gravity (OFF)");
+    mItems->mBuffer[1].copy(u"Sardine Tether (OFF) ");
+    mItems->mBuffer[2].copy(u"Tether Snapping (OFF)");
+    mItems->mBuffer[3].copy(u"Mario Collision (ON) ");
+    mItems->mBuffer[4].copy(u"Mario Bounce (ON)    ");
+    mItems->mBuffer[5].copy(u"Cappy Collision (OFF)");
+    mItems->mBuffer[6].copy(u"Cappy Bounce (OFF)   ");
 }
 
-void SardineConfigMenu::initMenu(const al::LayoutInitInfo& initInfo) {}
-
 const sead::WFixedSafeString<0x200>* SardineConfigMenu::getStringData() {
-    SardineInfo* sardine = GameModeManager::instance()->getInfo<SardineInfo>();
-    bool isMode = sardine != nullptr && GameModeManager::instance()->isMode(GameMode::SARDINE);
-
-    mItems->mBuffer[0].copy(
-        isMode && sardine->mIsUseGravity
+    // Gravity
+    const char16_t* gravity = (
+        SardineInfo::mIsUseGravity
         ? u"Sardine Gravity (ON) "
         : u"Sardine Gravity (OFF)"
     );
-    mItems->mBuffer[1].copy(
-        isMode && sardine->mIsTether
-        ? u"Sardine Tether (ON) "
-        : u"Sardine Tether (OFF)"
+
+    // Tether
+    const char16_t* tether = (
+        SardineInfo::mIsTether
+        ? u"Sardine Tether (ON)  "
+        : u"Sardine Tether (OFF) "
     );
-    mItems->mBuffer[2].copy(
-        isMode && sardine->mIsTether && sardine->mIsTetherSnap
+    const char16_t* tetherSnapping = (
+        SardineInfo::mIsTether && SardineInfo::mIsTetherSnap
         ? u"Tether Snapping (ON) "
         : u"Tether Snapping (OFF)"
     );
+
+    // Collision Toggles
+    const char16_t* marioCollision = (
+        SardineInfo::mHasMarioCollision
+        ? u"Mario Collision (ON) "
+        : u"Mario Collision (OFF)"
+    );
+    const char16_t* marioBounce = (
+        SardineInfo::mHasMarioBounce
+        ? u"Mario Bounce (ON)    "
+        : u"Mario Bounce (OFF)   "
+    );
+    const char16_t* cappyCollision = (
+        SardineInfo::mHasCappyCollision
+        ? u"Cappy Collision (ON) "
+        : u"Cappy Collision (OFF)"
+    );
+    const char16_t* cappyBounce = (
+        SardineInfo::mHasCappyBounce
+        ? u"Cappy Bounce (ON)    "
+        : u"Cappy Bounce (OFF)   "
+    );
+
+    mItems->mBuffer[0].copy(gravity);
+    mItems->mBuffer[1].copy(tether);
+    mItems->mBuffer[2].copy(SardineInfo::mIsTether ? tetherSnapping : marioCollision);
+    mItems->mBuffer[3].copy(SardineInfo::mIsTether ? marioCollision : marioBounce);
+    mItems->mBuffer[4].copy(SardineInfo::mIsTether ? marioBounce    : cappyCollision);
+    mItems->mBuffer[5].copy(SardineInfo::mIsTether ? cappyCollision : cappyBounce);
+    mItems->mBuffer[6].copy(cappyBounce);
 
     return mItems->mBuffer;
 }
 
 GameModeConfigMenu::UpdateAction SardineConfigMenu::updateMenu(int selectIndex) {
-    SardineInfo* sardine = GameModeManager::instance()->getInfo<SardineInfo>();
-    if (!sardine) {
-        Logger::log("Unable to Load Mode info!\n");
-        return UpdateAction::NOOP;
-    }
-
-    bool isMode = GameModeManager::instance()->isMode(GameMode::SARDINE);
-    if (!isMode) {
-        return UpdateAction::NOOP;
-    }
-
-    switch (selectIndex) {
+    int adjustedIndex = selectIndex + (!SardineInfo::mIsTether && selectIndex >= 2);
+    switch (adjustedIndex) {
         case 0: {
-            Logger::log("Setting Gravity Mode.\n");
-            sardine->mIsUseGravity = !sardine->mIsUseGravity;
+            SardineInfo::mIsUseGravity = !SardineInfo::mIsUseGravity;
             return UpdateAction::REFRESH;
         }
         case 1: {
-            Logger::log("Setting Sardine Tether.\n");
-            sardine->mIsTether = !sardine->mIsTether;
+            SardineInfo::mIsTether = !SardineInfo::mIsTether;
             return UpdateAction::REFRESH;
         }
         case 2: {
-            Logger::log("Setting Sardine Tether Snap.\n");
-            sardine->mIsTetherSnap = sardine->mIsTether && !sardine->mIsTetherSnap;
+            SardineInfo::mIsTetherSnap = SardineInfo::mIsTether && !SardineInfo::mIsTetherSnap;
+            return UpdateAction::REFRESH;
+        }
+        case 3: {
+            SardineInfo::mHasMarioCollision = !SardineInfo::mHasMarioCollision;
+            return UpdateAction::REFRESH;
+        }
+        case 4: {
+            SardineInfo::mHasMarioBounce = !SardineInfo::mHasMarioBounce;
+            return UpdateAction::REFRESH;
+        }
+        case 5: {
+            SardineInfo::mHasCappyCollision = !SardineInfo::mHasCappyCollision;
+            return UpdateAction::REFRESH;
+        }
+        case 6: {
+            SardineInfo::mHasCappyBounce = !SardineInfo::mHasCappyBounce;
             return UpdateAction::REFRESH;
         }
         default: {
-            Logger::log("Failed to interpret Index!\n");
             return UpdateAction::NOOP;
         }
     }

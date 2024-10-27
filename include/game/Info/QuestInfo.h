@@ -3,8 +3,8 @@
 #include "al/actor/ActorInitInfo.h"
 #include "al/actor/Placement.h"
 #include "al/scene/SceneObjHolder.h"
-#include "math/seadVector.h"
-#include "prim/seadSafeString.h"
+#include "sead/math/seadVector.h"
+#include "sead/prim/seadSafeString.h"
 
 class QuestInfo : public al::IUseSceneObjHolder {
 public:

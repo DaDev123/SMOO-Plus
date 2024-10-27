@@ -1,9 +1,7 @@
 #pragma once
 
-#include "al/LiveActor/LiveActor.h"
 #include "al/sensor/SensorMsg.h"
 #include "al/util/NerveUtil.h"
-#include "rs/util/SensorUtil.h"
 
 class FreezePlayerBlock : public al::LiveActor {
     public:

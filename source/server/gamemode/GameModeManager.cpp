@@ -1,16 +1,20 @@
 #include "server/gamemode/GameModeManager.hpp"
-#include <cstring>
-#include <heap/seadExpHeap.h>
-#include <basis/seadNew.h>
-#include <heap/seadHeapMgr.h>
+
 #include "al/util.hpp"
+
 #include "logger.hpp"
+
 #include "packets/GameModeInf.h"
+
+#include "sead/heap/seadExpHeap.h"
+#include "sead/heap/seadHeapMgr.h"
+
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/modifiers/ModeModifierBase.hpp"
 #include "server/gamemode/modifiers/ModifierFactory.hpp"
+
 #include "types.h"
 
 SEAD_SINGLETON_DISPOSER_IMPL(GameModeManager)
@@ -25,47 +29,6 @@ GameModeManager::GameModeManager() {
         false
     );
     setMode(GameMode::HIDEANDSEEK); // set default gamemode
-}
-
-bool GameModeManager::tryReceivePuppetMsg(const al::SensorMsg* msg, al::HitSensor* source, al::HitSensor* target) {
-    return (
-           instance()->mCurModeBase
-        && instance()->isActive()
-        && instance()->mCurModeBase->mIsUsePuppetSensor
-        ?  instance()->mCurModeBase->receiveMsg(msg, source, target)
-        :  false
-    );
-}
-
-bool GameModeManager::tryReceiveCapMsg(const al::SensorMsg* msg, al::HitSensor* source, al::HitSensor* target) {
-    return (
-           instance()->mCurModeBase
-        && instance()->isActive()
-        && instance()->mCurModeBase->mIsUseCapSensor
-        ?  instance()->mCurModeBase->receiveMsg(msg, source, target)
-        :  false
-    );
-}
-
-// returns false if default attack behavior should be used instead
-bool GameModeManager::tryAttackPuppetSensor(al::HitSensor* source, al::HitSensor* target) {
-    return (
-           instance()->mCurModeBase
-        && instance()->isActive()
-        && instance()->mCurModeBase->mIsUsePuppetSensor
-        ?  instance()->mCurModeBase->attackSensor(source, target)
-        :  false
-    );
-}
-
-bool GameModeManager::tryAttackCapSensor(al::HitSensor* source, al::HitSensor* target) {
-    return (
-           instance()->mCurModeBase
-        && instance()->isActive()
-        && instance()->mCurModeBase->mIsUseCapSensor
-        ?  instance()->mCurModeBase->attackSensor(source, target)
-        :  false
-    );
 }
 
 void GameModeManager::processModePacket(Packet* _packet) {

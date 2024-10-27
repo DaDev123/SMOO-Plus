@@ -1,24 +1,18 @@
 #pragma once
 
+#include "al/actor/ActorInitInfo.h"
+#include "al/audio/AudioKeeper.h"
 #include "al/LiveActor/LiveActor.h"
-#include "al/async/FunctorV0M.hpp"
-#include "al/async/FunctorBase.h"
-#include "al/util.hpp"
-#include "al/string/StringTmp.h"
-#include "al/layout/BalloonMessage.h"
+#include "al/sensor/HitSensor.h"
+#include "al/sensor/SensorMsg.h"
 
-#include "game/Player/PlayerFunction.h"
-#include "game/Player/PlayerJointControlPartsDynamics.h"
-#include "game/Player/PlayerConst.h"
 #include "game/Player/PlayerModelHolder.h"
 
 #include "actors/PuppetCapActor.h"
 #include "actors/PuppetHackActor.h"
 #include "layouts/NameTag.h"
 #include "sead/math/seadVector.h"
-#include "server/DeltaTime.hpp"
 
-#include "logger.hpp"
 #include "puppets/PuppetInfo.h"
 #include "puppets/HackModelHolder.hpp"
 #include "helpers.hpp"
@@ -36,6 +30,9 @@ class PuppetActor : public al::LiveActor {
         virtual void makeActorAlive(void) override;
         virtual void makeActorDead(void) override;
         virtual void calcAnim(void) override;
+
+        virtual void attackSensor(al::HitSensor*, al::HitSensor*) override;
+        virtual bool receiveMsg(const al::SensorMsg*, al::HitSensor*, al::HitSensor*) override;
 
         virtual const char* getName() const override {
             if (mInfo)

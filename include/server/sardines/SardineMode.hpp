@@ -3,8 +3,6 @@
 #include "al/camera/CameraTicket.h"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/sardines/SardineIcon.h"
-#include "server/sardines/SardineInfo.hpp"
-#include <math.h>
 
 class SardineMode : public GameModeBase {
     public:
@@ -28,17 +26,21 @@ class SardineMode : public GameModeBase {
         void processPacket(Packet* packet) override;
         Packet* createPacket() override;
 
-        bool isPlayerIt() const { return mInfo->mIsIt; };
+        inline bool isPlayerAlone() const { return mInfo->isPlayerAlone(); }
+        inline bool isPlayerPack()  const { return mInfo->isPlayerPack();  }
 
-        void setPlayerTagState(bool state) { mInfo->mIsIt = state; }
-
-        void enableGravityMode() { mInfo->mIsUseGravity = true; }
+        void enableGravityMode()  { mInfo->mIsUseGravity = true;  }
         void disableGravityMode() { mInfo->mIsUseGravity = false; }
-        bool isUseGravity() const { return mInfo->mIsUseGravity; }
+        bool isUseGravity() const { return mInfo->mIsUseGravity;  }
         void onBorderPullBackFirstStep(al::LiveActor* actor) override;
 
         bool hasCustomCamera() const override { return true; }
         void createCustomCameraTicket(al::CameraDirector* director) override;
+
+        bool hasMarioCollision() override { return SardineInfo::mHasMarioCollision; }
+        bool hasMarioBounce()    override { return SardineInfo::mHasMarioBounce;    }
+        bool hasCappyCollision() override { return SardineInfo::mHasCappyCollision; }
+        bool hasCappyBounce()    override { return SardineInfo::mHasCappyBounce;    }
 
     private:
         GameModeTimer*    mModeTimer  = nullptr;
@@ -46,9 +48,11 @@ class SardineMode : public GameModeBase {
         SardineInfo*      mInfo       = nullptr;
         al::CameraTicket* mTicket     = nullptr;
 
-        float pullDistanceMax = 2250.f;
-        float pullDistanceMin = 1000.f;
-        float pullPowerRate   = 75.f;
+        float pullDistanceMax   = 2250.f;
+        float pullDistanceMin   = 1000.f;
+        float pullDistanceMaxSq = 5062500.f;
+        float pullDistanceMinSq = 1000000.f;
+        float pullPowerRate     = 75.f;
 
         void updateTagState(bool isIt);
 };

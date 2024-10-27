@@ -1,7 +1,7 @@
 #pragma once
 
+#include "nn/result.h"
 #include "SocketBase.hpp"
-#include "types.h"
 
 class Logger : public SocketBase {
     public:
@@ -9,16 +9,16 @@ class Logger : public SocketBase {
             this->init(ip, port);
         };
         nn::Result init(const char* ip, u16 port) override;
-        
+
         static void createInstance();
-        static void setLogName(const char *name) { if(sInstance) sInstance->setName(name); }
+        static void setLogName(const char* name) { if (sInstance) sInstance->setName(name); }
         static void log(const char* fmt, ...);
         static void log(const char* fmt, va_list args);
 
-        static void enableName() { if(sInstance) sInstance->isDisableName = false; }
-        static void disableName() { if(sInstance) sInstance->isDisableName = true; }
-        
-        int read(char *out);
+        static void enableName()  { if(sInstance) sInstance->isDisableName = false; }
+        static void disableName() { if(sInstance) sInstance->isDisableName = true;  }
+
+        int read(char* out);
         bool pingSocket();
 
     private:

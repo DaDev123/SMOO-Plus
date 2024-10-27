@@ -1,28 +1,35 @@
 #include <sys/types.h>
+
+#include "al/byaml/ByamlIter.h"
+#include "al/byaml/writer/ByamlWriter.h"
 #include "al/execute/ExecuteDirector.h"
 #include "al/execute/ExecuteOrder.h"
 #include "al/execute/ExecuteTable.h"
 #include "al/execute/ExecuteTableHolderDraw.h"
 #include "al/execute/ExecuteTableHolderUpdate.h"
 #include "al/scene/Scene.h"
+#include "al/util.hpp"
 #include "al/util/GraphicsUtil.h"
 #include "al/util/KitUtil.h"
-#include "basis/seadNew.h"
-#include "logger.hpp"
-#include "rs/util.hpp"
-#include "server/Client.hpp"
-#include "al/byaml/ByamlIter.h"
-#include "al/util.hpp"
+
 #include "game/Actors/WorldEndBorderKeeper.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/StageScene/StageSceneStateOption.h"
 #include "game/StageScene/StageSceneStatePauseMenu.h"
 #include "game/StageScene/StageSceneStateServerConfig.hpp"
+
+#include "logger.hpp"
+
 #include "main.hpp"
-#include "al/byaml/writer/ByamlWriter.h"
-#include "math/seadVector.h"
+
+#include "rs/util.hpp"
 #include "rs/util/InputUtil.h"
+
+#include "sead/basis/seadNew.h"
+#include "sead/math/seadVector.h"
 #include "sead/prim/seadSafeString.h"
+
+#include "server/Client.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 

@@ -127,12 +127,6 @@ B59E28 B seadPrintHook  // sead::system::print
 // 891394 BL drawInitHook
 // 91328 BL updateInitHook
 
-// Unlocks costume doors
-262850 MOV W0, #0 // Sand, DeepWoods, Snow, Seaside, Luncheon, Bowser, Mushroom
-2609B4 MOV W0, #0 // Lake
-25FF74 MOV X0, #1 // Metro (open w/ doors)
-25FFAC MOV X0, #0 // Metro (open w/o doors) (not needed?)
-
 // Freeze tag hooks
 4272F0 BL freezeDeathArea            // Replaces functionality of death areas in freeze tag
 538A94 B  freezePlayerHitPointDamage // Reimplements the damage function, disabling it's functionality in Freeze Tag
@@ -143,4 +137,3 @@ B59E28 B seadPrintHook  // sead::system::print
 50EF28 BL speedboot::hakoniwaSetNerveSetup
 50EB88 ORR w2, wzr, #0x1f // nerve state count
 50EB64 BL speedboot::prepareLayoutInitInfo
-

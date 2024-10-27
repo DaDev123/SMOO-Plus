@@ -4,8 +4,6 @@
 #include "al/layout/LayoutInitInfo.h"
 #include "al/util/NerveUtil.h"
 
-#include "logger.hpp"
-#include "server/gamemode/GameModeTimer.hpp"
 #include "server/inf/InfectionInfo.hpp"
 #include "layouts/LayoutPlayerList.h"
 

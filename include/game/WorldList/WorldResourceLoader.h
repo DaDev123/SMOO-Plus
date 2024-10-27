@@ -3,7 +3,7 @@
 #include "al/async/AsyncFunctorThread.h"
 #include "al/hio/HioNode.h"
 #include "game/GameData/GameDataHolder.h"
-#include "heap/seadHeap.h"
+#include "sead/heap/seadHeap.h"
 
 class WorldResourceLoader : public al::HioNode {
     public:

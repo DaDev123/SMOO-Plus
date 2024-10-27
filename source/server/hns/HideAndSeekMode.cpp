@@ -1,28 +1,25 @@
 #include "server/hns/HideAndSeekMode.hpp"
-#include <cmath>
-#include "al/async/FunctorV0M.hpp"
+
 #include "al/util.hpp"
-#include "al/util/ControllerUtil.h"
-#include "al/util/LiveActorUtil.h"
+
+#include "game/GameData/GameDataFunction.h"
 #include "game/GameData/GameDataHolderAccessor.h"
-#include "game/Layouts/CoinCounter.h"
-#include "game/Layouts/MapMini.h"
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
-#include "heap/seadHeapMgr.h"
+#include "game/Player/PlayerFunction.h"
+
 #include "logger.hpp"
-#include "math/seadVector.h"
-#include "packets/Packet.h"
+
 #include "rs/util.hpp"
 #include "rs/util/PlayerUtil.h"
+
+#include "sead/heap/seadHeapMgr.h"
+#include "sead/math/seadVector.h"
+
 #include "server/Client.hpp"
-#include <heap/seadHeap.h>
-#include <math.h>
+#include "server/DeltaTime.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
-
-#include "basis/seadNew.h"
-#include "server/hns/HideAndSeekConfigMenu.hpp"
 #include "server/hns/HideAndSeekPacket.hpp"
 
 HideAndSeekMode::HideAndSeekMode(const char* name) : GameModeBase(name) {}
@@ -113,7 +110,7 @@ Packet* HideAndSeekMode::createPacket() {
 
     HideAndSeekPacket* packet = new HideAndSeekPacket();
     packet->mUserID    = Client::getClientId();
-    packet->isIt       = isPlayerIt();
+    packet->isIt       = isPlayerSeeking();
     packet->seconds    = mInfo->mHidingTime.mSeconds;
     packet->minutes    = mInfo->mHidingTime.mMinutes + mInfo->mHidingTime.mHours * 60;
     packet->setUpdateType(static_cast<HnSUpdateType>(HnSUpdateType::STATE | HnSUpdateType::TIME));
@@ -147,7 +144,7 @@ void HideAndSeekMode::unpause() {
 
     mModeLayout->appear();
 
-    if (mInfo->mIsPlayerIt) {
+    if (isPlayerSeeking()) {
         mModeTimer->disableTimer();
         mModeLayout->showSeeking();
     } else {
@@ -172,32 +169,38 @@ void HideAndSeekMode::update() {
         mInvulnTime = 0.0f; // if player is in a demo, reset invuln time
     }
 
-    if (mInfo->mIsPlayerIt) {
+    if (isPlayerSeeking()) {
         mModeTimer->timerControl();
     } else {
         if (mInvulnTime < 5) {
             mInvulnTime += Time::deltaTime;
         } else if (playerBase) {
-            for (size_t i = 0; i < (size_t)mPuppetHolder->getSize(); i++) {
-                PuppetInfo* other = Client::getPuppetInfo(i);
-                if (!other) {
-                    Logger::log("Checking %d, hit bounds %d-%d\n", i, mPuppetHolder->getSize(), Client::getMaxPlayerCount());
-                    break;
-                }
+            sead::Vector3f offset    = sead::Vector3f(0.0f, 80.0f, 0.0f);
+            sead::Vector3f playerPos = al::getTrans(playerBase) + offset;
 
-                if (!other->isConnected || !other->isInSameStage || !other->isIt || isYukimaru) {
-                    continue;
-                }
+            if (PlayerFunction::isPlayerDeadStatus(playerBase)) {
+                updateTagState(true);
+            } else {
+                for (size_t i = 0; i < (size_t)mPuppetHolder->getSize(); i++) {
+                    PuppetInfo* other = Client::getPuppetInfo(i);
+                    if (!other) {
+                        Logger::log("Checking %d, hit bounds %d-%d\n", i, mPuppetHolder->getSize(), Client::getMaxPlayerCount());
+                        break;
+                    }
 
-                if (other->gameMode != mMode && other->gameMode != GameMode::LEGACY) {
-                    continue;
-                }
+                    if (!other->isConnected || !other->isInSameStage || other->hnsIsHiding() || isYukimaru) {
+                        continue;
+                    }
 
-                sead::Vector3f offset = sead::Vector3f(0.0f, 80.0f, 0.0f);
-                float pupDist = vecDistance(other->playerPos + offset, al::getTrans(playerBase) + offset); // TODO: remove distance calculations and use hit sensors to determine this
+                    if (other->gameMode != mMode && other->gameMode != GameMode::LEGACY) {
+                        continue;
+                    }
 
-                if (pupDist < 200.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == other->is2D) {
-                    if (!PlayerFunction::isPlayerDeadStatus(playerBase)) {
+                    float distanceSq = vecDistanceSq(other->playerPos + offset, playerPos); // TODO: remove distance calculations and use hit sensors to determine this
+
+                    if (   distanceSq < 40000.f // non-squared: 200.0
+                        && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == other->is2D
+                    ) {
                         GameDataFunction::killPlayer(GameDataHolderAccessor(this));
                         playerBase->startDemoPuppetable();
                         al::setVelocityZero(playerBase);
@@ -206,9 +209,9 @@ void HideAndSeekMode::update() {
                         ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnimDead();
 
                         updateTagState(true);
+
+                        break;
                     }
-                } else if (PlayerFunction::isPlayerDeadStatus(playerBase)) {
-                    updateTagState(true);
                 }
             }
         }
@@ -243,7 +246,7 @@ void HideAndSeekMode::update() {
 
     // Switch roles
     if (al::isPadTriggerUp(-1) && !al::isPadHoldZL(-1)) {
-        updateTagState(!mInfo->mIsPlayerIt);
+        updateTagState(isPlayerHiding());
     }
 
     mInfo->mHidingTime = mModeTimer->getTime();
@@ -252,7 +255,7 @@ void HideAndSeekMode::update() {
 bool HideAndSeekMode::showNameTag(PuppetInfo* other) {
     return (
         (other->gameMode != mMode && other->gameMode != GameMode::LEGACY)
-        || (isPlayerIt() && other->isIt)
+        || (isPlayerSeeking() && other->hnsIsSeeking())
     );
 }
 

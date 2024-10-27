@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/Layouts/CommonVerticalList.h"
+#include "sead/prim/seadSafeString.h"
 
 class GameModeConfigMenu {
 public:
@@ -12,12 +12,9 @@ public:
 
     GameModeConfigMenu() = default;
 
-    virtual void initMenu(const al::LayoutInitInfo &initInfo) {return;}
+    virtual UpdateAction updateMenu(int selectIndex) { return UpdateAction::NOOP; }
 
-    virtual UpdateAction updateMenu(int selectIndex) {return UpdateAction::NOOP;}
+    virtual const sead::WFixedSafeString<0x200>* getStringData() { return nullptr; }
 
-    virtual const sead::WFixedSafeString<0x200>* getStringData() {return nullptr;}
-
-    virtual const int getMenuSize() {return 0;}
-
+    virtual const int getMenuSize() { return 0; }
 };

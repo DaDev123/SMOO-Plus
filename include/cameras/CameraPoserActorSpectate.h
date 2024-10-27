@@ -2,12 +2,9 @@
 
 #include "al/LiveActor/LiveActor.h"
 #include "al/camera/CameraPoser.h"
-#include "al/camera/alCameraPoserFunction.h"
 
 #include "game/Player/PlayerActorBase.h"
 #include "sead/math/seadVector.h"
-
-#include "al/util.hpp"
 
 // cc = custom cameras
 namespace cc {

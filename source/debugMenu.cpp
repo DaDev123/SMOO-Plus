@@ -1,23 +1,28 @@
 #include "debugMenu.hpp"
 
+#include "agl/utl.h"
+#include "al/util.hpp"
+#include "game/System/GameSystem.h"
+#include "sead/gfx/seadPrimitiveRenderer.h"
+#include "sead/math/seadMatrix.hpp"
+
 static const char *DBG_FONT_PATH = "DebugData/Font/nvn_font_jis1.ntx";
 static const char *DBG_SHADER_PATH = "DebugData/Font/nvn_font_shader_jis1.bin";
 static const char *DBG_TBL_PATH = "DebugData/Font/nvn_font_jis1_tbl.bin";
 
-sead::TextWriter *gTextWriter;
+sead::TextWriter* gTextWriter;
 
 void setupDebugMenu(GameSystem *gSys) {
 
-    sead::Heap *curHeap = al::getCurrentHeap();
+    sead::Heap* curHeap = al::getCurrentHeap();
 
-    agl::DrawContext *context = gSys->mSystemInfo->mDrawInfo->mDrawContext;
+    agl::DrawContext* context = gSys->mSystemInfo->mDrawInfo->mDrawContext;
 
-    if(curHeap) {
+    if (curHeap) {
         if (context) {
-            
             sead::DebugFontMgrJis1Nvn::sInstance = sead::DebugFontMgrJis1Nvn::createInstance(curHeap);
-            
-            if(al::isExistFile(DBG_FONT_PATH) && al::isExistFile(DBG_SHADER_PATH) && al::isExistFile(DBG_TBL_PATH)) {
+
+            if (al::isExistFile(DBG_FONT_PATH) && al::isExistFile(DBG_SHADER_PATH) && al::isExistFile(DBG_TBL_PATH)) {
                 sead::DebugFontMgrJis1Nvn::sInstance->initialize(curHeap, DBG_SHADER_PATH, DBG_FONT_PATH, DBG_TBL_PATH, 0x100000);
                 sead::TextWriter::setDefaultFont(sead::DebugFontMgrJis1Nvn::sInstance);
                 gTextWriter = new sead::TextWriter(context);
@@ -32,7 +37,7 @@ void setupDebugMenu(GameSystem *gSys) {
     __asm("MOV W8, #0xFFFFFFFF");
 }
 
-void drawBackground(agl::DrawContext *context) {
+void drawBackground(agl::DrawContext* context) {
     sead::Vector3<float> p1(-1, .3, 0); // top left
     sead::Vector3<float> p2(-.2, .3, 0); // top right
     sead::Vector3<float> p3(-1, -1, 0); // bottom left
@@ -42,5 +47,4 @@ void drawBackground(agl::DrawContext *context) {
     agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident, sead::Matrix44<float>::ident);
     agl::utl::DevTools::drawTriangleImm(context, p1, p2, p3, c);
     agl::utl::DevTools::drawTriangleImm(context, p3, p4, p2, c);
-
 }

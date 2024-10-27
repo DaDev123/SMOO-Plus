@@ -6,14 +6,14 @@
 #pragma once
 
 #include "al/scene/SceneObjHolder.h"
-#include "container/seadPtrArray.h"
-#include "prim/seadSafeString.h"
 #include "types.h"
 #include "UniqueObjInfo.h"
 #include "GameProgressData.h"
 #include "game/Player/PlayerHitPointData.h"
 
+#include "sead/container/seadPtrArray.h"
 #include "sead/math/seadVector.h"
+#include "sead/prim/seadSafeString.h"
 #include "sead/stream/seadStream.h"
 
 namespace al {

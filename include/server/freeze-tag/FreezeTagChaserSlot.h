@@ -1,7 +1,5 @@
 #pragma once
 
-#include "al/layout/LayoutActor.h"
-#include "al/layout/LayoutInitInfo.h"
 #include "al/util/LayoutUtil.h"
 #include "al/util/NerveUtil.h"
 

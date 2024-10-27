@@ -1,15 +1,13 @@
 #pragma once
 
+#include "al/actor/ActorInitInfo.h"
 #include "al/LiveActor/LiveActor.h"
 #include "al/sensor/HitSensor.h"
-#include "al/util.hpp"
+#include "al/sensor/SensorMsg.h"
 
-#include "game/Player/PlayerFunction.h"
 #include "game/Player/HackCap/HackCapJointControlKeeper.h"
 
-#include "logger.hpp"
 #include "puppets/PuppetInfo.h"
-#include "helpers.hpp"
 
 class PuppetCapActor : public al::LiveActor {
     public:

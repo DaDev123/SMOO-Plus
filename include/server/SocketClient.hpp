@@ -1,22 +1,14 @@
 #pragma once
 
-#include "SocketBase.hpp"
 #include "al/async/AsyncFunctorThread.h"
-#include "heap/seadHeap.h"
+
 #include "nn/result.h"
-#include "sead/math/seadVector.h"
-#include "sead/math/seadQuat.h"
-#include "sead/container/seadPtrArray.h"
+#include "nn/socket.h"
 
-#include "al/util.hpp"
+#include "sead/heap/seadHeap.h"
+#include "sead/thread/seadMessageQueue.h"
 
-#include "nn/account.h"
-
-#include "syssocket/sockdefines.h"
-
-#include "thread/seadMessageQueue.h"
-#include "thread/seadMutex.h"
-#include "types.h"
+#include "SocketBase.hpp"
 
 #include "packets/Packet.h"
 
