@@ -5,7 +5,7 @@ Welcome to the official repository for the Super Mario Odyssey Online mod! Have 
 ## Features
 
 * Explore Kingdoms together with up to 10 People
-* Almost every capture in the game is synced between players
+* Almost every capture in the game is synced between pelayers
 * Full 2D and Costume models syncing
 * Moon Collection is shared between all players
 * Custom Configuration Menu (Accessible by holding ZL and selecting any option in the pause/start menu)
