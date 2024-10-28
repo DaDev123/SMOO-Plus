@@ -18,7 +18,7 @@ struct PACKED CoinRunnerPacket : GameModeInf<CoinUpdateType> {
         mPacketSize = sizeof(CoinRunnerPacket) - sizeof(Packet);
     };
     bool     isRunner = false;
-    bool     isCoin = false;
+    bool     isFreeze = false;
     uint16_t score    = 0;
 };
 

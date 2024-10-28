@@ -15,7 +15,7 @@ CoinRunnerConfigMenu::CoinRunnerConfigMenu() : GameModeConfigMenu() {
     mItems->mBuffer[7].copy(u"Cappy Bounce (OFF)   ");
 
     mScoreKeyboard = new Keyboard(6);
-    mScoreKeyboard->setHeaderText(u"Set your Coin Tag score");
+    mScoreKeyboard->setHeaderText(u"Set your Freeze Tag score");
     mScoreKeyboard->setSubText(u"");
 
     mRoundKeyboard = new Keyboard(3);
@@ -116,7 +116,7 @@ GameModeConfigMenu::UpdateAction CoinRunnerConfigMenu::updateMenu(int selectInde
             }
 
             // We don't need to send the new score to other players here, because
-            //   CoinRunnerMode::update() checks for score changes every iteration
+            //   FreezeTagMode::update() checks for score changes every iteration
 
             return UpdateAction::NOOP;
         }

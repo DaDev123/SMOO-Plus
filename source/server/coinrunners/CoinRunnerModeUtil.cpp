@@ -18,7 +18,7 @@ bool CoinRunnerMode::areAllOtherRunnersFrozen(PuppetInfo* player) {
          */
     }
 
-    if (isPlayerRunner() && isPlayerUncoin()) {
+    if (isPlayerRunner() && isPlayerUnfrozen()) {
         return false; // If you are a runner but aren't frozen then skip
     }
 

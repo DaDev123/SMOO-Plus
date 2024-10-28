@@ -7,7 +7,7 @@
 
 void CoinRunnerMode::startRound(int roundMinutes) {
     mInfo->mIsRound = true;
-    mInfo->mCoinCount = 0;
+    mInfo->mFreezeCount = 0;
 
     mInvulnTime = 0.f;
 
@@ -30,7 +30,7 @@ void CoinRunnerMode::startRound(int roundMinutes) {
 
 void CoinRunnerMode::endRound(bool isAbort) {
     mInfo->mIsRound = false;
-    mInfo->mCoinCount = 0;
+    mInfo->mFreezeCount = 0;
 
     mModeTimer->disableTimer();
 
@@ -48,7 +48,7 @@ void CoinRunnerMode::endRound(bool isAbort) {
         }
 
         // unfreeze
-        if (isPlayerCoin()) {
+        if (isPlayerFrozen()) {
             trySetPlayerRunnerState(CoinState::ALIVECoin);
         }
     }
@@ -63,7 +63,7 @@ void CoinRunnerMode::endRound(bool isAbort) {
  * SET THE RUNNER PLAYER'S FROZEN/ALIVE STATE
  */
 bool CoinRunnerMode::trySetPlayerRunnerState(CoinState newState) {
-    if (mInfo->mIsPlayerCoin == newState || isPlayerChaser()) {
+    if (mInfo->mIsPlayerFreeze == newState || isPlayerChaser()) {
         return false;
     }
 
@@ -75,7 +75,7 @@ bool CoinRunnerMode::trySetPlayerRunnerState(CoinState newState) {
     mInvulnTime = 0.f;
 
     if (newState == CoinState::ALIVECoin) {
-        mInfo->mIsPlayerCoin = CoinState::ALIVECoin;
+        mInfo->mIsPlayerFreeze = CoinState::ALIVECoin;
 
         player->endDemoPuppetable();
 
@@ -83,7 +83,7 @@ bool CoinRunnerMode::trySetPlayerRunnerState(CoinState newState) {
     } else if (!isRound()) {
         return false;
     } else {
-        mInfo->mIsPlayerCoin = CoinState::Coin;
+        mInfo->mIsPlayerFreeze = CoinState::COIN;
 
         if (player->getPlayerHackKeeper()->currentHackActor) { // we're in a capture
             player->getPlayerHackKeeper()->cancelHackArea(); // leave the capture
@@ -95,7 +95,7 @@ bool CoinRunnerMode::trySetPlayerRunnerState(CoinState newState) {
         player->mHackCap->forcePutOn();
 
         mSpectateIndex = -1;
-        mInfo->mCoinCount++;
+        mInfo->mFreezeCount++;
 
         sendCoinPacket(CoinUpdateType::PLAYER);
 
@@ -191,7 +191,7 @@ bool CoinRunnerMode::tryEndRecoveryEvent() {
 
     // Set the player to frozen if they are a runner AND they had a valid recovery point
     if (isRound() && isPlayerRunner() && mRecoverySafetyPoint != sead::Vector3f::zero) {
-        trySetPlayerRunnerState(CoinState::Coin);
+        trySetPlayerRunnerState(CoinState::COIN);
         warpToRecoveryPoint(player);
     } else {
         trySetPlayerRunnerState(CoinState::ALIVECoin);
@@ -209,7 +209,7 @@ bool CoinRunnerMode::tryEndRecoveryEvent() {
     }
 
     // If player is being made alive, force end demo puppet state
-    if (isPlayerUncoin()) {
+    if (isPlayerUnfrozen()) {
         player->endDemoPuppetable();
     }
 
@@ -222,7 +222,7 @@ bool CoinRunnerMode::tryEndRecoveryEvent() {
 
 /*
  * UPDATE PLAYER SCORES
- * FUNCTION CALLED FROM CoinRunnerMode.cpp ON RECEIVING FREEZE TAG PACKETS
+ * FUNCTION CALLED FROM FreezeTagMode.cpp ON RECEIVING FREEZE TAG PACKETS
  */
 void CoinRunnerMode::tryScoreEvent(CoinRunnerPacket* packet, PuppetInfo* other) {
     if (!mCurScene || !mCurScene->mIsAlive || !GameModeManager::instance()->isModeAndActive(GameMode::COINRUNNER)) {
@@ -235,29 +235,29 @@ void CoinRunnerMode::tryScoreEvent(CoinRunnerPacket* packet, PuppetInfo* other) 
     }
 
     // Only if the frozen state of the other player changes
-    if (other->ftIsFrozen() == packet->isCoin) {
+    if (other->ftIsFrozen() == packet->isFreeze) {
         return;
     }
 
     // Check if we unfreeze a fellow runner
     bool scoreUnfreeze = (
            isPlayerRunner()         // we are a runner
-        && isPlayerUncoin()       // that is unfrozen and are touching another runner
+        && isPlayerUnfrozen()       // that is unfrozen and are touching another runner
         && !other->ftHasFallenOff() // that was not frozen by falling off the map
-        && !packet->isCoin        // which is unfreezing right now
+        && !packet->isFreeze        // which is unfreezing right now
         && isRound()
         && !isWipeout()
     );
 
     // Check if we freeze a runner as a chaser
-    bool scoreCoin = (
+    bool scoreFreeze = (
            !scoreUnfreeze
         && isPlayerChaser() // we are a chaser touching a runner
-        && packet->isCoin // which is freezing up right now
+        && packet->isFreeze // which is freezing up right now
         && (isRound() || isWipeout())
     );
 
-    if (other->isInSameStage && (scoreUnfreeze || scoreCoin)) {
+    if (other->isInSameStage && (scoreUnfreeze || scoreFreeze)) {
         PlayerActorBase* playerBase = rs::getPlayerActor(mCurScene);
 
         // Calculate the distance to the other player
@@ -274,7 +274,7 @@ void CoinRunnerMode::tryScoreEvent(CoinRunnerPacket* packet, PuppetInfo* other) 
     }
 
     // Checks if every runner is frozen, starts endgame sequence if so
-    if (packet->isCoin && areAllOtherRunnersFrozen(other)) {
+    if (packet->isFreeze && areAllOtherRunnersFrozen(other)) {
         // if there is only one runner, then end the round for legacy clients (new clients do this themselves)
         if (1 == runners()) {
             mCancelOnlyLegacy = true;

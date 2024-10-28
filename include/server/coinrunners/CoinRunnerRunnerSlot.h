@@ -20,7 +20,7 @@ class CoinRunnerRunnerSlot : public al::LayoutActor {
         void showSlot();
         void hideSlot();
 
-        void setCoinAngle();
+        void setFreezeAngle();
         void setSlotName(const char* name) { al::setPaneStringFormat(this, "TxtRunnerName", "%s", name); };
         void setSlotScore(int score) { al::setPaneStringFormat(this, "TxtRunnerScore", "%04u", score); };
 
@@ -31,8 +31,8 @@ class CoinRunnerRunnerSlot : public al::LayoutActor {
         bool mIsVisible = false;
         bool mIsPlayer  = false;
 
-        float mCoinIconSize = 0.f;
-        float mCoinIconSpin = 0.f;
+        float mFreezeIconSize = 0.f;
+        float mFreezeIconSpin = 0.f;
         int mRunnerIndex;
 
     private:
