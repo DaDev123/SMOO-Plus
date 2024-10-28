@@ -41,8 +41,8 @@ struct CoinRunnerInfo : GameModeInfoBase {
     inline bool     isRound()          const { return  mIsRound;                                 }
     inline bool     isPlayerRunner()   const { return  mIsPlayerRunner;                          }
     inline bool     isPlayerChaser()   const { return !mIsPlayerRunner;                          }
-    inline bool     isPlayerFrozen()   const { return  mIsPlayerCoin;                          }
-    inline bool     isPlayerUnfrozen() const { return !mIsPlayerCoin;                          }
+    inline bool     isPlayerCoin()   const { return  mIsPlayerCoin;                          }
+    inline bool     isPlayerUncoin() const { return !mIsPlayerCoin;                          }
     inline int      runners()          const { return  mRunnerPlayers.size() + isPlayerRunner(); }
     inline int      chasers()          const { return  mChaserPlayers.size() + isPlayerChaser(); }
     inline int      others()           const { return  mOtherPlayers.size();                     }

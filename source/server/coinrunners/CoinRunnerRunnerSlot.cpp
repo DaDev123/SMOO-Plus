@@ -117,7 +117,7 @@ void CoinRunnerRunnerSlot::setCoinAngle() {
     al::setPaneLocalRotate(this, "PicRunnerCoin", { 0.f, 0.f, mCoinIconSpin + (mRunnerIndex * 7.5f) });
 
     if (mIsPlayer) {
-        float targetSize = mInfo->isPlayerFrozen() ? 1.f : 0.f;
+        float targetSize = mInfo->isPlayerCoin() ? 1.f : 0.f;
         mInfo->mCoinIconSize = al::lerpValue(mInfo->mCoinIconSize, targetSize, 0.05f);
         al::setPaneLocalScale(this, "PicRunnerCoin", { mInfo->mCoinIconSize, mInfo->mCoinIconSize });
     } else if (mInfo->runners() <= mRunnerIndex) {

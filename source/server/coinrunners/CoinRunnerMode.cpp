@@ -163,7 +163,7 @@ Packet* CoinRunnerMode::createPacket() {
     CoinRunnerPacket* packet = new CoinRunnerPacket();
     packet->mUserID  = Client::getClientId();
     packet->isRunner = isPlayerRunner();
-    packet->isCoin = isPlayerFrozen();
+    packet->isCoin = isPlayerCoin();
     packet->score    = getScore();
     packet->setUpdateType(mNextUpdateType);
 
@@ -202,7 +202,7 @@ void CoinRunnerMode::end() {
     mCurScene->mSceneLayout->start();
 
     if (!GameModeManager::instance()->isPaused()) {
-        if (isPlayerFrozen()) {
+        if (isPlayerCoin()) {
             trySetPlayerRunnerState(CoinState::ALIVECoin);
         }
 
@@ -297,7 +297,7 @@ void CoinRunnerMode::update() {
     }
 
     // Verify you are never frozen on chaser team
-    if (isPlayerChaser() && isPlayerFrozen()) {
+    if (isPlayerChaser() && isPlayerCoin()) {
         trySetPlayerRunnerState(CoinState::ALIVECoin);
     }
 
@@ -323,7 +323,7 @@ void CoinRunnerMode::update() {
             if (isPlayerRunner()) { // if we're a runner
                 // Check if the chaser freezes us
                 bool chaserCoinsUs = (
-                       isPlayerUnfrozen()        // we're an unfrozen runner
+                       isPlayerUncoin()        // we're an unfrozen runner
                     && isPlayerAlive             // that is alive
                     && other->ftIsChaser()       // a chaser
                     && other->is2D == isPlayer2D // that has the same dimension (2D/3D) as us
@@ -332,7 +332,7 @@ void CoinRunnerMode::update() {
                 // Check if the runner unfreezes us
                 bool runnerUnfreezesUs = (
                        !chaserCoinsUs
-                    && isPlayerFrozen()             // we're a frozen runner
+                    && isPlayerCoin()             // we're a frozen runner
                     && freezeMinTime <= mInvulnTime // since some time (cooldown)
                     && isPlayerAlive                // that is alive
                     && other->ftIsRunner()          // another runner
@@ -398,7 +398,7 @@ void CoinRunnerMode::update() {
     };
 
     // Main player's ice block state and post processing
-    if (isPlayerFrozen()) {
+    if (isPlayerCoin()) {
         if (!al::isAlive(mMainPlayerIceBlock)) {
             mMainPlayerIceBlock->appear();
             trySetPostProcessingType(CoinPostProcessingType::PPFROZEN);
@@ -442,7 +442,7 @@ void CoinRunnerMode::update() {
 
     // Up => Toggle Role (chaser/runner)
     if (   !isRound()                // not during a round
-        && isPlayerUnfrozen()        // not when frozen
+        && isPlayerUncoin()        // not when frozen
         && mRecoveryEventFrames == 0 // not in recovery
         && !isWipeout()              // not in endgame (wipeout)
         && al::isPadTriggerUp(-1)    // D-Pad Up
@@ -457,7 +457,7 @@ void CoinRunnerMode::update() {
     }
 
     // L + Down => Reset Score
-    if (   isPlayerUnfrozen()        // not when frozen
+    if (   isPlayerUncoin()        // not when frozen
         && mRecoveryEventFrames == 0 // not in recovery
         && !isWipeout()              // not in endgame (wipeout)
         && al::isPadHoldL(-1)        // hold L
@@ -524,13 +524,13 @@ void CoinRunnerMode::update() {
     }
 
     // Spectator camera
-    if (!mTicket->mIsActive && isPlayerFrozen()) { // enable the spectator camera when frozen
+    if (!mTicket->mIsActive && isPlayerCoin()) { // enable the spectator camera when frozen
         al::startCamera(mCurScene, mTicket, -1);
         al::requestStopCameraVerticalAbsorb(mCurScene);
-    } else if (mTicket->mIsActive && isPlayerUnfrozen()) { // disable the spectator camera when unfrozen
+    } else if (mTicket->mIsActive && isPlayerUncoin()) { // disable the spectator camera when unfrozen
         al::endCamera(mCurScene, mTicket, 0, false);
         al::requestStopCameraVerticalAbsorb(mCurScene);
-    } else if (mTicket->mIsActive && isPlayerFrozen()) { // update spectator camera
+    } else if (mTicket->mIsActive && isPlayerCoin()) { // update spectator camera
         updateSpectateCam(player);
     }
 }
@@ -572,7 +572,7 @@ void CoinRunnerMode::debugMenuControls(sead::TextWriter* gTextWriter) {
         }
     }
 
-    if (mTicket && mTicket->mIsActive && isPlayerFrozen()) {
+    if (mTicket && mTicket->mIsActive && isPlayerCoin()) {
         gTextWriter->printf("- [FT][Frozen] ← | Spectate previous player\n");
         gTextWriter->printf("- [FT][Frozen] → | Spectate next player\n");
     }
@@ -585,7 +585,7 @@ void CoinRunnerMode::debugMenuPlayer(sead::TextWriter* gTextWriter, PuppetInfo* 
     }
 
     bool isRunner = other ? other->ftIsRunner() : isPlayerRunner();
-    bool isFrozen = other ? other->ftIsFrozen() : isPlayerFrozen();
+    bool isFrozen = other ? other->ftIsFrozen() : isPlayerCoin();
 
     gTextWriter->printf(
         "Coin-Tag: %s%s\n",

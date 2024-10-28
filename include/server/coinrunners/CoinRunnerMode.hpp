@@ -53,8 +53,8 @@ class CoinRunnerMode : public GameModeBase {
         inline bool     isRound()              const { return mInfo->isRound();          }
         inline bool     isPlayerRunner()       const { return mInfo->isPlayerRunner();   }
         inline bool     isPlayerChaser()       const { return mInfo->isPlayerChaser();   }
-        inline bool     isPlayerFrozen()       const { return mInfo->isPlayerFrozen();   }
-        inline bool     isPlayerUnfrozen()     const { return mInfo->isPlayerUnfrozen(); }
+        inline bool     isPlayerCoin()       const { return mInfo->isPlayerCoin();   }
+        inline bool     isPlayerUncoin()     const { return mInfo->isPlayerCoin(); }
         inline bool     isWipeout()            const { return mIsEndgameActive;          }
         inline uint16_t getScore()             const { return mInfo->getScore();         }
         inline int      runners()              const { return mInfo->runners();          }

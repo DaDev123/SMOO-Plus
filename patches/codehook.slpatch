@@ -133,6 +133,12 @@ B59E28 B seadPrintHook  // sead::system::print
 51B280 B  freezeKidsMode             // Forces kids mode to be enabled during Freeze Tag
 1CFBA0 BL freezeMoonHitboxDisable    // When mode enabled, disable hitboxes with moons to avoid softlocks
 
+// Coin Runner hooks
+4272F0 BL coinDeathArea            // Replaces functionality of death areas in Coin Runner
+538A94 B  coinPlayerHitPointDamage // Reimplements the damage function, disabling it's functionality in Coin Runner
+51B280 B  coinKidsMode             // Forces kids mode to be enabled during Coin Runner
+1CFBA0 BL coinMoonHitboxDisable    // When mode enabled, disable hitboxes with moons to avoid softlocks
+
 // custom bootscreen hooks
 50EF28 BL speedboot::hakoniwaSetNerveSetup
 50EB88 ORR w2, wzr, #0x1f // nerve state count

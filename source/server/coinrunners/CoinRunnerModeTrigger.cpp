@@ -48,7 +48,7 @@ void CoinRunnerMode::endRound(bool isAbort) {
         }
 
         // unfreeze
-        if (isPlayerFrozen()) {
+        if (isPlayerCoin()) {
             trySetPlayerRunnerState(CoinState::ALIVECoin);
         }
     }
@@ -209,7 +209,7 @@ bool CoinRunnerMode::tryEndRecoveryEvent() {
     }
 
     // If player is being made alive, force end demo puppet state
-    if (isPlayerUnfrozen()) {
+    if (isPlayerUncoin()) {
         player->endDemoPuppetable();
     }
 
@@ -242,7 +242,7 @@ void CoinRunnerMode::tryScoreEvent(CoinRunnerPacket* packet, PuppetInfo* other) 
     // Check if we unfreeze a fellow runner
     bool scoreUnfreeze = (
            isPlayerRunner()         // we are a runner
-        && isPlayerUnfrozen()       // that is unfrozen and are touching another runner
+        && isPlayerUncoin()       // that is unfrozen and are touching another runner
         && !other->ftHasFallenOff() // that was not frozen by falling off the map
         && !packet->isCoin        // which is unfreezing right now
         && isRound()

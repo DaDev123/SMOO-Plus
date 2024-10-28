@@ -150,7 +150,7 @@ void CoinRunnerIcon::exeWait() {
     }
 
     // Spectate UI
-    if (mInfo->isPlayerFrozen() && mSpectateName) {
+    if (mInfo->isPlayerCoin() && mSpectateName) {
         al::setPaneStringFormat(this, "TxtSpectateTarget", "%s", mSpectateName);
     }
 
@@ -196,16 +196,16 @@ void CoinRunnerIcon::queueScoreEvent(int eventValue, const char* eventDesc) {
 
 void CoinRunnerIcon::setCoinOverlayHeight() {
     // Show or hide the frozen UI overlay (frozen borders on top and bottom of the screen when being frozen)
-    float targetHeight = mInfo->isPlayerFrozen() ? 360.f : 415.f;
+    float targetHeight = mInfo->isPlayerCoin() ? 360.f : 415.f;
     mCoinOverlayHeight = al::lerpValue(mCoinOverlayHeight, targetHeight, 0.08f);
-    al::setPaneLocalTrans(this, "PicFreezeOverlayTop", { 0.f, mCoinOverlayHeight + 15.f, 0.f });
-    al::setPaneLocalTrans(this, "PicFreezeOverlayBot", { 0.f, -mCoinOverlayHeight, 0.f });
+    al::setPaneLocalTrans(this, "PicCoinOverlayTop", { 0.f, mCoinOverlayHeight + 15.f, 0.f });
+    al::setPaneLocalTrans(this, "PicCoinOverlayBot", { 0.f, -mCoinOverlayHeight, 0.f });
 }
 
 void CoinRunnerIcon::setSpectateOverlayHeight() {
     // Show or hide the spectator UI
     float targetHeight = (
-           mInfo->isPlayerFrozen()
+           mInfo->isPlayerCoin()
         && mInfo->runners() > 1
         && !mEndgameIsDisplay
         ? -250.f

@@ -67,7 +67,7 @@ class CoinRunnerIcon : public al::LayoutActor {
         float          mScoreEventScale = 0.f;
 
         // UI positioning and angle calculations
-        float mRunnerFreezeIconAngle = 0.f;
+        float mRunnerCoinIconAngle = 0.f;
 
         float mCoinOverlayHeight = 415.f;
 
