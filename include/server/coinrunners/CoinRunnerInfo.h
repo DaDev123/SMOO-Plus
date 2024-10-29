@@ -7,7 +7,7 @@
 
 enum CoinState { // Runner team player's state
     ALIVECoin  = 0,
-    Coin = 1,
+    COIN = 1,
 };
 
 struct CoinRunnerInfo : GameModeInfoBase {
@@ -16,11 +16,11 @@ struct CoinRunnerInfo : GameModeInfoBase {
     }
 
     bool        mIsPlayerRunner = true;
-    float       mCoinIconSize = 0.f;
-    CoinState mIsPlayerCoin = CoinState::ALIVECoin;
+    float       mFreezeIconSize = 0.f;
+   CoinState mIsPlayerFreeze = CoinState::ALIVECoin;
 
     bool     mIsRound     = false;
-    int      mCoinCount = 0; // how often runners were frozen in the current round (including refreezes after unfreeze)
+    int      mFreezeCount = 0; // how often runners were frozen in the current round (including refreezes after unfreeze)
     GameTime mRoundTimer;
 
     sead::PtrArray<PuppetInfo> mRunnerPlayers;
@@ -41,8 +41,8 @@ struct CoinRunnerInfo : GameModeInfoBase {
     inline bool     isRound()          const { return  mIsRound;                                 }
     inline bool     isPlayerRunner()   const { return  mIsPlayerRunner;                          }
     inline bool     isPlayerChaser()   const { return !mIsPlayerRunner;                          }
-    inline bool     isPlayerFrozen()   const { return  mIsPlayerCoin;                          }
-    inline bool     isPlayerUnfrozen() const { return !mIsPlayerCoin;                          }
+    inline bool     isPlayerFrozen()   const { return  mIsPlayerFreeze;                          }
+    inline bool     isPlayerUnfrozen() const { return !mIsPlayerFreeze;                          }
     inline int      runners()          const { return  mRunnerPlayers.size() + isPlayerRunner(); }
     inline int      chasers()          const { return  mChaserPlayers.size() + isPlayerChaser(); }
     inline int      others()           const { return  mOtherPlayers.size();                     }

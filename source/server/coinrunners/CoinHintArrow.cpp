@@ -11,7 +11,7 @@
 CoinHintArrow::CoinHintArrow(const char* name) : al::LiveActor(name) {}
 
 void CoinHintArrow::init(al::ActorInitInfo const& info) {
-    al::initActorWithArchiveName(this, info, "CoinHintArrow", nullptr);
+    al::initActorWithArchiveName(this, info, "FreezeHintArrow", nullptr);
     al::initNerve(this, &nrvCoinHintArrowWait, 0);
     al::invalidateClipping(this);
 
@@ -56,7 +56,7 @@ void CoinHintArrow::exeWait() {
         al::startAction(this, "Wait");
     }
 
-    if (   !GameModeManager::instance()->isModeAndActive(GameMode::COINRUNNER) // we're not in coinrunners mode
+    if (   !GameModeManager::instance()->isModeAndActive(GameMode::COINRUNNER) // we're not in freeze-tag mode
         || mInfo->isPlayerRunner()                                            // or we're a runner
         || !mInfo->isRound()                                                  // or we're outside of a round
         || !mTargetTrans                                                      // or there is no runner far enough away

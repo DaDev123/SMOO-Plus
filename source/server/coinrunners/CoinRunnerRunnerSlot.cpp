@@ -75,12 +75,12 @@ void CoinRunnerRunnerSlot::exeWait() {
         return;
     }
 
-    mCoinIconSpin += 1.2f;
-    if (mCoinIconSpin > 360.f + (mRunnerIndex * 7.5f)) {
-        mCoinIconSpin -= 360.f;
+    mFreezeIconSpin += 1.2f;
+    if (mFreezeIconSpin > 360.f + (mRunnerIndex * 7.5f)) {
+        mFreezeIconSpin -= 360.f;
     }
 
-    setCoinAngle();
+    setFreezeAngle();
 
     // Update name info in this slot
     if (mIsPlayer) {
@@ -113,13 +113,13 @@ void CoinRunnerRunnerSlot::hideSlot() {
     al::hidePane(this, "RunnerSlot");
 }
 
-void CoinRunnerRunnerSlot::setCoinAngle() {
-    al::setPaneLocalRotate(this, "PicRunnerCoin", { 0.f, 0.f, mCoinIconSpin + (mRunnerIndex * 7.5f) });
+void CoinRunnerRunnerSlot::setFreezeAngle() {
+    al::setPaneLocalRotate(this, "PicRunnerFreeze", { 0.f, 0.f, mFreezeIconSpin + (mRunnerIndex * 7.5f) });
 
     if (mIsPlayer) {
         float targetSize = mInfo->isPlayerFrozen() ? 1.f : 0.f;
-        mInfo->mCoinIconSize = al::lerpValue(mInfo->mCoinIconSize, targetSize, 0.05f);
-        al::setPaneLocalScale(this, "PicRunnerCoin", { mInfo->mCoinIconSize, mInfo->mCoinIconSize });
+        mInfo->mFreezeIconSize = al::lerpValue(mInfo->mFreezeIconSize, targetSize, 0.05f);
+        al::setPaneLocalScale(this, "PicRunnerFreeze", { mInfo->mFreezeIconSize, mInfo->mFreezeIconSize });
     } else if (mInfo->runners() <= mRunnerIndex) {
         return;
     } else {
@@ -127,7 +127,7 @@ void CoinRunnerRunnerSlot::setCoinAngle() {
 
         float targetSize = other->ftIsFrozen() ? 1.f : 0.f;
         other->freezeIconSize = al::lerpValue(other->freezeIconSize, targetSize, 0.05f);
-        al::setPaneLocalScale(this, "PicRunnerCoin", { other->freezeIconSize, other->freezeIconSize });
+        al::setPaneLocalScale(this, "PicRunnerFreeze", { other->freezeIconSize, other->freezeIconSize });
     }
 }
 

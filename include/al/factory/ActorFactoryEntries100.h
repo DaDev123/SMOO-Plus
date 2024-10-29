@@ -5,6 +5,7 @@
 #include "actors/PuppetActor.h"
 #include "actors/PuppetHackActor.h"
 #include "server/freeze-tag/FreezePlayerBlock.h"
+#include "server/coinrunners/CoinPlayerBlock.h"
 
 namespace al {
     class AllDeadWatcher;
@@ -70,6 +71,7 @@ namespace al {
 __attribute((used)) static al::NameToCreator<al::createActor> actorEntries[] = {
     // CUSTOM ACTOR ENTRIES HERE
     {"FreezePlayerBlock", &al::createCustomActor<FreezePlayerBlock>},
+    {"CoinPlayerBlock", &al::createCustomActor<CoinPlayerBlock>},
     {"PuppetActor", &al::createCustomActor<PuppetActor>},
     {"PuppetHackActor", &al::createCustomActor<PuppetHackActor>},
     // VANILLA ACTOR ENTRIES

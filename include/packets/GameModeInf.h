@@ -27,6 +27,13 @@ struct PACKED GameModeInf : Packet {
                 return GameMode::FREEZETAG;
             }
 
+            if (type == 1 || type == 2) {
+
+            // ROUNDCANCEL or FALLOFF (Coin-Runner)
+            if (type == 4 || type == 8) {
+                return GameMode::COINRUNNER;
+            }
+
             // (ROUNDSTART or STATE) or (PLAYER or TIME)
             if (type == 1 || type == 2) {
                 /**
@@ -53,6 +60,11 @@ struct PACKED GameModeInf : Packet {
                  */
                 if (this->mUserID != Client::getClientId()) {
                     return GameMode::FREEZETAG;
+                }
+            }
+        
+                if (this->mUserID != Client::getClientId()) {
+                    return GameMode::COINRUNNER;
                 }
             }
         }

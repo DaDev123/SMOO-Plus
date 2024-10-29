@@ -153,8 +153,15 @@ void InfectionMode::unpause() {
     }
 }
 
+bool isInInfectAnim = false;
+
 void InfectionMode::update() {
     PlayerActorBase* playerBase = rs::getPlayerActor(mCurScene);
+
+        if(isInInfectAnim && ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isAnimEnd()){
+        playerBase->endDemoPuppetable();
+        isInInfectAnim = false;
+    }
 
     bool isYukimaru = !playerBase->getPlayerInfo(); // if PlayerInfo is a nullptr, that means we're dealing with the bound bowl racer
 
@@ -201,12 +208,13 @@ void InfectionMode::update() {
                     if (   distanceSq < 40000.f // non-squared: 200.0
                         && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == other->is2D
                     ) {
-                        GameDataFunction::killPlayer(GameDataHolderAccessor(this));
+
                         playerBase->startDemoPuppetable();
                         al::setVelocityZero(playerBase);
                         rs::faceToCamera(playerBase);
                         ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->endSubAnim();
-                        ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnimDead();
+                        ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("DemoJangoCapSearch");
+                        isInInfectAnim = true;
 
                         updateTagState(true);
 

@@ -84,8 +84,8 @@ void CoinRunnerMode::processPacket(Packet* _packet) {
     /**
      * Ignore legacy game mode packets for other game modes
      *
-     * Legacy Coin-Tag packets that we are interested in should have been automatically
-     * transformed from LEGACY to COINRUNNER by the logic in the gameMode() function.
+     * Legacy Freeze-Tag packets that we are interested in should have been automatically
+     * transformed from LEGACY to FREEZETAG by the logic in the gameMode() function.
      */
     if (packet->gameMode() == GameMode::LEGACY) {
         return;
@@ -100,13 +100,13 @@ void CoinRunnerMode::processPacket(Packet* _packet) {
         tryScoreEvent(packet, other);
 
         // When puppet transitioning from frozen to unfrozen, disable the fall off flag
-        if (other->ftIsFrozen() && !packet->isCoin) {
+        if (other->ftIsFrozen() && !packet->isFreeze) {
             other->isCoinRunnerFallenOff = false;
         }
 
         other->isCoinRunnerRunner = packet->isRunner;
-        other->isCoinRunnerFreeze = packet->isCoin;
-        other->freezeTagScore    = packet->score;
+        other->isCoinRunnerFreeze = packet->isFreeze;
+        other->coinRunnerScore    = packet->score;
     }
 
     if (isRound()) {
@@ -141,7 +141,7 @@ void CoinRunnerMode::processPacket(Packet* _packet) {
 Packet* CoinRunnerMode::createPacket() {
     if (!isModeActive()) {
         DisabledGameModeInf* packet = new DisabledGameModeInf(Client::getClientId());
-        packet->setUpdateType(0); // so that legacy coinrunners clients don't wrongly interpret this as a round start
+        packet->setUpdateType(0); // so that legacy freeze-tag clients don't wrongly interpret this as a round start
         return packet;
     }
 
@@ -152,7 +152,7 @@ Packet* CoinRunnerMode::createPacket() {
         return packet;
     }
 
-    if (mNextUpdateType == CoinUpdateType::ROUNDCANCEL) {
+    if (mNextUpdateType == FreezeUpdateType::ROUNDCANCEL) {
         CoinRunnerRoundCancelPacket* packet = new CoinRunnerRoundCancelPacket();
         packet->mUserID       = Client::getClientId();
         packet->onlyForLegacy = mCancelOnlyLegacy;
@@ -163,7 +163,7 @@ Packet* CoinRunnerMode::createPacket() {
     CoinRunnerPacket* packet = new CoinRunnerPacket();
     packet->mUserID  = Client::getClientId();
     packet->isRunner = isPlayerRunner();
-    packet->isCoin = isPlayerFrozen();
+    packet->isFreeze = isPlayerFrozen();
     packet->score    = getScore();
     packet->setUpdateType(mNextUpdateType);
 
@@ -311,7 +311,7 @@ void CoinRunnerMode::update() {
 
         sead::Vector3f playerPos = al::getTrans(player);
         float closestDistanceSq = 9999999.f;
-        float freezeMinTime = isPlayerRunner() ? al::clamp(3.f + (mInfo->mCoinCount * 0.5f), 3.f, 7.f) : 0.f; // cooldown of 3-7s, +0.5s per frozen runner
+        float freezeMinTime = isPlayerRunner() ? al::clamp(3.f + (mInfo->mFreezeCount * 0.5f), 3.f, 7.f) : 0.f; // cooldown of 3-7s, +0.5s per frozen runner
 
         for (size_t i = 0; i < mPuppetHolder->getSize(); i++) {
             PuppetInfo* other = Client::getPuppetInfo(i);
@@ -322,7 +322,7 @@ void CoinRunnerMode::update() {
 
             if (isPlayerRunner()) { // if we're a runner
                 // Check if the chaser freezes us
-                bool chaserCoinsUs = (
+                bool chaserFreezesUs = (
                        isPlayerUnfrozen()        // we're an unfrozen runner
                     && isPlayerAlive             // that is alive
                     && other->ftIsChaser()       // a chaser
@@ -331,7 +331,7 @@ void CoinRunnerMode::update() {
 
                 // Check if the runner unfreezes us
                 bool runnerUnfreezesUs = (
-                       !chaserCoinsUs
+                       !chaserFreezesUs
                     && isPlayerFrozen()             // we're a frozen runner
                     && freezeMinTime <= mInvulnTime // since some time (cooldown)
                     && isPlayerAlive                // that is alive
@@ -340,11 +340,11 @@ void CoinRunnerMode::update() {
                     && other->is2D == isPlayer2D    // and has the same dimension (2D/3D) as us);
                 );
 
-                if (chaserCoinsUs || runnerUnfreezesUs) {
+                if (chaserFreezesUs || runnerUnfreezesUs) {
                     float distanceSq = vecDistanceSq(playerPos, other->playerPos);
 
-                    if (chaserCoinsUs && distanceSq < 62500.f) { // non-squared: 250.0
-                        trySetPlayerRunnerState(CoinState::Coin); // freeze ourselves
+                    if (chaserFreezesUs && distanceSq < 62500.f) { // non-squared: 250.0
+                        trySetPlayerRunnerState(CoinState::COIN); // freeze ourselves
                     } else if (runnerUnfreezesUs && distanceSq < 40000.f) { // non-squared: 200.0
                         trySetPlayerRunnerState(CoinState::ALIVECoin); // unfreeze ourselves
                     }
@@ -499,9 +499,9 @@ void CoinRunnerMode::update() {
             if (al::isPadHoldX(-1) && al::isPadTriggerRight(-1)) {
                 trySetPlayerRunnerState(CoinState::ALIVECoin);
             }
-            // [Debug] Y + Right => Coin
+            // [Debug] Y + Right => Freeze
             if (al::isPadHoldY(-1) && al::isPadTriggerRight(-1)) {
-                trySetPlayerRunnerState(CoinState::Coin);
+                trySetPlayerRunnerState(CoinState::COIN);
             }
         }
         // [Debug] A + Right => Score += 1
@@ -553,7 +553,7 @@ bool CoinRunnerMode::showNameTagEverywhere(PuppetActor* actor) {
 }
 
 void CoinRunnerMode::debugMenuControls(sead::TextWriter* gTextWriter) {
-    gTextWriter->printf("- L + ← | Enable/disable Coin Tag [FT]\n");
+    gTextWriter->printf("- L + ← | Enable/disable Freeze Tag [FT]\n");
     gTextWriter->printf("- [FT] ↑ | Switch between runners and chasers\n");
     gTextWriter->printf("- [FT] L + ↓ | Reset score\n");
 
@@ -568,7 +568,7 @@ void CoinRunnerMode::debugMenuControls(sead::TextWriter* gTextWriter) {
         gTextWriter->printf("- [FT][Debug] B + → | Wipeout\n");
         if (isPlayerRunner()) {
             gTextWriter->printf("- [FT][Debug][Runner] X + → | Unfreeze\n");
-            gTextWriter->printf("- [FT][Debug][Runner] Y + → | Coin\n");
+            gTextWriter->printf("- [FT][Debug][Runner] Y + → | Freeze\n");
         }
     }
 
@@ -580,7 +580,7 @@ void CoinRunnerMode::debugMenuControls(sead::TextWriter* gTextWriter) {
 
 void CoinRunnerMode::debugMenuPlayer(sead::TextWriter* gTextWriter, PuppetInfo* other) {
     if (other && other->gameMode != mMode) {
-        gTextWriter->printf("Coin-Tag: N/A\n");
+        gTextWriter->printf("Freeze-Tag: N/A\n");
         return;
     }
 
@@ -588,7 +588,7 @@ void CoinRunnerMode::debugMenuPlayer(sead::TextWriter* gTextWriter, PuppetInfo* 
     bool isFrozen = other ? other->ftIsFrozen() : isPlayerFrozen();
 
     gTextWriter->printf(
-        "Coin-Tag: %s%s\n",
+        "Freeze-Tag: %s%s\n",
         isRunner ? "Runner" : "Chaser",
         isFrozen ? " (Frozen)" : ""
     );
