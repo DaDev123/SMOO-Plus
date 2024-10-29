@@ -183,14 +183,14 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
         GameMode      gameMode     = GameModeManager::instance()->getGameMode();
         GameModeBase* gameModeBase = GameModeManager::instance()->getMode<GameModeBase>();
 
-        gTextWriter->printf("(R ←)------------ Page %d/%d -------------(R →)\n", pageIndex + 1, maxPages);
+        gTextWriter->printf("(ZR ←)------------ Page %d/%d -------------(ZR →)\n", pageIndex + 1, maxPages);
 
         switch (pageIndex)
         {
         case 0:
             {
                 gTextWriter->printf(
-                    "(ZL ←)----------%s Player %d/%d %s-----------(ZL →)\n\n",
+                    "(R ←)----------%s Player %d/%d %s-----------(R →)\n\n",
                     debugPuppetIndex + 1 < 10 ? "-" : "",
                     debugPuppetIndex + 1,
                     Client::getMaxPlayerCount(),
