@@ -156,9 +156,9 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     );
 
 #if EMU
-    gTextWriter->printf("Mod version: %s for Emulators\n", TOSTRING(BUILDVERSTR));
+    gTextWriter->printf("Mod version: SMOO-Plus 1.3.0 for Emulators\n", TOSTRING(BUILDVERSTR));
 #else
-    gTextWriter->printf("Mod version: %s for Switch\n", TOSTRING(BUILDVERSTR));
+    gTextWriter->printf("Mod version: SMOO-Plus 1.3.0 for Switch\n", TOSTRING(BUILDVERSTR));
 #endif
 
     al::Scene* curScene = curSequence->curScene;
@@ -183,7 +183,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
         GameMode      gameMode     = GameModeManager::instance()->getGameMode();
         GameModeBase* gameModeBase = GameModeManager::instance()->getMode<GameModeBase>();
 
-        gTextWriter->printf("(ZR ←)------------ Page %d/%d -------------(ZR →)\n", pageIndex + 1, maxPages);
+        gTextWriter->printf("(R ←)------------ Page %d/%d -------------(R →)\n", pageIndex + 1, maxPages);
 
         switch (pageIndex)
         {
@@ -437,7 +437,7 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
                 }
             }
         }
-    } else if (al::isPadHoldZL(-1)) {
+    } else if (al::isPadHoldR(-1)) {
         if (debugMode && pageIndex == 0) {
             if (al::isPadTriggerLeft(-1)) { // [Debug menu] ZL + Left => Previous player
                 debugPuppetIndex--;
