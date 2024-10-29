@@ -47,7 +47,7 @@ void InfectionIcon::exeAppear() {
 }
 
 const char* InfectionIcon::getRoleIcon(bool isIt) {
-    return isIt ? "\uE002" : "\uE001";
+    return isIt ? "金" : "音";
 }
 
 GameMode InfectionIcon::getGameMode() {
