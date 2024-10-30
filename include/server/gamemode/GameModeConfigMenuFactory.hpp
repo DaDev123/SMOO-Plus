@@ -6,6 +6,7 @@
 #include "server/freeze-tag/FreezeTagConfigMenu.hpp"
 #include "server/inf/InfectionConfigMenu.hpp"
 #include "server/coinrunners/CoinRunnerConfigMenu.hpp"
+#include "server/speedrun/SpeedrunConfigMenu.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
 
 typedef GameModeConfigMenu* (*createMenu)(const char* name);
@@ -20,7 +21,8 @@ __attribute((used)) constexpr al::NameToCreator<createMenu> menuTable[] = {
     { "Sardine",     &createGameModeConfigMenu<SardineConfigMenu>     },
     { "FreezeTag",   &createGameModeConfigMenu<FreezeTagConfigMenu>   },
     { "Infection",   &createGameModeConfigMenu<InfectionConfigMenu>   },
-    { "CoinRunner",   &createGameModeConfigMenu<CoinRunnerConfigMenu>   },
+    { "CoinRunner",  &createGameModeConfigMenu<CoinRunnerConfigMenu>  },
+    { "Speedrun",  &createGameModeConfigMenu<SpeedrunConfigMenu>  },
 };
 
 class GameModeConfigMenuFactory : public al::Factory<createMenu> {

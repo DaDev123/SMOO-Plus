@@ -42,6 +42,7 @@ SOURCES		:=  \
 			source/server/freeze-tag  \
 			source/server/inf  \
 			source/server/coinrunners  \
+			source/server/speedrun  \
 			source/server/gamemode  \
 			source/server/gamemode/modifiers  \
 			source/server  \
