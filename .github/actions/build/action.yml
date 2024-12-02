@@ -1,0 +1,81 @@
+name: Build artifacts
+
+
+inputs:
+  tag:
+    description : 'version tag'
+    required    : false
+    default     : ''
+  prefix:
+    description : 'filename prefix'
+    required    : false
+    default     : ''
+  emu:
+    description : 'what system the build is for: Switch or Emulators'
+    required    : false
+    default     : 'Switch'
+
+
+outputs:
+  filename:
+    description : 'Filename for the build artifacts'
+    value       : ${{ steps.env.outputs.filename }}
+
+
+runs:
+  using: composite
+  steps:
+  -
+    name  : Environment
+    id    : env
+    shell : bash
+    run: |
+      VERS=${{ inputs.tag }}
+      echo "version=${VERS:1}" >>$GITHUB_OUTPUT
+      echo "filename=${{ inputs.prefix }}SMO_Online${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}_for_${{ inputs.emu }}" >>$GITHUB_OUTPUT
+  -
+    name : Set up Docker Buildx
+    uses : docker/setup-buildx-action@v3
+  -
+    name : Build environment
+    uses : docker/build-push-action@v5
+    with:
+      pull       : true
+      push       : false
+      load       : true
+      context    : .
+      file       : ./Dockerfile
+      tags       : smoo-build-env
+      platforms  : linux/amd64
+      cache-from : type=gha,scope=smoo-build-env
+      cache-to   : type=gha,scope=smoo-build-env,mode=max
+  -
+    name  : Build mod
+    shell : bash
+    run: |
+      docker  run  --rm             \
+        -u `id -u`:`id -g`          \
+        -v "/$PWD/":/app/           \
+        -e ISEMU=${{ (inputs.emu != 'Switch' && '1') || '0' }}  \
+        ${{ (steps.env.outputs.version != '' && format('-e BUILDVERSTR={0}', steps.env.outputs.version)) || '' }}  \
+        smoo-build-env      \
+      ;
+      cp  -r  ./romfs/  ./starlight_patch_100/atmosphere/contents/0100000000010000/.
+  -
+    name  : Emulators
+    shell : bash
+    if    : ${{ inputs.emu == 'Emulators' }}
+    run: |
+      cd  ./starlight_patch_100/
+      mkdir  ./SMOO/
+      mv  ./atmosphere/contents/0100000000010000/exefs  ./SMOO/exefs
+      mv  ./atmosphere/contents/0100000000010000/romfs  ./SMOO/romfs
+      mv  ./atmosphere/exefs_patches/StarlightBase/3CA12DFAAF9C82DA064D1698DF79CDA1.ips  ./SMOO/exefs/
+      rm  -rf  ./atmosphere/
+  -
+    name : Upload artifacts
+    uses : actions/upload-artifact@v4
+    with:
+      name              : ${{ steps.env.outputs.filename }}
+      path              : ./starlight_patch_100/
+      if-no-files-found : error
