@@ -156,9 +156,9 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     );
 
 #if EMU
-    gTextWriter->printf("Mod version: %s for Emulators\n", TOSTRING(BUILDVERSTR));
+    gTextWriter->printf("Mod version: %s for peniss\n", TOSTRING(BUILDVERSTR));
 #else
-    gTextWriter->printf("Mod version: %s for Switch\n", TOSTRING(BUILDVERSTR));
+    gTextWriter->printf("Mod version: %s for Dicks\n", TOSTRING(BUILDVERSTR));
 #endif
 
     al::Scene* curScene = curSequence->curScene;
