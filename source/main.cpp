@@ -183,7 +183,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
         GameMode      gameMode     = GameModeManager::instance()->getGameMode();
         GameModeBase* gameModeBase = GameModeManager::instance()->getMode<GameModeBase>();
 
-        gTextWriter->printf("(ZR ←)------------ Page %d/%d -------------(ZR →)\n", pageIndex + 1, maxPages);
+        gTextWriter->printf("(R ←)------------ Page %d/%d -------------(R →)\n", pageIndex + 1, maxPages);
 
         switch (pageIndex)
         {
@@ -437,7 +437,7 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
                 }
             }
         }
-    } else if (al::isPadHoldZL(-1)) {
+    } else if (al::isPadHoldR(-1)) {
         if (debugMode && pageIndex == 0) {
             if (al::isPadTriggerLeft(-1)) { // [Debug menu] ZL + Left => Previous player
                 debugPuppetIndex--;
@@ -452,6 +452,16 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
                 }
             }
         }
+        
+        
+    } else if (al::isPadHoldZL(-1)) {
+        if (al::isPadTriggerLeft(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWaitDance01");
+        if (al::isPadTriggerUp(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWait64");
+        if (al::isPadTriggerRight(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("RaceResultWin");
+        if (al::isPadTriggerL(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWaitSitDown");
+        if (al::isPadTriggerDown(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("RaceResultLose");
+        
+        
     } else if (al::isPadHoldL(-1)) {
         if (al::isPadTriggerLeft(-1)) { // L + Left => Activate gamemode
             GameModeManager::instance()->toggleActive();
