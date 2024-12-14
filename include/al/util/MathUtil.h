@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sead/math/seadVector.h>
+#include "math/seadQuat.h"
 
 namespace al {
 
@@ -61,5 +62,7 @@ float calcAngleOnPlaneDegreeOrZero(sead::Vector3f const&,sead::Vector3f const&,s
 float calcAngleSignOnPlane(sead::Vector3f const&,sead::Vector3f const&,sead::Vector3f const&);
 bool tryCalcAngleDegree(float *,sead::Vector3f const&,sead::Vector3f const&);
 bool tryCalcAngleOnPlaneDegree(float *,sead::Vector3f const&,sead::Vector3f const&,sead::Vector3f const&);
+
+void calcQuatRotateDegree(sead::Vector3<float>* result, sead::Quat<float> const& quat);
 
 };  // namespace al

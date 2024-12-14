@@ -25,7 +25,7 @@ struct FishingFish;
 namespace alSensorFunction {
     void updateHitSensorsAll(al::LiveActor *);
     void clearHitSensors(al::LiveActor *);
-    uint findSensorTypeByName(char const *);
+    uint findSensorTypeByName(char const*);
 }
 
 namespace al
@@ -35,53 +35,48 @@ namespace al
     struct EventFlowExecutor;
     struct ParabolicPath;
 
-    sead::Vector3f * getSensorPos(al::HitSensor const *);
-    sead::Vector3f * getActorTrans(al::HitSensor const *);
+    sead::Vector3f *getSensorPos(al::HitSensor const *);
+    sead::Vector3f* getActorTrans(al::HitSensor const*);
 
-    bool tryReceiveMsgPushAndAddVelocity(
-        al::LiveActor *,
-        al::SensorMsg const *,
-        al::HitSensor const *,
-        al::HitSensor const *,
-        float
-    );
+    bool tryReceiveMsgPushAndAddVelocity(al::LiveActor*, al::SensorMsg const*, al::HitSensor const*,
+                                         al::HitSensor const*, float);
 
-    bool isSensorTypeYoshiEnableSendPush(al::HitSensor const *);
-    bool isSensorTypeYoshiMsgReceivable(al::HitSensor const *);
-    bool isSensorValid(al::HitSensor const *);
-    bool isSensorName(al::HitSensor const *, char const *);
-    bool isSensorHostName(al::HitSensor const *, char const *);
-    bool isSensorHost(al::HitSensor const *, al::LiveActor const *);
-    bool isSensorValid(al::LiveActor const *, char const *);
-    bool isSensorBindableAll(al::HitSensor const *);
-    bool isSensorEnemy(al::HitSensor const *);
-    bool isSensorEnemyAttack(al::HitSensor const *);
-    bool isSensorEnemyBody(al::HitSensor const *);
-    bool isSensorEye(al::HitSensor const *);
-    bool isSensorMapObj(al::HitSensor const *);
-    bool isSensorNpc(al::HitSensor const *);
-    bool isSensorPlayerAll(al::HitSensor const *);
-    bool isSensorRide(al::HitSensor const *);
-    bool isSensorPlayerAttack(al::HitSensor const *);
-    bool isSensorPlayer(al::HitSensor const *);
-    bool isSensorPlayerFoot(al::HitSensor const *);
-    bool isSensorPlayerDecoration(al::HitSensor const *);
-    bool isSensorPlayerEye(al::HitSensor const *);
-    bool isSensorPlayerOrPlayerWeapon(al::HitSensor const *);
-    bool isSensorCollision(al::HitSensor const *);
-    bool isSensorPlayerFireBall(al::HitSensor const *);
-    bool isSensorHoldObj(al::HitSensor const *);
-    bool isSensorLookAt(al::HitSensor const *);
-    bool isSensorBindableGoal(al::HitSensor const *);
-    bool isSensorBindableAllPlayer(al::HitSensor const *);
-    bool isSensorBindableBubbleOutScreen(al::HitSensor const *);
-    bool isSensorBindableKoura(al::HitSensor const *);
-    bool isSensorBindableRouteDokan(al::HitSensor const *);
-    bool isSensorBindableBubblePadInput(al::HitSensor const *);
-    bool isSensorBindable(al::HitSensor const *);
-    bool isSensorSimple(al::HitSensor const *);
-    bool isSensorHitAnyPlane(al::HitSensor const *, al::HitSensor const *, sead::Vector3<float> const &);
-    bool isSensorHitRingShape(al::HitSensor const *, al::HitSensor const *, float);
+    bool isSensorTypeYoshiEnableSendPush(al::HitSensor const*);
+    bool isSensorTypeYoshiMsgReceivable(al::HitSensor const*);
+    bool isSensorValid(al::HitSensor const*);
+    bool isSensorName(al::HitSensor const*, char const*);
+    bool isSensorHostName(al::HitSensor const*, char const*);
+    bool isSensorHost(al::HitSensor const*, al::LiveActor const*);
+    bool isSensorValid(al::LiveActor const*, char const*);
+    bool isSensorBindableAll(al::HitSensor const*);
+    bool isSensorEnemy(al::HitSensor const*);
+    bool isSensorEnemyAttack(al::HitSensor const*);
+    bool isSensorEnemyBody(al::HitSensor const*);
+    bool isSensorEye(al::HitSensor const*);
+    bool isSensorMapObj(al::HitSensor const*);
+    bool isSensorNpc(al::HitSensor const*);
+    bool isSensorPlayerAll(al::HitSensor const*);
+    bool isSensorRide(al::HitSensor const*);
+    bool isSensorPlayerAttack(al::HitSensor const*);
+    bool isSensorPlayer(al::HitSensor const*);
+    bool isSensorPlayerFoot(al::HitSensor const*);
+    bool isSensorPlayerDecoration(al::HitSensor const*);
+    bool isSensorPlayerEye(al::HitSensor const*);
+    bool isSensorPlayerOrPlayerWeapon(al::HitSensor const*);
+    bool isSensorCollision(al::HitSensor const*);
+    bool isSensorPlayerFireBall(al::HitSensor const*);
+    bool isSensorHoldObj(al::HitSensor const*);
+    bool isSensorLookAt(al::HitSensor const*);
+    bool isSensorBindableGoal(al::HitSensor const*);
+    bool isSensorBindableAllPlayer(al::HitSensor const*);
+    bool isSensorBindableBubbleOutScreen(al::HitSensor const*);
+    bool isSensorBindableKoura(al::HitSensor const*);
+    bool isSensorBindableRouteDokan(al::HitSensor const*);
+    bool isSensorBindableBubblePadInput(al::HitSensor const*);
+    bool isSensorBindable(al::HitSensor const*);
+    bool isSensorSimple(al::HitSensor const*);
+    bool isSensorHitAnyPlane(al::HitSensor const*,al::HitSensor const*, sead::Vector3<float> const&);
+    bool isSensorHitRingShape(al::HitSensor const*, al::HitSensor const*, float);
 
     bool isMsgRequestPlayerStainWet(al::SensorMsg const *, int *);
     bool isMsgPushAll(al::SensorMsg const *);
@@ -487,4 +482,5 @@ namespace al
     bool sendMsgPushAndKillVelocityToTargetH(al::LiveActor *, al::HitSensor *, al::HitSensor *);
     bool sendMsgCollidePush(al::HitSensor *, al::HitSensor *, sead::Vector3f const &);
     bool sendMsgScreenPointTarget(al::SensorMsg const &, al::ScreenPointer *, al::ScreenPointTarget *);
+
 } // namespace al

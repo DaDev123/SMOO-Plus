@@ -20,7 +20,7 @@
 #include "rs/util/LiveActorUtil.h"
 
 #include "PlayerCostumeInfo.h"
-#include "sead/math/seadVector.h"
+#include "math/seadVector.h"
 
 namespace al {
     class Resource;

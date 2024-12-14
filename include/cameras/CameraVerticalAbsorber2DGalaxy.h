@@ -2,7 +2,7 @@
 
 #include "al/camera/CameraPoser.h"
 #include "al/nerve/NerveExecutor.h"
-#include "sead/math/seadVector.h"
+#include "math/seadVector.h"
 
 namespace al {
 class CameraVerticalAbsorber2DGalaxy : public al::NerveExecutor {

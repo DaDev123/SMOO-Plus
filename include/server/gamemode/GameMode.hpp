@@ -9,6 +9,7 @@ enum GameMode : s8 {
     HIDEANDSEEK =  1,
     SARDINE     =  2,
     FREEZETAG   =  3,
+    INFECTION   =  4,
     /**
      * Don't use values 14 or higher before refactoring the GameModeInf packet.
      * This is necessary because currently there are only 4 bits in the packet for the game mode.

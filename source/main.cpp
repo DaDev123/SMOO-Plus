@@ -156,9 +156,9 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     );
 
 #if EMU
-    gTextWriter->printf("Mod version: SMOO-Plus 1.3.0 for Emulators\n", TOSTRING(BUILDVERSTR));
+    gTextWriter->printf("Mod version: %s for Emulators\n", TOSTRING(BUILDVERSTR));
 #else
-    gTextWriter->printf("Mod version: SMOO-Plus 1.3.0 for Switch\n", TOSTRING(BUILDVERSTR));
+    gTextWriter->printf("Mod version: %s for Switch\n", TOSTRING(BUILDVERSTR));
 #endif
 
     al::Scene* curScene = curSequence->curScene;
@@ -437,6 +437,14 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
                 }
             }
         }
+
+    } else if (al::isPadHoldZL(-1)) {
+        if (al::isPadTriggerLeft(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWaitDance01");
+        if (al::isPadTriggerUp(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWait64");
+        if (al::isPadTriggerRight(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("RaceResultWin");
+        if (al::isPadTriggerL(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWaitSitDown");
+        if (al::isPadTriggerDown(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("RaceResultLose"); 
+
     } else if (al::isPadHoldR(-1)) {
         if (debugMode && pageIndex == 0) {
             if (al::isPadTriggerLeft(-1)) { // [Debug menu] ZL + Left => Previous player
@@ -452,16 +460,6 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
                 }
             }
         }
-        
-        
-    } else if (al::isPadHoldZL(-1)) {
-        if (al::isPadTriggerLeft(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWaitDance01");
-        if (al::isPadTriggerUp(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWait64");
-        if (al::isPadTriggerRight(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("RaceResultWin");
-        if (al::isPadTriggerL(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("AreaWaitSitDown");
-        if (al::isPadTriggerDown(-1)) ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("RaceResultLose");
-        
-        
     } else if (al::isPadHoldL(-1)) {
         if (al::isPadTriggerLeft(-1)) { // L + Left => Activate gamemode
             GameModeManager::instance()->toggleActive();

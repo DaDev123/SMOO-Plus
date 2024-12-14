@@ -1,12 +1,12 @@
 #pragma once
 
 namespace al {
-    struct CameraOffsetPresetData;
+struct CameraOffsetPresetData;
 
-    class CameraOffsetPreset {
-        public:
-            CameraOffsetPresetData* mOffsetPresetData;
-            int mUnkInt;
-            int mUnk;
-    };
-}
+class CameraOffsetPreset {
+public:
+    CameraOffsetPresetData* mOffsetPresetData;
+    int mUnkInt;
+    int mUnk;
+};
+} //namespace al
