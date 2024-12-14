@@ -93,10 +93,10 @@ void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver
          al::sendMsgEnemyAttack(receiver, sender);
     }
 
-            if (al::sendMsgEnemyAttack(receiver, sender)) {
-  if (GameModeManager::hasCappyDamage()) {
-    al::sendMsgEnemyAttack(receiver, sender);
-  }
+    if (al::sendMsgEnemyAttack(receiver, sender)) {
+      if (GameModeManager::hasCappyDamage()) {
+        al::sendMsgEnemyAttack(receiver, sender);
+      }
     }
 }
 
