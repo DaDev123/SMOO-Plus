@@ -59,6 +59,7 @@ public:
     virtual bool hasMarioBounce()    { return true;  }
     virtual bool hasCappyCollision() { return false; }
     virtual bool hasCappyBounce()    { return false; }
+    virtual bool hasCappyDamage()    { return false; }
 
 protected:
     sead::FixedSafeString<0x10> mName;

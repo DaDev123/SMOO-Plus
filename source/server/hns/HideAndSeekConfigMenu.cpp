@@ -9,6 +9,7 @@ HideAndSeekConfigMenu::HideAndSeekConfigMenu() : GameModeConfigMenu() {
     mItems->mBuffer[2].copy(u"Mario Bounce (ON)       ");
     mItems->mBuffer[3].copy(u"Cappy Collision (OFF)   ");
     mItems->mBuffer[4].copy(u"Cappy Bounce (OFF)      ");
+    mItems->mBuffer[5].copy(u"Cappy Damage (OFF)      ");
 }
 
 const sead::WFixedSafeString<0x200>* HideAndSeekConfigMenu::getStringData() {
@@ -40,12 +41,18 @@ const sead::WFixedSafeString<0x200>* HideAndSeekConfigMenu::getStringData() {
         ? u"Cappy Bounce (ON)       "
         : u"Cappy Bounce (OFF)      "
     );
+    const char16_t* cappyDamage = (
+        HideAndSeekInfo::mHasCappyDamage
+        ? u"Cappy Damage (ON)       "
+        : u"Cappy Damage (OFF)      "
+    );
 
     mItems->mBuffer[0].copy(gravity);
     mItems->mBuffer[1].copy(marioCollision);
     mItems->mBuffer[2].copy(marioBounce);
     mItems->mBuffer[3].copy(cappyCollision);
     mItems->mBuffer[4].copy(cappyBounce);
+    mItems->mBuffer[5].copy(cappyDamage);
 
     return mItems->mBuffer;
 }
@@ -70,6 +77,10 @@ GameModeConfigMenu::UpdateAction HideAndSeekConfigMenu::updateMenu(int selectInd
         }
         case 4: {
             HideAndSeekInfo::mHasCappyBounce = !HideAndSeekInfo::mHasCappyBounce;
+            return UpdateAction::REFRESH;
+        }
+        case 5: {
+            HideAndSeekInfo::mHasCappyDamage = !HideAndSeekInfo::mHasCappyDamage;
             return UpdateAction::REFRESH;
         }
         default: {

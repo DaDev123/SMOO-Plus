@@ -12,6 +12,14 @@
 
 #include "server/gamemode/GameModeManager.hpp"
 
+bool PuppetCapActor::sIsPlayerInSafeZone = true;
+int PuppetCapActor::sInvincibilityFromPunchAnim;
+
+class PlayerDamageKeeper{
+    public:
+        void damage(int);
+};
+
 PuppetCapActor::PuppetCapActor(const char* name) : al::LiveActor(name) {}
 
 void PuppetCapActor::init(al::ActorInitInfo const& initInfo) {
@@ -79,8 +87,21 @@ void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver
 
     if (al::isSensorPlayer(receiver) && al::isSensorName(sender, "Push")) {
         rs::sendMsgPushToPlayer(receiver, sender);
+
+
+    if (GameModeManager::hasCappyDamage()) {
+         al::sendMsgEnemyAttack(receiver, sender);
+    }
+
+            if (al::sendMsgEnemyAttack(receiver, sender)) {
+  if (GameModeManager::hasCappyDamage()) {
+    al::sendMsgEnemyAttack(receiver, sender);
+  }
     }
 }
+
+}
+
 
 bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender, al::HitSensor* receiver) {
     if (!GameModeManager::hasCappyBounce()) {

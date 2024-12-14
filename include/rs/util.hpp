@@ -38,6 +38,9 @@ namespace rs {
 
     bool isPlayerDamageStopDemo(const al::LiveActor *);
 
+    bool isKidsMode(const al::Scene*);
+    bool isKidsMode(const GameDataHolder*);
+
     PlayerActorBase * getPlayerActor(const al::Scene *);
 
     void get2DAreaPos(sead::Vector3<f32> *, al::AreaObj const *);
