@@ -25,9 +25,9 @@ __attribute((used)) constexpr al::NameToCreator<createMode> modeTable[] = {
 
 constexpr const char* modeNames[] = {
     "Legacy",
-    "Hide & Seek",
+    "Cache Cache",
     "Sardines",
-    "Freeze-Tag",
+    "Loup Glace",
     "Infection",
 };
 

@@ -46,7 +46,6 @@ class HideAndSeekMode : public GameModeBase {
         bool hasMarioBounce()    override { return HideAndSeekInfo::mHasMarioBounce;    }
         bool hasCappyCollision() override { return HideAndSeekInfo::mHasCappyCollision; }
         bool hasCappyBounce()    override { return HideAndSeekInfo::mHasCappyBounce;    }
-        bool hasCappyDamage()    override { return HideAndSeekInfo::mHasCappyDamage;    }
 
     private:
         float             mInvulnTime = 0.0f;

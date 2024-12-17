@@ -5,10 +5,10 @@ SardineConfigMenu::SardineConfigMenu() : GameModeConfigMenu() {
     mItems->mBuffer[0].copy(u"Sardine Gravity (OFF)");
     mItems->mBuffer[1].copy(u"Sardine Tether (OFF) ");
     mItems->mBuffer[2].copy(u"Tether Snapping (OFF)");
-    mItems->mBuffer[3].copy(u"Mario Collision (ON) ");
-    mItems->mBuffer[4].copy(u"Mario Bounce (ON)    ");
-    mItems->mBuffer[5].copy(u"Cappy Collision (OFF)");
-    mItems->mBuffer[6].copy(u"Cappy Bounce (OFF)   ");
+    mItems->mBuffer[3].copy(u"Collision de Mario (ON) ");
+    mItems->mBuffer[4].copy(u"Saut Sur Mario (ON)    ");
+    mItems->mBuffer[5].copy(u"Collision de Cappy (OFF)");
+    mItems->mBuffer[6].copy(u"Boost de Cappy (OFF)   ");
 }
 
 const sead::WFixedSafeString<0x200>* SardineConfigMenu::getStringData() {
@@ -34,22 +34,22 @@ const sead::WFixedSafeString<0x200>* SardineConfigMenu::getStringData() {
     // Collision Toggles
     const char16_t* marioCollision = (
         SardineInfo::mHasMarioCollision
-        ? u"Mario Collision (ON) "
-        : u"Mario Collision (OFF)"
+        ? u"Collision de Mario (ON) "
+        : u"Collision de Mario (OFF)"
     );
     const char16_t* marioBounce = (
         SardineInfo::mHasMarioBounce
-        ? u"Mario Bounce (ON)    "
-        : u"Mario Bounce (OFF)   "
+        ? u"Saut Sur Mario (ON)    "
+        : u"Saut Sur Mario (OFF)   "
     );
     const char16_t* cappyCollision = (
         SardineInfo::mHasCappyCollision
-        ? u"Cappy Collision (ON) "
-        : u"Cappy Collision (OFF)"
+        ? u"Collision de Cappy (ON) "
+        : u"Collision de Cappy (OFF)"
     );
     const char16_t* cappyBounce = (
         SardineInfo::mHasCappyBounce
-        ? u"Cappy Bounce (ON)    "
+        ? u"Boost de Cappy (ON)    "
         : u"Cappy Bounce (OFF)   "
     );
 
