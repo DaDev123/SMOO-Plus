@@ -80,12 +80,12 @@ Client::Client() {
  */
 void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor holder) {
     mConnectStatus = new (mHeap) al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
-    al::setPaneString(mConnectStatus, "TxtSave", u"Connecting to Server.", 0);
-    al::setPaneString(mConnectStatus, "TxtSaveSh", u"Connecting to Server.", 0);
+    al::setPaneString(mConnectStatus, "TxtSave", u"Connexion au Serveur.", 0);
+    al::setPaneString(mConnectStatus, "TxtSaveSh", u"Connexion au Serveur.", 0);
 
     mUIMessage = new (mHeap) al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
-    mUIMessage->setTxtMessage(u"You've been kicked from the server.");
-    mUIMessage->setTxtMessageConfirm(u"You've been banned from the server!");
+    mUIMessage->setTxtMessage(u"Vous avez été expulsé du serveur.");
+    mUIMessage->setTxtMessageConfirm(u"Vous avez été banni du serveur!");
 
     mHolder = holder;
 
@@ -123,16 +123,16 @@ bool Client::startConnection() {
     bool isOverride = al::isPadHoldZL(-1);
 
     if (mServerIP.isEmpty() || isOverride) {
-        mKeyboard->setHeaderText(u"Save file does not contain a server address!");
-        mKeyboard->setSubText(u"Set a server address below.");
+        mKeyboard->setHeaderText(u"Le fichier de sauvegarde ne contient pas d'adresse de serveur!");
+        mKeyboard->setSubText(u"Définissez une adresse de serveur ci-dessous.");
         mServerIP = "127.0.0.1";
         Client::openKeyboardIP();
         isNeedSave = true;
     }
 
     if (!mServerPort || isOverride) {
-        mKeyboard->setHeaderText(u"Save file does not contain a server port!");
-        mKeyboard->setSubText(u"Set a server port below.");
+        mKeyboard->setHeaderText(u"Le fichier de sauvegarde ne contient pas de port de serveur!");
+        mKeyboard->setSubText(u"Définissez un port de serveur ci-dessous.");
         mServerPort = 1027;
         Client::openKeyboardPort();
         isNeedSave = true;

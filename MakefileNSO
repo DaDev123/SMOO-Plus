@@ -35,6 +35,7 @@ BUILD		?=	build$(SMOVER)
 SOURCES		:=  \
 			source/sead/time  \
 			source/sead  \
+			source/speedboot  \
 			source/puppets  \
 			source/server/hns  \
 			source/server/sardines  \
