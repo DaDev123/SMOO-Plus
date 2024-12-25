@@ -13,6 +13,6 @@ class InfectionConfigMenu : public GameModeConfigMenu {
         const int getMenuSize() override { return mItemCount; }
 
     private:
-        static constexpr int mItemCount = 6;
+        static constexpr int mItemCount = 5;
         sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>* mItems = nullptr;
 };

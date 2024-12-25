@@ -18,7 +18,6 @@ struct InfectionInfo : GameModeInfoBase {
     static bool mHasMarioBounce;
     static bool mHasCappyCollision;
     static bool mHasCappyBounce;
-    static bool mHasCappyDamage;
 
     inline bool isPlayerSeeking() const { return  mIsPlayerIt; }
     inline bool isPlayerHiding()  const { return !mIsPlayerIt; }
