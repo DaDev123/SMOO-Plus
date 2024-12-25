@@ -3,7 +3,7 @@
 #include "al/layout/LayoutActor.h"
 #include "al/nerve/NerveExecutor.h"
 #include "nn/ui2d/Texture.h"
-#include "prim/seadSafeString.h"
+#include "sead/prim/seadSafeString.h"
 
 struct RollPartsData {
     int mRollMsgCount = 0; // 0x0

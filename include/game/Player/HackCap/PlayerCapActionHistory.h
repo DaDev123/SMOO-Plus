@@ -3,7 +3,7 @@
 #include "al/LiveActor/LiveActor.h"
 #include "game/Interfaces/IUsePlayerCollision.h"
 #include "game/Player/PlayerConst.h"
-#include "math/seadVector.h"
+#include "sead/math/seadVector.h"
 
 class PlayerCapActionHistory {
 public:

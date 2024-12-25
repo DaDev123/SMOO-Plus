@@ -2,7 +2,7 @@
 
 #include "al/LiveActor/LiveActor.h"
 #include "al/nerve/NerveExecutor.h"
-#include "math/seadVector.h"
+#include "sead/math/seadVector.h"
 
 class WorldEndBorderKeeper : public al::NerveExecutor {
 public:

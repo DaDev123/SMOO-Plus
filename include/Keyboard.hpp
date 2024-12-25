@@ -9,6 +9,7 @@ typedef void (*KeyboardSetup)(nn::swkbd::KeyboardConfig&);
 class Keyboard {
     public:
         Keyboard(ulong strSize);
+        ~Keyboard();
         void keyboardThread();
 
         void openKeyboard(const char* initialText, KeyboardSetup setup);

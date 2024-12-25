@@ -50,11 +50,11 @@ StageSceneStateServerConfig::StageSceneStateServerConfig(
     mMainOptionsList->initDataNoResetSelected(mMainMenuOptionsCount);
 
     mMainMenuOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, mMainMenuOptionsCount>();
-    mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODECONFIG].copy(u"Gamemode Config");
-    mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODESWITCH].copy(u"Change Gamemode               "); // TBD
-    mMainMenuOptions->mBuffer[ServerConfigOption::SETIP].copy(u"Change Server (needs restart)");
-    mMainMenuOptions->mBuffer[ServerConfigOption::SETPORT].copy(u"Change Port (needs restart)");
-    mMainMenuOptions->mBuffer[ServerConfigOption::HIDESERVER].copy(u"Hide Server in Debug (OFF)"); // TBD
+    mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODECONFIG].copy(u"Paramètre du Mode");
+    mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODESWITCH].copy(u"Changer de Mode               "); // TBD
+    mMainMenuOptions->mBuffer[ServerConfigOption::SETIP].copy(u"Changer de Serveur");
+    mMainMenuOptions->mBuffer[ServerConfigOption::SETPORT].copy(u"Changer de Port");
+    mMainMenuOptions->mBuffer[ServerConfigOption::HIDESERVER].copy(u"Cacher le serveur Debug (OFF)"); // TBD
 
     mMainOptionsList->addStringData(getMainMenuOptions(), "TxtContent");
 
@@ -112,7 +112,7 @@ void StageSceneStateServerConfig::init() {
     nn::account::Uid user;
     nn::account::GetLastOpenedUser(&user);
     if (memcmp(user.data, ryujinx, 0x10) == 0) {
-        Client::showUIMessage(u"Error: Ryujinx default profile detected.\nYou have to create a new user profile!");
+        Client::showUIMessage(u"Erreur: Profile de defaut de Ryujinx.\nvous devez créer un nouveau Profile!");
     }
     #endif
 }
@@ -128,9 +128,9 @@ void StageSceneStateServerConfig::kill(void) {
 
     if (Client::hasServerChanged()) {
         #if EMU
-        Client::showUIMessage(u"You changed the server and have to restart the emulator now.");
+        Client::showUIMessage(u"Vous avez changé de serveur et devez maintenant redémarrer l'émulateur.");
         #else
-        Client::showUIMessage(u"You changed the server and have to restart the game now.");
+        Client::showUIMessage(u"Vous avez changé de serveur et devez maintenant redémarrer le jeu.");
         #endif
     }
 }
@@ -198,7 +198,7 @@ void StageSceneStateServerConfig::exeOpenKeyboardIP() {
     if (al::isFirstStep(this)) {
         mCurrentList->deactivate();
 
-        Client::getKeyboard()->setHeaderText(u"Set a server address below.");
+        Client::getKeyboard()->setHeaderText(u"Définissez une adresse de serveur ci-dessous.");
         Client::getKeyboard()->setSubText(u"");
 
         bool isSave = Client::openKeyboardIP(); // anything that happens after this will be ran after the keyboard closes
@@ -217,7 +217,7 @@ void StageSceneStateServerConfig::exeOpenKeyboardPort() {
     if (al::isFirstStep(this)) {
         mCurrentList->deactivate();
 
-        Client::getKeyboard()->setHeaderText(u"Set a server port below.");
+        Client::getKeyboard()->setHeaderText(u"Définissez un port de serveur ci-dessous.");
         Client::getKeyboard()->setSubText(u"");
 
         bool isSave = Client::openKeyboardPort(); // anything that happens after this will be ran after the keyboard closes
@@ -375,15 +375,15 @@ const sead::WFixedSafeString<0x200>* StageSceneStateServerConfig::getMainMenuOpt
 
     mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODESWITCH].copy(
         GameModeManager::instance()->getInfo<GameModeInfoBase>()
-        ? u"Change Gamemode (needs reload)"
-        : u"Change Gamemode               "
+        ? u"Changer de Mode               "
+        : u"Changer de Mode               "
     );
 
     // "Hide Server in Debug" option
     mMainMenuOptions->mBuffer[ServerConfigOption::HIDESERVER].copy(
         Client::isServerHidden()
-        ? u"Hide Server in Debug (ON) "
-        : u"Hide Server in Debug (OFF)"
+        ? u"Cacher le serveur Debug (ON) "
+        : u"Cacher le serveur Debug (OFF)"
     );
 
     return mMainMenuOptions->mBuffer;

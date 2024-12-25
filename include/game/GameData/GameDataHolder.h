@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include "basis/seadTypes.h"
 #include "game/GameData/GameDataFile.h"
 #include "game/GameData/GameDataHolderBase.h"
 #include "game/WorldList/WorldList.h"
+#include "sead/basis/seadTypes.h"
 
 class GameDataHolder : public al::GameDataHolderBase
 {

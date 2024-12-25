@@ -27,7 +27,4 @@ class PuppetCapActor : public al::LiveActor {
     private:
         HackCapJointControlKeeper* mJointKeeper;
         PuppetInfo* mInfo;
-    public:
-        static bool sIsPlayerInSafeZone;
-        static int sInvincibilityFromPunchAnim;
 };

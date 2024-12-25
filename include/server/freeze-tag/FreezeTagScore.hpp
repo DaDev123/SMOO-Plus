@@ -16,25 +16,25 @@ class FreezeTagScore {
 
         // Events
         void eventScoreDebug()        { addScore( 1, "Debugging!");    }
-        void eventScoreSurvivalTime() { addScore( 1, "Survival Time"); }
-        void eventScoreUnfreeze()     { addScore( 2, "Rescued");       }
-        void eventScoreFreeze()       { addScore( 2, "Caught");        }
-        void eventScoreFallOff()      { addScore( 2, "Fell Off L");    }
-        void eventScoreRunnerWin()    { addScore( 4, "Survived!");     }
+        void eventScoreSurvivalTime() { addScore( 1, "Temps de Survie"); }
+        void eventScoreUnfreeze()     { addScore( 2, "Sauvé");       }
+        void eventScoreFreeze()       { addScore( 2, "Attrapé");        }
+        void eventScoreFallOff()      { addScore( 2, "Tomber L + Ratio");    }
+        void eventScoreRunnerWin()    { addScore( 4, "Survécu!");     }
         void eventScoreWipeout()      { addScore(20, "Wipeout!");      }
 
-        void eventNotEnoughRunnersToStart()    { addScore(0, "Not enough Runners to start a round"); }
-        void eventNotEnoughChasersToStart()    { addScore(0, "Not enough Chasers to start a round"); }
-        void eventNotEnoughRunnersToContinue() { addScore(0, "Round cancelled: not enough Runners"); }
-        void eventNotEnoughChasersToContinue() { addScore(0, "Round cancelled: not enough Chasers"); }
+        void eventNotEnoughRunnersToStart()    { addScore(0, "Pas assez de Joueurs pour commencer la Partie"); }
+        void eventNotEnoughChasersToStart()    { addScore(0, "Pas assez de Loups pour commencer la Partie"); }
+        void eventNotEnoughRunnersToContinue() { addScore(0, "Partie annulé: Pas assez de Joueurs"); }
+        void eventNotEnoughChasersToContinue() { addScore(0, "Partie annulé: Pas assez de Loups"); }
 
         void eventRoundStarted(const char* name) {
-            strcpy(buffer, "Round started by ");
+            strcpy(buffer, "Partie commencé part ");
             strcat(buffer, name);
             addScore(0, buffer);
         }
         void eventRoundCancelled(const char* name) {
-            strcpy(buffer, "Round cancelled by ");
+            strcpy(buffer, "Partie arreté par ");
             strcat(buffer, name);
             addScore(0, buffer);
         }

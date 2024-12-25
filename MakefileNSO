@@ -36,6 +36,7 @@ SOURCES		:=  \
 			source/sead/time  \
 			source/sead  \
 			source/puppets  \
+			source/speedboot  \
 			source/server/hns  \
 			source/server/sardines  \
 			source/server/freeze-tag  \

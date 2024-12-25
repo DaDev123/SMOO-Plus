@@ -99,35 +99,6 @@ __attribute__((used)) static const char* costumeNames[] = {
     "MarioTopper",
     "MarioZombie"
 };
-// full costume list from 1.3
-// attribute otherwise the build log is spammed with unused warnings
-// __attribute__((used)) static const char* costumeNames[] = {
-//     "Mario", "Mario3D", "Mario64", "Mario64Metal", "MarioAloha", "MarioArmor",
-//     // "MarioArmorWestern", // DLC
-//     "MarioBandman",
-//     // "MarioBatter", // DLC
-//     "MarioBone", "MarioCaptain", "MarioClown", "MarioColorClassic", "MarioColorGold",
-//     "MarioColorLuigi", "MarioColorWaluigi", "MarioColorWario",
-//     // "MarioConductor", // DLC
-//     "MarioCook", "MarioDiddyKong", "MarioDoctor", "MarioDot", "MarioDot3d", "MarioExplorer",
-//     "MarioFootball", "MarioGolf", "MarioGunman", "MarioHakama", "MarioHappi",
-//     // "MarioHariet", // DLC
-//     // "MarioHigh",
-//     "MarioKing", "MarioKoopa", "MarioMaker", "MarioMechanic", "MarioNew3DS", "MarioPainter",
-//     "MarioPeach", "MarioPilot", "MarioPirate", "MarioPoncho", "MarioPrimitiveMan", "MarioRacer",
-//     //"MarioRango", // DLC
-//     //"MarioRsv", // DLC
-//     "MarioSailor", "MarioSanta",
-//     // "MarioSatellite", // DLC
-//     "MarioScientist", "MarioShopman", "MarioSnowSuit", "MarioSpaceSuit",
-//     // "MarioSpewart", // DLC
-//     "MarioSuit",
-//     // "MarioSunshine", // DLC
-//     "MarioSwimwear",
-//     // "MarioTopper", // DLC
-//     "MarioTuxedo",
-//     // "MarioZombie" // DLC
-// };
 
 struct HackActorName {
     const char* className;

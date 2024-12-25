@@ -20,7 +20,13 @@ Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
 
     mCustomizeDicSize = 0x400;
     mCustomizeDicBuf = (char*)malloc(mCustomizeDicSize);
+}
 
+Keyboard::~Keyboard() {
+    delete mThread;
+    free(mWorkBuf);
+    free(mTextCheckBuf);
+    free(mCustomizeDicBuf);
 }
 
 void Keyboard::keyboardThread() {
@@ -48,7 +54,6 @@ void Keyboard::keyboardThread() {
 }
 
 void Keyboard::openKeyboard(const char* initialText, KeyboardSetup setupFunc) {
-
     mInitialText = initialText;
     mSetupFunc   = setupFunc;
 

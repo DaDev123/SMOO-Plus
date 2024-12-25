@@ -5,10 +5,11 @@
 InfectionConfigMenu::InfectionConfigMenu() : GameModeConfigMenu() {
     mItems = new sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>();
     mItems->mBuffer[0].copy(u"Toggle Infection Gravity (OFF)");
-    mItems->mBuffer[1].copy(u"Mario Collision (ON)    ");
-    mItems->mBuffer[2].copy(u"Mario Bounce (ON)       ");
-    mItems->mBuffer[3].copy(u"Cappy Collision (OFF)   ");
-    mItems->mBuffer[4].copy(u"Cappy Bounce (OFF)      ");
+    mItems->mBuffer[1].copy(u"Collision des Joueurs (ON)    ");
+    mItems->mBuffer[2].copy(u"Saut sur Joueurs (ON)       ");
+    mItems->mBuffer[3].copy(u"Collision de Cappy (OFF)   ");
+    mItems->mBuffer[4].copy(u"Boost de Cappy (OFF)      ");
+    mItems->mBuffer[5].copy(u"Cappy Damage (OFF)      ");
 }
 
 const sead::WFixedSafeString<0x200>* InfectionConfigMenu::getStringData() {
@@ -22,23 +23,28 @@ const sead::WFixedSafeString<0x200>* InfectionConfigMenu::getStringData() {
     // Collision Toggles
     const char16_t* marioCollision = (
         InfectionInfo::mHasMarioCollision
-        ? u"Mario Collision (ON)    "
-        : u"Mario Collision (OFF)   "
+        ? u"Collision des Joueurs (ON)    "
+        : u"Collision des Joueurs (OFF)   "
     );
     const char16_t* marioBounce = (
         InfectionInfo::mHasMarioBounce
-        ? u"Mario Bounce (ON)       "
-        : u"Mario Bounce (OFF)      "
+        ? u"Saut sur Joueurs (ON)       "
+        : u"Saut sur Joueurs (OFF)      "
     );
     const char16_t* cappyCollision = (
         InfectionInfo::mHasCappyCollision
-        ? u"Cappy Collision (ON)    "
-        : u"Cappy Collision (OFF)   "
+        ? u"Collision de Cappy (ON)    "
+        : u"Collision de Cappy (OFF)   "
     );
     const char16_t* cappyBounce = (
         InfectionInfo::mHasCappyBounce
-        ? u"Cappy Bounce (ON)       "
-        : u"Cappy Bounce (OFF)      "
+        ? u"Boost de Cappy (ON)       "
+        : u"Boost de Cappy (OFF)      "
+    );
+    const char16_t* cappyDamage = (
+        InfectionInfo::mHasCappyDamage
+        ? u"Cappy Damage (ON)       "
+        : u"Cappy Damage (OFF) (Needs Collision de Cappy)     "
     );
 
     mItems->mBuffer[0].copy(gravity);
@@ -46,6 +52,7 @@ const sead::WFixedSafeString<0x200>* InfectionConfigMenu::getStringData() {
     mItems->mBuffer[2].copy(marioBounce);
     mItems->mBuffer[3].copy(cappyCollision);
     mItems->mBuffer[4].copy(cappyBounce);
+    mItems->mBuffer[5].copy(cappyDamage);
 
     return mItems->mBuffer;
 }
@@ -70,6 +77,10 @@ GameModeConfigMenu::UpdateAction InfectionConfigMenu::updateMenu(int selectIndex
         }
         case 4: {
             InfectionInfo::mHasCappyBounce = !InfectionInfo::mHasCappyBounce;
+            return UpdateAction::REFRESH;
+        }
+        case 5: {
+            InfectionInfo::mHasCappyDamage = !InfectionInfo::mHasCappyDamage;
             return UpdateAction::REFRESH;
         }
         default: {

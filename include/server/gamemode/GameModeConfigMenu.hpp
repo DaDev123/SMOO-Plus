@@ -12,6 +12,8 @@ public:
 
     GameModeConfigMenu() = default;
 
+    virtual void clean() {}
+
     virtual UpdateAction updateMenu(int selectIndex) { return UpdateAction::NOOP; }
 
     virtual const sead::WFixedSafeString<0x200>* getStringData() { return nullptr; }

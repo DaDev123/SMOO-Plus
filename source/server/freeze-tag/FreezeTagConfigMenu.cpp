@@ -1,6 +1,10 @@
 #include "server/freeze-tag/FreezeTagConfigMenu.hpp"
 
+#include <cmath>
 #include <stdint.h>
+#include "sead/basis/seadNew.h"
+#include "sead/heap/seadHeap.h"
+#include "server/gamemode/GameModeManager.hpp"
 #include "nn/util.h"
 
 FreezeTagConfigMenu::FreezeTagConfigMenu() : GameModeConfigMenu() {
@@ -9,18 +13,17 @@ FreezeTagConfigMenu::FreezeTagConfigMenu() : GameModeConfigMenu() {
     mItems->mBuffer[1].copy(u"Debug Mode (OFF)     ");
     mItems->mBuffer[2].copy(u"Set Score            ");
     mItems->mBuffer[3].copy(u"Set Round Duration   ");
-    mItems->mBuffer[4].copy(u"Mario Collision (ON) ");
-    mItems->mBuffer[5].copy(u"Mario Bounce (OFF)   ");
-    mItems->mBuffer[6].copy(u"Cappy Collision (ON) ");
-    mItems->mBuffer[7].copy(u"Cappy Bounce (OFF)   ");
+    mItems->mBuffer[4].copy(u"Collision des Joueurs (ON) ");
+    mItems->mBuffer[5].copy(u"Saut sur Joueurs (OFF)   ");
+    mItems->mBuffer[6].copy(u"Collision de Cappy (ON) ");
+    mItems->mBuffer[7].copy(u"Boost de Cappy (OFF)   ");
 
-    mScoreKeyboard = new Keyboard(6);
-    mScoreKeyboard->setHeaderText(u"Set your Freeze Tag score");
-    mScoreKeyboard->setSubText(u"");
+    sead::Heap* heap = GameModeManager::instance()->getHeap();
+    mKeyboard = new (heap) Keyboard(6);
+}
 
-    mRoundKeyboard = new Keyboard(3);
-    mRoundKeyboard->setHeaderText(u"Set length of rounds you start in minutes");
-    mRoundKeyboard->setSubText(u"This will be automatically sent to other players (2-60 minutes)");
+void FreezeTagConfigMenu::clean() {
+    delete mKeyboard;
 }
 
 const sead::WFixedSafeString<0x200>* FreezeTagConfigMenu::getStringData() {
@@ -41,23 +44,23 @@ const sead::WFixedSafeString<0x200>* FreezeTagConfigMenu::getStringData() {
     // Collision Toggles
     const char16_t* marioCollision = (
         FreezeTagInfo::mHasMarioCollision
-        ? u"Mario Collision (ON) "
-        : u"Mario Collision (OFF)"
+        ? u"Collision des Joueurs (ON) "
+        : u"Collision des Joueurs (OFF)"
     );
     const char16_t* marioBounce = (
         FreezeTagInfo::mHasMarioBounce
-        ? u"Mario Bounce (ON)    "
-        : u"Mario Bounce (OFF)   "
+        ? u"Saut sur Joueurs (ON)    "
+        : u"Saut sur Joueurs (OFF)   "
     );
     const char16_t* cappyCollision = (
         FreezeTagInfo::mHasCappyCollision
-        ? u"Cappy Collision (ON) "
-        : u"Cappy Collision (OFF)"
+        ? u"Collision de Cappy (ON) "
+        : u"Collision de Cappy (OFF)"
     );
     const char16_t* cappyBounce = (
         FreezeTagInfo::mHasCappyBounce
-        ? u"Cappy Bounce (ON)    "
-        : u"Cappy Bounce (OFF)   "
+        ? u"Boost de Cappy (ON)    "
+        : u"Boost de Cappy (OFF)   "
     );
 
     mItems->mBuffer[0].copy(host);
@@ -92,7 +95,9 @@ GameModeConfigMenu::UpdateAction FreezeTagConfigMenu::updateMenu(int selectIndex
             char buf[5];
             nn::util::SNPrintf(buf, 5, "%u", oldScore);
 
-            mScoreKeyboard->openKeyboard(
+            mKeyboard->setHeaderText(u"Set your Freeze Tag score");
+            mKeyboard->setSubText(u"");
+            mKeyboard->openKeyboard(
                 buf,
                 [](nn::swkbd::KeyboardConfig& config) {
                     config.keyboardMode  = nn::swkbd::KeyboardMode::ModeNumeric;
@@ -103,12 +108,12 @@ GameModeConfigMenu::UpdateAction FreezeTagConfigMenu::updateMenu(int selectIndex
                 }
             );
 
-            while (!mScoreKeyboard->isThreadDone()) {
+            while (!mKeyboard->isThreadDone()) {
                 nn::os::YieldThread(); // allow other threads to run
             }
 
-            if (!mScoreKeyboard->isKeyboardCancelled()) {
-                newScore = ::atoi(mScoreKeyboard->getResult());
+            if (!mKeyboard->isKeyboardCancelled()) {
+                newScore = std::atoi(mKeyboard->getResult());
             }
 
             if (newScore != uint16_t(-1)) {
@@ -128,7 +133,9 @@ GameModeConfigMenu::UpdateAction FreezeTagConfigMenu::updateMenu(int selectIndex
             char buf[3];
             nn::util::SNPrintf(buf, 3, "%u", oldTime);
 
-            mRoundKeyboard->openKeyboard(
+            mKeyboard->setHeaderText(u"Set length of rounds you start in minutes");
+            mKeyboard->setSubText(u"This will be automatically sent to other players (2-60 minutes)");
+            mKeyboard->openKeyboard(
                 buf,
                 [](nn::swkbd::KeyboardConfig& config) {
                     config.keyboardMode  = nn::swkbd::KeyboardMode::ModeNumeric;
@@ -139,17 +146,18 @@ GameModeConfigMenu::UpdateAction FreezeTagConfigMenu::updateMenu(int selectIndex
                 }
             );
 
-            while (!mRoundKeyboard->isThreadDone()) {
+            while (!mKeyboard->isThreadDone()) {
                 nn::os::YieldThread(); // allow other threads to run
             }
 
-            if (!mRoundKeyboard->isKeyboardCancelled()) {
-                newTime = ::atoi(mRoundKeyboard->getResult());
+            if (!mKeyboard->isKeyboardCancelled()) {
+                newTime = std::atoi(mKeyboard->getResult());
             }
 
             if (newTime != uint8_t(-1)) {
                 FreezeTagInfo::mRoundLength = al::clamp(newTime, u8(2), u8(60));
             }
+
             return UpdateAction::NOOP;
         }
         case 4: {

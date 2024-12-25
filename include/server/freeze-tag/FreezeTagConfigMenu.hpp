@@ -9,6 +9,8 @@ class FreezeTagConfigMenu : public GameModeConfigMenu {
     public:
         FreezeTagConfigMenu();
 
+        void clean() override;
+
         const sead::WFixedSafeString<0x200>* getStringData() override;
         GameModeConfigMenu::UpdateAction updateMenu(int selectIndex) override;
 
@@ -17,6 +19,5 @@ class FreezeTagConfigMenu : public GameModeConfigMenu {
     private:
         static constexpr int mItemCount = 8;
         sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>* mItems = nullptr;
-        Keyboard* mScoreKeyboard;
-        Keyboard* mRoundKeyboard;
+        Keyboard* mKeyboard;
 };

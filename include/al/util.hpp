@@ -121,6 +121,7 @@ namespace al
     void setPaneLocalSize(  al::IUseLayout* layout, const char* paneName, sead::Vector2f const&);
     void setPaneLocalScale( al::IUseLayout* layout, const char* paneName, sead::Vector2f const&);
     void setPaneLocalRotate(al::IUseLayout* layout, const char* paneName, sead::Vector3f const&);
+    void setPaneVtxColor(al::IUseLayout const* layout, char const* paneName, sead::Color4u8 const&);
 
     sead::Vector3f& getPaneLocalTrans(const al::IUseLayout* layout, const char* paneName);
     void getPaneLocalSize(sead::Vector2f*, const al::IUseLayout* layout, const char* paneName);
