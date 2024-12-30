@@ -6,12 +6,12 @@
 #include "al/util.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeInfoBase.hpp"
-#include "server/gamemode/GameModeInitInfo.hpp"
 #include "server/gamemode/modifiers/ModeModifierBase.hpp"
 
 class GameModeManager {
     SEAD_SINGLETON_DISPOSER(GameModeManager)
     GameModeManager();
+    ~GameModeManager();
 
 public:
     void setMode(GameMode mode);
@@ -23,15 +23,43 @@ public:
     void unpause();
 
     GameMode getGameMode() const { return mCurMode; }
-    GameMode getNextGameMode() const { return mNextMode; }
     template<class T> T* getMode() const { return static_cast<T*>(mCurModeBase); }
     template<class T> T* getInfo() const { return static_cast<T*>(mModeInfo); }
+    template<class T> T* tryGetOrCreateInfo(GameMode mode);
     void setInfo(GameModeInfoBase* info) { mModeInfo = info; }
 
-    static void processModePacket(Packet* packet);
-    static Packet* createModePacket();
+    static bool tryReceivePuppetMsg(const al::SensorMsg* msg, al::HitSensor* source, al::HitSensor* target) {
+        return instance()->mCurModeBase && instance()->isActive() && instance()->mCurModeBase->mIsUsePuppetSensor ? instance()->mCurModeBase->receiveMsg(msg, source, target) : false;
+    }
 
-    template<class T> T* createModeInfo();
+    static bool tryReceiveCapMsg(const al::SensorMsg* msg, al::HitSensor* source, al::HitSensor* target) {
+        return instance()->mCurModeBase && instance()->isActive() && instance()->mCurModeBase->mIsUseCapSensor ? instance()->mCurModeBase->receiveMsg(msg, source, target) : false;
+    }
+
+    // returns false if default attack behavior should be used instead 
+    static bool tryAttackPuppetSensor(al::HitSensor* source, al::HitSensor* target) {
+        return instance()->mCurModeBase && instance()->isActive() && instance()->mCurModeBase->mIsUsePuppetSensor ? instance()->mCurModeBase->attackSensor(source, target) : false;
+    }
+
+    static bool tryAttackCapSensor(al::HitSensor* source, al::HitSensor* target) {
+        return instance()->mCurModeBase && instance()->isActive() && instance()->mCurModeBase->mIsUseCapSensor ? instance()->mCurModeBase->attackSensor(source, target) : false;
+    }
+
+    static void processModePacket(Packet *packet) {
+        if(instance()->mCurModeBase) {
+            instance()->mCurModeBase->processPacket(packet);
+        }
+    }
+
+    static Packet *createModePacket() {
+        if(instance()->mCurModeBase) {
+            return instance()->mCurModeBase->createPacket();
+        }
+        return nullptr;
+    }
+
+    template<class T>
+    T* createModeInfo();
 
     sead::Heap* getHeap() { return mHeap; }
     static sead::Heap* getSceneHeap() { return al::getSceneHeap(); }
@@ -41,33 +69,24 @@ public:
     bool isMode(GameMode mode) const { return mCurMode == mode; }
     bool isActive() const { return mActive; }
     bool isModeAndActive(GameMode mode) const { return isMode(mode) && isActive(); }
-    bool isModeRequireUI();
+    bool isModeRequireUI() { return isActive() && !mCurModeBase->isUseNormalUI(); }
     bool isPaused() const { return mPaused; }
     bool wasSceneTrans() const { return mWasSceneTrans; }
-
-    static bool hasMarioCollision() { return instance()->mCurModeBase ? instance()->mCurModeBase->hasMarioCollision() : true;  }
-    static bool hasMarioBounce()    { return instance()->mCurModeBase ? instance()->mCurModeBase->hasMarioBounce()    : true;  }
-    static bool hasCappyCollision() { return instance()->mCurModeBase ? instance()->mCurModeBase->hasCappyCollision() : false; }
-    static bool hasCappyBounce()    { return instance()->mCurModeBase ? instance()->mCurModeBase->hasCappyBounce()    : false; }
-
 private:
     sead::Heap* mHeap = nullptr;
 
-    bool mActive        = false;
-    bool mPaused        = false;
+    bool mActive = false;
+    bool mPaused = false;
     bool mWasSceneTrans = false;
-    bool mWasSetMode    = false;
-    bool mWasPaused     = false;
-
-    GameMode          mCurMode      = GameMode::NONE;
-    GameMode          mNextMode     = GameMode::NONE;
-    GameModeBase*     mCurModeBase  = nullptr;
-    GameModeInfoBase* mModeInfo     = nullptr;
-    GameModeInitInfo* mLastInitInfo = nullptr;
-    ModeModifierBase* mCurModifier  = nullptr;
+    bool mWasSetMode = false;
+    bool mWasPaused = false;
+    GameMode mCurMode = GameMode::NONE;
+    GameModeBase* mCurModeBase = nullptr;
+    GameModeInfoBase *mModeInfo = nullptr;
+    GameModeInitInfo *mLastInitInfo = nullptr;
+    ModeModifierBase *mCurModifier = nullptr;
 };
 
-// TODO: moving this method into the .cpp file crashes the game on stage enter
 template<class T>
 T* GameModeManager::createModeInfo() {
     sead::ScopedCurrentHeapSetter heapSetter(mHeap);
@@ -75,4 +94,15 @@ T* GameModeManager::createModeInfo() {
     T* info = new T();
     mModeInfo = info;
     return info;
+}
+
+template<class T>
+T* GameModeManager::tryGetOrCreateInfo(GameMode mode) {
+    if (mModeInfo && mModeInfo->mMode == mode)
+        return static_cast<T*>(mModeInfo);
+
+    if (mModeInfo)
+        delete mModeInfo;  // attempt to destory previous info before creating new one
+
+    return createModeInfo<T>();
 }

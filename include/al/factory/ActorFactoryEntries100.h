@@ -4,9 +4,10 @@
 
 #include "actors/PuppetActor.h"
 #include "actors/PuppetHackActor.h"
-#include "server/freeze-tag/FreezePlayerBlock.h"
+#include "server/freeze/FreezePlayerBlock.h"
 
-namespace al {
+namespace al
+{
     class AllDeadWatcher;
     class BgmPlayObj;
     class CameraRailHolder;
@@ -642,5 +643,5 @@ __attribute((used)) static al::NameToCreator<al::createActor> actorEntries[] = {
     {"YoshiFruitShineHolder", &al::createActorFunction<class YoshiFruitShineHolder>},
     {"Yukimaru", &al::createActorFunction<class Yukimaru>},
     {"YukimaruRacer", &al::createActorFunction<class YukimaruRacer>},
-    {"YukimaruRacerTiago", &al::createActorFunction<class YukimaruRacerTiago>},
+    {"YukimaruRacerTiago", &al::createActorFunction<class YukimaruRacerTiago>}
 };

@@ -31,6 +31,7 @@ float calcAngleOnPlaneDegreeOrZero(sead::Vector3f const&,sead::Vector3f const&,s
 bool tryCalcAngleOnPlaneDegree(float *,sead::Vector3f const&,sead::Vector3f const&,sead::Vector3f const&);
 float calcAngleSignOnPlane(sead::Vector3f const&, sead::Vector3f const&, sead::Vector3f const&);
 
+void calcUpDir(sead::Vector3<float>*, al::LiveActor const*);
 void calcDir(sead::Vector3f *,sead::Vector3f const&,sead::Vector3f const&);
 void calcDirBetweenSensors(sead::Vector3f *,al::HitSensor const*,al::HitSensor const*);
 void calcDirBetweenSensorsH(sead::Vector3f *,al::HitSensor const*,al::HitSensor const*);

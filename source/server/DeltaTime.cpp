@@ -1,7 +1,5 @@
 #include "server/DeltaTime.hpp"
 
-#include <cmath>
-
 sead::TickTime Time::prevTime;
 sead::TickSpan Time::deltaSpan;
 float Time::deltaTime;

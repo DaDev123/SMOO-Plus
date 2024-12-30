@@ -1,7 +1,6 @@
 #include "SocketBase.hpp"
-
 #include <cstring>
-#include "nn/socket.h"
+#include "nn/result.h"
 #include "types.h"
 
 SocketBase::SocketBase(const char *name)
@@ -19,15 +18,15 @@ const char *SocketBase::getStateChar() {
     switch (this->socket_log_state)
     {
     case SOCKET_LOG_CONNECTED:
-        return "Connected";
+        return "Socket Connected";
     case SOCKET_LOG_UNAVAILABLE:
-        return "Unavailable";
+        return "Socket Unavailable";
     case SOCKET_LOG_UNINITIALIZED:
-        return "Unitialized";
+        return "Socket Unitialized";
     case SOCKET_LOG_DISCONNECTED:
-        return "Disconnected";
+        return "Socket Disconnected";
     default:
-        return "Unknown";
+        return "Unknown State";
     }
 }
 
@@ -73,13 +72,12 @@ s32 SocketBase::getFd() {
 
 bool SocketBase::closeSocket() {
 
-    if (this->socket_log_state != SOCKET_LOG_DISCONNECTED) {
-        nn::Result result = nn::socket::Close(this->socket_log_socket);
-        if (result.isSuccess()) {
-            this->socket_log_state = SOCKET_LOG_DISCONNECTED;
-        }
-        return result.isSuccess();
-    }
+    this->socket_log_state = SOCKET_LOG_DISCONNECTED; // probably not safe to assume socket will be closed
 
-    return true;
+    nn::Result result = nn::socket::Close(this->socket_log_socket);
+
+    return result.isSuccess();
 }
+
+
+

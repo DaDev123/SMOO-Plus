@@ -1,9 +1,5 @@
 #include "helpers.hpp"
-
-#include <math.h>
-#include <cstring>
 #include "al/LiveActor/LiveActor.h"
-#include "game/GameData/GameDataFunction.h"
 #include "logger.hpp"
 #include "sead/math/seadMathCalcCommon.h"
 #include "sead/math/seadQuat.h"
@@ -12,20 +8,24 @@
 #include "sead/time/seadTickTime.h"
 
 bool isPartOf(const char* w1, const char* w2) {
-    int i = 0;
-    int j = 0;
 
-    if (strlen(w1) <= 0) {
+    int i=0;
+    int j=0;
+
+    if(strlen(w1) <= 0) {
         return false;
     }
 
-    while (w1[i] != '\0') {
-        if (w1[i] == w2[j]) {
-            while (w1[i] == w2[j] && w2[j] != '\0') {
+    while(w1[i]!='\0'){
+        if(w1[i] == w2[j])
+        {
+            int init = i;
+            while (w1[i] == w2[j] && w2[j]!='\0')
+            {
                 j++;
                 i++;
             }
-            if (w2[j] == '\0') {
+            if(w2[j]=='\0'){
                 return true;
             }
             j=0;
@@ -35,16 +35,19 @@ bool isPartOf(const char* w1, const char* w2) {
     return false;
 }
 
-int indexOf(char* w1, char c1) {
-    for (size_t i = 0; i < strlen(w1); i++) {
-        if (w1[i] == c1) {
+int indexOf(char *w1, char c1) {
+
+    for (int i = 0; i < strlen(w1); i++)
+    {
+        if(w1[i] == c1) {
             return i;
         }
     }
     return -1;
 }
 
-sead::Vector3f QuatToEuler(sead::Quatf* quat) {
+sead::Vector3f QuatToEuler(sead::Quatf *quat) {
+
     f32 x = quat->z;
     f32 y = quat->y;
     f32 z = quat->x;
@@ -66,61 +69,59 @@ sead::Vector3f QuatToEuler(sead::Quatf* quat) {
     return sead::Vector3f(yaw, pitch, roll);
 }
 
-void logVector(const char* vectorName, sead::Vector3f vector) {
+void logVector(const char *vectorName, sead::Vector3f vector) {
     Logger::log("%s: \nX: %f\nY: %f\nZ: %f\n", vectorName, vector.x, vector.y, vector.z);
 }
 
-void logQuat(const char* quatName, sead::Quatf& quat) {
+void logQuat(const char *quatName, sead::Quatf &quat) {
     Logger::log("%s: \nX: %f\nY: %f\nZ: %f\nW: %f\n", quatName, quat.x, quat.y, quat.z, quat.w);
 }
 
-float vecMagnitude(sead::Vector3f const& input) {
+float vecMagnitude(sead::Vector3f const &input) {
     return (input.x * input.x + input.y * input.y + input.z * input.z);
 }
 
 float vecDistance(sead::Vector3f const& a, sead::Vector3f const& b) {
-    return sqrt(vecDistanceSq(a, b));
+    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
 }
 
-float vecDistanceSq(sead::Vector3f const& a, sead::Vector3f const& b) {
-    return pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2);
-}
-
-float quatAngle(sead::Quatf const& q1, sead::Quatf& q2) {
+float quatAngle(sead::Quatf const &q1, sead::Quatf &q2) {
     float dot = (q1.x * q2.x) + (q1.y * q2.y) + (q1.z * q2.z) + (q1.w * q2.w);
     float dotAngle = sead::Mathf::min(abs(dot), 1.0f);
 
     return dotAngle > 1.0f - 0.000001f ? 0.0f : DEG(sead::Mathf::acos(dotAngle) * 2.0f);
 }
 
-bool isInCostumeList(const char* costumeName) {
-    for (size_t i = 0; i < sizeof(costumeNames) / sizeof(costumeNames[0]); i++) {
-        if (al::isEqualString(costumeNames[i], costumeName)) {
+bool isInCostumeList(const char *costumeName) {
+    for (size_t i = 0; i < sizeof(costumeNames)/sizeof(costumeNames[0]); i++)
+    {
+        if(al::isEqualString(costumeNames[i], costumeName)) {
             return true;
         }
     }
     return false;
 }
 
-const char* tryGetPuppetCapName(PuppetInfo* info) {
-    if (info->costumeHead && isInCostumeList(info->costumeHead)) {
+const char *tryGetPuppetCapName(PuppetInfo *info) {
+    if(info->costumeHead && isInCostumeList(info->costumeHead)) {
         return info->costumeHead;
-    } else {
+    }else {
         return "Mario";
     }
 }
 
-const char* tryGetPuppetBodyName(PuppetInfo* info) {
-    if (info->costumeBody && isInCostumeList(info->costumeBody)) {
+const char *tryGetPuppetBodyName(PuppetInfo *info) {
+    if(info->costumeBody && isInCostumeList(info->costumeBody)) {
         return info->costumeBody;
-    } else {
+    }else {
         return "Mario";
     }
 }
 
-const char* tryConvertName(const char* className) {
-    for (size_t i = 0; i < ACNT(classHackNames); i++) {
-        if (al::isEqualString(classHackNames[i].className, className)) {
+const char *tryConvertName(const char *className) {
+    for (size_t i = 0; i < ACNT(classHackNames); i++)
+    {
+        if(al::isEqualString(classHackNames[i].className, className)) {
             return classHackNames[i].hackName;
         }
     }
@@ -129,14 +130,17 @@ const char* tryConvertName(const char* className) {
 
 // Unity Classes
 
-float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
+float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed)
+{
+
     // Position
-
+    
     sead::Vector3f posDiff = *targetTransform.position - *moveTransform.position;
-
+    
     float posDiffMag = posDiff.dot(posDiff);
 
     if (posDiffMag > 0) {
+
         float diffSpeed = sead::Mathf::max(k_MinSmoothSpeed, posDiffMag / k_TargetCatchupTime);
 
         closingSpeed = sead::Mathf::max(closingSpeed, diffSpeed);
@@ -149,11 +153,14 @@ float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform
         moveTransform.position->y += posDiff.y;
         moveTransform.position->z += posDiff.z;
 
-        if (moveDist == posDiffMag) {
+        if( moveDist == posDiffMag )
+        {
             //we capped the move, meaning we exactly reached our target transform. Time to reset our velocity.
             closingSpeed = 0;
         }
-    } else {
+    }
+    else
+    {
         closingSpeed = 0;
     }
 
@@ -163,7 +170,8 @@ float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform
         float angleDiff = quatAngle(*targetTransform.rotation, *moveTransform.rotation);
 
         // if rotation is over 150 degrees, snap to new rotation instead of interpolating to it
-        if (angleDiff > 0) {
+        if (angleDiff > 0)
+        {
             float maxAngleMove = timeDelta * maxAngularSpeed;
             float angleMove = sead::Mathf::min(maxAngleMove, angleDiff);
             float t = angleMove / angleDiff;
@@ -175,8 +183,8 @@ float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform
 }
 
 void killMainPlayer(al::LiveActor* actor) {
-    PlayerActorHakoniwa* mainPlayer = (PlayerActorHakoniwa*)al::getPlayerActor(actor, 0);
-
+    PlayerActorHakoniwa *mainPlayer = (PlayerActorHakoniwa*)al::getPlayerActor(actor, 0);
+    
     GameDataFunction::killPlayer(GameDataHolderAccessor(actor));
     mainPlayer->startDemoPuppetable();
     al::setVelocityZero(mainPlayer);

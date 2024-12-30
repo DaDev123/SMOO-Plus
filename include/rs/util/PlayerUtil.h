@@ -4,7 +4,7 @@
 
 namespace rs {
     bool isPlayerHack(al::LiveActor const*);
-    bool isPlayerHackType(al::LiveActor const*, int);
+    bool isPlayerHackType(al::LiveActor const*,int);
     bool isPlayerHackRigidBody(al::LiveActor const*);
     bool isPlayerHackJugemFishing(al::LiveActor const*);
     bool isPlayerHackKuriboAny(al::LiveActor const*);
@@ -35,7 +35,7 @@ namespace rs {
     bool isPlayerHackGroupUseCameraStick(al::LiveActor const*);
     bool isPlayerHackNoSeparateCameraInput(al::LiveActor const*);
 
-    bool isPlayerNoInput(al::LiveActor const*);
+    bool isPlayerNoInput(al::LiveActor const *);
 
     void calcGuidePos(sead::Vector3f*, al::LiveActor const*);
 

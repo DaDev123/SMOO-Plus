@@ -1,59 +1,55 @@
 #include <sys/types.h>
-
-#include "al/byaml/ByamlIter.h"
-#include "al/byaml/writer/ByamlWriter.h"
 #include "al/execute/ExecuteDirector.h"
 #include "al/execute/ExecuteOrder.h"
 #include "al/execute/ExecuteTable.h"
 #include "al/execute/ExecuteTableHolderDraw.h"
 #include "al/execute/ExecuteTableHolderUpdate.h"
 #include "al/scene/Scene.h"
-#include "al/util.hpp"
 #include "al/util/GraphicsUtil.h"
 #include "al/util/KitUtil.h"
-
+#include "basis/seadNew.h"
+#include "logger.hpp"
+#include "rs/util.hpp"
+#include "server/Client.hpp"
+#include "al/byaml/ByamlIter.h"
+#include "al/util.hpp"
 #include "game/Actors/WorldEndBorderKeeper.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/StageScene/StageSceneStateOption.h"
 #include "game/StageScene/StageSceneStatePauseMenu.h"
 #include "game/StageScene/StageSceneStateServerConfig.hpp"
-
-#include "logger.hpp"
-
 #include "main.hpp"
-
-#include "rs/util.hpp"
+#include "al/byaml/writer/ByamlWriter.h"
+#include "math/seadVector.h"
 #include "rs/util/InputUtil.h"
-
-#include "sead/basis/seadNew.h"
-#include "sead/math/seadVector.h"
 #include "sead/prim/seadSafeString.h"
+#include "server/freeze/FreezeTagMode.hpp"
+#include "server/hns/HideAndSeekMode.hpp"
+#include "server/inf/InfectionMode.hpp"
 
-#include "server/Client.hpp"
-#include "server/gamemode/GameModeBase.hpp"
-#include "server/gamemode/GameModeManager.hpp"
+bool checkpointPatch()
+{
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+        return false;
+    
+    return true;
+}
 
 bool comboBtnHook(int port) {
-    GameModeManager* gmm = GameModeManager::instance();
+    if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+        return false;
 
-    // only switch to combo if the gamemode is active
-    if (!gmm->isActive()) {
+    if (GameModeManager::instance()->isActive()) { // only switch to combo if any gamemode is active
+        return !al::isPadHoldL(port) && al::isPadTriggerDown(port);
+    } else {
         return al::isPadTriggerDown(port);
     }
-
-    // only if the gamemode wants it
-    GameModeBase* mode = gmm->getMode<GameModeBase>();
-    if (!mode || mode->ignoreComboBtn()) {
-        return false;
-    }
-
-    return !al::isPadHoldL(port) && al::isPadTriggerDown(port);
 }
 
 void saveWriteHook(al::ByamlWriter* saveByml) {
-    const char* serverIP     = Client::getCurrentIP();
-    const int   serverPort   = Client::getCurrentPort();
-    const bool  serverHidden = Client::isServerHidden();
+
+    const char *serverIP = Client::getCurrentIP();
+    const int serverPort = Client::getCurrentPort();
 
     if (serverIP) {
         saveByml->addString("ServerIP", serverIP);
@@ -67,15 +63,13 @@ void saveWriteHook(al::ByamlWriter* saveByml) {
         saveByml->addInt("ServerPort", 0);
     }
 
-    saveByml->addBool("ServerHidden", serverHidden);
-
     saveByml->pop();
 }
 
 bool saveReadHook(int* padRumbleInt, al::ByamlIter const& saveByml, char const* padRumbleKey) {
-    const char* serverIP     = "";
-    int         serverPort   = 0;
-    bool        serverHidden = false;
+
+    const char *serverIP = "";
+    int serverPort = 0;
 
     if (al::tryGetByamlString(&serverIP, saveByml, "ServerIP")) {
         Client::setLastUsedIP(serverIP);
@@ -84,50 +78,49 @@ bool saveReadHook(int* padRumbleInt, al::ByamlIter const& saveByml, char const* 
     if (al::tryGetByamlS32(&serverPort, saveByml, "ServerPort")) {
         Client::setLastUsedPort(serverPort);
     }
-
-    if (al::tryGetByamlBool(&serverHidden, saveByml, "ServerHidden")) {
-        Client::setServerHidden(serverHidden);
-    }
-
+    
     return al::tryGetByamlS32(padRumbleInt, saveByml, padRumbleKey);
 }
 
 bool registerShineToList(Shine* shineActor) {
+
     if (shineActor->mShineIdx >= 0) {
         Client::tryRegisterShine(shineActor);
-    }
+    } 
 
     return al::isAlive(shineActor);
 }
 
-void overrideHelpFadeNerve(StageSceneStatePauseMenu* thisPtr) {
-    // Set label in menu inside LocalizedData/${lang}/MessageData/LayoutMessage.szs/Menu.msbt/Menu_Help
+// void overrideNerveHook(StageSceneStatePauseMenu* thisPtr, al::Nerve* nrvSet) {
+
+//     if (al::isPadHoldZL(-1)) {
+//         al::setNerve(thisPtr, &nrvStageSceneStatePauseMenuServerConfig);
+//     } else {
+//         al::setNerve(thisPtr, nrvSet);
+//     }
+// }
+
+void overrideHelpFadeNerve(StageSceneStatePauseMenu* thisPtr)
+{
+    // Set label in menu inside LocalizedData/lang/MessageData/LayoutData/Menu.msbt
     thisPtr->exeServerConfig();
     al::setNerve(thisPtr, &nrvStageSceneStatePauseMenuServerConfig);
+    return;
 }
 
-StageSceneStateServerConfig* sceneStateServerConfig = nullptr;
+StageSceneStateServerConfig *sceneStateServerConfig = nullptr;
 
-void initStateHook(
-    StageSceneStatePauseMenu* thisPtr,
-    char const* stateName,
-    al::Scene* host,
-    al::LayoutInitInfo const& initInfo,
-    FooterParts* footer,
-    GameDataHolder* data,
-    bool unkBool
-) {
-    thisPtr->mStateOption = new StageSceneStateOption(stateName, host, initInfo, footer, data, unkBool);
+void initStateHook(StageSceneStatePauseMenu *thisPtr, char const *stateName, al::Scene *host, al::LayoutInitInfo const &initInfo, FooterParts *footer,
+                   GameDataHolder *data, bool unkBool) {
+    thisPtr->mStateOption =
+        new StageSceneStateOption(stateName, host, initInfo, footer, data, unkBool);
 
     sceneStateServerConfig = new StageSceneStateServerConfig("ServerConfig", host, initInfo, footer, data, unkBool);
 }
 
-void initNerveStateHook(
-    StageSceneStatePauseMenu* stateParent,
-    StageSceneStateOption* stateOption,
-    al::Nerve const* executingNerve,
-    char const* stateName
-) {
+void initNerveStateHook(StageSceneStatePauseMenu* stateParent, StageSceneStateOption* stateOption,
+                        al::Nerve const* executingNerve, char const* stateName) {
+
     al::initNerveState(stateParent, stateOption, executingNerve, stateName);
 
     al::initNerveState(stateParent, sceneStateServerConfig, &nrvStageSceneStatePauseMenuServerConfig, "CustomNerveOverride");
@@ -154,17 +147,37 @@ void playGuideEndHook(al::SimpleLayoutAppearWaitEnd* thisPtr) {
 
 // Gravity Hooks
 
-void initHackCapHook(al::LiveActor* cappy) {
+void initHackCapHook(al::LiveActor *cappy) {
     al::initActorPoseTQGSV(cappy);
 }
 
 al::PlayerHolder* createTicketHook(StageScene* curScene) {
-    // only creates custom camera ticket if the mode wants it
-    GameModeBase* mode = GameModeManager::instance()->getMode<GameModeBase>();
-    if (mode && mode->hasCustomCamera()) {
+    // only creates custom gravity camera ticket if hide and seek mode is active
+    if (GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
         al::CameraDirector* director = curScene->getCameraDirector();
-        if (director && director->mFactory) {
-            mode->createCustomCameraTicket(director);
+        if (director) {
+            if (director->mFactory) {
+                al::CameraTicket* gravityCamera = director->createCameraFromFactory(
+                    "CameraPoserCustom", nullptr, 0, 5, sead::Matrix34f::ident);
+
+                HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
+
+                mode->setCameraTicket(gravityCamera);
+            }
+        }
+    }
+
+    if (GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
+        al::CameraDirector* director = curScene->getCameraDirector();
+        if (director) {
+            if (director->mFactory) {
+                al::CameraTicket* spectateCamera = director->createCameraFromFactory(
+                    "CameraPoserActorSpectate", nullptr, 0, 5, sead::Matrix34f::ident);
+
+                FreezeTagMode* mode = GameModeManager::instance()->getMode<FreezeTagMode>();
+
+                mode->setCameraTicket(spectateCamera);
+            }
         }
     }
 
@@ -172,32 +185,38 @@ al::PlayerHolder* createTicketHook(StageScene* curScene) {
 }
 
 bool borderPullBackHook(WorldEndBorderKeeper* thisPtr) {
+
     bool isFirstStep = al::isFirstStep(thisPtr);
 
-    if (isFirstStep && GameModeManager::instance()->isActive()) {
-        GameModeBase* mode = GameModeManager::instance()->getMode<GameModeBase>();
-        if (mode) {
-            mode->onBorderPullBackFirstStep(thisPtr->mActor);
+    if (isFirstStep) {
+        if (GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK)) {
+
+            HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
+
+            if (mode->isUseGravity()) {
+                killMainPlayer(thisPtr->mActor);
+            }
         }
     }
-
+    
     return isFirstStep;
 }
 
-void drawTableHook(al::ExecuteDirector* thisPtr, const al::ExecuteSystemInitInfo& initInfo) {
+void drawTableHook(al::ExecuteDirector* thisPtr, const al::ExecuteSystemInitInfo &initInfo) {
+    
     thisPtr->mUpdateTableCount = updateTableSize;
-    thisPtr->mUpdateTables     = new al::ExecuteTableHolderUpdate*[thisPtr->mUpdateTableCount]();
+    thisPtr->mUpdateTables = new al::ExecuteTableHolderUpdate*[thisPtr->mUpdateTableCount]();
 
     for (int i = 0; i < thisPtr->mUpdateTableCount; i++) {
         thisPtr->mUpdateTables[i] = new al::ExecuteTableHolderUpdate();
-        const al::ExecuteTable& curTable = updateTable[i];
+        const al::ExecuteTable &curTable = updateTable[i];
         // Logger::log("Update Table Name: %s Count: %d\n", curTable.mName, curTable.mExecuteOrderCount);
         thisPtr->mUpdateTables[i]->init(curTable.mName, initInfo, curTable.mExecuteOrders, curTable.mExecuteOrderCount);
     }
 
     thisPtr->mDrawTableCount = drawTableSize;
-    thisPtr->mDrawTables     = new al::ExecuteTableHolderDraw*[thisPtr->mDrawTableCount]();
-
+    thisPtr->mDrawTables = new al::ExecuteTableHolderDraw*[thisPtr->mDrawTableCount]();
+    
     for (int i = 0; i < thisPtr->mDrawTableCount; i++) {
         thisPtr->mDrawTables[i] = new al::ExecuteTableHolderDraw();
         const al::ExecuteTable* curTable = &drawTable[i];
@@ -214,6 +233,7 @@ void updateStateHook(al::Scene* scene) {
 }
 
 void updateDrawHook(al::ExecuteDirector* thisPtr, const char* listName, const char* kit) {
+    
     thisPtr->drawList("OnlineDrawExecutors", "PuppetActor");
 
     Logger::log("Updating Draw List for: %s %s\n", listName, kit);

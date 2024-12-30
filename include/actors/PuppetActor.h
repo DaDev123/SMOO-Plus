@@ -1,29 +1,35 @@
 #pragma once
 
-#include "al/actor/ActorInitInfo.h"
-#include "al/audio/AudioKeeper.h"
 #include "al/LiveActor/LiveActor.h"
-#include "al/sensor/HitSensor.h"
-#include "al/sensor/SensorMsg.h"
+#include "al/async/FunctorV0M.hpp"
+#include "al/async/FunctorBase.h"
+#include "al/util.hpp"
+#include "al/string/StringTmp.h"
+#include "al/layout/BalloonMessage.h"
 
+#include "game/Player/PlayerFunction.h"
+#include "game/Player/PlayerJointControlPartsDynamics.h"
+#include "game/Player/PlayerConst.h"
 #include "game/Player/PlayerModelHolder.h"
 
 #include "actors/PuppetCapActor.h"
 #include "actors/PuppetHackActor.h"
 #include "layouts/NameTag.h"
 #include "sead/math/seadVector.h"
+#include "server/DeltaTime.hpp"
 
+#include "logger.hpp"
 #include "puppets/PuppetInfo.h"
 #include "puppets/HackModelHolder.hpp"
 #include "helpers.hpp"
 #include "algorithms/CaptureTypes.h"
 
-#include "server/freeze-tag/FreezePlayerBlock.h"
+#include "server/freeze/FreezePlayerBlock.h"
 
 class PuppetActor : public al::LiveActor {
     public:
-        PuppetActor(const char* name);
-        virtual void init(al::ActorInitInfo const&) override;
+        PuppetActor(const char *name);
+        virtual void init(al::ActorInitInfo const &) override;
         virtual void initAfterPlacement(void) override;
         virtual void control(void) override;
         virtual void movement(void) override;
@@ -31,29 +37,26 @@ class PuppetActor : public al::LiveActor {
         virtual void makeActorDead(void) override;
         virtual void calcAnim(void) override;
 
-        virtual void attackSensor(al::HitSensor*, al::HitSensor*) override;
-        virtual bool receiveMsg(const al::SensorMsg*, al::HitSensor*, al::HitSensor*) override;
-
         virtual const char* getName() const override {
             if (mInfo)
                 return mInfo->puppetName;
             return mActorName;
         }
 
-        void initOnline(PuppetInfo* pupInfo);
+        void initOnline(PuppetInfo *pupInfo);
 
-        void startAction(const char* actName);
+        void startAction(const char *actName);
         void hairControl();
 
         void setBlendWeight(int index, float weight) { al::setSklAnimBlendWeight(getCurrentModel(), weight, index); };
 
         bool isNeedBlending();
 
-        bool isInCaptureList(const char* hackName);
+        bool isInCaptureList(const char *hackName);
 
         PuppetInfo* getInfo() { return mInfo; }
 
-        bool addCapture(PuppetHackActor* capture, const char* hackType);
+        bool addCapture(PuppetHackActor *capture, const char *hackType);
 
         al::LiveActor* getCurrentModel();
 
@@ -65,8 +68,10 @@ class PuppetActor : public al::LiveActor {
 
         void emitJoinEffect();
 
-        bool mIsDebug = false;
+        void debugThrowCap();
 
+        bool mIsDebug = false;
+        
     private:
         void changeModel(const char* newModel);
 
@@ -74,12 +79,12 @@ class PuppetActor : public al::LiveActor {
 
         void syncPose();
 
-        PlayerCostumeInfo* mCostumeInfo = nullptr;
-        PuppetInfo*        mInfo        = nullptr;
-        PuppetCapActor*    mPuppetCap   = nullptr;
-        PlayerModelHolder* mModelHolder = nullptr;
-        HackModelHolder*   mCaptures    = nullptr;
-        NameTag*           mNameTag     = nullptr;
+        PlayerCostumeInfo *mCostumeInfo = nullptr;
+        PuppetInfo *mInfo = nullptr;
+        PuppetCapActor *mPuppetCap = nullptr;
+        PlayerModelHolder *mModelHolder = nullptr;
+        HackModelHolder* mCaptures = nullptr;
+        NameTag *mNameTag = nullptr;
 
         CaptureTypes::Type mCurCapture = CaptureTypes::Type::Unknown;
 
@@ -92,20 +97,7 @@ class PuppetActor : public al::LiveActor {
         FreezePlayerBlock* mFreezeTagIceBlock = nullptr;
 };
 
-PlayerCostumeInfo* initMarioModelPuppet(
-    al::LiveActor* player,
-    const al::ActorInitInfo& initInfo,
-    char const* bodyName,
-    char const* capName,
-    int subActorNum,
-    al::AudioKeeper* audioKeeper
-);
-
-PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(
-    al::LiveActor* player,
-    const al::ActorInitInfo& initInfo,
-    const char* headModelName,
-    const char* capModelName,
-    const char* headType,
-    const char* headSuffix
-);
+PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo,
+                                        char const* bodyName, char const* capName, int subActorNum,
+                                        al::AudioKeeper* audioKeeper);
+PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player, const al::ActorInitInfo &initInfo, const char* headModelName, const char* capModelName, const char* headType, const char* headSuffix);

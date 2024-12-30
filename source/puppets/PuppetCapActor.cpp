@@ -1,20 +1,18 @@
 #include "actors/PuppetCapActor.h"
-
+#include "al/sensor/HitSensor.h"
 #include "al/util.hpp"
 #include "al/util/MathUtil.h"
-#include "al/util/SensorUtil.h"
-
-#include "game/Player/PlayerFunction.h"
-
+#include "logger.hpp"
+#include "math/seadVector.h"
 #include "rs/util/SensorUtil.h"
-
-#include "sead/math/seadVector.h"
-
+#include "al/util/SensorUtil.h"
 #include "server/gamemode/GameModeManager.hpp"
+#include "server/gamemode/GameModeBase.hpp"
 
-PuppetCapActor::PuppetCapActor(const char* name) : al::LiveActor(name) {}
+PuppetCapActor::PuppetCapActor(const char *name) : al::LiveActor(name) {}
 
-void PuppetCapActor::init(al::ActorInitInfo const& initInfo) {
+void PuppetCapActor::init(al::ActorInitInfo const &initInfo) {
+
     sead::FixedSafeString<0x20> capModelName;
 
     PlayerFunction::createCapModelName(&capModelName, tryGetPuppetCapName(mInfo));
@@ -23,9 +21,11 @@ void PuppetCapActor::init(al::ActorInitInfo const& initInfo) {
 
     initHitSensor(2);
 
-    al::addHitSensor(this, initInfo, "Push", SensorType::MapObjSimple, 60.0f, 8, sead::Vector3f::zero);
+    al::addHitSensor(this, initInfo, "Push", SensorType::MapObjSimple, 60.0f, 8,
+                     sead::Vector3f::zero);
 
-    al::addHitSensor(this, initInfo, "Attack", SensorType::EnemyAttack, 300.0f, 8, sead::Vector3f::zero);
+    al::addHitSensor(this, initInfo, "Attack", SensorType::EnemyAttack, 300.0f, 8,
+                     sead::Vector3f::zero);
 
     al::hideSilhouetteModelIfShow(this);
 
@@ -42,7 +42,7 @@ void PuppetCapActor::initAfterPlacement() {
     al::LiveActor::initAfterPlacement();
 }
 
-void PuppetCapActor::initOnline(PuppetInfo* pupInfo) {
+void PuppetCapActor::initOnline(PuppetInfo *pupInfo) {
     mInfo = pupInfo;
 }
 
@@ -51,13 +51,14 @@ void PuppetCapActor::movement() {
 }
 
 void PuppetCapActor::control() {
-    if (mInfo->capAnim) {
+    if(mInfo->capAnim) {
         startAction(mInfo->capAnim);
     }
 
-    sead::Vector3f* cPos = al::getTransPtr(this);
+    sead::Vector3f *cPos = al::getTransPtr(this);
 
-    if (*cPos != mInfo->capPos) {
+    if(*cPos != mInfo->capPos) 
+    {
         al::lerpVec(cPos, *cPos, mInfo->capPos, 0.45);
     }
 
@@ -73,17 +74,26 @@ void PuppetCapActor::update() {
 }
 
 void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver) {
-    if (!GameModeManager::hasCappyCollision()) {
-        return;
-    }
 
+    // prevent normal attack behavior if gamemode requires custom behavior
+    if (GameModeManager::tryAttackCapSensor(sender, receiver))
+        return;
+    
     if (al::isSensorPlayer(receiver) && al::isSensorName(sender, "Push")) {
         rs::sendMsgPushToPlayer(receiver, sender);
     }
+
 }
 
-bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender, al::HitSensor* receiver) {
-    if (!GameModeManager::hasCappyBounce()) {
+bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender,
+                             al::HitSensor* receiver) {
+
+    // try to use gamemode recieve logic, otherwise fallback to default behavior
+    if (GameModeManager::tryReceiveCapMsg(msg, sender, receiver)) {
+        return true;
+    }
+
+    if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
         return false;
     }
 
@@ -103,11 +113,11 @@ bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender,
     return false;
 }
 
-void PuppetCapActor::startAction(const char* actName) {
-    if (al::tryStartActionIfNotPlaying(this, actName)) {
-        const char* curActName = al::getActionName(this);
-        if (curActName) {
-            if (al::isSklAnimExist(this, curActName)) {
+void PuppetCapActor::startAction(const char *actName) {
+    if(al::tryStartActionIfNotPlaying(this, actName)) {
+        const char *curActName = al::getActionName(this);
+        if(curActName) {
+            if(al::isSklAnimExist(this, curActName)) {
                 al::clearSklAnimInterpole(this);
             }
         }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "al/scene/SceneObjHolder.h"
+#include "game/Interfaces/IUsePlayerHack.h"
 
 namespace rs {
     bool isTriggerUiAnyABXY(al::IUseSceneObjHolder const*);
@@ -20,4 +21,6 @@ namespace rs {
     bool isTriggerUiY(al::IUseSceneObjHolder const*);
     bool isTriggerUiZL(al::IUseSceneObjHolder const*);
     bool isTriggerUiZR(al::IUseSceneObjHolder const*);
+
+    bool isHoldHackJump(IUsePlayerHack const*);
 }

@@ -25,6 +25,7 @@ def listdirs(connection,_path):
 
 
 def ensuredirectory(connection,root,path):
+    return
     print(f"Ensuring {os.path.join(root, path)} exists...")
     if path not in listdirs(connection, root):
         connection.mkd(f'{root}/{path}')
@@ -35,37 +36,36 @@ if '.' not in consoleIP:
     print(sys.argv[0], "ERROR: Please specify with `IP=[Your console's IP]`")
     sys.exit(-1)
 
-isNeedOtherSwitch = False
+isNeedOtherSwitch = True
+
+altSwitchIP = sys.argv[2]
+if '.' not in altSwitchIP:
+    isNeedOtherSwitch = False
 
 consolePort = 5000
 
-if len(sys.argv) < 3:
+if len(sys.argv) < 4:
     projName = 'StarlightBase'
 else:
-    projName = sys.argv[2]
-
-if len(sys.argv) < 5:
-    user = 'crafty'
-    passwd = 'boss'
-else:
-    user = sys.argv[3]
-    passwd = sys.argv[4]
+    projName = sys.argv[3]
 
 curDir = os.curdir
 
 ftp = FTP()
 
+otherftp = FTP()
+
 print(f'Connecting to {consoleIP}... ', end='')
 ftp.connect(consoleIP, consolePort)
 print('logging into server...', end='')
-ftp.login(user,passwd)
+ftp.login('crafty','boss')
 print('Connected!')
 
 if isNeedOtherSwitch:
     print(f'Connecting to {altSwitchIP}... ', end='')
     otherftp.connect(altSwitchIP, consolePort)
     print('logging into server...', end='')
-    otherftp.login(user,passwd)
+    otherftp.login('crafty','boss')
     print('Connected!')
 
 patchDirectories = []

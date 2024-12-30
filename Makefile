@@ -3,20 +3,12 @@
 
 .PHONY: all clean starlight send
 
-
-GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
-GIT_COMMIT := $(shell git rev-parse --short HEAD)
-GIT_REV    := ${GIT_BRANCH}-${GIT_COMMIT}
-ifneq (,$(strip $(shell git status --porcelain 2>/dev/null)))
-GIT_REV := $(GIT_REV)-dirty
-endif
-
 SMOVER ?= 100
-BUILDVER ?= 101
-BUILDVERSTR ?= $(GIT_REV)
-IP ?= 10.0.0.221 # ftp server ip (usually is switch's local IP)
+BUILDVER ?= 101 
+BUILDVERSTR ?= 1.0.1 
+IP ?= 192.168.0.9 # ftp server ip (usually is switch's local IP)
 DEBUGLOG ?= 0 # defaults to disable debug logger 
-SERVERIP ?= 0.0.0.0 # put debug logger server IP here
+SERVERIP ?= 192.168.0.58 # put debug logger server IP here
 ISEMU ?= 0 # set to 1 to compile for emulators
 
 PROJNAME ?= StarlightBase
@@ -53,14 +45,14 @@ emu:
 	mv $(shell basename $(CURDIR))$(SMOVER).nso starlight_patch_$(SMOVER)/yuzu/subsdk1
 # builds and sends project to FTP server hosted on provided IP
 send: all
-	python3 scripts/sendPatch.py $(IP) $(PROJNAME)
+	python3.8 scripts/sendPatch.py $(IP) $(PROJNAME) 
 
 log: all
-	python3 scripts/tcpServer.py $(SERVERIP)
+	python3.8 scripts/tcpServer.py $(SERVERIP)
 
 sendlog: all
-	python3 scripts/sendPatch.py $(IP) $(PROJNAME) $(USER) $(PASS)
-	python3 scripts/tcpServer.py $(SERVERIP)
+	python3.8 scripts/sendPatch.py $(IP) $(PROJNAME) $(USER) $(PASS)
+	python3.8 scripts/tcpServer.py $(SERVERIP)
 
 clean:
 	$(MAKE) clean -f MakefileNSO
