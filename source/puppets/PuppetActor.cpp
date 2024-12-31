@@ -22,7 +22,6 @@
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/snh/SardineMode.hpp"
-#include "server/inf/InfectionMode.hpp"
 // #include "server/manhunt/ManhuntMode.hpp"
 
 static const char *subActorNames[] = {
@@ -236,10 +235,6 @@ void PuppetActor::control() {
                     mNameTag->mIsAlive = (isRun && mInfo->isFreezeTagRunner) || (!isRun && !mInfo->isFreezeTagRunner);
                     break;
                 }
-                case GameMode::Infection:
-                    mNameTag->mIsAlive = GameModeManager::instance()->getMode<InfectionMode>()->isPlayerIt() && mInfo->isIt;
-                    break;
-
                 default:
                     Logger::log("Name tag display failed due to unknown active game mode!\n");
                     break;
@@ -290,6 +285,38 @@ void PuppetActor::makeActorDead() {
         mFreezeTagIceBlock->makeActorDead();
     
     al::LiveActor::makeActorDead();
+}
+
+void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
+
+    // prevent normal attack behavior if gamemode requires custom behavior
+    if (GameModeManager::tryAttackPuppetSensor(source, target))
+        return;
+    
+    if (!al::sendMsgPush(target, source)) {
+        rs::sendMsgPushToPlayer(target, source);
+        rs::sendMsgPlayerDisregardTargetMarker(target, source);
+    }
+
+}
+
+bool PuppetActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* source,
+                             al::HitSensor* target) {
+
+    // try to use gamemode recieve logic, otherwise fallback to default behavior
+    if (GameModeManager::tryReceivePuppetMsg(msg, source, target)) {
+        return true;
+    }
+
+    if ((al::isMsgPlayerTrampleReflect(msg) || rs::isMsgPlayerAndCapObjHipDropReflectAll(msg)) && al::isSensorName(target, "Body"))
+    {
+        if(!GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
+            rs::requestHitReactionToAttacker(msg, target, source);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 // this is more or less how nintendo does it with marios demo puppet
