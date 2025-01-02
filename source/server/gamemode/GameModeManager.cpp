@@ -16,7 +16,7 @@ SEAD_SINGLETON_DISPOSER_IMPL(GameModeManager)
 GameModeManager::GameModeManager() {
     mHeap = sead::ExpHeap::create(0x50000, "GameModeHeap", al::getSequenceHeap(), 8,
                                     sead::Heap::HeapDirection::cHeapDirection_Reverse, false);
-    setMode(GameMode::Infection); // set default gamemode
+    setMode(GameMode::HIDEANDSEEK); // set default gamemode
 }
 
 void GameModeManager::begin() {
