@@ -21,7 +21,7 @@
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
-#include "server/snh/SardineMode.hpp"
+#include "server/inf/InfectionMode.hpp"
 // #include "server/manhunt/ManhuntMode.hpp"
 
 static const char *subActorNames[] = {
@@ -227,8 +227,8 @@ void PuppetActor::control() {
                 case GameMode::HIDEANDSEEK:
                     mNameTag->mIsAlive = GameModeManager::instance()->getMode<HideAndSeekMode>()->isPlayerIt() && mInfo->isIt;
                     break;
-                case GameMode::SARDINE:
-                    mNameTag->mIsAlive = GameModeManager::instance()->getMode<SardineMode>()->isPlayerIt() && mInfo->isIt;
+                case GameMode::Infection:
+                    mNameTag->mIsAlive = GameModeManager::instance()->getMode<InfectionMode>()->isPlayerIt() && mInfo->isIt;
                     break;
                 case GameMode::FREEZETAG: {
                     bool isRun = GameModeManager::instance()->getInfo<FreezeTagInfo>()->mIsPlayerRunner;
