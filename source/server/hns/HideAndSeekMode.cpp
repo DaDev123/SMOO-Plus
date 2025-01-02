@@ -269,18 +269,3 @@ void HideAndSeekMode::update() {
 
     mInfo->mHidingTime = mModeTimer->getTime();
 }
-
-
-// Hooks
-
-namespace al {
-    class Triangle;
-    bool isFloorCode(al::Triangle const&,char const*);
-}
-
-bool skateFloorCodeHook(al::Triangle const& tri, char const* code) {
-    if (GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK)) {
-        return GameModeManager::instance()->getInfo<HideAndSeekInfo>()->mIsUseSlipperyGround;
-    }
-    return al::isFloorCode(tri, code);
-}

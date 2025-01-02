@@ -18,14 +18,14 @@
 #include "rs/util/PlayerUtil.h"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/Client.hpp"
+#include "server/gamemode/GameModeTimer.hpp"
 #include <heap/seadHeap.h>
 #include <math.h>
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
-#include "server/hns/HideAndSeekMode.hpp"
+
 #include "basis/seadNew.h"
 #include "server/inf/InfectionConfigMenu.hpp"
-
 
 InfectionMode::InfectionMode(const char* name) : GameModeBase(name) {}
 
@@ -94,7 +94,7 @@ void InfectionMode::processPacket(Packet *packet) {
 
 Packet *InfectionMode::createPacket() {
 
-    InfectionPacket *packet = new InfectionPacket();
+    HideAndSeekPacket *packet = new HideAndSeekPacket();
 
     packet->mUserID = Client::getClientId();
 
@@ -172,6 +172,7 @@ void InfectionMode::update() {
     if (rs::isActiveDemoPlayerPuppetable(playerBase)) {
         mInvulnTime = 0.0f; // if player is in a demo, reset invuln time
     }
+
     if (!mInfo->mIsPlayerIt) {
         if (mInvulnTime >= 5) {  
 
@@ -193,21 +194,17 @@ void InfectionMode::update() {
 
                         if (!isYukimaru) {
                             if(pupDist < 200.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D) {
-                                if(!PlayerFunction::isPlayerDeadStatus(playerBase) && !rs::isActiveDemoPlayerPuppetable(playerBase)) {
-
+                                if(!PlayerFunction::isPlayerDeadStatus(playerBase)) {
+                                    
+                                    mInfo->mIsPlayerIt = true;
+                                    mModeTimer->disableTimer();
+                                    mModeLayout->showSeeking();
                                     playerBase->startDemoPuppetable();
                                     al::setVelocityZero(playerBase);
                                     rs::faceToCamera(playerBase);
                                     ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->endSubAnim();
                                     ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("DemoJangoCapSearch");
                                     isInInfectAnim = true;
-                                    
-                                    
-
-                                
-                                    mInfo->mIsPlayerIt = true;
-                                    mModeTimer->disableTimer();
-                                    mModeLayout->showSeeking();
                                     
                                     Client::sendGamemodePacket();
                                 }
