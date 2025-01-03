@@ -30,6 +30,7 @@
 #include "game/StageScene/StageScene.h"
 #include "helpers.hpp"
 #include "layouts/HideAndSeekIcon.h"
+#include "layouts/SardineIcon.h"
 #include "logger.hpp"
 #include "rs/util.hpp"
 #include "server/freeze/FreezeTagMode.hpp"

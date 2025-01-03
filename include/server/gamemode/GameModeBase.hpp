@@ -12,6 +12,7 @@
 #include "game/GameData/GameDataHolder.h"
 #include "game/StageScene/StageScene.h"
 #include "layouts/HideAndSeekIcon.h"
+#include "layouts/SardineIcon.h"
 #include "layouts/InfectionIcon.h"
 #include "prim/seadSafeString.h"
 #include "server/gamemode/GameModeConfigMenu.hpp"
@@ -20,8 +21,9 @@
 enum GameMode : s8 {
     NONE = -1,
     HIDEANDSEEK,
-    Infection,
-    FREEZETAG
+    SARDINE,
+    FREEZETAG,
+    Infection
 };
 
 // struct containing info about the games state for use in gamemodes

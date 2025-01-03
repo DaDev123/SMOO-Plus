@@ -1,4 +1,4 @@
-#include "server/inf/InfectionMode.hpp"
+#include "server/snh/SardineMode.hpp"
 #include <cmath>
 #include "al/async/FunctorV0M.hpp"
 #include "al/util.hpp"
@@ -10,7 +10,7 @@
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "heap/seadHeapMgr.h"
-#include "layouts/InfectionIcon.h"
+#include "layouts/SardineIcon.h"
 #include "logger.hpp"
 #include "math/seadVector.h"
 #include "packets/Packet.h"
@@ -25,33 +25,33 @@
 #include "server/gamemode/GameModeFactory.hpp"
 
 #include "basis/seadNew.h"
-#include "server/inf/InfectionConfigMenu.hpp"
+#include "server/snh/SardineConfigMenu.hpp"
 
-InfectionMode::InfectionMode(const char* name) : GameModeBase(name) {}
+SardineMode::SardineMode(const char* name) : GameModeBase(name) {}
 
-void InfectionMode::init(const GameModeInitInfo& info) {
+void SardineMode::init(const GameModeInitInfo& info) {
     mSceneObjHolder = info.mSceneObjHolder;
     mMode = info.mMode;
     mCurScene = (StageScene*)info.mScene;
     mPuppetHolder = info.mPuppetHolder;
 
-    GameModeInfoBase* curGameInfo = GameModeManager::instance()->getInfo<InfectionInfo>();
+    GameModeInfoBase* curGameInfo = GameModeManager::instance()->getInfo<SardineInfo>();
 
     if (curGameInfo) Logger::log("Gamemode info found: %s %s\n", GameModeFactory::getModeString(curGameInfo->mMode), GameModeFactory::getModeString(info.mMode));
     else Logger::log("No gamemode info found\n");
     if (curGameInfo && curGameInfo->mMode == mMode) {
-        mInfo = (InfectionInfo*)curGameInfo;
+        mInfo = (SardineInfo*)curGameInfo;
         mModeTimer = new GameModeTimer(mInfo->mHidingTime);
         Logger::log("Reinitialized timer with time %d:%.2d\n", mInfo->mHidingTime.mMinutes, mInfo->mHidingTime.mSeconds);
     } else {
         if (curGameInfo) delete curGameInfo;  // attempt to destory previous info before creating new one
         
-        mInfo = GameModeManager::instance()->createModeInfo<InfectionInfo>();
+        mInfo = GameModeManager::instance()->createModeInfo<SardineInfo>();
         
         mModeTimer = new GameModeTimer();
     }
 
-    mModeLayout = new InfectionIcon("InfectionIcon", *info.mLayoutInitInfo);
+    mModeLayout = new SardineIcon("SardineIcon", *info.mLayoutInitInfo);
 
     mModeLayout->showSeeking();
 
@@ -59,14 +59,14 @@ void InfectionMode::init(const GameModeInitInfo& info) {
 
 }
 
-void InfectionMode::processPacket(Packet *packet) {
-    InfectionPacket* tagPacket = (InfectionPacket*)packet;
+void SardineMode::processPacket(Packet *packet) {
+    SardinePacket* tagPacket = (SardinePacket*)packet;
 
     // if the packet is for our player, edit info for our player
-    if (tagPacket->mUserID == Client::getClientId() && GameModeManager::instance()->isMode(GameMode::Infection)) {
+    if (tagPacket->mUserID == Client::getClientId() && GameModeManager::instance()->isMode(GameMode::SARDINE)) {
 
-        InfectionMode* mode = GameModeManager::instance()->getMode<InfectionMode>();
-        InfectionInfo* curInfo = GameModeManager::instance()->getInfo<InfectionInfo>();
+        SardineMode* mode = GameModeManager::instance()->getMode<SardineMode>();
+        SardineInfo* curInfo = GameModeManager::instance()->getInfo<SardineInfo>();
 
         if (tagPacket->updateType & TagUpdateType::STATE) {
             mode->setPlayerTagState(tagPacket->isIt);
@@ -92,9 +92,9 @@ void InfectionMode::processPacket(Packet *packet) {
     curInfo->minutes = tagPacket->minutes;
 }
 
-Packet *InfectionMode::createPacket() {
+Packet *SardineMode::createPacket() {
 
-    InfectionPacket *packet = new InfectionPacket();
+    SardinePacket *packet = new SardinePacket();
 
     packet->mUserID = Client::getClientId();
 
@@ -107,7 +107,7 @@ Packet *InfectionMode::createPacket() {
     return packet;
 }
 
-void InfectionMode::begin() {
+void SardineMode::begin() {
 
     unpause();
 
@@ -119,21 +119,21 @@ void InfectionMode::begin() {
 }
 
 
-void InfectionMode::end() {
+void SardineMode::end() {
 
     pause();
 
     GameModeBase::end();
 }
 
-void InfectionMode::pause() {
+void SardineMode::pause() {
     GameModeBase::pause();
 
     mModeLayout->tryEnd();
     mModeTimer->disableTimer();
 }
 
-void InfectionMode::unpause() {
+void SardineMode::unpause() {
     GameModeBase::unpause();
 
     mModeLayout->appear();
@@ -147,16 +147,9 @@ void InfectionMode::unpause() {
     }
 }
 
-bool isInInfectAnim = false;
-
-void InfectionMode::update() {
+void SardineMode::update() {
 
     PlayerActorBase* playerBase = rs::getPlayerActor(mCurScene);
-
-    if(isInInfectAnim && ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->isAnimEnd()){
-        playerBase->endDemoPuppetable();
-        isInInfectAnim = false;
-    }
 
     bool isYukimaru = !playerBase->getPlayerInfo(); // if PlayerInfo is a nullptr, that means we're dealing with the bound bowl racer
 
@@ -193,18 +186,12 @@ void InfectionMode::update() {
                         float pupDist = vecDistance(curInfo->playerPos + offset, al::getTrans(playerBase) + offset); // TODO: remove distance calculations and use hit sensors to determine this
 
                         if (!isYukimaru) {
-                            if(pupDist < 200.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D) {
+                            if(pupDist < 300.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D) {
                                 if(!PlayerFunction::isPlayerDeadStatus(playerBase)) {
-                                    
+
                                     mInfo->mIsPlayerIt = true;
                                     mModeTimer->disableTimer();
                                     mModeLayout->showSeeking();
-                                    playerBase->startDemoPuppetable();
-                                    al::setVelocityZero(playerBase);
-                                    rs::faceToCamera(playerBase);
-                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->endSubAnim();
-                                    ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("DemoJangoCapSearch");
-                                    isInInfectAnim = true;
                                     
                                     Client::sendGamemodePacket();
                                 }
