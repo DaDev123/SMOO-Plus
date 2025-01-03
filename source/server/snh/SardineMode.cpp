@@ -139,11 +139,11 @@ void SardineMode::unpause() {
     mModeLayout->appear();
     
     if (!mInfo->mIsPlayerIt) {
-        mModeTimer->enableTimer();
-        mModeLayout->showHiding();
-    } else {
         mModeTimer->disableTimer();
         mModeLayout->showSeeking();
+    } else {
+        mModeTimer->enableTimer();
+        mModeLayout->showHiding();
     }
 }
 
@@ -190,16 +190,16 @@ void SardineMode::update() {
                                 if(!PlayerFunction::isPlayerDeadStatus(playerBase)) {
 
                                     mInfo->mIsPlayerIt = true;
-                                    mModeTimer->disableTimer();
-                                    mModeLayout->showSeeking();
+                                    mModeTimer->enableTimer();
+                                    mModeLayout->showHiding();
                                     
                                     Client::sendGamemodePacket();
                                 }
                             } else if (PlayerFunction::isPlayerDeadStatus(playerBase)) {
 
                                 mInfo->mIsPlayerIt = true;
-                                mModeTimer->disableTimer();
-                                mModeLayout->showSeeking();
+                                mModeTimer->enableTimer();
+                                mModeLayout->showHiding();
 
                                 Client::sendGamemodePacket();
                                 
