@@ -1,4 +1,5 @@
 #include "speedboot/SpeedbootLoad.hpp"
+#include "DeltaTime.hpp"
 #include "al/layout/LayoutActor.h"
 #include "al/util.hpp"
 #include "al/util/LayoutUtil.h"
@@ -9,9 +10,7 @@
 #include "gfx/seadColor.h"
 #include "logger.hpp"
 #include "math/seadMathCalcCommon.h"
-#include "math/seadVector.h"
 #include "prim/seadSafeString.h"
-#include "server/DeltaTime.hpp"
 
 SpeedbootLoad::SpeedbootLoad(WorldResourceLoader* resourceLoader, const al::LayoutInitInfo& initInfo)
     : al::LayoutActor("SpeedbootLoad")
@@ -43,72 +42,34 @@ void SpeedbootLoad::exeWait()
 
 void SpeedbootLoad::exeDecrease()
 {
-    mTime += 0.016666f;
-
     mProgression = worldResourceLoader->calcLoadPercent() / 100.0f;
+    sead::Color4u8 color = { 255, 255, 0, 255 };
 
-    float rotation = cosf(mTime) * 3;
+    color.r = 255 - sead::MathCalcCommon<int>::ceil(mProgression * 255);
+    color.g = sead::MathCalcCommon<int>::ceil(mProgression * 255);
 
-    // Debug stuff
-    sead::WFormatFixedSafeString<0x40> string(u"Time: %.02f\nSine Value: %.02f", mTime, rotation);
+    mRotTime += 0.03f;
+    float rotation = cosf(mRotTime) * 5;
+
+    sead::WFormatFixedSafeString<0x40> string(u"Display Time: %.02f\nSin Value: %.02f", mRotTime, rotation);
+
     al::setPaneString(this, "TxtDebug", string.cstr(), 0);
 
-    if (mProgression < 1.f) {
+    if (mProgression < 1.0) {
+        // al::startFreezeAction(this, "Decrease", 60.f * (1.0f - actual), "State");
+        al::setPaneLocalScale(this, "PicBar", { mProgression, 2.f });
+        al::setPaneVtxColor(this, "PicBar", color);
 
-        // Target setup
-        if (mTime < 7.f) {
-            mOnlineLogoScaleTarget = 1.f;
-            mOnlineLogoTransTarget = { 0.f, 0.f };
+        al::setPaneLocalScale(this, "PicBarFill", { 30.f, 1.f });
+        al::setPaneVtxColor(this, "PicBarFill", color);
 
-            mFreezeLogoTransXTarget = 1000.f;
+        al::setPaneLocalTrans(this, "PicPointer", { (mProgression * 1280.f) - 640.f, -260.f });
+        al::setPaneLocalRotate(this, "PicPointer", { 0.f, 0.f, rotation });
 
-            mFreezeBorderTarget = sead::Vector2f(700.f, 420.f);
-
-            mFreezeBGTransXTarget = 0.f;
-        } else {
-            mOnlineLogoScaleTarget = 0.3f;
-            mOnlineLogoTransTarget = { -520.f, 260.f };
-
-            mFreezeLogoTransXTarget = 0.f;
-
-            mFreezeBorderTarget = sead::Vector2f(640.f, 360.f);
-
-            mFreezeBGTransXTarget = -1280.f;
-        }
-
-        // Online logo part //
-
-        mOnlineLogoScale = al::lerpValue(mOnlineLogoScale, mOnlineLogoScaleTarget, 0.04f);
-        mOnlineLogoTrans.x = al::lerpValue(mOnlineLogoTrans.x, mOnlineLogoTransTarget.x, 0.04f);
-        mOnlineLogoTrans.y = al::lerpValue(mOnlineLogoTrans.y, mOnlineLogoTransTarget.y, 0.04f);
-
-        al::setPaneLocalScale(this, "PartOnlineLogo", { mOnlineLogoScale, mOnlineLogoScale });
-        al::setPaneLocalTrans(this, "PartOnlineLogo", mOnlineLogoTrans);
-
-        // Freeze logo part //
-
-        mFreezeLogoTransX = al::lerpValue(mFreezeLogoTransX, mFreezeLogoTransXTarget, 0.02f);
-
-        al::setPaneLocalTrans(this, "FreezeLogoRoot", { mFreezeLogoTransX, 0.f });
-        al::setPaneLocalRotate(this, "PicFreezeLogo", { 0.f, 0.f, rotation });
-
-        // Freeze borders //
-
-        mFreezeBorder.x = al::lerpValue(mFreezeBorder.x, mFreezeBorderTarget.x, 0.01f);
-        mFreezeBorder.y = al::lerpValue(mFreezeBorder.y, mFreezeBorderTarget.y, 0.01f);
-
-        al::setPaneLocalTrans(this, "PicFreezeEdgeLeft", { -mFreezeBorder.x, 0.f });
-        al::setPaneLocalTrans(this, "PicFreezeEdgeRight", { mFreezeBorder.x, 0.f });
-        al::setPaneLocalTrans(this, "PicFreezeEdgeTop", { 0.f, mFreezeBorder.y });
-        al::setPaneLocalTrans(this, "PicFreezeEdgeBot", { 0.f, -mFreezeBorder.y });
-
-        // Freeze BG //
-        mFreezeBGTransX = al::lerpValue(mFreezeBGTransX, mFreezeBGTransXTarget, 0.02f);
-
-        al::setPaneLocalTrans(this, "BackgroundsRoot", { mFreezeBGTransX, 0.f });
+        al::setPaneLocalRotate(this, "PicBG", { 0.f, 0.f, mRotTime * -3.f });
     }
 
-    if (mProgression > 1.f) {
+    if (mProgression > 1.0f) {
         al::setNerve(this, &nrvSpeedbootLoadEnd);
     }
 }
