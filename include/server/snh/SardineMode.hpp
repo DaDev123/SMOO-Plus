@@ -1,70 +1,74 @@
 #pragma once
 
-#include <math.h>
-#include <basis/seadTypes.h>
-
 #include "al/camera/CameraTicket.h"
 #include "server/gamemode/GameModeBase.hpp"
-#include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
+#include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
 #include "server/snh/SardineConfigMenu.hpp"
-#include "server/hns/HideAndSeekMode.hpp"
-
-#include "packets/Packet.h"
+#include "layouts/SardineIcon.h"
+#include <math.h>
 
 struct SardineInfo : GameModeInfoBase {
     SardineInfo() { mMode = GameMode::SARDINE; }
-    bool mIsPlayerIt = false;
+    bool mIsIt = false;
     bool mIsUseGravity = false;
     bool mIsUseGravityCam = false;
-    bool mIsUseSlipperyGround = true;
+
+    bool mIsTether = false;
+    bool mIsTetherSnap = false;
+
     GameTime mHidingTime;
+};
+
+enum SardineUpdateType : u8 {
+    SARDINETIME                 = 1 << 0,
+    SARDINESTATE                = 1 << 1
 };
 
 struct PACKED SardinePacket : Packet {
     SardinePacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(SardinePacket) - sizeof(Packet);};
-    TagUpdateType updateType;
+    SardineUpdateType updateType;
     bool1 isIt = false;
     u8 seconds;
     u16 minutes;
 };
 
 class SardineMode : public GameModeBase {
-    public:
-        SardineMode(const char* name);
+public:
+    SardineMode(const char* name);
 
-        void init(GameModeInitInfo const& info) override;
+    void init(GameModeInitInfo const& info) override;
 
-        void begin() override;
-        void update() override;
-        void end() override;
-    
-        void pause() override;
-        void unpause() override;
+    virtual void begin() override;
+    virtual void update() override;
+    virtual void end() override;
 
-        bool isUseNormalUI() const override { return false; }
+    void pause() override;
+    void unpause() override;
 
-        void processPacket(Packet* packet) override;
-        Packet* createPacket() override;
+    bool isUseNormalUI() const override { return false; }
 
-        bool isPlayerIt() const { return mInfo->mIsPlayerIt; }
+    void processPacket(Packet* packet) override;
+    Packet* createPacket() override;
 
-        float getInvulnTime() const { return mInvulnTime; }
+    bool isPlayerIt() const { return mInfo->mIsIt; };
 
-        void setPlayerTagState(bool state) { mInfo->mIsPlayerIt = state; }
+    void setPlayerTagState(bool state) { mInfo->mIsIt = state; }
 
-        void enableGravityMode() {mInfo->mIsUseGravity = true;}
-        void disableGravityMode() { mInfo->mIsUseGravity = false; }
-        bool isUseGravity() const { return mInfo->mIsUseGravity; }
+    void enableGravityMode() { mInfo->mIsUseGravity = true; }
+    void disableGravityMode() { mInfo->mIsUseGravity = false; }
+    bool isUseGravity() const { return mInfo->mIsUseGravity; }
 
-        void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; }
+    void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; }
 
-    private:
-        float mInvulnTime = 0.0f;
-        GameModeTimer* mModeTimer = nullptr;
-        SardineIcon *mModeLayout = nullptr;
-        SardineInfo* mInfo = nullptr;
-        al::CameraTicket *mTicket = nullptr;
+private:
+    GameModeTimer* mModeTimer = nullptr;
+    SardineIcon* mModeLayout = nullptr;
+    SardineInfo* mInfo = nullptr;
+    al::CameraTicket* mTicket = nullptr;
 
+    float pullDistanceMax = 2250.f;
+    float pullDistanceMin = 1000.f;
+    float pullPowerRate = 75.f;
 };
