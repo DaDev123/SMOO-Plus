@@ -120,6 +120,12 @@ Packet *SardineMode::createPacket() {
 
 void SardineMode::begin() {
 
+    if (mInfo->mIsIt) {
+        mModeTimer->enableTimer();
+        mModeLayout->showPack();
+    } else {
+        mModeTimer->disableTimer();
+        mModeLayout->showSolo();
     unpause();
 
     mIsFirstFrame = true;
