@@ -1,95 +1,105 @@
 #include "server/snh/SardineMode.hpp"
-#include <cmath>
 #include "al/async/FunctorV0M.hpp"
 #include "al/util.hpp"
 #include "al/util/ControllerUtil.h"
 #include "al/util/LiveActorUtil.h"
+#include "al/util/MathUtil.h"
+#include "game/GameData/GameDataFunction.h"
 #include "game/GameData/GameDataHolderAccessor.h"
 #include "game/Layouts/CoinCounter.h"
 #include "game/Layouts/MapMini.h"
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
+#include "game/Player/PlayerFunction.h"
 #include "heap/seadHeapMgr.h"
-#include "layouts/SardineIcon.h"
+#include "layouts/HideAndSeekIcon.h"
 #include "logger.hpp"
 #include "math/seadVector.h"
-#include "packets/Packet.h"
 #include "rs/util.hpp"
-#include "rs/util/PlayerUtil.h"
-#include "server/gamemode/GameModeBase.hpp"
 #include "server/Client.hpp"
-#include "server/gamemode/GameModeTimer.hpp"
-#include <heap/seadHeap.h>
-#include <math.h>
-#include "server/gamemode/GameModeManager.hpp"
+#include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
+#include "server/gamemode/GameModeManager.hpp"
+#include "server/gamemode/GameModeTimer.hpp"
+#include <cmath>
+#include <heap/seadHeap.h>
 
 #include "basis/seadNew.h"
 #include "server/snh/SardineConfigMenu.hpp"
 
-SardineMode::SardineMode(const char* name) : GameModeBase(name) {}
+SardineMode::SardineMode(const char* name)
+    : GameModeBase(name)
+{
+}
 
-void SardineMode::init(const GameModeInitInfo& info) {
+void SardineMode::init(const GameModeInitInfo& info)
+{
     mSceneObjHolder = info.mSceneObjHolder;
     mMode = info.mMode;
     mCurScene = (StageScene*)info.mScene;
     mPuppetHolder = info.mPuppetHolder;
 
-    GameModeInfoBase* curGameInfo = GameModeManager::instance()->getInfo<SardineInfo>();
+    GameModeInfoBase* curGameInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
 
-    if (curGameInfo) Logger::log("Gamemode info found: %s %s\n", GameModeFactory::getModeString(curGameInfo->mMode), GameModeFactory::getModeString(info.mMode));
-    else Logger::log("No gamemode info found\n");
+    sead::ScopedCurrentHeapSetter heapSetter(GameModeManager::instance()->getHeap());
+
+    if (curGameInfo)
+        Logger::log("Gamemode info found: %s %s\n", GameModeFactory::getModeString(curGameInfo->mMode), GameModeFactory::getModeString(info.mMode));
+    else
+        Logger::log("No gamemode info found\n");
     if (curGameInfo && curGameInfo->mMode == mMode) {
+        sead::ScopedCurrentHeapSetter heapSetter(GameModeManager::getSceneHeap());
         mInfo = (SardineInfo*)curGameInfo;
         mModeTimer = new GameModeTimer(mInfo->mHidingTime);
         Logger::log("Reinitialized timer with time %d:%.2d\n", mInfo->mHidingTime.mMinutes, mInfo->mHidingTime.mSeconds);
     } else {
-        if (curGameInfo) delete curGameInfo;  // attempt to destory previous info before creating new one
-        
+        if (curGameInfo)
+            delete curGameInfo; // attempt to destory previous info before creating new one
+
         mInfo = GameModeManager::instance()->createModeInfo<SardineInfo>();
-        
+
         mModeTimer = new GameModeTimer();
     }
+    sead::ScopedCurrentHeapSetter heapSetterr(GameModeManager::getSceneHeap());
 
     mModeLayout = new SardineIcon("SardineIcon", *info.mLayoutInitInfo);
 
-    mModeLayout->showHiding();
+    mModeLayout->showSolo();
 
-    mModeTimer->enableTimer();
-
+    // mModeTimer->disableTimer();
 }
 
 void SardineMode::processPacket(Packet *packet) {
-    SardinePacket* tagPacket = (SardinePacket*)packet;
+    SardinePacket* sardinePacket = (SardinePacket*)packet;
 
     // if the packet is for our player, edit info for our player
-    if (tagPacket->mUserID == Client::getClientId() && GameModeManager::instance()->isMode(GameMode::SARDINE)) {
+    if (sardinePacket->mUserID == Client::getClientId() && GameModeManager::instance()->isMode(GameMode::SARDINE)) {
 
         SardineMode* mode = GameModeManager::instance()->getMode<SardineMode>();
         SardineInfo* curInfo = GameModeManager::instance()->getInfo<SardineInfo>();
 
-        if (tagPacket->updateType & TagUpdateType::STATE) {
-            mode->setPlayerTagState(tagPacket->isIt);
+        if (sardinePacket->updateType & SardineUpdateType::SARDINESTATE) {
+            mode->setPlayerTagState(sardinePacket->isIt);
         }
 
-        if (tagPacket->updateType & TagUpdateType::TIME) {
-            curInfo->mHidingTime.mSeconds = tagPacket->seconds;
-            curInfo->mHidingTime.mMinutes = tagPacket->minutes;
+        if (sardinePacket->updateType & SardineUpdateType::SARDINETIME) {
+            curInfo->mHidingTime.mSeconds = sardinePacket->seconds;
+            curInfo->mHidingTime.mMinutes = sardinePacket->minutes;
         }
 
         return;
 
     }
 
-    PuppetInfo* curInfo = Client::findPuppetInfo(tagPacket->mUserID, false);
+    PuppetInfo* curInfo = Client::findPuppetInfo(sardinePacket->mUserID, false);
 
     if (!curInfo) {
         return;
     }
 
-    curInfo->isIt = tagPacket->isIt;
-    curInfo->seconds = tagPacket->seconds;
-    curInfo->minutes = tagPacket->minutes;
+    curInfo->isIt = sardinePacket->isIt;
+    curInfo->seconds = sardinePacket->seconds;
+    curInfo->minutes = sardinePacket->minutes;
 }
 
 Packet *SardineMode::createPacket() {
@@ -102,18 +112,17 @@ Packet *SardineMode::createPacket() {
 
     packet->minutes = mInfo->mHidingTime.mMinutes;
     packet->seconds = mInfo->mHidingTime.mSeconds;
-    packet->updateType = static_cast<TagUpdateType>(TagUpdateType::STATE | TagUpdateType::TIME);
+    packet->updateType = static_cast<SardineUpdateType>(SardineUpdateType::SARDINESTATE | SardineUpdateType::SARDINETIME);
 
     return packet;
 }
+
 
 void SardineMode::begin() {
 
     unpause();
 
     mIsFirstFrame = true;
-    
-    mInvulnTime = 0.0f;
 
     GameModeBase::begin();
 }
@@ -138,84 +147,82 @@ void SardineMode::unpause() {
 
     mModeLayout->appear();
     
-    if (!mInfo->mIsPlayerIt) {
-        mModeTimer->disableTimer();
-        mModeLayout->showSeeking();
-    } else {
+    if (!mInfo->mIsIt) {
         mModeTimer->enableTimer();
-        mModeLayout->showHiding();
+        mModeLayout->showPack();
+    } else {
+        mModeTimer->disableTimer();
+        mModeLayout->showSolo();
     }
 }
 
-void SardineMode::update() {
-
+void SardineMode::update()
+{
     PlayerActorBase* playerBase = rs::getPlayerActor(mCurScene);
-
     bool isYukimaru = !playerBase->getPlayerInfo(); // if PlayerInfo is a nullptr, that means we're dealing with the bound bowl racer
 
+    float highPuppetDistance = -1.f;
+    int farPuppetID = -1;
+    bool isAnyIt = false;
+
     if (mIsFirstFrame) {
-
-        if (mInfo->mIsUseGravityCam && mTicket) {
+        if (mInfo->mIsUseGravityCam && mTicket)
             al::startCamera(mCurScene, mTicket, -1);
-        }
-
         mIsFirstFrame = false;
     }
 
-    if (rs::isActiveDemoPlayerPuppetable(playerBase)) {
-        mInvulnTime = 0.0f; // if player is in a demo, reset invuln time
-    }
+    if (playerBase) {
+        for (size_t i = 0; i < mPuppetHolder->getSize(); i++) {
+            PuppetInfo* curInfo = Client::getPuppetInfo(i);
 
-    if (!mInfo->mIsPlayerIt) {
-        if (mInvulnTime >= 5) {  
+            if (!curInfo) {
+                Logger::log("Checking %d, hit bounds %d-%d\n", i, mPuppetHolder->getSize(), Client::getMaxPlayerCount());
+                break;
+            }
 
-            if (playerBase) {
-                for (size_t i = 0; i < mPuppetHolder->getSize(); i++)
-                {
-                    PuppetInfo *curInfo = Client::getPuppetInfo(i);
+            float pupDist = al::calcDistance(playerBase, curInfo->playerPos);
+            bool isPupInStage = al::isEqualString(curInfo->stageName, GameDataFunction::getCurrentStageName(mCurScene->mHolder));
 
-                    if (!curInfo) {
-                        Logger::log("Checking %d, hit bounds %d-%d\n", i, mPuppetHolder->getSize(), Client::getMaxPlayerCount());
-                        break;
-                    }
+            if ((pupDist > highPuppetDistance || highPuppetDistance == -1) && isPupInStage && curInfo->isIt) {
+                highPuppetDistance = pupDist;
+                farPuppetID = i;
+            }
 
-                    if(curInfo->isConnected && curInfo->isInSameStage && curInfo->isIt) {
+            if (curInfo->isIt)
+                isAnyIt = true;
 
-                        sead::Vector3f offset = sead::Vector3f(0.0f, 80.0f, 0.0f);
-            
-                        float pupDist = vecDistance(curInfo->playerPos + offset, al::getTrans(playerBase) + offset); // TODO: remove distance calculations and use hit sensors to determine this
+            if (curInfo->isConnected && curInfo->isInSameStage && curInfo->isIt && !mInfo->mIsIt && !isYukimaru && pupDist < 300.f) {
+                if (((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D && !PlayerFunction::isPlayerDeadStatus(playerBase)) {
+                    mInfo->mIsIt = true;
+                    mModeTimer->enableTimer();
+                    mModeLayout->showPack();
 
-                        if (!isYukimaru) {
-                            if(pupDist < 300.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D) {
-                                if(!PlayerFunction::isPlayerDeadStatus(playerBase)) {
-
-                                    mInfo->mIsPlayerIt = true;
-                                    mModeTimer->enableTimer();
-                                    mModeLayout->showHiding();
-                                    
-                                    Client::sendGamemodePacket();
-                                }
-                            } else if (PlayerFunction::isPlayerDeadStatus(playerBase)) {
-
-                                mInfo->mIsPlayerIt = true;
-                                mModeTimer->enableTimer();
-                                mModeLayout->showHiding();
-
-                                Client::sendGamemodePacket();
-                                
-                            }
-                        }
-                    }
+                    Client::sendGamemodePacket();
                 }
             }
-        }else {
-            mInvulnTime += Time::deltaTime;
         }
+    }
 
-        mModeTimer->updateTimer();
-        
-    } else {
-        mModeTimer->timerControl();
+    mModeTimer->updateTimer();
+
+    // Tin detaching
+    if ((PlayerFunction::isPlayerDeadStatus(playerBase) || (highPuppetDistance > pullDistanceMax && mInfo->mIsTetherSnap && mInfo->mIsTether)) && mInfo->mIsIt) {
+        mInfo->mIsIt = false;
+        mModeTimer->disableTimer();
+        mModeLayout->showSolo();
+
+        Client::sendGamemodePacket();
+    }
+
+    // Player pulling
+    if (highPuppetDistance >= pullDistanceMin && mInfo->mIsIt && farPuppetID != -1 && mInfo->mIsTether) {
+        sead::Vector3f target = Client::getPuppetInfo(farPuppetID)->playerPos;
+        sead::Vector3f* playerPos = al::getTransPtr(playerBase);
+        sead::Vector3f direction = target - *playerPos;
+
+        al::normalize(&direction);
+
+        playerPos->add(direction * ((al::calcDistance(playerBase, target) - pullDistanceMin) / pullPowerRate));
     }
 
     if (mInfo->mIsUseGravity && !isYukimaru) {
@@ -226,7 +233,7 @@ void SardineMode::update() {
             al::setGravity(playerBase, gravity);
             al::setGravity(((PlayerActorHakoniwa*)playerBase)->mHackCap, gravity);
         }
-        
+
         if (al::isPadHoldL(-1)) {
             if (al::isPadTriggerRight(-1)) {
                 if (al::isActiveCamera(mTicket)) {
@@ -244,19 +251,16 @@ void SardineMode::update() {
         }
     }
 
-    if (al::isPadTriggerUp(-1) && !al::isPadHoldZL(-1))
-    {
-        mInfo->mIsPlayerIt = !mInfo->mIsPlayerIt;
-
-        mModeTimer->toggleTimer();
-
-        if(!mInfo->mIsPlayerIt) {
-            mInvulnTime = 0;
-            mModeLayout->showHiding();
+    if (al::isPadTriggerUp(-1) && !al::isPadHoldZL(-1)) {
+        if (!mInfo->mIsIt && !isAnyIt) {
+            mInfo->mIsIt = true;
+            mModeTimer->enableTimer();
+            mModeLayout->showPack();
         } else {
-            mModeLayout->showSeeking();
+            mInfo->mIsIt = false;
+            mModeTimer->disableTimer();
+            mModeLayout->showSolo();
         }
-
         Client::sendGamemodePacket();
     }
 
