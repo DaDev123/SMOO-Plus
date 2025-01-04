@@ -126,6 +126,8 @@ void SardineMode::begin() {
     } else {
         mModeTimer->disableTimer();
         mModeLayout->showSolo();
+    }
+    
     unpause();
 
     mIsFirstFrame = true;
