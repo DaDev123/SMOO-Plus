@@ -53,9 +53,9 @@ void SardineMode::init(const GameModeInitInfo& info) {
 
     mModeLayout = new SardineIcon("SardineIcon", *info.mLayoutInitInfo);
 
-    mModeLayout->showSeeking();
+    mModeLayout->showHiding();
 
-    mModeTimer->disableTimer();
+    mModeTimer->enableTimer();
 
 }
 
