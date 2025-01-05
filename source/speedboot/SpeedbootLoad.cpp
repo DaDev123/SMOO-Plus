@@ -66,7 +66,7 @@ void SpeedbootLoad::exeDecrease()
         al::setPaneLocalTrans(this, "PicPointer", { (mProgression * 1280.f) - 640.f, -260.f });
         al::setPaneLocalRotate(this, "PicPointer", { 0.f, 0.f, rotation });
 
-        al::setPaneLocalRotate(this, "PicBG", { 0.f, 0.f, mRotTime * -3.f });
+        al::setPaneLocalRotate(this, "P_pict", { 0.f, 0.f, mRotTime * -3.f });
     }
 
     if (mProgression > 1.0f) {

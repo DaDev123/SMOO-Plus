@@ -87,7 +87,7 @@ struct HakoniwaSequenceSpeedboot : public al::NerveStateBase {
     void exeWipeToKill()
     {
         if (al::isFirstStep(this)) {
-            mSequence->mWipeHolder->startClose("FadeWhite", -1);
+            mSequence->mWipeHolder->startClose("FadeBlack", -1);
         }
 
         if (mSequence->mWipeHolder->isCloseEnd())

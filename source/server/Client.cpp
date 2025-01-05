@@ -147,11 +147,12 @@ void Client::restartConnection() {
  * @return true if successful connection to server
  * @return false if connection was unable to establish
  */
+
 bool Client::startConnection() {
 
-    bool isNeedSave = false;
+        bool isNeedSave = false;
 
-    bool isOverride = al::isPadHoldZL(-1);
+    bool isOverride = al::isPadHoldPlus(-1);
 
     if (mServerIP.isEmpty() || isOverride) {
         mKeyboard->setHeaderText(u"Save File does not contain an IP!");
@@ -160,6 +161,7 @@ bool Client::startConnection() {
         Client::openKeyboardIP();
         isNeedSave = true;
     }
+
 
     if (!mServerPort || isOverride) {
         mKeyboard->setHeaderText(u"Save File does not contain a port!");
