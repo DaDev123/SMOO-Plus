@@ -146,7 +146,6 @@ namespace al
     void setPaneLocalSize(al::IUseLayout *layout, const char *paneName, sead::Vector2f const &);
     void setPaneLocalScale(al::IUseLayout *layout, const char *paneName, sead::Vector2f const &);
     void setPaneLocalRotate(al::IUseLayout *layout, const char *paneName, sead::Vector3f const &);
-    void setPaneVtxColor(al::IUseLayout const* layout, char const* paneName, sead::Color4u8 const&);
 
     sead::Vector3f &getPaneLocalTrans(const al::IUseLayout *layout, const char *paneName);
     void getPaneLocalSize(sead::Vector2f *, const al::IUseLayout *layout, const char *paneName);
@@ -518,4 +517,36 @@ namespace al
     void setDitherAnimMaxAlpha(al::LiveActor *, float);
     void setDitherAnimClippingJudgeLocalOffset(al::LiveActor *, sead::Vector3f const&);
     void setDitherAnimClippingJudgeParam(al::LiveActor *, const char *);
+
+    // layout stuff
+
+    al::LayoutInitInfo *getLayoutInitInfo(al::ActorInitInfo const&);
+
+    void requestCaptureRecursive(al::LayoutActor const*);
+
+    void startAction(IUseLayoutAction*, const char *, const char *);
+
+    bool isActionPlaying(al::IUseLayoutAction *, const char *action, const char *group);
+
+    bool isActionEnd(al::IUseLayoutAction const*, char const*);
+
+    void setPaneTexture(al::IUseLayout *, char const *, nn::ui2d::TextureInfo const *);
+
+    void setPaneString(al::IUseLayout *layout, char const *paneName, char16_t const *, ushort);
+
+    void setPaneStringFormat(al::IUseLayout *layout, char const *paneName, char const *format,...);
+
+    void setPaneLocalTrans(al::IUseLayout *layout, const char *paneName, sead::Vector3f const &);
+    void setPaneLocalTrans(al::IUseLayout *layout, const char *paneName, sead::Vector2f const &);
+    void setPaneLocalSize(al::IUseLayout *layout, const char *paneName, sead::Vector2f const &);
+    void setPaneLocalScale(al::IUseLayout *layout, const char *paneName, sead::Vector2f const &);
+    void setPaneLocalRotate(al::IUseLayout *layout, const char *paneName, sead::Vector3f const &);
+    void setPaneVtxColor(al::IUseLayout const* layout, char const* paneName, sead::Color4u8 const&);
+
+    sead::Vector3f &getPaneLocalTrans(const al::IUseLayout *layout, const char *paneName);
+    void getPaneLocalSize(sead::Vector2f *, const al::IUseLayout *layout, const char *paneName);
+    sead::Vector2f &getPaneLocalScale(const al::IUseLayout *layout, const char *paneName);
+    sead::Vector3f &getPaneLocalRotate(const al::IUseLayout *layout, const char *paneName);
+
+    bool killLayoutIfActive(al::LayoutActor *);
 }

@@ -13,7 +13,6 @@
 
 #include "CameraPoserFlag.h"
 #include "CameraStartInfo.h"
-#include "CameraOffsetCtrlPreset.h"
 #include "CameraTurnInfo.h"
 #include "CameraObjectRequestInfo.h"
 #include "al/rail/RailRider.h"
@@ -30,6 +29,7 @@ namespace al {
     class CameraAngleCtrlInfo;
     class CameraAngleSwingInfo;
     class CameraArrowCollider;
+    class CameraOffsetCtrlPreset;
     class CameraParamMoveLimit;
     class GyroCameraCtrl;
     class SnapShotCameraCtrl;

@@ -25,7 +25,6 @@
 #include "sead/prim/seadSafeString.h"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
-#include "server/inf/InfectionMode.hpp"
 
 bool checkpointPatch()
 {
@@ -128,19 +127,19 @@ void initNerveStateHook(StageSceneStatePauseMenu* stateParent, StageSceneStateOp
 
 // skips starting both coin counters
 void startCounterHook(CoinCounter* thisPtr) {
-    if (!GameModeManager::instance()->isModeRequireUI()) {
+    if (!GameModeManager::instance()->isActive()) {
         thisPtr->tryStart();
     }
 }
 
 // Simple hook that can be used to override isModeE3 checks to enable/disable certain behaviors
 bool modeE3Hook() {
-    return GameModeManager::instance()->isModeRequireUI();
+    return GameModeManager::instance()->isActive();
 }
 
 // Skips ending the play guide layout if a mode is active, since the mode would have already ended it
 void playGuideEndHook(al::SimpleLayoutAppearWaitEnd* thisPtr) {
-    if (!GameModeManager::instance()->isModeRequireUI()) {
+    if (!GameModeManager::instance()->isActive()) {
         thisPtr->end();
     }
 }

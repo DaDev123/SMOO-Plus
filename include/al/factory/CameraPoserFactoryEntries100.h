@@ -3,7 +3,6 @@
 #include "CameraPoserFactory.h"
 #include "al/factory/Factory.h"
 
-#include "cameras/CameraPoserActorSpectate.h"
 #include "cameras/CameraPoserCustom.h"
 
 class CameraPoserFollowLimit;
@@ -52,8 +51,7 @@ static al::NameToCreator<al::createCameraPoser> poserEntries[] = {
     {"会話用2点間", &al::createCameraPoserFunction<al::CameraPoserTalk>},
     {"映像撮影レール", &al::createCameraPoserFunction<al::CameraPoserRailMoveMovie>},
     // Custom Posers
-    {"CameraPoserCustom", &cc::createCustomCameraPoser<cc::CameraPoserCustom>}, // al::CameraPoserFollowSimple
-    {"CameraPoserActorSpectate", &cc::createCustomCameraPoser<cc::CameraPoserActorSpectate>} // al::CameraPoserFollowSimple
+    {"CameraPoserCustom", &cc::createCustomCameraPoser<cc::CameraPoserCustom>} // al::CameraPoserFollowSimple
 };
 
 // 0xB in size

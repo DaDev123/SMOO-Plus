@@ -93,20 +93,20 @@ void SardineIcon::exeWait()
             sead::BufferedSafeStringBase<char>(playerNameBuf, 0x200);
         
         // Add your own name to the list at the top
-        playerList.appendWithFormat("%s %s\n", mInfo->mIsIt ? "@" : "©", Client::instance()->getClientName());
+        playerList.appendWithFormat("%s %s\n", mInfo->mIsIt ? "\uE004" : "\uE003", Client::instance()->getClientName());
 
         // Add all it players to list
         for(int i = 0; i < playerCount; i++){
             PuppetInfo* curPuppet = Client::getPuppetInfo(i);
             if (curPuppet && curPuppet->isConnected && curPuppet->isIt)
-                playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "@" : "©", curPuppet->puppetName);
+                playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "\uE004" : "\uE003", curPuppet->puppetName);
         }
 
         // Add not it players to list
         for(int i = 0; i < playerCount; i++){
             PuppetInfo* curPuppet = Client::getPuppetInfo(i);
             if (curPuppet && curPuppet->isConnected && !curPuppet->isIt)
-                playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "@" : "©", curPuppet->puppetName);
+                playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "\uE004" : "\uE003", curPuppet->puppetName);
         }
         
         al::setPaneStringFormat(this, "TxtPlayerList", playerList.cstr());

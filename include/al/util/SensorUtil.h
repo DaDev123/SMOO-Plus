@@ -8,8 +8,6 @@
 
 #include <math/seadVector.h>
 
-#include "types.h"
-
 struct SaveObjInfo;
 struct HackEndParam;
 struct IUsePlayerCollision;
@@ -22,11 +20,7 @@ struct CapTargetInfo;
 struct GotogotonMark;
 struct FishingFish;
 
-namespace alSensorFunction {
-    void updateHitSensorsAll(al::LiveActor *);
-    void clearHitSensors(al::LiveActor *);
-    uint findSensorTypeByName(char const*);
-}
+typedef unsigned int uint;
 
 namespace al
 {

@@ -4,9 +4,8 @@
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/inf/InfectionMode.hpp"
-#include "server/snh/SardineMode.hpp"
 #include "server/freeze/FreezeTagMode.hpp"
-
+#include "server/snh/SardineMode.hpp"
 
 typedef GameModeBase* (*createMode)(const char* name);
 
@@ -18,13 +17,13 @@ GameModeBase* createGameMode(const char* name)
 
 __attribute((used)) constexpr al::NameToCreator<createMode> modeTable[] = {
     {"HideAndSeek", &createGameMode<HideAndSeekMode>},
-    {"Sardine", &createGameMode<SardineMode>},
+    {"Sardines", &createGameMode<SardineMode>},
     {"FreezeTag", &createGameMode<FreezeTagMode>},
     {"Infection", &createGameMode<InfectionMode>}
 };
 
 constexpr const char* modeNames[] = {
-    "Hide And Seek",
+    "Hide and Seek",
     "Sardines",
     "Freeze Tag",
     "Infection"

@@ -3,35 +3,6 @@
 #include "al/sensor/SensorHitGroup.h"
 #include "sead/math/seadVector.h"
 #include "sead/math/seadMatrix.h"
-#include "types.h"
-
-enum SensorType : uint {
-    Eye,
-    Player,
-    PlayerAttack,
-    PlayerFoot,
-    PlayerDecoration,
-    PlayerEye,
-    Npc,
-    Ride,
-    Enemy,
-    EnemyBody,
-    EnemyAttack,
-    EnemySimple,
-    MapObj,
-    MapObjSimple,
-    Bindable,
-    CollisionParts,
-    PlayerFireBall,
-    HoldObj,
-    LookAt,
-    BindableGoal,
-    BindableAllPlayer,
-    BindableBubbleOutScreen,
-    BindableKoura,
-    BindableRouteDokan,
-    BindableBubblePadInput
-};
 
 namespace al
 {
@@ -54,21 +25,20 @@ namespace al
         void addHitSensor(al::HitSensor *);
 
         const char* mName; // _0
-        SensorType mSensorType;
+        int _8;
         float _unkC;
         float _10;
         float _14;
-        float mSensorRadius;
+        float _18;
         unsigned short mMaxSensorCount; // _1C
         unsigned short mSensorCount; // _1E
         al::HitSensor** mSensors; // _20
-        struct SensorSortCmpFuncBase* mSortFunc;
+        unsigned long _28;
         al::SensorHitGroup* mHitGroup; // _30
         bool mIsValidBySystem; // _38
         bool mIsValid; // _39
         al::LiveActor* mParentActor; // _40
-        const sead::Vector3f* mFollowPos; // _48
-        const sead::Matrix34f* mFollowMtx;  // _50
-        const sead::Vector3f mSensorOffset; // _58
+        const sead::Vector3<float>* mFollowPos; // _48
+        const sead::Matrix34<float>* mFollowMtx; // _50
     };
 };

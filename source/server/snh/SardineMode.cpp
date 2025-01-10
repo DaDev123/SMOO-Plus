@@ -69,56 +69,11 @@ void SardineMode::init(const GameModeInitInfo& info)
     // mModeTimer->disableTimer();
 }
 
-void SardineMode::processPacket(Packet *packet) {
-    SardinePacket* sardinePacket = (SardinePacket*)packet;
+void SardineMode::begin()
+{
+    mModeLayout->appear();
 
-    // if the packet is for our player, edit info for our player
-    if (sardinePacket->mUserID == Client::getClientId() && GameModeManager::instance()->isMode(GameMode::SARDINE)) {
-
-        SardineMode* mode = GameModeManager::instance()->getMode<SardineMode>();
-        SardineInfo* curInfo = GameModeManager::instance()->getInfo<SardineInfo>();
-
-        if (sardinePacket->updateType & SardineUpdateType::SARDINESTATE) {
-            mode->setPlayerTagState(sardinePacket->isIt);
-        }
-
-        if (sardinePacket->updateType & SardineUpdateType::SARDINETIME) {
-            curInfo->mHidingTime.mSeconds = sardinePacket->seconds;
-            curInfo->mHidingTime.mMinutes = sardinePacket->minutes;
-        }
-
-        return;
-
-    }
-
-    PuppetInfo* curInfo = Client::findPuppetInfo(sardinePacket->mUserID, false);
-
-    if (!curInfo) {
-        return;
-    }
-
-    curInfo->isIt = sardinePacket->isIt;
-    curInfo->seconds = sardinePacket->seconds;
-    curInfo->minutes = sardinePacket->minutes;
-}
-
-Packet *SardineMode::createPacket() {
-
-    SardinePacket *packet = new SardinePacket();
-
-    packet->mUserID = Client::getClientId();
-
-    packet->isIt = isPlayerIt();
-
-    packet->minutes = mInfo->mHidingTime.mMinutes;
-    packet->seconds = mInfo->mHidingTime.mSeconds;
-    packet->updateType = static_cast<SardineUpdateType>(SardineUpdateType::SARDINESTATE | SardineUpdateType::SARDINETIME);
-
-    return packet;
-}
-
-
-void SardineMode::begin() {
+    mIsFirstFrame = true;
 
     if (mInfo->mIsIt) {
         mModeTimer->enableTimer();
@@ -127,41 +82,46 @@ void SardineMode::begin() {
         mModeTimer->disableTimer();
         mModeLayout->showSolo();
     }
-    
-    unpause();
 
-    mIsFirstFrame = true;
+    CoinCounter* coinCollect = mCurScene->mSceneLayout->mCoinCollectLyt;
+    CoinCounter* coinCounter = mCurScene->mSceneLayout->mCoinCountLyt;
+    MapMini* compass = mCurScene->mSceneLayout->mMapMiniLyt;
+    al::SimpleLayoutAppearWaitEnd* playGuideLyt = mCurScene->mSceneLayout->mPlayGuideMenuLyt;
+
+    if (coinCounter->mIsAlive)
+        coinCounter->tryEnd();
+    if (coinCollect->mIsAlive)
+        coinCollect->tryEnd();
+    if (compass->mIsAlive)
+        compass->end();
+    if (playGuideLyt->mIsAlive)
+        playGuideLyt->end();
 
     GameModeBase::begin();
 }
 
-
-void SardineMode::end() {
-
-    pause();
-
-    GameModeBase::end();
-}
-
-void SardineMode::pause() {
-    GameModeBase::pause();
+void SardineMode::end()
+{
 
     mModeLayout->tryEnd();
+
     mModeTimer->disableTimer();
-}
 
-void SardineMode::unpause() {
-    GameModeBase::unpause();
+    CoinCounter* coinCollect = mCurScene->mSceneLayout->mCoinCollectLyt;
+    CoinCounter* coinCounter = mCurScene->mSceneLayout->mCoinCountLyt;
+    MapMini* compass = mCurScene->mSceneLayout->mMapMiniLyt;
+    al::SimpleLayoutAppearWaitEnd* playGuideLyt = mCurScene->mSceneLayout->mPlayGuideMenuLyt;
 
-    mModeLayout->appear();
-    
-    if (!mInfo->mIsIt) {
-        mModeTimer->enableTimer();
-        mModeLayout->showPack();
-    } else {
-        mModeTimer->disableTimer();
-        mModeLayout->showSolo();
-    }
+    if (!coinCounter->mIsAlive)
+        coinCounter->tryStart();
+    if (!coinCollect->mIsAlive)
+        coinCollect->tryStart();
+    if (!compass->mIsAlive)
+        compass->appearSlideIn();
+    if (!playGuideLyt->mIsAlive)
+        playGuideLyt->appear();
+
+    GameModeBase::end();
 }
 
 void SardineMode::update()
@@ -205,7 +165,7 @@ void SardineMode::update()
                     mModeTimer->enableTimer();
                     mModeLayout->showPack();
 
-                    Client::sendGamemodePacket();
+                    Client::sendTagInfPacket();
                 }
             }
         }
@@ -219,7 +179,7 @@ void SardineMode::update()
         mModeTimer->disableTimer();
         mModeLayout->showSolo();
 
-        Client::sendGamemodePacket();
+        Client::sendTagInfPacket();
     }
 
     // Player pulling
@@ -269,7 +229,7 @@ void SardineMode::update()
             mModeTimer->disableTimer();
             mModeLayout->showSolo();
         }
-        Client::sendGamemodePacket();
+        Client::sendTagInfPacket();
     }
 
     mInfo->mHidingTime = mModeTimer->getTime();

@@ -4,10 +4,9 @@
 #include "al/layout/LayoutActor.h"
 #include "al/util.hpp"
 #include "al/util/NerveUtil.h"
+#include "server/freeze/FreezeTagMode.hpp"
 #include "logger.hpp"
 #include "sead/math/seadVector.h"
-#include "server/freeze/FreezeTagMode.hpp"
-#include "server/gamemode/GameModeManager.hpp"
 
 NameTag::NameTag(PuppetActor* pupActor, const al::LayoutInitInfo& initInfo, float startDist,
                  float endDist, const char *playerName)
@@ -73,8 +72,10 @@ void NameTag::updateTrans() {
 
     al::setLocalTrans(this, newTrans);
 
-    mNormalizedDist = 1 - al::normalize(al::calcDistance(puppetModel, al::getPlayerActor(puppetModel, 0)), 200.0f, mEndDist);
-    
+    mNormalizedDist =
+        1 - al::normalize(al::calcDistance(puppetModel, al::getPlayerActor(puppetModel, 0)), 200.0f,
+                          mEndDist);
+
     //Freeze tag exclusive name tag distance changes
     if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
         if(mPuppet->getInfo()->isFreezeTagFreeze)

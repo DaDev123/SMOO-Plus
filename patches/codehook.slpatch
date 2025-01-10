@@ -68,7 +68,7 @@ B59E28 B seadPrintHook // sead::system::print
     MOV X0, #0
     RET
 
-// Remap Snapshot to !L + Down, disables snapshot mode in freeze tag
+// Remap Snapshot to !L + Down
 577014 B comboBtnHook
 
 // Capture Syncing
@@ -139,7 +139,16 @@ B59E28 B seadPrintHook // sead::system::print
 51b280 B freezeKidsMode // Forces kids mode to be enabled during Freeze Tag
 1cfba0 BL freezeMoonHitboxDisable // When mode enabled, disable hitboxes with moons to avoid softlocks
 
-// Temporary speedbooter hooks (take out after first stream!)
+// Remap Snapshot to !L + Down, disables snapshot mode in freeze tag
+577014 B comboBtnHook
+
+// Speedboot Hooks
 50ef28 BL speedboot::hakoniwaSetNerveSetup
 50eb88 ORR w2, wzr, #0x1f // nerve state count
 50eb64 BL speedboot::prepareLayoutInitInfo
+
+//LifeUpMaxItem demo skip
+4DB934 NOP
+
+//Notes
+2D250C B 71002D2604

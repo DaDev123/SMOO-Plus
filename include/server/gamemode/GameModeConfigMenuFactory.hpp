@@ -2,9 +2,9 @@
 
 #include "al/factory/Factory.h"
 #include "server/hns/HideAndSeekConfigMenu.hpp"
-#include "server/inf/InfectionConfigMenu.hpp"
-#include "server/snh/SardineConfigMenu.hpp"
 #include "server/freeze/FreezeTagConfigMenu.hpp"
+#include "server/snh/SardineConfigMenu.hpp"
+#include "server/inf/InfectionConfigMenu.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
 
 typedef GameModeConfigMenu* (*createMenu)(const char* name);

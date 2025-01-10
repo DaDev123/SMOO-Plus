@@ -71,8 +71,6 @@ class PuppetActor : public al::LiveActor {
 
         void emitJoinEffect();
 
-        void debugThrowCap();
-
         bool mIsDebug = false;
         
     private:
@@ -96,7 +94,6 @@ class PuppetActor : public al::LiveActor {
         bool mIsCaptureModel = false;
 
         float mClosingSpeed = 0;
-
         FreezePlayerBlock* mFreezeTagIceBlock = nullptr;
 };
 

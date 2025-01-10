@@ -8,12 +8,13 @@
 #include "al/LiveActor/LiveActor.h"
 #include "game/Interfaces/IUsePlayerHack.h"
 #include "game/Player/PlayerInput.h"
-#include "game/Player/PlayerRecoverySafetyPoint.h"
 #include "game/Player/HackCap.h"
 #include "game/Player/PlayerCollider.h"
 #include "game/Player/HackCap/CapTargetInfo.h"
+#include "game/Player/PlayerRecoverySafetyPoint.h"
 
 struct HackEndParam;
+struct PlayerRecoverySafetyPoint;
 struct PlayerDamageKeeper;
 struct IPlayerModelChanger;
 struct IUsePlayerHeightCheck;

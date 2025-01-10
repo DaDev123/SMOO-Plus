@@ -36,7 +36,7 @@ enum FreezePostProcessingType : u8 { // Snapshot mode post processing state
 };
 
 struct PACKED FreezeTagPacket : Packet {
-    FreezeTagPacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(FreezeTagPacket) - sizeof(Packet);};
+    FreezeTagPacket() : Packet() { this->mType = PacketType::TAGINF; mPacketSize = sizeof(FreezeTagPacket) - sizeof(Packet);};
     FreezeUpdateType updateType;
     bool isRunner = false;
     bool isFreeze = false;
@@ -44,7 +44,7 @@ struct PACKED FreezeTagPacket : Packet {
 };
 
 struct PACKED FreezeTagRoundPacket : Packet {
-    FreezeTagRoundPacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(FreezeTagPacket) - sizeof(Packet);};
+    FreezeTagRoundPacket() : Packet() { this->mType = PacketType::TAGINF; mPacketSize = sizeof(FreezeTagPacket) - sizeof(Packet);};
     FreezeUpdateType updateType;
     uint8_t roundTime = 10;
     const char padding[3] = "\0\0";

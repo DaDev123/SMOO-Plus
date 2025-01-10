@@ -132,7 +132,7 @@ Packet* FreezeTagMode::createPacket() {
 
 void FreezeTagMode::sendFreezePacket(FreezeUpdateType updateType) {
     mNextUpdateType = updateType;
-    Client::sendGamemodePacket();
+    Client::sendTagInfPacket();
 }
 
 void FreezeTagMode::begin() {

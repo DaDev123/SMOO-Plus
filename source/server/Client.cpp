@@ -6,7 +6,7 @@
 #include "logger.hpp"
 #include "packets/Packet.h"
 #include "server/hns/HideAndSeekMode.hpp"
-#include "server/inf/InfectionMode.hpp"
+#include "server/snh/SardineMode.hpp"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
@@ -147,12 +147,11 @@ void Client::restartConnection() {
  * @return true if successful connection to server
  * @return false if connection was unable to establish
  */
-
 bool Client::startConnection() {
 
-        bool isNeedSave = false;
+    bool isNeedSave = false;
 
-    bool isOverride = al::isPadHoldPlus(-1);
+    bool isOverride = al::isPadHoldZL(-1);
 
     if (mServerIP.isEmpty() || isOverride) {
         mKeyboard->setHeaderText(u"Save File does not contain an IP!");
@@ -161,7 +160,6 @@ bool Client::startConnection() {
         Client::openKeyboardIP();
         isNeedSave = true;
     }
-
 
     if (!mServerPort || isOverride) {
         mKeyboard->setHeaderText(u"Save File does not contain a port!");
@@ -372,8 +370,8 @@ void Client::readFunc() {
                 curPacket->mUserID.print();
                 disconnectPlayer((PlayerDC*)curPacket);
                 break;
-            case PacketType::GAMEMODEINF:
-                GameModeManager::processModePacket(curPacket);
+            case PacketType::TAGINF:
+                updateTagInfo((TagInf*)curPacket);
                 break;
             case PacketType::CHANGESTAGE:
                 sendToStage((ChangeStagePacket*)curPacket);
@@ -596,21 +594,54 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
  * @brief 
  * 
  */
-void Client::sendGamemodePacket() {
+void Client::sendTagInfPacket() {
 
     if (!sInstance) {
         Logger::log("Static Instance is Null!\n");
         return;
     }
+    
+    GameMode curMode = GameModeManager::instance()->getGameMode();
+    HideAndSeekMode* hsMode;
+    HideAndSeekInfo* hsInfo;
+    SardineMode* sarMode;
+    SardineInfo* sarInfo;
 
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
+    switch(GameModeManager::instance()->getGameMode()){
+        case GameMode::HIDEANDSEEK:
+            hsMode = GameModeManager::instance()->getMode<HideAndSeekMode>();
+            hsInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
+            break;
+        case GameMode::SARDINE:
+            sarMode = GameModeManager::instance()->getMode<SardineMode>();
+            sarInfo = GameModeManager::instance()->getInfo<SardineInfo>();
+            break;
+        case GameMode::NONE:
+            Logger::log("Tag info packet has unknown gamemode!\n");
+            return;
+        default:
+            Logger::log("Tag info packet has unknown gamemode!\n");
+            return;
+    };
 
-    Packet* gmPacket = GameModeManager::createModePacket();
+    TagInf *packet = new TagInf();
 
-    if(gmPacket) {
-        sInstance->mSocket->queuePacket(gmPacket);
+    packet->mUserID = sInstance->mUserID;
+
+    if(curMode == GameMode::HIDEANDSEEK){
+        packet->isIt = hsMode->isPlayerIt();
+        packet->minutes = hsInfo->mHidingTime.mMinutes;
+        packet->seconds = hsInfo->mHidingTime.mSeconds;
+    }
+    else if (curMode == GameMode::SARDINE){
+        packet->isIt = sarMode->isPlayerIt();
+        packet->minutes = sarInfo->mHidingTime.mMinutes;
+        packet->seconds = sarInfo->mHidingTime.mSeconds;
     }
 
+    packet->updateType = static_cast<TagUpdateType>(TagUpdateType::STATE | TagUpdateType::TIME);
+
+    sInstance->mSocket->queuePacket(packet);
 }
 
 /**
@@ -877,6 +908,61 @@ void Client::updateGameInfo(GameInf *packet) {
  * 
  * @param packet 
  */
+void Client::updateTagInfo(TagInf *packet) {
+    
+    // if the packet is for our player, edit info for our player
+    if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
+
+        HideAndSeekMode* mMode = GameModeManager::instance()->getMode<HideAndSeekMode>();
+        HideAndSeekInfo* curInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
+
+        if (packet->updateType & TagUpdateType::STATE) {
+            mMode->setPlayerTagState(packet->isIt);
+        }
+
+        if (packet->updateType & TagUpdateType::TIME) {
+            curInfo->mHidingTime.mSeconds = packet->seconds;
+            curInfo->mHidingTime.mMinutes = packet->minutes;
+        }
+
+        return;
+
+    }
+
+    if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::SARDINE)) {
+
+        SardineMode* mMode = GameModeManager::instance()->getMode<SardineMode>();
+        SardineInfo* curInfo = GameModeManager::instance()->getInfo<SardineInfo>();
+
+        if (packet->updateType & TagUpdateType::STATE) {
+            mMode->setPlayerTagState(packet->isIt);
+        }
+
+        if (packet->updateType & TagUpdateType::TIME) {
+            curInfo->mHidingTime.mSeconds = packet->seconds;
+            curInfo->mHidingTime.mMinutes = packet->minutes;
+        }
+
+        return;
+
+    }
+
+    PuppetInfo* curInfo = findPuppetInfo(packet->mUserID, false);
+
+    if (!curInfo) {
+        return;
+    }
+
+    curInfo->isIt = packet->isIt;
+    curInfo->seconds = packet->seconds;
+    curInfo->minutes = packet->minutes;
+}
+
+/**
+ * @brief 
+ * 
+ * @param packet 
+ */
 void Client::sendToStage(ChangeStagePacket* packet) {
     if (mSceneInfo && mSceneInfo->mSceneObjHolder) {
 
@@ -1034,7 +1120,6 @@ PuppetInfo *Client::getLatestInfo() {
         return nullptr;
     }
 }
-
 /**
  * @brief 
  * Returns Puppet Info based off index in array.

@@ -36,6 +36,8 @@ class HintPhotoData;
 class ShopTalkData;
 class RaceRecord;
 
+class PlayerHitPointData;
+
 
 class GameDataHolder;
 class ShineInfo;
@@ -111,6 +113,7 @@ class GameDataFile
         void checkIsHomeStage(char const*);
         void setGameClear(void);
         void startDemoStage(char const*);
+        PlayerHitPointData* getPlayerHitPointData() const;
         void changeNextStage(struct ChangeStageInfo const*,int);
         void returnPrevStage(void);
         void changeNextStageWithDemoWorldWarp(char const*);
@@ -267,7 +270,6 @@ class GameDataFile
         void getPlayerStartId(void);
         void getStageNameNext(void);
         void getStageNameCurrent(void);
-        PlayerHitPointData* getPlayerHitPointData() const;
         void getLastUpdateTime(void);
         void getPlayTimeTotal(void);
         int getMainScenarioNo(int) const;
@@ -404,6 +406,7 @@ class GameDataFile
         void *qword5E0;
         void *qword5E8;
         void *qword5F0;
+        bool mIsKidsMode;
         u16 word5F8;
         bool mIsEnableCap;
         void *qword600;
@@ -445,7 +448,7 @@ class GameDataFile
         void *qword810;
         bool byte818;
         void *qword820;
-        bool mIsKidsMode;
+        bool byte828;
         sead::PtrArrayImpl sead__ptrarrayimpl830;
         u16 word840;
         bool byte842;

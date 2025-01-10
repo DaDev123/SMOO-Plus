@@ -3,7 +3,6 @@
 #include "al/scene/Scene.h"
 #include "game/StageScene/StageSceneLayout.h"
 #include "game/StageScene/StageSceneStatePauseMenu.h"
-
 #include "al/wipe/WipeHolder.h"
 
 namespace al {
@@ -12,6 +11,7 @@ struct SimpleAudioUser;
 struct ParabolicPath;
 struct DemoSyncedEventKeeper;
 struct ChromakeyDrawer;
+struct WipeHolder;
 }
 
 class StageScene : public al::Scene

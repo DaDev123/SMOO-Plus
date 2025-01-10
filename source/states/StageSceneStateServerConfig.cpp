@@ -20,7 +20,6 @@
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
-#include "server/inf/InfectionMode.hpp"
 
 // WIP work on RollPartsData, not exactly working out atm
 const char16_t* testValues[] = {u"Test 1", u"Test 2", u"Test 3", u"Test 4", u"Test 5",

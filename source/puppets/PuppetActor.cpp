@@ -17,13 +17,12 @@
 #include "actors/PuppetActor.h"
 #include "math/seadQuat.h"
 #include "math/seadVector.h"
-#include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/snh/SardineMode.hpp"
+#include "server/freeze/FreezeTagMode.hpp"
 #include "server/inf/InfectionMode.hpp"
-// #include "server/manhunt/ManhuntMode.hpp"
 
 static const char *subActorNames[] = {
     "顔", // Face
@@ -109,8 +108,7 @@ void PuppetActor::initOnline(PuppetInfo *pupInfo) {
 
 void PuppetActor::movement() {
     al::LiveActor::movement();
-
-    if(mFreezeTagIceBlock) {
+if(mFreezeTagIceBlock) {
         if(mInfo->isFreezeTagFreeze && mInfo->isConnected && mInfo->isInSameStage && !al::isAlive(mFreezeTagIceBlock))
             mFreezeTagIceBlock->appear();
         
@@ -284,22 +282,17 @@ void PuppetActor::makeActorDead() {
     }
 
     mPuppetCap->makeActorDead();
+    
+    al::LiveActor::makeActorDead();
 
     if(mFreezeTagIceBlock)
         mFreezeTagIceBlock->makeActorDead();
-    
-    al::LiveActor::makeActorDead();
 }
 
 void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
-
-    // prevent normal attack behavior if gamemode requires custom behavior
-    if (GameModeManager::tryAttackPuppetSensor(source, target))
-        return;
     
     if (!al::sendMsgPush(target, source)) {
         rs::sendMsgPushToPlayer(target, source);
-        rs::sendMsgPlayerDisregardTargetMarker(target, source);
     }
 
 }
@@ -307,17 +300,10 @@ void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
 bool PuppetActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* source,
                              al::HitSensor* target) {
 
-    // try to use gamemode recieve logic, otherwise fallback to default behavior
-    if (GameModeManager::tryReceivePuppetMsg(msg, source, target)) {
-        return true;
-    }
-
     if ((al::isMsgPlayerTrampleReflect(msg) || rs::isMsgPlayerAndCapObjHipDropReflectAll(msg)) && al::isSensorName(target, "Body"))
     {
-        if(!GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
-            rs::requestHitReactionToAttacker(msg, target, source);
-            return true;
-        }
+        rs::requestHitReactionToAttacker(msg, target, source);
+        return true;
     }
 
     return false;
@@ -465,17 +451,6 @@ void PuppetActor::emitJoinEffect() {
     al::tryDeleteEffect(this, "Disappear"); // remove previous effect (if played previously)
 
     al::tryEmitEffect(this, "Disappear", nullptr);
-}
-
-void PuppetActor::debugThrowCap() {
-    mInfo->isCapThrow = !mInfo->isCapThrow;
-
-    if (mInfo->isCapThrow) {
-        sead::Vector3f &fowardDir = al::getFront(this);
-        sead::Vector3f &curPos = al::getTrans(this);
-
-        mInfo->capPos = sead::Vector3f(curPos.x - (fowardDir.x * 500.0f), curPos.y + 80.0f, curPos.z - (fowardDir.z * 500.0f));
-    }
 }
 
 const char *executorName = "ＮＰＣ";

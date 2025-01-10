@@ -1,15 +1,12 @@
 #pragma once
 
 #include <math.h>
-#include <basis/seadTypes.h>
-
 #include "al/camera/CameraTicket.h"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
 #include "server/inf/InfectionConfigMenu.hpp"
-#include "server/hns/HideAndSeekMode.hpp"
 
 #include "packets/Packet.h"
 
@@ -18,16 +15,7 @@ struct InfectionInfo : GameModeInfoBase {
     bool mIsPlayerIt = false;
     bool mIsUseGravity = false;
     bool mIsUseGravityCam = false;
-    bool mIsUseSlipperyGround = true;
     GameTime mHidingTime;
-};
-
-struct PACKED InfectionPacket : Packet {
-    InfectionPacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(InfectionPacket) - sizeof(Packet);};
-    TagUpdateType updateType;
-    bool1 isIt = false;
-    u8 seconds;
-    u16 minutes;
 };
 
 class InfectionMode : public GameModeBase {
@@ -36,21 +24,19 @@ class InfectionMode : public GameModeBase {
 
         void init(GameModeInitInfo const& info) override;
 
-        void begin() override;
-        void update() override;
-        void end() override;
-    
-        void pause() override;
-        void unpause() override;
+        virtual void begin() override;
+        virtual void update() override;
+        virtual void end() override;
 
-        bool isUseNormalUI() const override { return false; }
+        bool isUseNormalUI() const override { return false; }       
 
         void processPacket(Packet* packet) override;
         Packet* createPacket() override;
 
-        bool isPlayerIt() const { return mInfo->mIsPlayerIt; }
+        void pause() override;
+        void unpause() override;
 
-        float getInvulnTime() const { return mInvulnTime; }
+        bool isPlayerIt() const { return mInfo->mIsPlayerIt; };
 
         void setPlayerTagState(bool state) { mInfo->mIsPlayerIt = state; }
 
@@ -58,7 +44,7 @@ class InfectionMode : public GameModeBase {
         void disableGravityMode() { mInfo->mIsUseGravity = false; }
         bool isUseGravity() const { return mInfo->mIsUseGravity; }
 
-        void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; }
+        void setCameraTicket(al::CameraTicket *ticket) {mTicket = ticket;}
 
     private:
         float mInvulnTime = 0.0f;

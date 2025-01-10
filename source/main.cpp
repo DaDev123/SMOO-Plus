@@ -10,7 +10,6 @@
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Player/PlayerHackKeeper.h"
-#include "game/Input/InputSeparator.h"
 #include "heap/seadHeap.h"
 #include "math/seadVector.h"
 #include "server/Client.hpp"
@@ -30,14 +29,12 @@
 #include "game/StageScene/StageScene.h"
 #include "helpers.hpp"
 #include "layouts/HideAndSeekIcon.h"
-#include "layouts/SardineIcon.h"
 #include "logger.hpp"
 #include "rs/util.hpp"
-#include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
-#include "server/inf/InfectionMode.hpp"
+#include "server/freeze/FreezeTagMode.hpp"
 #include "layouts/InfectionIcon.h"
 
 static int pInfSendTimer = 0;
@@ -108,7 +105,7 @@ void drawMainHook(HakoniwaSequence *curSequence, sead::Viewport *viewport, sead:
 
     gTextWriter->mViewport = viewport;
 
-    gTextWriter->mColor = sead::Color4f(3.f, 3.f, 3.f, 0.8f);
+    gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 0.8f);
 
     drawBackground((agl::DrawContext *)drawContext);
 
@@ -134,7 +131,7 @@ void drawMainHook(HakoniwaSequence *curSequence, sead::Viewport *viewport, sead:
     
     gTextWriter->printf("Send Queue Count: %d/%d\n", Client::instance()->mSocket->getSendCount(), Client::instance()->mSocket->getSendMaxCount());
     gTextWriter->printf("Recv Queue Count: %d/%d\n", Client::instance()->mSocket->getRecvCount(), Client::instance()->mSocket->getRecvMaxCount());
-    
+
     if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
         FreezeTagInfo* inf = GameModeManager::instance()->getInfo<FreezeTagInfo>();
         gTextWriter->printf("Is Runner: %s\n", BTOC(inf->mIsPlayerRunner));
@@ -203,8 +200,6 @@ void drawMainHook(HakoniwaSequence *curSequence, sead::Viewport *viewport, sead:
                             gTextWriter->printf("Animation Index: %d\n", curPupInfo->curAnim);
                             if (curModel) {
                                 gTextWriter->printf("Current Animation: %s\n", al::getActionName(curModel));
-                                gTextWriter->printf("---------------- Currrent Version ---------------\n");
-                                gTextWriter->printf("------------- Infection | Secret Dev ------------");
                             }
                         }
                     }
