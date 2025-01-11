@@ -12,6 +12,7 @@
 #include "layouts/HideAndSeekIcon.h"
 #include "logger.hpp"
 #include "rs/util.hpp"
+#include "cameras/CameraPoserActorSpectate.h"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
@@ -56,6 +57,9 @@ void HideAndSeekMode::init(const GameModeInitInfo& info) {
 
 void HideAndSeekMode::begin() {
     mModeLayout->appear();
+
+    mSpectateIndex = -1;
+    mPrevSpectateIndex = -2;
 
     mIsFirstFrame = true;
 
@@ -111,9 +115,11 @@ void HideAndSeekMode::end() {
     GameModeBase::end();
 }
 
+
 void HideAndSeekMode::update() {
 
     PlayerActorBase* playerBase = rs::getPlayerActor(mCurScene);
+
 
     bool isYukimaru = !playerBase->getPlayerInfo(); // if PlayerInfo is a nullptr, that means we're dealing with the bound bowl racer
 
@@ -224,4 +230,18 @@ void HideAndSeekMode::update() {
     }
 
     mInfo->mHidingTime = mModeTimer->getTime();
+
+//Spectate camera
+    if(!mTicket->mIsActive && mInfo->mIsPlayerIt) {
+        al::startCamera(mCurScene, mTicket, -1);
+        al::requestStopCameraVerticalAbsorb(mCurScene);
+    }
+
+    if(mTicket->mIsActive && !mInfo->mIsPlayerIt) {
+        al::endCamera(mCurScene, mTicket, 0, false);
+        al::requestStopCameraVerticalAbsorb(mCurScene);
+    }
+    
+    if(mTicket->mIsActive && mInfo->mIsPlayerIt)
+        updateSpectateCam(playerBase);
 }

@@ -34,13 +34,19 @@ class HideAndSeekMode : public GameModeBase {
         void disableGravityMode() { mInfo->mIsUseGravity = false; }
         bool isUseGravity() const { return mInfo->mIsUseGravity; }
 
-        void setCameraTicket(al::CameraTicket *ticket) {mTicket = ticket;}
+        void updateSpectateCam(PlayerActorBase* playerBase); // Updates the frozen spectator camera
+        void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; } // Called when the camera ticket is constructed to get a pointer
+
+// Spectate camera ticket and target information
+    al::CameraTicket* mTicket = nullptr;
+    int mPrevSpectateIndex = -2;
+    int mSpectateIndex = -1;
+    sead::PtrArray<PuppetInfo> mIsPlayerIt;
 
     private:
         float mInvulnTime = 0.0f;
         GameModeTimer* mModeTimer = nullptr;
         HideAndSeekIcon *mModeLayout = nullptr;
         HideAndSeekInfo* mInfo = nullptr;
-        al::CameraTicket *mTicket = nullptr;
 
 };

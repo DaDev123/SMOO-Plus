@@ -26,6 +26,8 @@ HideAndSeekIcon::HideAndSeekIcon(const char* name, const al::LayoutInitInfo& ini
     
     kill();
 
+    mSpectateName = nullptr;
+
 }
 
 void HideAndSeekIcon::appear() {
@@ -63,7 +65,10 @@ void HideAndSeekIcon::exeAppear() {
     }
 }
 
+
 void HideAndSeekIcon::exeWait() {
+
+
     if (al::isFirstStep(this)) {
         al::startAction(this, "Wait", 0);
     }
@@ -91,6 +96,8 @@ void HideAndSeekIcon::exeWait() {
         
         // Add your own name to the list at the top
         playerList.appendWithFormat("%s %s\n", mInfo->mIsPlayerIt ? "\uE002" : "\uE001", Client::instance()->getClientName());
+
+
 
         // Add all it players to list
         for(int i = 0; i < playerCount; i++){
