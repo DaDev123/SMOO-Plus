@@ -6,6 +6,7 @@
 #include "logger.hpp"
 #include "packets/Packet.h"
 #include "server/hns/HideAndSeekMode.hpp"
+#include "server/inf/InfectionMode.hpp"
 #include "server/snh/SardineMode.hpp"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
@@ -604,6 +605,8 @@ void Client::sendTagInfPacket() {
     GameMode curMode = GameModeManager::instance()->getGameMode();
     HideAndSeekMode* hsMode;
     HideAndSeekInfo* hsInfo;
+    InfectionMode* infMode;
+    InfectionInfo* infInfo;
     SardineMode* sarMode;
     SardineInfo* sarInfo;
 
@@ -611,6 +614,10 @@ void Client::sendTagInfPacket() {
         case GameMode::HIDEANDSEEK:
             hsMode = GameModeManager::instance()->getMode<HideAndSeekMode>();
             hsInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
+            break;
+        case GameMode::Infection:
+            infMode = GameModeManager::instance()->getMode<InfectionMode>();
+            infInfo = GameModeManager::instance()->getInfo<InfectionInfo>();
             break;
         case GameMode::SARDINE:
             sarMode = GameModeManager::instance()->getMode<SardineMode>();
@@ -632,6 +639,11 @@ void Client::sendTagInfPacket() {
         packet->isIt = hsMode->isPlayerIt();
         packet->minutes = hsInfo->mHidingTime.mMinutes;
         packet->seconds = hsInfo->mHidingTime.mSeconds;
+    }
+    if(curMode == GameMode::Infection){
+        packet->isIt = infMode->isPlayerIt();
+        packet->minutes = infInfo->mHidingTime.mMinutes;
+        packet->seconds = infInfo->mHidingTime.mSeconds;
     }
     else if (curMode == GameMode::SARDINE){
         packet->isIt = sarMode->isPlayerIt();
@@ -915,6 +927,24 @@ void Client::updateTagInfo(TagInf *packet) {
 
         HideAndSeekMode* mMode = GameModeManager::instance()->getMode<HideAndSeekMode>();
         HideAndSeekInfo* curInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
+
+        if (packet->updateType & TagUpdateType::STATE) {
+            mMode->setPlayerTagState(packet->isIt);
+        }
+
+        if (packet->updateType & TagUpdateType::TIME) {
+            curInfo->mHidingTime.mSeconds = packet->seconds;
+            curInfo->mHidingTime.mMinutes = packet->minutes;
+        }
+
+        return;
+
+    }
+
+    if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::Infection)) {
+
+        InfectionMode* mMode = GameModeManager::instance()->getMode<InfectionMode>();
+        InfectionInfo* curInfo = GameModeManager::instance()->getInfo<InfectionInfo>();
 
         if (packet->updateType & TagUpdateType::STATE) {
             mMode->setPlayerTagState(packet->isIt);
