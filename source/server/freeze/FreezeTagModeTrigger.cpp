@@ -31,7 +31,7 @@ void FreezeTagMode::endRound(bool isAbort) {
     if(!mIsEndgameActive) {
         if(!mInfo->mIsPlayerRunner) {
             mInfo->mIsPlayerRunner = true;
-            sendFreezePacket(FreezeUpdateType::PLAYER);
+            Client::sendFreezeInfPacket();
             return;
         }
 
@@ -84,7 +84,7 @@ bool FreezeTagMode::trySetPlayerRunnerState(FreezeState newState)
             tryStartEndgameEvent();
     }
 
-    sendFreezePacket(FreezeUpdateType::PLAYER);
+    Client::sendFreezeInfPacket();
 
     return true;
 }
@@ -94,7 +94,7 @@ bool FreezeTagMode::trySetPlayerRunnerState(FreezeState newState)
     FUNCTION CALLED FROM client.cpp ON RECEIVING FREEZE TAG PACKETS
 */
 
-void FreezeTagMode::tryScoreEvent(FreezeTagPacket* incomingPacket, PuppetInfo* sourcePuppet)
+void FreezeTagMode::tryScoreEvent(FreezeInf* incomingPacket, PuppetInfo* sourcePuppet)
 {
     if(!mCurScene || !sourcePuppet || !GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
         return;
