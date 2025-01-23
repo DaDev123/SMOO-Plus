@@ -22,20 +22,6 @@
 #include <math.h>
 #include <stdint.h>
 
-enum FreezeUpdateType : u8 { // Type of packets to send between players
-    PLAYER                 = 1 << 0,
-    ROUNDSTART             = 1 << 1,
-    ROUNDCANCEL            = 1 << 2,
-    FALLOFF                = 1 << 3
-};
-
-enum FreezePostProcessingType : u8 { // Snapshot mode post processing state
-    PPDISABLED = 0,
-    PPFROZEN = 1,
-    PPENDGAMELOSE = 2,
-    PPENDGAMEWIN = 3
-};
-
 class FreezeTagMode : public GameModeBase {
 public:
     FreezeTagMode(const char* name);
@@ -51,7 +37,7 @@ public:
 
     bool isUseNormalUI() const override { return false; }
 
-    void sendFreezePacket(FreezeUpdateType updateType); // Called instead of Client::sendGamemodePacket(), allows setting packet type
+    void sendFreezeInfPacket(FreezeUpdateType updateType); // Called instead of Client::sendGamemodePacket(), allows setting packet type
 
     void startRound(int roundMinutes); // Actives round on this specific client
     void endRound(bool isAbort); // Ends round, allows setting for if this was a natural end or abort (used for scoring)
