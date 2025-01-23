@@ -27,10 +27,10 @@ runs:
       echo "::set-output name=filename::SMO_Online${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}"
   -
     name : Set up Docker Buildx
-    uses : docker/setup-buildx-action@v4
+    uses : docker/setup-buildx-action@v3
   -
     name : Build environment
-    uses : docker/build-push-action@v4
+    uses : docker/build-push-action@v3
     with:
       pull       : true
       push       : false
