@@ -150,7 +150,7 @@ bool FreezeTagMode::tryStartRecoveryEvent(bool isEndgame)
     if(!isEndgame) {
         mRecoverySafetyPoint = player->mPlayerRecoverySafetyPoint->mSafetyPointPos;
         if(mInfo->mIsPlayerRunner && mInfo->mIsRound)
-            sendFreezePacket(FreezeUpdateType::FALLOFF);
+            sendFreezeInfPacket(FreezeUpdateType::FALLOFF);
     } else {
         mRecoverySafetyPoint = sead::Vector3f::zero;
     }
