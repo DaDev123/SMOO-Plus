@@ -27,10 +27,10 @@ runs:
       echo "::set-output name=filename::SMO_Online${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}"
   -
     name : Set up Docker Buildx
-    uses : docker/setup-buildx-action@v2
+    uses : docker/setup-buildx-action@v4
   -
     name : Build environment
-    uses : docker/build-push-action@v3
+    uses : docker/build-push-action@v4
     with:
       pull       : true
       push       : false
@@ -54,7 +54,7 @@ runs:
       cp  -r  ./romfs/  ./starlight_patch_100/atmosphere/contents/0100000000010000/.
   -
     name : Upload artifacts
-    uses : actions/upload-artifact@v3
+    uses : actions/upload-artifact@v4
     with:
       name              : ${{ steps.env.outputs.filename }}
       path              : ./starlight_patch_100/
