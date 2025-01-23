@@ -9,7 +9,7 @@
 #include "layouts/FreezeTagIcon.h"
 #include "math/seadVector.h"
 #include "puppets/PuppetInfo.h"
-#include "packet/FreezeInf.h"
+#include "packets/FreezeInf.h"
 #include "server/freeze/FreezeHintArrow.h"
 #include "server/freeze/FreezePlayerBlock.h"
 #include "server/freeze/FreezeTagInfo.h"
