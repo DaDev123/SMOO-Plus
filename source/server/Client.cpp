@@ -677,7 +677,7 @@ void Client::sendFreezeInfPacket() {
     }
 
     FreezeTagMode* frMode = GameModeManager::instance()->getMode<FreezeTagMode>();
-    FreezeTagInfo* frInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();;
+    FreezeTagInfo* frInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
 
     FreezeInf *packet = new FreezeInf();
 
@@ -1023,7 +1023,7 @@ void Client::updateTagInfo(TagInf *packet) {
     curInfo->minutes = packet->minutes;
 }
 
-if(mode == GameMode::FREEZETAG) {
+else if(mode == GameMode::FREEZETAG) {
         FreezeInf* freezePak = (FreezeInf*)packet;
         
         // if the packet is for our player, edit info for our player
