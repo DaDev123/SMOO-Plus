@@ -36,6 +36,7 @@
 
 #include "heap/seadExpHeap.h"
 #include "layouts/HideAndSeekIcon.h"
+#include "packets/FreezeInf.h"
 #include "rs/util.hpp"
 
 #include "sead/heap/seadDisposer.h"
@@ -103,6 +104,7 @@ class Client {
         static void sendCostumeInfPacket(const char *body, const char *cap);
         static void sendShineCollectPacket(int shineId);
         static void sendTagInfPacket();
+        static void sendFreezeInfPacket();
         static void sendCaptureInfPacket(const PlayerActorHakoniwa *player);
 
         int getCollectedShinesCount() { return curCollectedShines.size(); }
@@ -199,6 +201,7 @@ class Client {
         void updateShineInfo(ShineCollect *packet);
         void updatePlayerConnect(PlayerConnect *packet);
         void updateTagInfo(TagInf *packet);
+        void updateFreezeInfo(FreezeInf *packet);
         void updateCaptureInfo(CaptureInf* packet);
         void sendToStage(ChangeStagePacket* packet);
         void disconnectPlayer(PlayerDC *packet);
