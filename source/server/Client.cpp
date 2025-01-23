@@ -8,6 +8,7 @@
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/inf/InfectionMode.hpp"
 #include "server/snh/SardineMode.hpp"
+#include "server/freeze/FreezeTagMode.hpp"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
@@ -659,6 +660,40 @@ void Client::sendTagInfPacket() {
 /**
  * @brief 
  * 
+ */
+void Client::sendFreezeInfPacket() {
+
+    if (!sInstance) {
+        Logger::log("Static Instance is Null!\n");
+        return;
+    }
+
+    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
+    
+    GameMode curMode = GameModeManager::instance()->getGameMode();
+    if(curMode != GameMode::FREEZETAG) {
+        Logger::log("Attempting to send FreezeInf packet while not in Freeze Tag mode!\n");
+        return;
+    }
+
+    FreezeTagMode* frMode = GameModeManager::instance()->getMode<FreezeTagMode>();
+    FreezeTagInfo* frInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();;
+
+    FreezeInf *packet = new FreezeInf();
+
+    packet->mUserID = sInstance->mUserID;
+
+    packet->isRunner = frInfo->mIsPlayerRunner;
+    packet->isFreeze = frInfo->mIsPlayerFreeze;
+    packet->score = frInfo->mPlayerTagScore.mScore;
+
+    sInstance->mSocket->queuePacket(packet);
+}
+
+
+/**
+ * @brief 
+ * 
  * @param body 
  * @param cap 
  */
@@ -986,6 +1021,49 @@ void Client::updateTagInfo(TagInf *packet) {
     curInfo->isIt = packet->isIt;
     curInfo->seconds = packet->seconds;
     curInfo->minutes = packet->minutes;
+}
+
+if(mode == GameMode::FREEZETAG) {
+        FreezeInf* freezePak = (FreezeInf*)packet;
+        
+        // if the packet is for our player, edit info for our player
+        if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
+
+            FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
+            FreezeTagInfo* curInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
+            
+            curInfo->mIsPlayerRunner = freezePak->isRunner;
+
+            if(freezePak->isFreeze && !freezePak->isRunner)
+                mMode->trySetPlayerRunnerState(FreezeState::FREEZE);
+            else
+                mMode->trySetPlayerRunnerState(FreezeState::ALIVE);
+
+            return;
+
+        }
+
+        PuppetInfo* curInfo = findPuppetInfo(packet->mUserID, false);
+
+        if (!curInfo)
+            return;
+
+        if(!GameModeManager::instance()->isActive()) {
+            curInfo->isFreezeTagFreeze = freezePak->isFreeze;
+            curInfo->isFreezeTagRunner = freezePak->isRunner;
+            curInfo->freezeTagScore = freezePak->score;
+            return;
+        }
+        
+        FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
+
+        if(mMode->isScoreEventsEnabled())
+            mMode->tryScoreEvent(freezePak, curInfo);
+
+        curInfo->isFreezeTagFreeze = freezePak->isFreeze;
+        curInfo->isFreezeTagRunner = freezePak->isRunner;
+        curInfo->freezeTagScore = freezePak->score;
+    }
 }
 
 /**
