@@ -8,8 +8,8 @@ Welcome to the non-official repository for the Super Mario Odyssey Online mod! H
 * Almost every capture in the game is synced between players
 * Full 2D and Costume models syncing
 * Moon Collection is shared between all players
-* Custom Configuration Menu (Accessible by holding ZL and selecting any option in the pause/start menu)
-* Support for custom gamemodes (WIP)
+* Custom Configuration Menu (Accessible in the Pause menu)
+* Support for custom gamemodes
 * 1.3 Costumes
 ### Available Gamemodes
 * Hide and Seek
