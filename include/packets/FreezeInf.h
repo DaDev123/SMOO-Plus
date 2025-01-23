@@ -24,3 +24,10 @@ struct PACKED FreezeInf : Packet {
     bool1 isFreeze = false;
     uint16_t score;
 };
+
+struct PACKED FreezeInfRoundPacket : Packet {
+    FreezeInfRoundPacket() : Packet() { this->mType = PacketType::TAGINF; mPacketSize = sizeof(FreezeInf) - sizeof(Packet);};
+    FreezeUpdateType updateType;
+    uint8_t roundTime = 10;
+    const char padding[3] = "\0\0";
+};

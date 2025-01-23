@@ -37,6 +37,8 @@ public:
 
     bool isUseNormalUI() const override { return false; }
 
+
+    void processPacket(Packet* packet) override;
     void sendFreezeInfPacket(FreezeUpdateType updateType); // Called instead of Client::sendGamemodePacket(), allows setting packet type
 
     void startRound(int roundMinutes); // Actives round on this specific client

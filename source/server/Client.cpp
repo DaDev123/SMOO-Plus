@@ -959,7 +959,7 @@ void Client::updateTagInfo(TagInf *packet) {
     
     GameMode mode = GameModeManager::instance()->getGameMode();
 
-    if(mode == GameMode::HIDEANDSEEK || mode == GameMode::SARDINE || mode == GameMode::Infection {
+    if(mode == GameMode::HIDEANDSEEK || mode == GameMode::SARDINE || mode == GameMode::Infection) {
         // if the packet is for our player, edit info for our player
         if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
 
