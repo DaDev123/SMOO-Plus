@@ -959,7 +959,7 @@ void Client::updateTagInfo(TagInf *packet) {
     
     GameMode mode = GameModeManager::instance()->getGameMode();
 
-    if(mode == GameMode::HIDEANDSEEK || mode == GameMode::SARDINE) {
+    if(mode == GameMode::HIDEANDSEEK || mode == GameMode::SARDINE || mode == GameMode::Infection {
         // if the packet is for our player, edit info for our player
         if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
 
@@ -981,21 +981,21 @@ void Client::updateTagInfo(TagInf *packet) {
 
     if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::Infection)) {
 
-        InfectionMode* mMode = GameModeManager::instance()->getMode<InfectionMode>();
-        InfectionInfo* curInfo = GameModeManager::instance()->getInfo<InfectionInfo>();
+            InfectionMode* mMode = GameModeManager::instance()->getMode<InfectionMode>();
+            InfectionInfo* curInfo = GameModeManager::instance()->getInfo<InfectionInfo>();
 
-        if (packet->updateType & TagUpdateType::STATE) {
-            mMode->setPlayerTagState(packet->isIt);
+            if (packet->updateType & TagUpdateType::STATE) {
+                mMode->setPlayerTagState(packet->isIt);
+            }
+
+            if (packet->updateType & TagUpdateType::TIME) {
+                curInfo->mHidingTime.mSeconds = packet->seconds;
+                curInfo->mHidingTime.mMinutes = packet->minutes;
+            }
+
+            return;
+
         }
-
-        if (packet->updateType & TagUpdateType::TIME) {
-            curInfo->mHidingTime.mSeconds = packet->seconds;
-            curInfo->mHidingTime.mMinutes = packet->minutes;
-        }
-
-        return;
-
-    }
 
         if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::SARDINE)) {
 
