@@ -1,4 +1,4 @@
-#include "server/hotpotato/FreezeTagMode.hpp"
+#include "server/hotpotato/HotPotatoMode.hpp"
 #include <cmath>
 #include "actors/PuppetActor.h"
 #include "al/async/FunctorV0M.hpp"
@@ -17,13 +17,13 @@
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Player/PlayerHitPointData.h"
 #include "heap/seadHeapMgr.h"
-#include "layouts/FreezeTagIcon.h"
+#include "layouts/HotPotatoIcon.h"
 #include "logger.hpp"
 #include "math/seadVector.h"
 #include "puppets/PuppetInfo.h"
 #include "rs/util.hpp"
 #include "server/hotpotato/FreezeHintArrow.h"
-#include "server/hotpotato/FreezeTagScore.hpp"
+#include "server/hotpotato/HotPotatoScore.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
@@ -33,26 +33,26 @@
 #include "rs/util/InputUtil.h"
 
 #include "basis/seadNew.h"
-#include "server/hotpotato/FreezeTagConfigMenu.hpp"
+#include "server/hotpotato/HotPotatoConfigMenu.hpp"
 
-FreezeTagMode::FreezeTagMode(const char* name) : GameModeBase(name) {}
+HotPotatoMode::HotPotatoMode(const char* name) : GameModeBase(name) {}
 
-void FreezeTagMode::init(const GameModeInitInfo& info) {
+void HotPotatoMode::init(const GameModeInitInfo& info) {
     mSceneObjHolder = info.mSceneObjHolder;
     mMode = info.mMode;
     mCurScene = (StageScene*)info.mScene;
     mPuppetHolder = info.mPuppetHolder;
 
-    GameModeInfoBase* curGameInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
+    GameModeInfoBase* curGameInfo = GameModeManager::instance()->getInfo<HotPotatoInfo>();
 
     if (curGameInfo) Logger::log("Gamemode info found: %s %s\n", GameModeFactory::getModeString(curGameInfo->mMode), GameModeFactory::getModeString(info.mMode));
     else Logger::log("No gamemode info found\n");
     if (curGameInfo && curGameInfo->mMode == mMode) {
-        mInfo = (FreezeTagInfo*)curGameInfo;
+        mInfo = (HotPotatoInfo*)curGameInfo;
         mModeTimer = new GameModeTimer(mInfo->mRoundTimer);
     } else {
         if (curGameInfo) delete curGameInfo;  // attempt to destory previous info before creating new one
-        mInfo = GameModeManager::instance()->createModeInfo<FreezeTagInfo>();
+        mInfo = GameModeManager::instance()->createModeInfo<HotPotatoInfo>();
         mModeTimer = new GameModeTimer();
     }
 
@@ -61,7 +61,7 @@ void FreezeTagMode::init(const GameModeInitInfo& info) {
 
     Logger::log("Scene Heap Free Size: %f/%f\n", al::getSceneHeap()->getFreeSize() * 0.001f, al::getSceneHeap()->getSize() * 0.001f);
 
-    mModeLayout = new FreezeTagIcon("FreezeTagIcon", *info.mLayoutInitInfo);
+    mModeLayout = new HotPotatoIcon("HotPotatoIcon", *info.mLayoutInitInfo);
     mInfo->mPlayerTagScore.setTargetLayout(mModeLayout);
     
     Logger::log("Scene Heap Free Size: %f/%f\n", al::getSceneHeap()->getFreeSize() * 0.001f, al::getSceneHeap()->getSize() * 0.001f);
@@ -75,48 +75,48 @@ void FreezeTagMode::init(const GameModeInitInfo& info) {
     mHintArrow->init(*info.mActorInitInfo);
 }
 
-void FreezeTagMode::processPacket(Packet *packet) {
-    FreezeTagPacket* frzPak = (FreezeTagPacket*)packet;
+void HotPotatoMode::processPacket(Packet *packet) {
+    HotPotatoPacket* frzPak = (HotPotatoPacket*)packet;
     PuppetInfo* curInfo = Client::findPuppetInfo(frzPak->mUserID, false);
 
     if (!curInfo)
         return;
 
-    if (frzPak->updateType & FreezeUpdateType::PLAYER) {
+    if (frzPak->updateType & FreezeUpdateType::HOTPLAYER) {
         tryScoreEvent(frzPak, curInfo);
 
         // When puppet transitioning from frozen to unfrozen, disable the fall off flag
-        if(curInfo->isFreezeTagFreeze && !frzPak->isFreeze)
-            curInfo->isFreezeTagFallenOff = false;
+        if(curInfo->isHotPotatoFreeze && !frzPak->isFreeze)
+            curInfo->isHotPotatoFallenOff = false;
 
-        curInfo->isFreezeTagRunner = frzPak->isRunner;
-        curInfo->isFreezeTagFreeze = frzPak->isFreeze;
+        curInfo->isHotPotatoRunner = frzPak->isRunner;
+        curInfo->isHotPotatoFreeze = frzPak->isFreeze;
         curInfo->freezeTagScore = frzPak->score;
     }
 
-    if (frzPak->updateType & FreezeUpdateType::ROUNDSTART && !mInfo->mIsRound) {
-        FreezeTagRoundPacket* roundPak = (FreezeTagRoundPacket*)frzPak;
+    if (frzPak->updateType & FreezeUpdateType::HOTROUNDSTART && !mInfo->mIsRound) {
+        HotPotatoRoundPacket* roundPak = (HotPotatoRoundPacket*)frzPak;
         startRound(al::clamp(roundPak->roundTime, u8(2), u8(60))); // Start round if round not already started
     }
 
-    if (frzPak->updateType & FreezeUpdateType::ROUNDCANCEL && mInfo->mIsRound)
+    if (frzPak->updateType & FreezeUpdateType::HOTROUNDCANCEL && mInfo->mIsRound)
         endRound(true); // Abort round early on receiving cancel packet
 
-    if (frzPak->updateType & FreezeUpdateType::FALLOFF && mInfo->mIsRound) {
-        curInfo->isFreezeTagFallenOff = true;
+    if (frzPak->updateType & FreezeUpdateType::HOTFALLOFF && mInfo->mIsRound) {
+        curInfo->isHotPotatoFallenOff = true;
         
         if(!mInfo->mIsPlayerRunner)
             mInfo->mPlayerTagScore.eventScoreFallOff();
     }
 }
 
-Packet* FreezeTagMode::createPacket() {
-    FreezeTagPacket *packet = new FreezeTagPacket();
+Packet* HotPotatoMode::createPacket() {
+    HotPotatoPacket *packet = new HotPotatoPacket();
     
     packet->mUserID = Client::getClientId();
     packet->updateType = mNextUpdateType;
 
-    if(packet->updateType != FreezeUpdateType::ROUNDSTART) {
+    if(packet->updateType != FreezeUpdateType::HOTROUNDSTART) {
         packet->isRunner = mInfo->mIsPlayerRunner;
         packet->isFreeze = mInfo->mIsPlayerFreeze;
         packet->score = mInfo->mPlayerTagScore.mScore;
@@ -124,18 +124,18 @@ Packet* FreezeTagMode::createPacket() {
         return packet;
     }
 
-    FreezeTagRoundPacket* roundPak = (FreezeTagRoundPacket*)packet;
+    HotPotatoRoundPacket* roundPak = (HotPotatoRoundPacket*)packet;
     roundPak->roundTime = u8(mInfo->mRoundLength);
 
     return roundPak;
 }
 
-void FreezeTagMode::sendFreezePacket(FreezeUpdateType updateType) {
+void HotPotatoMode::sendFreezePacket(FreezeUpdateType updateType) {
     mNextUpdateType = updateType;
     Client::sendGamemodePacket();
 }
 
-void FreezeTagMode::begin() {
+void HotPotatoMode::begin() {
     unpause();
 
     mInvulnTime = 0.f;
@@ -160,7 +160,7 @@ void FreezeTagMode::begin() {
 }
 
 
-void FreezeTagMode::end() {
+void HotPotatoMode::end() {
     pause();
 
     mInvulnTime = 0.f;
@@ -176,26 +176,26 @@ void FreezeTagMode::end() {
         
         if(al::isAlive(mMainPlayerIceBlock) && !al::isNerve(mMainPlayerIceBlock, &nrvFreezePlayerBlockDisappear)) {
             mMainPlayerIceBlock->end();
-            trySetPostProcessingType(FreezePostProcessingType::PPDISABLED);
+            trySetPostProcessingType(FreezePostProcessingType::HOTPPFROZEN);
         }
     }
 
     GameModeBase::end();
 }
 
-void FreezeTagMode::pause() {
+void HotPotatoMode::pause() {
     GameModeBase::pause();
 
     mModeLayout->tryEnd();
 }
 
-void FreezeTagMode::unpause() {
+void HotPotatoMode::unpause() {
     GameModeBase::unpause();
 
     mModeLayout->appear();
 }
 
-void FreezeTagMode::update() {
+void HotPotatoMode::update() {
     PlayerActorHakoniwa* player = getPlayerActorHakoniwa();
     if(!player)
         return;
@@ -223,7 +223,7 @@ void FreezeTagMode::update() {
         if(!curInfo->isConnected)
             continue;
             
-        if(curInfo->isFreezeTagRunner)
+        if(curInfo->isHotPotatoRunner)
             mInfo->mRunnerPlayers.pushBack(curInfo);
         else
             mInfo->mChaserPlayers.pushBack(curInfo);
@@ -252,7 +252,7 @@ void FreezeTagMode::update() {
                     continue;
                 
                 // If this puppet is the new closest, set the closest info to the current puppet
-                if(pupDist < closePupDistance && curInfo->isFreezeTagRunner && !curInfo->isFreezeTagFreeze) {
+                if(pupDist < closePupDistance && curInfo->isHotPotatoRunner && !curInfo->isHotPotatoFreeze) {
                     closePupDistance = pupDist;
                     closePup = curInfo;
                 }
@@ -261,13 +261,13 @@ void FreezeTagMode::update() {
                     continue;
 
                 //Check for hotpotato
-                if (!mInfo->mIsPlayerFreeze && pupDist < 250.f && isP2D == curInfo->is2D && !isPDead && !curInfo->isFreezeTagRunner)
+                if (!mInfo->mIsPlayerFreeze && pupDist < 250.f && isP2D == curInfo->is2D && !isPDead && !curInfo->isHotPotatoRunner)
                     trySetPlayerRunnerState(FreezeState::FREEZE);
 
                 //Check for unfreeze
                 float freezeMinTime = al::clamp(3.f + (mInfo->mFreezeCount * 0.5f), 3.f, 7.f);
                 if (mInvulnTime >= freezeMinTime && mInfo->mIsPlayerFreeze && pupDist < 200.f && isP2D == curInfo->is2D
-                && !isPDead && curInfo->isFreezeTagRunner && !curInfo->isFreezeTagFreeze) {
+                && !isPDead && curInfo->isHotPotatoRunner && !curInfo->isHotPotatoFreeze) {
                     trySetPlayerRunnerState(FreezeState::ALIVE);
                 }
             }
@@ -301,7 +301,7 @@ void FreezeTagMode::update() {
     }
 
     // Update other players if your score changes
-    FreezeTagScore* score = &mInfo->mPlayerTagScore;
+    HotPotatoScore* score = &mInfo->mPlayerTagScore;
     if(score->mScore != score->mPrevScore) {
         score->mPrevScore = score->mScore;
         sendFreezePacket(FreezeUpdateType::PLAYER);
@@ -311,7 +311,7 @@ void FreezeTagMode::update() {
     if(mInfo->mIsPlayerFreeze) {
         if(!al::isAlive(mMainPlayerIceBlock)) {
             mMainPlayerIceBlock->appear();
-            trySetPostProcessingType(FreezePostProcessingType::PPFROZEN);
+            trySetPostProcessingType(FreezePostProcessingType::HOTPPFROZEN);
         }
         
         //Lock block onto player
@@ -321,7 +321,7 @@ void FreezeTagMode::update() {
     } else {
         if(al::isAlive(mMainPlayerIceBlock) && mMainPlayerIceBlock->mIsLocked) {
             mMainPlayerIceBlock->end();
-            trySetPostProcessingType(FreezePostProcessingType::PPDISABLED);
+            trySetPostProcessingType(FreezePostProcessingType::HOTPPFROZEN);
         }
     }
 
