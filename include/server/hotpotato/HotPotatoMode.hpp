@@ -97,7 +97,7 @@ public:
 
 private:
     HotPotatoUpdateType mNextUpdateType = HotPotatoUpdateType::HOTPLAYER; // Set for the sendPacket funtion to know what packet type is sent
-    HotPotatoPostProcessingType mPostProcessingType = HotPotatoPostProcessingType::PPDISABLED; // Current post processing mode (snapshot mode)
+    HotPotatoPostProcessingType mPostProcessingType = HotPotatoPostProcessingType::HOTPPDISABLED; // Current post processing mode (snapshot mode)
     GameModeTimer* mModeTimer = nullptr; // Generic timer from H&S used for round timer
     HotPotatoIcon* mModeLayout = nullptr; // HUD layout (creates sub layout actors for runner and chaser)
     HotPotatoInfo* mInfo = nullptr;
