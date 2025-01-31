@@ -12,7 +12,7 @@ struct HotPotatoInfo : GameModeInfoBase {
     HotPotatoInfo() { mMode = GameMode::HOTPOTATO; }
     bool mIsPlayerRunner = true;
     float mFreezeIconSize = 0.f;
-    HotPotatoState mIsPlayerFreeze = HotPotatoFreezeState::HOTALIVE;
+    HotPotatoState mIsPlayerFreeze = HotPotatoState::HOTALIVE;
 
     bool mIsRound = false;
     int mFreezeCount = 0;
