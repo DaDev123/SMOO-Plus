@@ -22,17 +22,17 @@
 #include <stdint.h>
 
 enum HotPotatoUpdateType : u8 { // Type of packets to send between players
-    PLAYER                 = 1 << 0,
-    ROUNDSTART             = 1 << 1,
-    ROUNDCANCEL            = 1 << 2,
-    FALLOFF                = 1 << 3
+    HOTPLAYER                 = 1 << 0,
+    HOTROUNDSTART             = 1 << 1,
+    HOTROUNDCANCEL            = 1 << 2,
+    HOTFALLOFF                = 1 << 3
 };
 
 enum HotPotatoPostProcessingType : u8 { // Snapshot mode post processing state
-    PPDISABLED = 0,
-    PPFROZEN = 1,
-    PPENDGAMELOSE = 2,
-    PPENDGAMEWIN = 3
+    HOTPPDISABLED = 0,
+    HOTPPFROZEN = 1,
+    HOTPPENDGAMELOSE = 2,
+    HOTPPENDGAMEWIN = 3
 };
 
 struct PACKED HotPotatoPacket : Packet {
