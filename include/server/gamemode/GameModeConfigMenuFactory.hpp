@@ -20,7 +20,7 @@ __attribute((used)) constexpr al::NameToCreator<createMenu> menuTable[] = {
     {"Sardine", &createGameModeConfigMenu<SardineConfigMenu>},
     {"FreezeTag", &createGameModeConfigMenu<FreezeTagConfigMenu>},
     {"Infection", &createGameModeConfigMenu<InfectionConfigMenu>},
-    {"HotPotato", &createGameModeConfigMenu<HotPotatoConfigMenu>},
+    {"HotPotato", &createGameModeConfigMenu<HotPotatoConfigMenu>}
 };
 
 class GameModeConfigMenuFactory : public al::Factory<createMenu> {
