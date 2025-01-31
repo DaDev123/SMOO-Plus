@@ -96,7 +96,7 @@ public:
     void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; } // Called when the camera ticket is constructed to get a pointer
 
 private:
-    HotPotatoUpdateType mNextUpdateType = HotPotatoUpdateType::PLAYER; // Set for the sendPacket funtion to know what packet type is sent
+    HotPotatoUpdateType mNextUpdateType = HotPotatoUpdateType::HOTPLAYER; // Set for the sendPacket funtion to know what packet type is sent
     HotPotatoPostProcessingType mPostProcessingType = HotPotatoPostProcessingType::PPDISABLED; // Current post processing mode (snapshot mode)
     GameModeTimer* mModeTimer = nullptr; // Generic timer from H&S used for round timer
     HotPotatoIcon* mModeLayout = nullptr; // HUD layout (creates sub layout actors for runner and chaser)
