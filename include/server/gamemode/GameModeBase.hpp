@@ -35,19 +35,18 @@ struct GameModeInitInfo {
         
     };
 
-    void initServerInfo(GameMode mode, PuppetHolder* pupHolder)
-    {
+    void initServerInfo(GameMode mode, PuppetHolder *pupHolder) {
         mMode = mode;
         mPuppetHolder = pupHolder;
     }
 
     al::LayoutInitInfo* mLayoutInitInfo;
-    al::PlayerHolder* mPlayerHolder;
-    al::SceneObjHolder* mSceneObjHolder;
     al::ActorInitInfo *mActorInitInfo;
+    al::PlayerHolder* mPlayerHolder;
+    al::SceneObjHolder *mSceneObjHolder;
     al::Scene* mScene;
     GameMode mMode = GameMode::NONE;
-    PuppetHolder* mPuppetHolder;
+    PuppetHolder *mPuppetHolder;
 };
 
 // base class for all gamemodes, must inherit from this to have a functional gamemode
@@ -61,28 +60,35 @@ public:
     virtual GameMode getMode() { return mMode; }
 
     virtual bool isModeActive() const { return mIsActive; }
+    virtual bool isUseNormalUI() const { return true; }
 
-    virtual void init(GameModeInitInfo const& info);
+    virtual void init(GameModeInitInfo const &info);
 
-    virtual void begin() { mIsActive = true; }
-    virtual void update();
-    virtual void end() { mIsActive = false; }
+    virtual void begin();
+
+    virtual void update(){};
+    virtual void end();
 
     virtual void pause() { mIsActive = false; };
     virtual void unpause() { mIsActive = true; };
 
-    virtual void processPacket(Packet* packet){};
+    virtual bool receiveMsg(const al::SensorMsg *msg, al::HitSensor *source, al::HitSensor *target) { return false; };
 
-    virtual bool isUseNormalUI() const { return true; }
+    virtual bool attackSensor(al::HitSensor* source, al::HitSensor* target) { return false; };
+
+    virtual void processPacket(Packet* packet){};
 
     virtual Packet* createPacket() { return nullptr; }
 
+    bool mIsUsePuppetSensor;
+    bool mIsUseCapSensor;
+
 protected:
     sead::FixedSafeString<0x10> mName;
-    al::SceneObjHolder* mSceneObjHolder = nullptr;
+    al::SceneObjHolder *mSceneObjHolder = nullptr;
     GameMode mMode = GameMode::NONE;
     StageScene* mCurScene = nullptr;
-    PuppetHolder* mPuppetHolder = nullptr;
+    PuppetHolder *mPuppetHolder = nullptr;
     bool mIsActive = false;
     bool mIsFirstFrame = true;
 };

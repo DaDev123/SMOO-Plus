@@ -13,6 +13,7 @@
 #include "game/Player/PlayerFunction.h"
 #include "heap/seadHeapMgr.h"
 #include "layouts/HideAndSeekIcon.h"
+#include "packets/Packet.h"
 #include "logger.hpp"
 #include "math/seadVector.h"
 #include "rs/util.hpp"
@@ -67,6 +68,54 @@ void SardineMode::init(const GameModeInitInfo& info)
     mModeLayout->showSolo();
 
     // mModeTimer->disableTimer();
+}
+
+void SardineMode::processPacket(Packet *packet) {
+    SardinePacket* tagPacket = (SardinePacket*)packet;
+
+    // if the packet is for our player, edit info for our player
+    if (tagPacket->mUserID == Client::getClientId() && GameModeManager::instance()->isMode(GameMode::SARDINE)) {
+
+        SardineMode* mode = GameModeManager::instance()->getMode<SardineMode>();
+        SardineInfo* curInfo = GameModeManager::instance()->getInfo<SardineInfo>();
+
+        if (tagPacket->updateType & SardineTagUpdateType::SARDINESTATE) {
+            mode->setPlayerTagState(tagPacket->isIt);
+        }
+
+        if (tagPacket->updateType & SardineTagUpdateType::SARDINETIME) {
+            curInfo->mHidingTime.mSeconds = tagPacket->seconds;
+            curInfo->mHidingTime.mMinutes = tagPacket->minutes;
+        }
+
+        return;
+
+    }
+
+    PuppetInfo* curInfo = Client::findPuppetInfo(tagPacket->mUserID, false);
+
+    if (!curInfo) {
+        return;
+    }
+
+    curInfo->isIt = tagPacket->isIt;
+    curInfo->seconds = tagPacket->seconds;
+    curInfo->minutes = tagPacket->minutes;
+}
+
+Packet *SardineMode::createPacket() {
+
+    SardinePacket *packet = new SardinePacket();
+
+    packet->mUserID = Client::getClientId();
+
+    packet->isIt = isPlayerIt();
+
+    packet->minutes = mInfo->mHidingTime.mMinutes;
+    packet->seconds = mInfo->mHidingTime.mSeconds;
+    packet->updateType = static_cast<SardineTagUpdateType>(SardineTagUpdateType::SARDINESTATE | SardineTagUpdateType::SARDINETIME);
+
+    return packet;
 }
 
 void SardineMode::begin()
@@ -165,7 +214,7 @@ void SardineMode::update()
                     mModeTimer->enableTimer();
                     mModeLayout->showPack();
 
-                    Client::sendTagInfPacket();
+                    Client::sendGamemodePacket();
                 }
             }
         }
@@ -179,7 +228,7 @@ void SardineMode::update()
         mModeTimer->disableTimer();
         mModeLayout->showSolo();
 
-        Client::sendTagInfPacket();
+        Client::sendGamemodePacket();
     }
 
     // Player pulling
@@ -229,7 +278,7 @@ void SardineMode::update()
             mModeTimer->disableTimer();
             mModeLayout->showSolo();
         }
-        Client::sendTagInfPacket();
+        Client::sendGamemodePacket();
     }
 
     mInfo->mHidingTime = mModeTimer->getTime();

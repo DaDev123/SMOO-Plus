@@ -25,8 +25,20 @@ public:
     GameMode getGameMode() const { return mCurMode; }
     template<class T> T* getMode() const { return static_cast<T*>(mCurModeBase); }
     template<class T> T* getInfo() const { return static_cast<T*>(mModeInfo); }
-    void setInfo(GameModeInfoBase* info) {
-        mModeInfo = info;
+    template<class T> T* tryGetOrCreateInfo(GameMode mode);
+    void setInfo(GameModeInfoBase* info) { mModeInfo = info; }
+
+    static void processModePacket(Packet *packet) {
+        if(instance()->mCurModeBase) {
+            instance()->mCurModeBase->processPacket(packet);
+        }
+    }
+
+    static Packet *createModePacket() {
+        if(instance()->mCurModeBase) {
+            return instance()->mCurModeBase->createPacket();
+        }
+        return nullptr;
     }
 
     template<class T>
@@ -40,7 +52,9 @@ public:
     bool isMode(GameMode mode) const { return mCurMode == mode; }
     bool isActive() const { return mActive; }
     bool isModeAndActive(GameMode mode) const { return isMode(mode) && isActive(); }
+    bool isModeRequireUI() { return isActive() && !mCurModeBase->isUseNormalUI(); }
     bool isPaused() const { return mPaused; }
+    bool wasSceneTrans() const { return mWasSceneTrans; }
 private:
     sead::Heap* mHeap = nullptr;
 
@@ -48,6 +62,7 @@ private:
     bool mPaused = false;
     bool mWasSceneTrans = false;
     bool mWasSetMode = false;
+    bool mWasPaused = false;
     GameMode mCurMode = GameMode::NONE;
     GameModeBase* mCurModeBase = nullptr;
     GameModeInfoBase *mModeInfo = nullptr;
@@ -62,4 +77,15 @@ T* GameModeManager::createModeInfo() {
     T* info = new T();
     mModeInfo = info;
     return info;
+}
+
+template<class T>
+T* GameModeManager::tryGetOrCreateInfo(GameMode mode) {
+    if (mModeInfo && mModeInfo->mMode == mode)
+        return static_cast<T*>(mModeInfo);
+
+    if (mModeInfo)
+        delete mModeInfo;  // attempt to destory previous info before creating new one
+
+    return createModeInfo<T>();
 }

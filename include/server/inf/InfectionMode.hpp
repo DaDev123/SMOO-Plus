@@ -18,6 +18,18 @@ struct InfectionInfo : GameModeInfoBase {
     GameTime mHidingTime;
 };
 
+enum InfectionTagUpdateType : u8 {
+    InfectionTIME                 = 1 << 0,
+    InfectionSTATE                = 1 << 1
+};
+struct PACKED InfectionPacket : Packet {
+    InfectionPacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(InfectionPacket) - sizeof(Packet);};
+    InfectionTagUpdateType updateType;
+    bool1 isIt = false;
+    u8 seconds;
+    u16 minutes;
+};
+
 class InfectionMode : public GameModeBase {
     public:
         InfectionMode(const char* name);

@@ -372,8 +372,8 @@ void Client::readFunc() {
                 curPacket->mUserID.print();
                 disconnectPlayer((PlayerDC*)curPacket);
                 break;
-            case PacketType::TAGINF:
-                updateTagInfo((TagInf*)curPacket);
+            case PacketType::GAMEMODEINF:
+                GameModeManager::processModePacket(curPacket);
                 break;
             case PacketType::CHANGESTAGE:
                 sendToStage((ChangeStagePacket*)curPacket);
@@ -596,72 +596,7 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
  * @brief 
  * 
  */
-void Client::sendTagInfPacket() {
-
-    if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
-        return;
-    }
-    
-    GameMode curMode = GameModeManager::instance()->getGameMode();
-    HideAndSeekMode* hsMode;
-    HideAndSeekInfo* hsInfo;
-    InfectionMode* infMode;
-    InfectionInfo* infInfo;
-    SardineMode* sarMode;
-    SardineInfo* sarInfo;
-
-    switch(GameModeManager::instance()->getGameMode()){
-        case GameMode::HIDEANDSEEK:
-            hsMode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-            hsInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
-            break;
-        case GameMode::Infection:
-            infMode = GameModeManager::instance()->getMode<InfectionMode>();
-            infInfo = GameModeManager::instance()->getInfo<InfectionInfo>();
-            break;
-        case GameMode::SARDINE:
-            sarMode = GameModeManager::instance()->getMode<SardineMode>();
-            sarInfo = GameModeManager::instance()->getInfo<SardineInfo>();
-            break;
-        case GameMode::NONE:
-            Logger::log("Tag info packet has unknown gamemode!\n");
-            return;
-        default:
-            Logger::log("Tag info packet has unknown gamemode!\n");
-            return;
-    };
-
-    TagInf *packet = new TagInf();
-
-    packet->mUserID = sInstance->mUserID;
-
-    if(curMode == GameMode::HIDEANDSEEK){
-        packet->isIt = hsMode->isPlayerIt();
-        packet->minutes = hsInfo->mHidingTime.mMinutes;
-        packet->seconds = hsInfo->mHidingTime.mSeconds;
-    }
-    if(curMode == GameMode::Infection){
-        packet->isIt = infMode->isPlayerIt();
-        packet->minutes = infInfo->mHidingTime.mMinutes;
-        packet->seconds = infInfo->mHidingTime.mSeconds;
-    }
-    else if (curMode == GameMode::SARDINE){
-        packet->isIt = sarMode->isPlayerIt();
-        packet->minutes = sarInfo->mHidingTime.mMinutes;
-        packet->seconds = sarInfo->mHidingTime.mSeconds;
-    }
-
-    packet->updateType = static_cast<TagUpdateType>(TagUpdateType::STATE | TagUpdateType::TIME);
-
-    sInstance->mSocket->queuePacket(packet);
-}
-
-/**
- * @brief 
- * 
- */
-void Client::sendFreezeInfPacket() {
+void Client::sendGamemodePacket() {
 
     if (!sInstance) {
         Logger::log("Static Instance is Null!\n");
@@ -669,25 +604,13 @@ void Client::sendFreezeInfPacket() {
     }
 
     sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
-    
-    GameMode curMode = GameModeManager::instance()->getGameMode();
-    if(curMode != GameMode::FREEZETAG) {
-        Logger::log("Attempting to send FreezeInf packet while not in Freeze Tag mode!\n");
-        return;
+
+    Packet* gmPacket = GameModeManager::createModePacket();
+
+    if(gmPacket) {
+        sInstance->mSocket->queuePacket(gmPacket);
     }
 
-    FreezeTagMode* frMode = GameModeManager::instance()->getMode<FreezeTagMode>();
-    FreezeTagInfo* frInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
-
-    FreezeInf *packet = new FreezeInf();
-
-    packet->mUserID = sInstance->mUserID;
-
-    packet->isRunner = frInfo->mIsPlayerRunner;
-    packet->isFreeze = frInfo->mIsPlayerFreeze;
-    packet->score = frInfo->mPlayerTagScore.mScore;
-
-    sInstance->mSocket->queuePacket(packet);
 }
 
 
@@ -947,125 +870,6 @@ void Client::updateGameInfo(GameInf *packet) {
         }
 
         curInfo->is2D = packet->is2D;
-    }
-}
-
-/**
- * @brief 
- * 
- * @param packet 
- */
-void Client::updateTagInfo(TagInf *packet) {
-    
-    GameMode mode = GameModeManager::instance()->getGameMode();
-
-    if(mode == GameMode::HIDEANDSEEK || mode == GameMode::SARDINE || mode == GameMode::Infection) {
-        // if the packet is for our player, edit info for our player
-        if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
-
-            HideAndSeekMode* mMode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-            HideAndSeekInfo* curInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
-
-            if (packet->updateType & TagUpdateType::STATE) {
-                mMode->setPlayerTagState(packet->isIt);
-            }
-
-            if (packet->updateType & TagUpdateType::TIME) {
-                curInfo->mHidingTime.mSeconds = packet->seconds;
-                curInfo->mHidingTime.mMinutes = packet->minutes;
-            }
-
-            return;
-
-        }
-
-    if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::Infection)) {
-
-            InfectionMode* mMode = GameModeManager::instance()->getMode<InfectionMode>();
-            InfectionInfo* curInfo = GameModeManager::instance()->getInfo<InfectionInfo>();
-
-            if (packet->updateType & TagUpdateType::STATE) {
-                mMode->setPlayerTagState(packet->isIt);
-            }
-
-            if (packet->updateType & TagUpdateType::TIME) {
-                curInfo->mHidingTime.mSeconds = packet->seconds;
-                curInfo->mHidingTime.mMinutes = packet->minutes;
-            }
-
-            return;
-
-        }
-
-        if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::SARDINE)) {
-
-            SardineMode* mMode = GameModeManager::instance()->getMode<SardineMode>();
-            SardineInfo* curInfo = GameModeManager::instance()->getInfo<SardineInfo>();
-
-            if (packet->updateType & TagUpdateType::STATE) {
-                mMode->setPlayerTagState(packet->isIt);
-            }
-
-            if (packet->updateType & TagUpdateType::TIME) {
-                curInfo->mHidingTime.mSeconds = packet->seconds;
-                curInfo->mHidingTime.mMinutes = packet->minutes;
-            }
-
-            return;
-
-        }
-
-        PuppetInfo* curInfo = findPuppetInfo(packet->mUserID, false);
-
-        if (!curInfo) {
-            return;
-        }
-
-        curInfo->isIt = packet->isIt;
-        curInfo->seconds = packet->seconds;
-        curInfo->minutes = packet->minutes;
-    }
-
-    if(mode == GameMode::FREEZETAG) {
-        FreezeInf* freezePak = (FreezeInf*)packet;
-        
-        // if the packet is for our player, edit info for our player
-        if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
-
-            FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
-            FreezeTagInfo* curInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
-            
-            curInfo->mIsPlayerRunner = freezePak->isRunner;
-
-            if(freezePak->isFreeze && !freezePak->isRunner)
-                mMode->trySetPlayerRunnerState(FreezeState::FREEZE);
-            else
-                mMode->trySetPlayerRunnerState(FreezeState::ALIVE);
-
-            return;
-
-        }
-
-        PuppetInfo* curInfo = findPuppetInfo(packet->mUserID, false);
-
-        if (!curInfo)
-            return;
-
-        if(!GameModeManager::instance()->isActive()) {
-            curInfo->isFreezeTagFreeze = freezePak->isFreeze;
-            curInfo->isFreezeTagRunner = freezePak->isRunner;
-            curInfo->freezeTagScore = freezePak->score;
-            return;
-        }
-        
-        FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
-
-        if(mMode->isScoreEventsEnabled())
-            mMode->tryScoreEvent(freezePak, curInfo);
-
-        curInfo->isFreezeTagFreeze = freezePak->isFreeze;
-        curInfo->isFreezeTagRunner = freezePak->isRunner;
-        curInfo->freezeTagScore = freezePak->score;
     }
 }
 

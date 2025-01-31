@@ -75,10 +75,64 @@ void FreezeTagMode::init(const GameModeInitInfo& info) {
     mHintArrow->init(*info.mActorInitInfo);
 }
 
+void FreezeTagMode::processPacket(Packet *packet) {
+    FreezeTagPacket* frzPak = (FreezeTagPacket*)packet;
+    PuppetInfo* curInfo = Client::findPuppetInfo(frzPak->mUserID, false);
 
-void FreezeTagMode::sendFreezeInfPacket(FreezeUpdateType updateType) {
+    if (!curInfo)
+        return;
+
+    if (frzPak->updateType & FreezeUpdateType::PLAYER) {
+        tryScoreEvent(frzPak, curInfo);
+
+        // When puppet transitioning from frozen to unfrozen, disable the fall off flag
+        if(curInfo->isFreezeTagFreeze && !frzPak->isFreeze)
+            curInfo->isFreezeTagFallenOff = false;
+
+        curInfo->isFreezeTagRunner = frzPak->isRunner;
+        curInfo->isFreezeTagFreeze = frzPak->isFreeze;
+        curInfo->freezeTagScore = frzPak->score;
+    }
+
+    if (frzPak->updateType & FreezeUpdateType::ROUNDSTART && !mInfo->mIsRound) {
+        FreezeTagRoundPacket* roundPak = (FreezeTagRoundPacket*)frzPak;
+        startRound(al::clamp(roundPak->roundTime, u8(2), u8(60))); // Start round if round not already started
+    }
+
+    if (frzPak->updateType & FreezeUpdateType::ROUNDCANCEL && mInfo->mIsRound)
+        endRound(true); // Abort round early on receiving cancel packet
+
+    if (frzPak->updateType & FreezeUpdateType::FALLOFF && mInfo->mIsRound) {
+        curInfo->isFreezeTagFallenOff = true;
+        
+        if(!mInfo->mIsPlayerRunner)
+            mInfo->mPlayerTagScore.eventScoreFallOff();
+    }
+}
+
+Packet* FreezeTagMode::createPacket() {
+    FreezeTagPacket *packet = new FreezeTagPacket();
+    
+    packet->mUserID = Client::getClientId();
+    packet->updateType = mNextUpdateType;
+
+    if(packet->updateType != FreezeUpdateType::ROUNDSTART) {
+        packet->isRunner = mInfo->mIsPlayerRunner;
+        packet->isFreeze = mInfo->mIsPlayerFreeze;
+        packet->score = mInfo->mPlayerTagScore.mScore;
+
+        return packet;
+    }
+
+    FreezeTagRoundPacket* roundPak = (FreezeTagRoundPacket*)packet;
+    roundPak->roundTime = u8(mInfo->mRoundLength);
+
+    return roundPak;
+}
+
+void FreezeTagMode::sendFreezePacket(FreezeUpdateType updateType) {
     mNextUpdateType = updateType;
-    Client::sendFreezeInfPacket();
+    Client::sendGamemodePacket();
 }
 
 void FreezeTagMode::begin() {
@@ -98,7 +152,7 @@ void FreezeTagMode::begin() {
     hit->mCurrentHit = hit->getMaxCurrent();
     hit->mIsKidsMode = true;
 
-    sendFreezeInfPacket(FreezeUpdateType::PLAYER);
+    sendFreezePacket(FreezeUpdateType::PLAYER);
 
     GameModeBase::begin();
 
@@ -239,7 +293,7 @@ void FreezeTagMode::update() {
         if(mEndgameTimer > 6.f) {
             mInfo->mIsPlayerRunner = true;
             mInvulnTime = 0.f;
-            sendFreezeInfPacket(FreezeUpdateType::PLAYER);
+            sendFreezePacket(FreezeUpdateType::PLAYER);
 
             mIsEndgameActive = false;
             tryStartRecoveryEvent(true);
@@ -250,7 +304,7 @@ void FreezeTagMode::update() {
     FreezeTagScore* score = &mInfo->mPlayerTagScore;
     if(score->mScore != score->mPrevScore) {
         score->mPrevScore = score->mScore;
-        sendFreezeInfPacket(FreezeUpdateType::PLAYER);
+        sendFreezePacket(FreezeUpdateType::PLAYER);
     };
 
     // Main player's ice block state and post processing
@@ -277,7 +331,7 @@ void FreezeTagMode::update() {
         mInfo->mIsPlayerRunner = !mInfo->mIsPlayerRunner;
         mInvulnTime = 0.f;
 
-        sendFreezeInfPacket(FreezeUpdateType::PLAYER);
+        sendFreezePacket(FreezeUpdateType::PLAYER);
     }
 
     if (al::isPadTriggerDown(-1) && al::isPadHoldL(-1) && !mInfo->mIsPlayerFreeze && mRecoveryEventFrames == 0 && !mIsEndgameActive)
@@ -285,11 +339,11 @@ void FreezeTagMode::update() {
     
     if (al::isPadTriggerUp(-1) && al::isPadHoldR(-1) && mInfo->mIsHostMode && !mInfo->mIsRound) {
         startRound(mInfo->mRoundLength);
-        sendFreezeInfPacket(FreezeUpdateType::ROUNDSTART);
+        sendFreezePacket(FreezeUpdateType::ROUNDSTART);
     }
     if (al::isPadTriggerDown(-1) && al::isPadHoldR(-1) && mInfo->mIsHostMode && mInfo->mIsRound) {
         endRound(true);
-        sendFreezeInfPacket(FreezeUpdateType::ROUNDCANCEL);
+        sendFreezePacket(FreezeUpdateType::ROUNDCANCEL);
     }
 
     //Debug freeze buttons

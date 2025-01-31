@@ -31,7 +31,7 @@ void FreezeTagMode::endRound(bool isAbort) {
     if(!mIsEndgameActive) {
         if(!mInfo->mIsPlayerRunner) {
             mInfo->mIsPlayerRunner = true;
-            Client::sendFreezeInfPacket();
+            sendFreezePacket(FreezeUpdateType::PLAYER);
             return;
         }
 
@@ -84,7 +84,7 @@ bool FreezeTagMode::trySetPlayerRunnerState(FreezeState newState)
             tryStartEndgameEvent();
     }
 
-    Client::sendFreezeInfPacket();
+    sendFreezePacket(FreezeUpdateType::PLAYER);
 
     return true;
 }
@@ -94,7 +94,7 @@ bool FreezeTagMode::trySetPlayerRunnerState(FreezeState newState)
     FUNCTION CALLED FROM client.cpp ON RECEIVING FREEZE TAG PACKETS
 */
 
-void FreezeTagMode::tryScoreEvent(FreezeInf* incomingPacket, PuppetInfo* sourcePuppet)
+void FreezeTagMode::tryScoreEvent(FreezeTagPacket* incomingPacket, PuppetInfo* sourcePuppet)
 {
     if(!mCurScene || !sourcePuppet || !GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
         return;
@@ -150,7 +150,7 @@ bool FreezeTagMode::tryStartRecoveryEvent(bool isEndgame)
     if(!isEndgame) {
         mRecoverySafetyPoint = player->mPlayerRecoverySafetyPoint->mSafetyPointPos;
         if(mInfo->mIsPlayerRunner && mInfo->mIsRound)
-            sendFreezeInfPacket(FreezeUpdateType::FALLOFF);
+            sendFreezePacket(FreezeUpdateType::FALLOFF);
     } else {
         mRecoverySafetyPoint = sead::Vector3f::zero;
     }

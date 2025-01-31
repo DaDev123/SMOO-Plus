@@ -21,10 +21,22 @@ struct SardineInfo : GameModeInfoBase {
     GameTime mHidingTime;
 };
 
+enum SardineTagUpdateType : u8 {
+    SARDINETIME                 = 1 << 0,
+    SARDINESTATE                = 1 << 1
+};
+
+struct PACKED SardinePacket : Packet {
+    SardinePacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(SardinePacket) - sizeof(Packet);};
+    SardineTagUpdateType updateType;
+    bool1 isIt = false;
+    u8 seconds;
+    u16 minutes;
+};
+
 class SardineMode : public GameModeBase {
 public:
     SardineMode(const char* name);
-
     void init(GameModeInitInfo const& info) override;
 
     virtual void begin() override;
@@ -38,6 +50,9 @@ public:
     void enableGravityMode() { mInfo->mIsUseGravity = true; }
     void disableGravityMode() { mInfo->mIsUseGravity = false; }
     bool isUseGravity() const { return mInfo->mIsUseGravity; }
+
+    void processPacket(Packet* packet) override;
+    Packet* createPacket() override;
 
     void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; }
 

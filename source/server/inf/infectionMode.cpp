@@ -11,6 +11,7 @@
 #include "heap/seadHeapMgr.h"
 #include "layouts/InfectionIcon.h"
 #include "logger.hpp"
+#include "packets/Packet.h"
 #include "rs/util.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/Client.hpp"
@@ -52,6 +53,54 @@ void InfectionMode::init(const GameModeInitInfo& info) {
 
     mModeTimer->disableTimer();
 
+}
+
+void InfectionMode::processPacket(Packet *packet) {
+    InfectionPacket* tagPacket = (InfectionPacket*)packet;
+
+    // if the packet is for our player, edit info for our player
+    if (tagPacket->mUserID == Client::getClientId() && GameModeManager::instance()->isMode(GameMode::Infection)) {
+
+        InfectionMode* mode = GameModeManager::instance()->getMode<InfectionMode>();
+        InfectionInfo* curInfo = GameModeManager::instance()->getInfo<InfectionInfo>();
+
+        if (tagPacket->updateType & InfectionTagUpdateType::InfectionSTATE) {
+            mode->setPlayerTagState(tagPacket->isIt);
+        }
+
+        if (tagPacket->updateType & InfectionTagUpdateType::InfectionTIME) {
+            curInfo->mHidingTime.mSeconds = tagPacket->seconds;
+            curInfo->mHidingTime.mMinutes = tagPacket->minutes;
+        }
+
+        return;
+
+    }
+
+    PuppetInfo* curInfo = Client::findPuppetInfo(tagPacket->mUserID, false);
+
+    if (!curInfo) {
+        return;
+    }
+
+    curInfo->isIt = tagPacket->isIt;
+    curInfo->seconds = tagPacket->seconds;
+    curInfo->minutes = tagPacket->minutes;
+}
+
+Packet *InfectionMode::createPacket() {
+
+    InfectionPacket *packet = new InfectionPacket();
+
+    packet->mUserID = Client::getClientId();
+
+    packet->isIt = isPlayerIt();
+
+    packet->minutes = mInfo->mHidingTime.mMinutes;
+    packet->seconds = mInfo->mHidingTime.mSeconds;
+    packet->updateType = static_cast<InfectionTagUpdateType>(InfectionTagUpdateType::InfectionSTATE | InfectionTagUpdateType::InfectionTIME);
+
+    return packet;
 }
 
 void InfectionMode::begin() {
@@ -164,7 +213,7 @@ void InfectionMode::update() {
                                     ((PlayerActorHakoniwa*)playerBase)->mPlayerAnimator->startAnim("DemoJangoCapSearch");
                                     isInInfectAnim = true;
                                     
-                                    Client::sendTagInfPacket();
+                                    Client::sendGamemodePacket();
                                 }
                             } else if (PlayerFunction::isPlayerDeadStatus(playerBase)) {
 
@@ -172,7 +221,7 @@ void InfectionMode::update() {
                                 mModeTimer->disableTimer();
                                 mModeLayout->showSeeking();
 
-                                Client::sendTagInfPacket();
+                                Client::sendGamemodePacket();
                                 
                             }
                         }
@@ -226,7 +275,7 @@ void InfectionMode::update() {
             mModeLayout->showSeeking();
         }
 
-        Client::sendTagInfPacket();
+        Client::sendGamemodePacket();
     }
 
     mInfo->mHidingTime = mModeTimer->getTime();

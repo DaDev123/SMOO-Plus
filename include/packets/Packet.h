@@ -18,7 +18,7 @@ enum PacketType : short {
     PLAYERINF,
     HACKCAPINF,
     GAMEINF,
-    TAGINF,
+    GAMEMODEINF,
     PLAYERCON,
     PLAYERDC,
     COSTUMEINF,
@@ -36,7 +36,7 @@ USED static const char *packetNames[] = {
     "Player Info",
     "Player Cap Info",
     "Game Info",
-    "Tag Info",
+    "Gamemode Info",
     "Player Connect",
     "Player Disconnect",
     "Costume Info",
@@ -76,7 +76,7 @@ struct PACKED Packet {
 #include "packets/PlayerConnect.h"
 #include "packets/PlayerDC.h"
 #include "packets/GameInf.h"
-#include "packets/TagInf.h"
+
 #include "packets/CostumeInf.h"
 #include "packets/ServerCommand.h"
 #include "packets/ShineCollect.h"

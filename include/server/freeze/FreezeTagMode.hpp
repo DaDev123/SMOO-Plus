@@ -9,7 +9,6 @@
 #include "layouts/FreezeTagIcon.h"
 #include "math/seadVector.h"
 #include "puppets/PuppetInfo.h"
-#include "packets/FreezeInf.h"
 #include "server/freeze/FreezeHintArrow.h"
 #include "server/freeze/FreezePlayerBlock.h"
 #include "server/freeze/FreezeTagInfo.h"
@@ -21,6 +20,35 @@
 #include "server/hns/HideAndSeekConfigMenu.hpp"
 #include <math.h>
 #include <stdint.h>
+
+enum FreezeUpdateType : u8 { // Type of packets to send between players
+    PLAYER                 = 1 << 0,
+    ROUNDSTART             = 1 << 1,
+    ROUNDCANCEL            = 1 << 2,
+    FALLOFF                = 1 << 3
+};
+
+enum FreezePostProcessingType : u8 { // Snapshot mode post processing state
+    PPDISABLED = 0,
+    PPFROZEN = 1,
+    PPENDGAMELOSE = 2,
+    PPENDGAMEWIN = 3
+};
+
+struct PACKED FreezeTagPacket : Packet {
+    FreezeTagPacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(FreezeTagPacket) - sizeof(Packet);};
+    FreezeUpdateType updateType;
+    bool isRunner = false;
+    bool isFreeze = false;
+    uint16_t score = 0;
+};
+
+struct PACKED FreezeTagRoundPacket : Packet {
+    FreezeTagRoundPacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(FreezeTagPacket) - sizeof(Packet);};
+    FreezeUpdateType updateType;
+    uint8_t roundTime = 10;
+    const char padding[3] = "\0\0";
+};
 
 class FreezeTagMode : public GameModeBase {
 public:
@@ -37,9 +65,9 @@ public:
 
     bool isUseNormalUI() const override { return false; }
 
-
     void processPacket(Packet* packet) override;
-    void sendFreezeInfPacket(FreezeUpdateType updateType); // Called instead of Client::sendGamemodePacket(), allows setting packet type
+    Packet* createPacket() override;
+    void sendFreezePacket(FreezeUpdateType updateType); // Called instead of Client::sendGamemodePacket(), allows setting packet type
 
     void startRound(int roundMinutes); // Actives round on this specific client
     void endRound(bool isAbort); // Ends round, allows setting for if this was a natural end or abort (used for scoring)
@@ -58,7 +86,7 @@ public:
     void tryStartEndgameEvent(); // Starts the WIPEOUT message event
     bool tryStartRecoveryEvent(bool isEndgame); // Returns player to a chaser's position or last stood position, unless endgame variant
     bool tryEndRecoveryEvent(); // Called after the fade of the recovery event
-    void tryScoreEvent(FreezeInf* incomingPacket, PuppetInfo* sourcePuppet);
+    void tryScoreEvent(FreezeTagPacket* incomingPacket, PuppetInfo* sourcePuppet); // Attempt score gain when getting a packet
     void setWipeHolder(al::WipeHolder* wipe) { mWipeHolder = wipe; }; // Called with HakoniwaSequence hook, wipe used in recovery event
     bool trySetPostProcessingType(FreezePostProcessingType type); // Sets the post processing type, also used for disabling
     
