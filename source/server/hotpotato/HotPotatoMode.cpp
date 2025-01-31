@@ -22,7 +22,7 @@
 #include "math/seadVector.h"
 #include "puppets/PuppetInfo.h"
 #include "rs/util.hpp"
-#include "server/hotpotato/FreezeHintArrow.h"
+#include "server/hotpotato/HotPotatoHintArrow.h"
 #include "server/hotpotato/HotPotatoScore.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/Client.hpp"
