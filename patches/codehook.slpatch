@@ -133,7 +133,7 @@ B59E28 B seadPrintHook // sead::system::print
 25ff74 MOV X0, #1
 25ffac MOV X0, #0
 
-// Freeze tag hooks
+// Freeze tag Hooks
 4272f0 BL freezeDeathArea // Replaces functionality of death areas in freeze tag
 538a94 B playerHitPointDamage // Reimplements the damage function, disabling it's functionality in Freeze Tag
 51b280 B freezeKidsMode // Forces kids mode to be enabled during Freeze Tag
@@ -147,3 +147,8 @@ B59E28 B seadPrintHook // sead::system::print
 
 //Notes
 2D250C B 71002D2604
+
+// Custom Boot Screen Hooks
+50ef28 BL speedboot::hakoniwaSetNerveSetup
+50eb88 ORR w2, wzr, #0x1f // nerve state count
+50eb64 BL speedboot::prepareLayoutInitInfo
