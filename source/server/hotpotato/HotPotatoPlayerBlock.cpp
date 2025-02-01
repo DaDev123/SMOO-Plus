@@ -48,13 +48,13 @@ void HotPotatoPlayerBlock::control(void)
 void HotPotatoPlayerBlock::appear()
 {
     al::LiveActor::appear();
-    al::setNerve(this, &nrvFreezePlayerBlockAppear);
+    al::setNerve(this, &nrvHotPotatoBlockAppear);
     mIsLocked = true;
 }
 
 void HotPotatoPlayerBlock::end()
 {
-    al::setNerve(this, &nrvFreezePlayerBlockDisappear);
+    al::setNerve(this, &nrvHotPotatoBlockDisappear);
     mIsLocked = false;
 }
 
@@ -69,7 +69,7 @@ void HotPotatoPlayerBlock::exeAppear()
     al::setDitherAnimSphereRadius(this, 0.f);
 
     if (al::isActionEnd(this))
-        al::setNerve(this, &nrvFreezePlayerBlockWait);
+        al::setNerve(this, &nrvHotPotatoBlockWait);
 }
 
 void HotPotatoPlayerBlock::exeWait()
@@ -103,7 +103,7 @@ void HotPotatoPlayerBlock::exeDisappear()
     al::setScaleAll(this, scale);
 
     if (al::isNearZero(scale, 0.05f))
-        al::setNerve(this, &nrvFreezePlayerBlockDead);
+        al::setNerve(this, &nrvHotPotatoBlockDead);
 }
 
 void HotPotatoPlayerBlock::exeDead()
