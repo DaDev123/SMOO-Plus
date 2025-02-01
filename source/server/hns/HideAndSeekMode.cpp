@@ -307,18 +307,18 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
         if(al::isPadTriggerLeft(-1)) indexDirection = -1; //Move index left
         //Force index to increase if your current target changes stages
         if(mSpectateIndex != -1)
-            if(!mInfo->mIsPlayerIt.at(mSpectateIndex)->isInSameStage)
+            if(!mInfo->isPlayerIt.at(mSpectateIndex)->isInSameStage)
                 indexDirection = 1; //Move index right
         //Loop over indexs until you find a sutible one in the same stage
         bool isFinalIndex = false;
         while(!isFinalIndex) {
             mSpectateIndex += indexDirection;
             // Start by clamping the index
-            if(mSpectateIndex < -1) mSpectateIndex = mInfo->mIsPlayerIt.size() - 1;
-            if(mSpectateIndex >= mInfo->mIsPlayerIt.size()) mSpectateIndex = -1;
+            if(mSpectateIndex < -1) mSpectateIndex = mInfo->isPlayerIt.size() - 1;
+            if(mSpectateIndex >= mInfo->isPlayerIt.size()) mSpectateIndex = -1;
             // If not in same stage, skip
             if(mSpectateIndex != -1) {
-                if(mInfo->mIsPlayerIt.at(mSpectateIndex)->isInSameStage)
+                if(mInfo->isPlayerIt.at(mSpectateIndex)->isInSameStage)
                     isFinalIndex = true;
             } else {
                 isFinalIndex = true;
@@ -332,7 +332,7 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
         if(mSpectateIndex == -1) {
             spectatePoser->setTargetActor(al::getTransPtr(playerBase));
         } else {
-            spectatePoser->setTargetActor(&mInfo->mIsPlayerIt.at(mSpectateIndex)->playerPos);
+            spectatePoser->setTargetActor(&mInfo->isPlayerIt.at(mSpectateIndex)->playerPos);
            }
         mPrevSpectateIndex = mSpectateIndex;
     }
