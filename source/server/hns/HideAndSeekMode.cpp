@@ -316,7 +316,7 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
 
         //Force index to decrease if your current target changes stages
         if(mSpectateIndex != -1 && indexDirection == 0)
-            if(!mInfo->isIt.at(mSpectateIndex)->isInSameStage)
+            if(mInfo->isIt.at(mSpectateIndex)->isInSameStage)
                 indexDirection = -1; //Move index left
 
         //Loop over indexs until you find a sutible one in the same stage
