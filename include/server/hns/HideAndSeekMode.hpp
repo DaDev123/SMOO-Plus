@@ -49,6 +49,8 @@ class HideAndSeekMode : public GameModeBase {
         void processPacket(Packet* packet) override;
         Packet* createPacket() override;
 
+        void updateSpectateCam(PlayerActorBase* playerBase);
+
         bool isPlayerIt() const { return mInfo->mIsPlayerIt; }
 
         float getInvulnTime() const { return mInvulnTime; }
@@ -60,7 +62,6 @@ class HideAndSeekMode : public GameModeBase {
         bool isUseGravity() const { return mInfo->mIsUseGravity; }
 
 
-        void updateSpectateCam(PlayerActorBase* playerBase);
         void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; }
 
     private:
