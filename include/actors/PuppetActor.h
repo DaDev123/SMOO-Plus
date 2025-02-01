@@ -25,7 +25,7 @@
 #include "algorithms/CaptureTypes.h"
 
 #include "server/freeze/FreezePlayerBlock.h"
-#include "server/hotpotato/HotPotatoPlayerBlock"
+#include "server/hotpotato/HotPotatoPlayerBlock.h"
 
 class PuppetActor : public al::LiveActor {
     public:
