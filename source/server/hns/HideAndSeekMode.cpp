@@ -162,19 +162,6 @@ void HideAndSeekMode::update() {
 
     if (mIsFirstFrame) {
 
-        //Spectate camera
-    if(!mTicket->mIsActive && mInfo->isIt) {
-        al::startCamera(mCurScene, mTicket, -1);
-        al::requestStopCameraVerticalAbsorb(mCurScene);
-    }
-
-    if(mTicket->mIsActive && !mInfo->isIt) {
-        al::endCamera(mCurScene, mTicket, 0, false);
-        al::requestStopCameraVerticalAbsorb(mCurScene);
-    }
-    
-    if(mTicket->mIsActive && mInfo->isIt)
-        updateSpectateCam(player);
 
         if (mInfo->mIsUseGravityCam && mTicket) {
             al::startCamera(mCurScene, mTicket, -1);
@@ -245,6 +232,20 @@ void HideAndSeekMode::update() {
     } else {
         mModeTimer->timerControl();
     }
+
+    //Spectate camera
+    if(!mTicket->mIsActive && mInfo->isIt) {
+        al::startCamera(mCurScene, mTicket, -1);
+        al::requestStopCameraVerticalAbsorb(mCurScene);
+    }
+
+    if(mTicket->mIsActive && !mInfo->isIt) {
+        al::endCamera(mCurScene, mTicket, 0, false);
+        al::requestStopCameraVerticalAbsorb(mCurScene);
+    }
+    
+    if(mTicket->mIsActive && mInfo->isIt)
+        updateSpectateCam(player);
 
     if (mInfo->mIsUseGravity && !isYukimaru) {
         sead::Vector3f gravity;
