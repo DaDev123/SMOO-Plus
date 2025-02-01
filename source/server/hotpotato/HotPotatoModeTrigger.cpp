@@ -31,7 +31,7 @@ void HotPotatoMode::endRound(bool isAbort) {
     if(!mIsEndgameActive) {
         if(!mInfo->mIsPlayerRunner) {
             mInfo->mIsPlayerRunner = true;
-            sendFreezePacket(FreezeUpdateType::PLAYER);
+            sendHotPotatoPacket(HotPotatoUpdateType::HOTPLAYER);
             return;
         }
 
@@ -39,7 +39,7 @@ void HotPotatoMode::endRound(bool isAbort) {
             mInfo->mPlayerTagScore.eventScoreRunnerWin();
 
         if(mInfo->mIsPlayerFreeze)
-            trySetPlayerRunnerState(FreezeState::ALIVE);
+            trySetPlayerRunnerState(HotPotatoState::HOTALIVE);
     }
 }
 
@@ -47,7 +47,7 @@ void HotPotatoMode::endRound(bool isAbort) {
     SET THE RUNNER PLAYER'S FROZEN/ALIVE STATE
 */
 
-bool HotPotatoMode::trySetPlayerRunnerState(FreezeState newState)
+bool HotPotatoMode::trySetPlayerRunnerState(HotPotatoState newState)
 {
     PlayerActorHakoniwa* player = getPlayerActorHakoniwa();
     if(!player)
@@ -60,14 +60,14 @@ bool HotPotatoMode::trySetPlayerRunnerState(FreezeState newState)
 
     mInvulnTime = 0.f;
     
-    if(newState == FreezeState::ALIVE) {
-        mInfo->mIsPlayerFreeze = FreezeState::ALIVE;
+    if(newState == HotPotatoState::HOTALIVE) {
+        mInfo->mIsPlayerFreeze = HotPotatoState::HOTALIVE;
         player->endDemoPuppetable();
     } else {
         if(!mInfo->mIsRound)
             return false;
 
-        mInfo->mIsPlayerFreeze = FreezeState::FREEZE;
+        mInfo->mIsPlayerFreeze = HotPotatoState::HOTFREEZE;
         if(player->getPlayerHackKeeper()->currentHackActor)
             player->getPlayerHackKeeper()->cancelHackArea();
             
@@ -84,7 +84,7 @@ bool HotPotatoMode::trySetPlayerRunnerState(FreezeState newState)
             tryStartEndgameEvent();
     }
 
-    sendFreezePacket(FreezeUpdateType::PLAYER);
+    sendHotPotatoPacket(HotPotatoUpdateType::HOTPLAYER);
 
     return true;
 }
@@ -94,9 +94,9 @@ bool HotPotatoMode::trySetPlayerRunnerState(FreezeState newState)
     FUNCTION CALLED FROM client.cpp ON RECEIVING FREEZE TAG PACKETS
 */
 
-void HotPotatoMode::tryScoreEvent(FreezeTagPacket* incomingPacket, PuppetInfo* sourcePuppet)
+void HotPotatoMode::tryScoreEvent(HotPotatoPacket* incomingPacket, PuppetInfo* sourcePuppet)
 {
-    if(!mCurScene || !sourcePuppet || !GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+    if(!mCurScene || !sourcePuppet || !GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
         return;
     
     if(!mCurScene->mIsAlive)
@@ -112,20 +112,20 @@ void HotPotatoMode::tryScoreEvent(FreezeTagPacket* incomingPacket, PuppetInfo* s
 
     if(isInRange) {
         //Check for unfreeze score event
-        if((mInfo->mIsPlayerRunner && !mInfo->mIsPlayerFreeze) && (sourcePuppet->isFreezeTagFreeze && !incomingPacket->isFreeze)) {
+        if((mInfo->mIsPlayerRunner && !mInfo->mIsPlayerFreeze) && (sourcePuppet->isHotPotatoFreeze && !incomingPacket->isFreeze)) {
             //Verify that the target puppet wasn't frozen via falling off the map
-            if(!sourcePuppet->isFreezeTagFallenOff)
+            if(!sourcePuppet->isHotPotatoFallenOff)
                 mInfo->mPlayerTagScore.eventScoreUnfreeze();
         }
 
         //Check for freeze score event
-        if((!mInfo->mIsPlayerRunner) && (!sourcePuppet->isFreezeTagFreeze && incomingPacket->isFreeze)) {
+        if((!mInfo->mIsPlayerRunner) && (!sourcePuppet->isHotPotatoFreeze && incomingPacket->isFreeze)) {
             mInfo->mPlayerTagScore.eventScoreFreeze();
         }
     }
 
     // Checks if every runner is frozen, starts endgame sequence if so
-    if(!sourcePuppet->isFreezeTagFreeze && incomingPacket->isFreeze && isAllRunnerFrozen(sourcePuppet)) {
+    if(!sourcePuppet->isHotPotatoFreeze && incomingPacket->isFreeze && isAllRunnerFrozen(sourcePuppet)) {
         tryStartEndgameEvent();
     }
 }
@@ -150,7 +150,7 @@ bool HotPotatoMode::tryStartRecoveryEvent(bool isEndgame)
     if(!isEndgame) {
         mRecoverySafetyPoint = player->mPlayerRecoverySafetyPoint->mSafetyPointPos;
         if(mInfo->mIsPlayerRunner && mInfo->mIsRound)
-            sendFreezePacket(FreezeUpdateType::FALLOFF);
+            sendHotPotatoPacket(HotPotatoUpdateType::HOTFALLOFF);
     } else {
         mRecoverySafetyPoint = sead::Vector3f::zero;
     }
@@ -173,11 +173,11 @@ bool HotPotatoMode::tryEndRecoveryEvent()
 
     // Set the player to frozen if they are a runner AND they had a valid recovery point
     if(mInfo->mIsPlayerRunner && mRecoverySafetyPoint != sead::Vector3f::zero && mInfo->mIsRound) {
-        trySetPlayerRunnerState(FreezeState::FREEZE);
+        trySetPlayerRunnerState(HotPotatoState::HOTFREEZE);
         warpToRecoveryPoint(player);
     } else {
-        trySetPlayerRunnerState(FreezeState::ALIVE);
-        trySetPostProcessingType(FreezePostProcessingType::PPDISABLED);
+        trySetPlayerRunnerState(HotPotatoState::HOTALIVE);
+        trySetPostProcessingType(HotPotatoPostProcessingType::HOTPPDISABLED);
     }
 
     // If player is a chaser with a valid recovery point, teleport (and disable collisions)
@@ -186,7 +186,7 @@ bool HotPotatoMode::tryEndRecoveryEvent()
         if(mRecoverySafetyPoint != sead::Vector3f::zero)
             warpToRecoveryPoint(player);
         
-        trySetPostProcessingType(FreezePostProcessingType::PPDISABLED);
+        trySetPostProcessingType(HotPotatoPostProcessingType::HOTPPDISABLED);
     }
 
     // If player is being made alive, force end demo puppet state
@@ -237,10 +237,10 @@ void HotPotatoMode::tryStartEndgameEvent()
     player->mPlayerAnimator->endSubAnim();
     if(mInfo->mIsPlayerRunner) {
         player->mPlayerAnimator->startAnim("RaceResultLose");
-        trySetPostProcessingType(FreezePostProcessingType::PPENDGAMELOSE);
+        trySetPostProcessingType(HotPotatoPostProcessingType::HOTPPENDGAMELOSE);
     } else {
         player->mPlayerAnimator->startAnim("RaceResultWin");
-        trySetPostProcessingType(FreezePostProcessingType::PPENDGAMEWIN);
+        trySetPostProcessingType(HotPotatoPostProcessingType::HOTPPENDGAMEWIN);
         mInfo->mPlayerTagScore.eventScoreWipeout();
     }
     
@@ -251,7 +251,7 @@ void HotPotatoMode::tryStartEndgameEvent()
     SET THE POST PROCESSING STYLE IN THE GAMEMODE
 */
 
-bool HotPotatoMode::trySetPostProcessingType(FreezePostProcessingType type)
+bool HotPotatoMode::trySetPostProcessingType(HotPotatoPostProcessingType type)
 {
     u8 ppIdx = type;
     u32 curIdx = al::getPostProcessingFilterPresetId(mCurScene);
@@ -259,7 +259,7 @@ bool HotPotatoMode::trySetPostProcessingType(FreezePostProcessingType type)
     if(ppIdx == curIdx || !mCurScene)
         return false; // Already set to target post processing type or doesn't have scene, return fail
     
-    if(type == FreezePostProcessingType::PPDISABLED) {
+    if(type == HotPotatoPostProcessingType::HOTPPDISABLED) {
         while(curIdx != ppIdx) {
             al::incrementPostProcessingFilterPreset(mCurScene);
             curIdx = (curIdx + 1) % 18;
