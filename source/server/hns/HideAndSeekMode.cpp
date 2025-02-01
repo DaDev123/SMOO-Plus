@@ -115,9 +115,6 @@ void HideAndSeekMode::begin() {
 
     unpause();
 
-    mSpectateIndex = -1;
-    mPrevSpectateIndex = -2;
-
     mIsFirstFrame = true;
     
     mInvulnTime = 0.0f;
@@ -161,7 +158,6 @@ void HideAndSeekMode::update() {
     bool isYukimaru = !playerBase->getPlayerInfo(); // if PlayerInfo is a nullptr, that means we're dealing with the bound bowl racer
 
     if (mIsFirstFrame) {
-
 
         if (mInfo->mIsUseGravityCam && mTicket) {
             al::startCamera(mCurScene, mTicket, -1);
@@ -233,20 +229,6 @@ void HideAndSeekMode::update() {
         mModeTimer->timerControl();
     }
 
-    //Spectate camera
-    if(!mTicket->mIsActive && mInfo->isIt) {
-        al::startCamera(mCurScene, mTicket, -1);
-        al::requestStopCameraVerticalAbsorb(mCurScene);
-    }
-
-    if(mTicket->mIsActive && !mInfo->isIt) {
-        al::endCamera(mCurScene, mTicket, 0, false);
-        al::requestStopCameraVerticalAbsorb(mCurScene);
-    }
-    
-    if(mTicket->mIsActive && mInfo->isIt)
-        updateSpectateCam(player);
-
     if (mInfo->mIsUseGravity && !isYukimaru) {
         sead::Vector3f gravity;
         if (rs::calcOnGroundNormalOrGravityDir(&gravity, playerBase, playerBase->getPlayerCollision())) {
@@ -273,6 +255,16 @@ void HideAndSeekMode::update() {
         }
     }
 
+  //Spectate camera
+    if(mTicket->mIsActive && mInfo->mIsPlayerIt)
+        updateSpectateCam(playerBase);
+    
+    if(!mTicket->mIsActive && mInfo->mIsPlayerIt)
+        al::startCamera(mCurScene, mTicket, -1);
+    if(mTicket->mIsActive && !mInfo->mIsPlayerIt)
+        al::endCamera(mCurScene, mTicket, 0, false);
+        mSpectateIndex = -1;
+
     if (al::isPadTriggerUp(-1) && !al::isPadHoldZL(-1))
     {
         mInfo->mIsPlayerIt = !mInfo->mIsPlayerIt;
@@ -296,8 +288,6 @@ void HideAndSeekMode::update() {
 
 void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
 {
-
-    
     //If the specate camera ticket is active, get the camera poser
     al::CameraPoser* curPoser;
     al::CameraDirector* director = mCurScene->getCameraDirector();
@@ -362,5 +352,3 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
         mPrevSpectateIndex = mSpectateIndex;
     }
 }
-
-
