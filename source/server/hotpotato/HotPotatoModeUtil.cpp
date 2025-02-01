@@ -13,7 +13,7 @@ bool HotPotatoMode::isPlayerLastSurvivor(PuppetInfo* changingPuppet)
         if(changingPuppet == inf)
             continue; // If the puppet getting updated is the one currently being checked, skip this one
 
-        if(!inf->isFreezeTagFreeze)
+        if(!inf->isHotPotatoFreeze)
             return false; // Found another non-frozen player, not last survivor
     }
 
@@ -33,14 +33,14 @@ bool HotPotatoMode::isAllRunnerFrozen(PuppetInfo* changingPuppet)
         if(changingPuppet == inf)
             continue; // If the puppet getting updated is the one currently being checked, skip this one
 
-        if(!inf->isFreezeTagFreeze)
+        if(!inf->isHotPotatoFreeze)
             return false; // Found a non-frozen player on the runner team, cancel
     }
 
     return true; // All runners are frozen!
 }
 
-PlayerActorHakoniwa* FreezeTagMode::getPlayerActorHakoniwa()
+PlayerActorHakoniwa* HotPotatoMode::getPlayerActorHakoniwa()
 {
     PlayerActorBase* playerBase = rs::getPlayerActor(mCurScene);
     bool isYukimaru = !playerBase->getPlayerInfo();
