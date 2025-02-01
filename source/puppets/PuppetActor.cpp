@@ -257,9 +257,10 @@ void PuppetActor::control() {
                     bool isRun = GameModeManager::instance()->getInfo<FreezeTagInfo>()->mIsPlayerRunner;
                     mNameTag->mIsAlive = (isRun && mInfo->isFreezeTagRunner) || (!isRun && !mInfo->isFreezeTagRunner);
                     break;
+                }
                 case GameMode::HOTPOTATO: {
-                    bool isHotRun = GameModeManager::instance()->getInfo<HotPotatoInfo>()->mIsPlayerRunner;
-                    mNameTag->mIsAlive = (isHotRun && mInfo->isHotPotatoRunner) || (!isHotRun && !mInfo->isHotPotatoRunner);
+                    bool isRun = GameModeManager::instance()->getInfo<HotPotatoInfo>()->mIsPlayerRunner;
+                    mNameTag->mIsAlive = (isRun && mInfo->isHotPotatoRunner) || (!isRun && !mInfo->isHotPotatoRunner);
                     break;
                 }
                 default:
