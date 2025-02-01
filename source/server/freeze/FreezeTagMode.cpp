@@ -311,7 +311,7 @@ void FreezeTagMode::update() {
     if(!mInfo->mIsPlayerRunner) {
         if(!al::isAlive(mMainPlayerIceBlock)) {
             mMainPlayerIceBlock->appear();
-            trySetPostProcessingType(FreezePostProcessingType::PPFROZEN);
+            trySetPostProcessingType(FreezePostProcessingType::PPENDGAMEWIN);
         }
         
         //Lock block onto player
