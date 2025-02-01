@@ -24,8 +24,8 @@ bool newDeathArea(al::LiveActor const* player)
 
     // If player is in a death area but in Freeze Tag or Hot Potato mode, start a recovery event
     if (al::isInAreaObj(player, "DeathArea")) {
-        auto* mode = GameModeManager::instance()->getGameMode();
-        if (mode && !mode->isEndgameActive())
+        FreezeTagMode* mode = GameModeManager::instance()->getMode<FreezeTagMode>();
+        if (!mode->isEndgameActive())
             mode->tryStartRecoveryEvent(false);
     }
 
@@ -34,11 +34,11 @@ bool newDeathArea(al::LiveActor const* player)
 
 void customPlayerHitPointDamage(PlayerHitPointData *thisPtr)
 {
-    // Prevent damage in Freeze Tag or Hot Potato mode
+    // Disable damage in Freeze Tag or Hot Potato mode
     if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
         GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
         return;
-
+    
     int nextHit = thisPtr->mCurrentHit - 1;
     if (nextHit <= 0)
         nextHit = 0;
@@ -52,7 +52,7 @@ void customPlayerHitPointDamage(PlayerHitPointData *thisPtr)
 
 bool forceKidsMode(GameDataFile* thisPtr)
 {
-    // Enable kids mode in Freeze Tag or Hot Potato
+    // Enable Kids Mode in Freeze Tag or Hot Potato
     if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
         GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
         return true;
