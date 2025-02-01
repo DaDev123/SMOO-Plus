@@ -59,5 +59,4 @@ struct PuppetInfo {
     bool isHotPotatoRunner = true;
     bool isHotPotatoFreeze = false;
     bool isHotPotatoFallenOff = false; // When runenr falls off and is automatically frozen, this flag is set
-    float freezeIconSize = 0.f;
 };
