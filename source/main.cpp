@@ -352,8 +352,8 @@ bool threadInit(HakoniwaSequence *mainSeq) {  // hook for initializing client cl
     return GameDataFunction::isPlayDemoOpening(mainSeq->mGameDataHolder);
 }
 
-//  NOCLIP CODE
-// void NoClipCode(al::LiveActor* player);
+  
+ void NoClipCode(al::LiveActor* player);
 
 bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
     StageScene* stageScene = (StageScene*)sequence->curScene;
@@ -485,7 +485,6 @@ void seadPrintHook(const char *fmt, ...)
     va_end(args);
 }
 
-  NOCLIP CODE
 
   void NoClipCode(al::LiveActor* player) {
       float speed = 25.0f;
