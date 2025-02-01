@@ -284,6 +284,7 @@ void HideAndSeekMode::update() {
     mInfo->mHidingTime = mModeTimer->getTime();
 
 }
+}
 
 void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
 {
