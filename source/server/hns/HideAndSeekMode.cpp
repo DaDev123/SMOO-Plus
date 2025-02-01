@@ -283,17 +283,17 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
 {
 
     //Spectate camera
-    if(!mTicket->mIsActive && mInfo->mIsPlayerFreeze) {
+    if(!mTicket->mIsActive && mInfo->isIt) {
         al::startCamera(mCurScene, mTicket, -1);
         al::requestStopCameraVerticalAbsorb(mCurScene);
     }
 
-    if(mTicket->mIsActive && !mInfo->mIsPlayerFreeze) {
+    if(mTicket->mIsActive && !mInfo->isIt) {
         al::endCamera(mCurScene, mTicket, 0, false);
         al::requestStopCameraVerticalAbsorb(mCurScene);
     }
     
-    if(mTicket->mIsActive && mInfo->mIsPlayerFreeze)
+    if(mTicket->mIsActive && mInfo->isIt)
         updateSpectateCam(player);
     //If the specate camera ticket is active, get the camera poser
     al::CameraPoser* curPoser;
