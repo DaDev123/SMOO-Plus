@@ -8,59 +8,63 @@
 #include "rs/util/InputUtil.h"
 #include "rs/util/SensorUtil.h"
 #include "server/Client.hpp"
-#include "server/freeze/FreezeTagMode.hpp
+#include "server/freeze/FreezeTagMode.hpp"
 #include "server/hotpotato/HotPotatoMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 
 #include "al/nerve/Nerve.h"
 #include "rs/util.hpp"
 
-bool freezeDeathArea(al::LiveActor const* player)
+bool newDeathArea(al::LiveActor const* player)
 {
-    // If player isn't actively playing freeze tag, perform normal functionality
-    if (!GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+    // If player isn't actively playing Freeze Tag or Hot Potato, perform normal functionality
+    if (!GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) &&
+        !GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
         return al::isInDeathArea(player);
 
-    // If player is in a death area but in Freeze Tag mode, start a recovery event
+    // If player is in a death area but in Freeze Tag or Hot Potato mode, start a recovery event
     if (al::isInAreaObj(player, "DeathArea")) {
-        FreezeTagMode* mode = GameModeManager::instance()->getMode<FreezeTagMode>();
-        if (!mode->isEndgameActive())
+        auto* mode = GameModeManager::instance()->getActiveMode();
+        if (mode && !mode->isEndgameActive())
             mode->tryStartRecoveryEvent(false);
     }
 
     return false;
 }
 
-void playerHitPointDamage(PlayerHitPointData *thisPtr)
+void customPlayerHitPointDamage(PlayerHitPointData *thisPtr)
 {
-    if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+    // Prevent damage in Freeze Tag or Hot Potato mode
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
         return;
-    
-    int nextHit = 0;
-    int maxUpVal = 0;
 
-    nextHit = thisPtr->mCurrentHit - 1;
+    int nextHit = thisPtr->mCurrentHit - 1;
     if (nextHit <= 0)
         nextHit = 0;
     
     thisPtr->mCurrentHit = nextHit;
 
-    if (!thisPtr->mIsForceNormalHealth )
+    if (!thisPtr->mIsForceNormalHealth)
         if (nextHit <= (thisPtr->mIsKidsMode ? 6 : 3))
             thisPtr->mIsHaveMaxUpItem = false;
 }
 
-bool freezeKidsMode(GameDataFile* thisPtr)
+bool forceKidsMode(GameDataFile* thisPtr)
 {
-    if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+    // Enable kids mode in Freeze Tag or Hot Potato
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
         return true;
     
     return thisPtr->mIsKidsMode;
 }
 
-bool freezeMoonHitboxDisable(al::IUseNerve* nrvUse, al::Nerve* nrv)
+bool customMoonHitboxDisable(al::IUseNerve* nrvUse, al::Nerve* nrv)
 {
-    if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+    // Disable moon hitbox in Freeze Tag or Hot Potato
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
         return true;
 
     return al::isNerve(nrvUse, nrv);
