@@ -286,7 +286,7 @@ void HideAndSeekMode::update() {
 
 }
 
-void FreezeTagMode::updateSpectateCam(PlayerActorBase* playerBase)
+void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
 {
     //If the specate camera ticket is active, get the camera poser
     al::CameraPoser* curPoser;
