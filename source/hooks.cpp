@@ -24,6 +24,7 @@
 #include "rs/util/InputUtil.h"
 #include "sead/prim/seadSafeString.h"
 #include "server/freeze/FreezeTagMode.hpp"
+#include "server/hotpotato/HotPotatoMode.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 
 bool checkpointPatch()
@@ -36,6 +37,25 @@ bool checkpointPatch()
 
 bool comboBtnHook(int port) {
     if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+        return false;
+
+    if (GameModeManager::instance()->isActive()) { // only switch to combo if any gamemode is active
+        return !al::isPadHoldL(port) && al::isPadTriggerDown(port);
+    } else {
+        return al::isPadTriggerDown(port);
+    }
+}
+
+bool checkpointPatchHot()
+{
+    if (GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
+        return false;
+    
+    return true;
+}
+
+bool comboBtnHookHot(int port) {
+    if(GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
         return false;
 
     if (GameModeManager::instance()->isActive()) { // only switch to combo if any gamemode is active
@@ -174,6 +194,22 @@ al::PlayerHolder* createTicketHook(StageScene* curScene) {
                     "CameraPoserActorSpectate", nullptr, 0, 5, sead::Matrix34f::ident);
 
                 FreezeTagMode* mode = GameModeManager::instance()->getMode<FreezeTagMode>();
+
+                mode->setCameraTicket(spectateCamera);
+            }
+        }
+    }
+
+    return al::getScenePlayerHolder(curScene);
+
+if (GameModeManager::instance()->isMode(GameMode::HOTPOTATO)) {
+        al::CameraDirector* director = curScene->getCameraDirector();
+        if (director) {
+            if (director->mFactory) {
+                al::CameraTicket* spectateCamera = director->createCameraFromFactory(
+                    "CameraPoserActorSpectate", nullptr, 0, 5, sead::Matrix34f::ident);
+
+                HotPotatoMode* mode = GameModeManager::instance()->getMode<HotPotatoMode>();
 
                 mode->setCameraTicket(spectateCamera);
             }

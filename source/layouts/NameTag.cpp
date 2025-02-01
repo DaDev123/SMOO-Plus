@@ -5,6 +5,7 @@
 #include "al/util.hpp"
 #include "al/util/NerveUtil.h"
 #include "server/freeze/FreezeTagMode.hpp"
+#include "server/hotpotato/HotPotatoMode.hpp"
 #include "logger.hpp"
 #include "sead/math/seadVector.h"
 
@@ -82,6 +83,11 @@ void NameTag::updateTrans() {
             mNormalizedDist = al::clamp(mNormalizedDist, 0.5f, 1.f);
     }
 
+    if(GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO)) {
+        if(mPuppet->getInfo()->isHotPotatoFreeze)
+            mNormalizedDist = al::clamp(mNormalizedDist, 0.5f, 1.f);
+    }
+
     al::setLocalScale(this, mNormalizedDist);
     
 }
@@ -115,6 +121,11 @@ void NameTag::setText(const char* text) {
 bool NameTag::isNearPlayerActor(float dist) const {
     // Freeze tag specific checks for frozen
     if(mPuppet->getInfo()->isFreezeTagFreeze)
+        return true;
+    
+    return al::isNearPlayer(mPuppet->getCurrentModel(), dist);
+
+if(mPuppet->getInfo()->isHotPotatoFreeze)
         return true;
     
     return al::isNearPlayer(mPuppet->getCurrentModel(), dist);

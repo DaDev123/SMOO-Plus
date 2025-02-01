@@ -35,6 +35,7 @@
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/freeze/FreezeTagMode.hpp"
+#include "server/hotpotato/HotPotatoMode.hpp"
 #include "layouts/InfectionIcon.h"
 
 static int pInfSendTimer = 0;
@@ -472,6 +473,9 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
 
     if(isFirstStep && GameModeManager::instance()->isMode(GameMode::FREEZETAG))
         GameModeManager::instance()->getMode<FreezeTagMode>()->setWipeHolder(sequence->mWipeHolder);
+
+    if(isFirstStep && GameModeManager::instance()->isMode(GameMode::HOTPOTATO))
+        GameModeManager::instance()->getMode<HotPotatoMode>()->setWipeHolder(sequence->mWipeHolder);
 
     return isFirstStep;
 

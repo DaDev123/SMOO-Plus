@@ -3,6 +3,7 @@
 #include "al/factory/Factory.h"
 #include "server/hns/HideAndSeekConfigMenu.hpp"
 #include "server/freeze/FreezeTagConfigMenu.hpp"
+#include "server/hotpotato/HotPotatoConfigMenu.hpp"
 #include "server/snh/SardineConfigMenu.hpp"
 #include "server/inf/InfectionConfigMenu.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
@@ -19,6 +20,7 @@ __attribute((used)) constexpr al::NameToCreator<createMenu> menuTable[] = {
     {"Sardine", &createGameModeConfigMenu<SardineConfigMenu>},
     {"FreezeTag", &createGameModeConfigMenu<FreezeTagConfigMenu>},
     {"Infection", &createGameModeConfigMenu<InfectionConfigMenu>},
+    {"HotPotato", &createGameModeConfigMenu<HotPotatoConfigMenu>},
 };
 
 class GameModeConfigMenuFactory : public al::Factory<createMenu> {

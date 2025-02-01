@@ -22,6 +22,7 @@
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/snh/SardineMode.hpp"
 #include "server/freeze/FreezeTagMode.hpp"
+#include "server/hotpotato/HotPotatoMode.hpp"
 #include "server/inf/InfectionMode.hpp"
 
 static const char *subActorNames[] = {
@@ -95,6 +96,10 @@ void PuppetActor::init(al::ActorInitInfo const &initInfo) {
         mFreezeTagIceBlock = new FreezePlayerBlock("PuppetIceBlock");
         mFreezeTagIceBlock->init(initInfo);
     }
+    if(GameModeManager::instance()->isMode(GameMode::HOTPOTATO)) {
+        mHotPotatoIceBlock = new HotPlayerBlock("PuppetIceBlock");
+        mHotPotatoIceBlock->init(initInfo);
+    }
 }
 
 void PuppetActor::initAfterPlacement() { al::LiveActor::initAfterPlacement(); }
@@ -120,6 +125,20 @@ if(mFreezeTagIceBlock) {
         
         al::setTrans(mFreezeTagIceBlock, mInfo->playerPos);
         al::setQuat(mFreezeTagIceBlock, mInfo->playerRot);
+    }
+
+if(mHotPotatoIceBlock) {
+        if(mInfo->isHotPotatoFreeze && mInfo->isConnected && mInfo->isInSameStage && !al::isAlive(mHotPotatoIceBlock))
+            mHotPotatoIceBlock->appear();
+        
+        if((!mInfo->isHotPotatoFreeze || !mInfo->isConnected || !mInfo->isInSameStage) && al::isAlive(mHotPotatoIceBlock)
+            && !al::isNerve(mHotPotatoIceBlock, &nrvHotPlayerBlockDisappear))
+        {
+            mHotPotatoIceBlock->end();
+        }
+        
+        al::setTrans(mHotPotatoIceBlock, mInfo->playerPos);
+        al::setQuat(mHotPotatoIceBlock, mInfo->playerRot);
     }
 }
 
@@ -237,6 +256,11 @@ void PuppetActor::control() {
                     mNameTag->mIsAlive = (isRun && mInfo->isFreezeTagRunner) || (!isRun && !mInfo->isFreezeTagRunner);
                     break;
                 }
+                case GameMode::HOTPOTATO: {
+                    bool isRun = GameModeManager::instance()->getInfo<HotPotatoInfo>()->mIsPlayerRunner;
+                    mNameTag->mIsAlive = (isRun && mInfo->isHotPotatoRunner) || (!isRun && !mInfo->isHotPotatoRunner);
+                    break;
+                }
                 default:
                     Logger::log("Name tag display failed due to unknown active game mode!\n");
                     break;
@@ -287,6 +311,9 @@ void PuppetActor::makeActorDead() {
 
     if(mFreezeTagIceBlock)
         mFreezeTagIceBlock->makeActorDead();
+
+    if(mHotPotatoIceBlock)
+        mHotPotatoIceBlock->makeActorDead();
 }
 
 void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {

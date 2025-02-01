@@ -21,7 +21,8 @@ enum GameMode : s8 {
     HIDEANDSEEK,
     SARDINE,
     FREEZETAG,
-    Infection
+    Infection,
+    HOTPOTATO
 };
 
 // struct containing info about the games state for use in gamemodes

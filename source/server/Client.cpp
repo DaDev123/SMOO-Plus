@@ -9,6 +9,7 @@
 #include "server/inf/InfectionMode.hpp"
 #include "server/snh/SardineMode.hpp"
 #include "server/freeze/FreezeTagMode.hpp"
+#include "server/hotpotato/HotPotatoMode.hpp"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
