@@ -67,7 +67,7 @@ public:
 
     void processPacket(Packet* packet) override;
     Packet* createPacket() override;
-    void sendHotPotatoPacket(FreezeUpdateType updateType); // Called instead of Client::sendGamemodePacket(), allows setting packet type
+    void sendHotPotatoPacket(HotPotatoUpdateType updateType); // Called instead of Client::sendGamemodePacket(), allows setting packet type
 
     void startRound(int roundMinutes); // Actives round on this specific client
     void endRound(bool isAbort); // Ends round, allows setting for if this was a natural end or abort (used for scoring)
@@ -82,13 +82,13 @@ public:
     PlayerActorHakoniwa* getPlayerActorHakoniwa(); // Returns nullptr if the player is not a PlayerActorHakoniwa
     uint16_t getScore() { return mInfo->mPlayerTagScore.mScore; }
 
-    bool trySetPlayerRunnerState(FreezeState state); // Sets runner to alive or frozen, many safety checks
+    bool trySetPlayerRunnerState(HotPotatoState state); // Sets runner to alive or frozen, many safety checks
     void tryStartEndgameEvent(); // Starts the WIPEOUT message event
     bool tryStartRecoveryEvent(bool isEndgame); // Returns player to a chaser's position or last stood position, unless endgame variant
     bool tryEndRecoveryEvent(); // Called after the fade of the recovery event
-    void tryScoreEvent(FreezeTagPacket* incomingPacket, PuppetInfo* sourcePuppet); // Attempt score gain when getting a packet
+    void tryScoreEvent(HotPotatoPacket* incomingPacket, PuppetInfo* sourcePuppet); // Attempt score gain when getting a packet
     void setWipeHolder(al::WipeHolder* wipe) { mWipeHolder = wipe; }; // Called with HakoniwaSequence hook, wipe used in recovery event
-    bool trySetPostProcessingType(FreezePostProcessingType type); // Sets the post processing type, also used for disabling
+    bool trySetPostProcessingType(HotPotatoPostProcessingType type); // Sets the post processing type, also used for disabling
     
     void warpToRecoveryPoint(al::LiveActor* actor); // Warps runner to chaser OR if impossible, last standing position
 
