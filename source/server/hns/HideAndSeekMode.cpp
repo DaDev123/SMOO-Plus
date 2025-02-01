@@ -27,6 +27,10 @@
 #include "basis/seadNew.h"
 #include "server/hns/HideAndSeekConfigMenu.hpp"
 
+//Spectator
+#include "al/util/CameraUtil.h"
+#include "cameras/CameraPoserActorSpectate.h"
+
 HideAndSeekMode::HideAndSeekMode(const char* name) : GameModeBase(name) {}
 
 void HideAndSeekMode::init(const GameModeInitInfo& info) {
@@ -265,10 +269,71 @@ void HideAndSeekMode::update() {
         }
 
         Client::sendGamemodePacket();
-    }
+
 
     mInfo->mHidingTime = mModeTimer->getTime();
+
+    //Spectate camera
+    if(mTicket->mIsActive && mInfo->mIsPlayerFreeze)
+        updateSpectateCam(playerBase);
+    
+    if(!mTicket->mIsActive && mInfo->mIsPlayerFreeze)
+        al::startCamera(mCurScene, mTicket, -1);
+    if(mTicket->mIsActive && !mInfo->mIsPlayerFreeze)
+        al::endCamera(mCurScene, mTicket, 0, false);
 }
+
+void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
+{
+    //If the specate camera ticket is active, get the camera poser
+    al::CameraPoser* curPoser;
+    al::CameraDirector* director = mCurScene->getCameraDirector();
+    if (director) {
+        al::CameraPoseUpdater* updater = director->getPoseUpdater(0);
+        if (updater && updater->mTicket) {
+            curPoser = updater->mTicket->mPoser;
+        }
+    }
+    
+    //Verify 100% that this poser is the actor spectator
+    if (al::isEqualString(curPoser->getName(), "CameraPoserActorSpectate")) {
+        cc::CameraPoserActorSpectate* spectatePoser = (cc::CameraPoserActorSpectate*)curPoser;
+        spectatePoser->setPlayer(playerBase);
+        //Increase or decrease spectate index, followed by clamping it
+        int indexDirection = 0;
+        if(al::isPadTriggerRight(-1)) indexDirection = 1; //Move index right
+        if(al::isPadTriggerLeft(-1)) indexDirection = -1; //Move index left
+        //Force index to increase if your current target changes stages
+        if(mSpectateIndex != -1)
+            if(!mInfo->mIsPlayerIt.at(mSpectateIndex)->isInSameStage)
+                indexDirection = 1; //Move index right
+        //Loop over indexs until you find a sutible one in the same stage
+        bool isFinalIndex = false;
+        while(!isFinalIndex) {
+            mSpectateIndex += indexDirection;
+            // Start by clamping the index
+            if(mSpectateIndex < -1) mSpectateIndex = mInfo->mIsPlayerIt.size() - 1;
+            if(mSpectateIndex >= mInfo->mIsPlayerIt.size()) mSpectateIndex = -1;
+            // If not in same stage, skip
+            if(mSpectateIndex != -1) {
+                if(mInfo->mIsPlayerIt.at(mSpectateIndex)->isInSameStage)
+                    isFinalIndex = true;
+            } else {
+                isFinalIndex = true;
+            }
+        }
+        
+        //If no index change is happening, end here
+        if(mPrevSpectateIndex == mSpectateIndex)
+            return;
+        //Apply index to target actor and HUD
+        if(mSpectateIndex == -1) {
+            spectatePoser->setTargetActor(al::getTransPtr(playerBase));
+        } else {
+            spectatePoser->setTargetActor(&mInfo->mIsPlayerIt.at(mSpectateIndex)->playerPos);
+           }
+        mPrevSpectateIndex = mSpectateIndex;
+    }
 
 
 // Hooks
