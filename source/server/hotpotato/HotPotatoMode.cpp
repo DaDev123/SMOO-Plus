@@ -257,9 +257,10 @@ void HotPotatoMode::update() {
                 if(!mInfo->mIsPlayerRunner)
                     continue;
 
-                //Check for freeze
-                if (!mInfo->mIsPlayerFreeze && pupDist < 250.f && isP2D == curInfo->is2D && !isPDead && !curInfo->isHotPotatoRunner)
-                    trySetPlayerRunnerState(HotState::HOTFREEZE);
+                // Check to invert the player's Runner state
+if (!mInfo->mIsPlayerFreeze && pupDist < 250.f && isP2D == curInfo->is2D && !isPDead && !curInfo->isHotPotatoRunner)
+    trySetPlayerRunnerState(!mInfo->mIsPlayerRunner);
+
 
                 //Check for unfreeze
                 float hotMinTime = al::clamp(3.f + (mInfo->mFreezeCount * 0.5f), 3.f, 7.f);
