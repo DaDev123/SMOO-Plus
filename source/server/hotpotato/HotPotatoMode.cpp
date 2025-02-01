@@ -349,9 +349,9 @@ void HotPotatoMode::update() {
     //Debug freeze buttons
     if (mInfo->mIsDebugMode) {
         if (al::isPadTriggerRight(-1) && al::isPadHoldX(-1) && mInfo->mIsPlayerRunner)
-            trySetPlayerRunnerState(FreezeState::ALIVE);
+            trySetPlayerRunnerState(HotPotatoState::HOTALIVE);
         if (al::isPadTriggerRight(-1) && al::isPadHoldY(-1) && mInfo->mIsPlayerRunner)
-            trySetPlayerRunnerState(FreezeState::FREEZE);
+            trySetPlayerRunnerState(HotPotatoState::HOTFREEZE);
         if (al::isPadTriggerRight(-1) && al::isPadHoldA(-1))
             mInfo->mPlayerTagScore.eventScoreDebug();
         if (al::isPadTriggerRight(-1) && al::isPadHoldB(-1))
