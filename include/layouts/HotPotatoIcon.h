@@ -43,7 +43,7 @@ public:
     void exeEnd();
 
 private:
-    struct HitPotatoInfo* mInfo;
+    struct HotPotatoInfo* mInfo;
 
     // Runner and chaser display info
     sead::PtrArray<HotPotatoRunnerSlot> mRunnerSlots;
