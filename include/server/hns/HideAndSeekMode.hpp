@@ -70,8 +70,10 @@ class HideAndSeekMode : public GameModeBase {
         GameModeTimer* mModeTimer = nullptr;
         HideAndSeekIcon *mModeLayout = nullptr;
         HideAndSeekInfo* mInfo = nullptr;
-        al::CameraTicket *mTicket = nullptr;
+        // Spectate camera ticket and target information
+    al::CameraTicket* mTicket = nullptr;
     int mPrevSpectateIndex = -2;
     int mSpectateIndex = -1;
+};
 
 };
