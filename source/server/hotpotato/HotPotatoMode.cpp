@@ -257,14 +257,11 @@ void HotPotatoMode::update() {
                 if(!mInfo->mIsPlayerRunner)
                     continue;
 
-                // Check to invert the player's Runner state
+                // Check to invert the player's Runner state manually
 if (!mInfo->mIsPlayerFreeze && pupDist < 250.f && isP2D == curInfo->is2D && !isPDead && !curInfo->isHotPotatoRunner) {
-    if (mInfo->mIsPlayerRunner) {
-        trySetPlayerRunnerState(HotState::NOTRUNNER);  // Set to NOTRUNNER if currently a runner
-    } else {
-        trySetPlayerRunnerState(HotState::RUNNER);  // Set to RUNNER if currently not a runner
-    }
+    mInfo->mIsPlayerRunner = !mInfo->mIsPlayerRunner;  // Directly invert the player's Runner state
 }
+
 
 
 
