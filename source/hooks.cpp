@@ -28,7 +28,6 @@
 #include "server/hns/HideAndSeekMode.hpp"
 
 bool checkpointPatch()
-bool checkpointPatch()
 {
     // Désactiver les checkpoints en mode Freeze Tag ou Hot Potato
     if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
