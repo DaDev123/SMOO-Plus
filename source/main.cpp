@@ -457,16 +457,22 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
         }
     }
     
-    static bool oneTimeDeal = true;
-      if (al::isPadHoldR(-1)) {
-         NoClipCode(playerBase);
-          oneTimeDeal = true;
-     } else {
-         if (oneTimeDeal) {
-             oneTimeDeal = false;
-              al::onCollide(playerBase);
-          }
-      }
+    static bool noClipEnabled = false;  // Tracks whether NoClip is active
+static bool prevRState = false;     // Tracks the previous state of the R button
+
+bool currentRState = al::isPadHoldR(-1);  // Check current R button state
+
+if (currentRState && !prevRState) {  // Detect if R was just pressed
+    noClipEnabled = !noClipEnabled;  // Toggle NoClip mode
+}
+
+if (noClipEnabled) {
+    NoClipCode(playerBase);
+} else {
+    al::onCollide(playerBase);
+}
+
+prevRState = currentRState;  // Update the previous state
 
     if(isFirstStep && GameModeManager::instance()->isMode(GameMode::FREEZETAG))
         GameModeManager::instance()->getMode<FreezeTagMode>()->setWipeHolder(sequence->mWipeHolder);
