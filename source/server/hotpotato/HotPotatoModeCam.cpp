@@ -1,7 +1,7 @@
 #include "server/hotpotato/HotPotatoMode.hpp"
 #include "cameras/CameraPoserActorSpectate.h"
 
-void HotPotatlMode::updateSpectateCam(PlayerActorBase* playerBase)
+void HotPotatoMode::updateSpectateCam(PlayerActorBase* playerBase)
 {
     //If the specate camera ticket is active, get the camera poser
     al::CameraPoser* curPoser;
