@@ -281,6 +281,7 @@ void HideAndSeekMode::update() {
         al::startCamera(mCurScene, mTicket, -1);
     if(mTicket->mIsActive && !mInfo->mIsPlayerFreeze)
         al::endCamera(mCurScene, mTicket, 0, false);
+        mSpectateIndex = -1;
 }
 
 void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
