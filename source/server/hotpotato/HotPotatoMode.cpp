@@ -67,11 +67,11 @@ void HotPotatoMode::init(const GameModeInitInfo& info) {
     Logger::log("Scene Heap Free Size: %f/%f\n", al::getSceneHeap()->getFreeSize() * 0.001f, al::getSceneHeap()->getSize() * 0.001f);
 
     // Create main player's ice block
-    mMainPlayerIceBlock = new FreezePlayerBlock("MainPlayerBlock");
+    mMainPlayerIceBlock = new HotPotatoPlayerBlock("MainPlayerBlock");
     mMainPlayerIceBlock->init(*info.mActorInitInfo);
 
     // Create hint arrow
-    mHintArrow = new FreezeHintArrow("ChaserHintArrow");
+    mHintArrow = new HotPotatoHintArrow("ChaserHintArrow");
     mHintArrow->init(*info.mActorInitInfo);
 }
 
@@ -82,7 +82,7 @@ void HotPotatoMode::processPacket(Packet *packet) {
     if (!curInfo)
         return;
 
-    if (frzPak->updateType & FreezeUpdateType::HOTPLAYER) {
+    if (frzPak->updateType & HotPotatoUpdateType::HOTPLAYER) {
         tryScoreEvent(frzPak, curInfo);
 
         // When puppet transitioning from frozen to unfrozen, disable the fall off flag
@@ -94,15 +94,15 @@ void HotPotatoMode::processPacket(Packet *packet) {
         curInfo->freezeTagScore = frzPak->score;
     }
 
-    if (frzPak->updateType & FreezeUpdateType::HOTROUNDSTART && !mInfo->mIsRound) {
+    if (frzPak->updateType & HotPotatoUpdateType::HOTROUNDSTART && !mInfo->mIsRound) {
         HotPotatoRoundPacket* roundPak = (HotPotatoRoundPacket*)frzPak;
         startRound(al::clamp(roundPak->roundTime, u8(2), u8(60))); // Start round if round not already started
     }
 
-    if (frzPak->updateType & FreezeUpdateType::HOTROUNDCANCEL && mInfo->mIsRound)
+    if (frzPak->updateType & HotPotatoUpdateType::HOTROUNDCANCEL && mInfo->mIsRound)
         endRound(true); // Abort round early on receiving cancel packet
 
-    if (frzPak->updateType & FreezeUpdateType::HOTFALLOFF && mInfo->mIsRound) {
+    if (frzPak->updateType & HotPotatoUpdateType::HOTFALLOFF && mInfo->mIsRound) {
         curInfo->isHotPotatoFallenOff = true;
         
         if(!mInfo->mIsPlayerRunner)
@@ -116,7 +116,7 @@ Packet* HotPotatoMode::createPacket() {
     packet->mUserID = Client::getClientId();
     packet->updateType = mNextUpdateType;
 
-    if(packet->updateType != FreezeUpdateType::HOTROUNDSTART) {
+    if(packet->updateType != HotPotatoUpdateType::HOTROUNDSTART) {
         packet->isRunner = mInfo->mIsPlayerRunner;
         packet->isFreeze = mInfo->mIsPlayerFreeze;
         packet->score = mInfo->mPlayerTagScore.mScore;
@@ -130,7 +130,7 @@ Packet* HotPotatoMode::createPacket() {
     return roundPak;
 }
 
-void HotPotatoMode::sendFreezePacket(FreezeUpdateType updateType) {
+void HotPotatoMode::sendHotPotatoPacket(HotPotatoUpdateType updateType) {
     mNextUpdateType = updateType;
     Client::sendGamemodePacket();
 }
@@ -152,7 +152,7 @@ void HotPotatoMode::begin() {
     hit->mCurrentHit = hit->getMaxCurrent();
     hit->mIsKidsMode = true;
 
-    sendFreezePacket(FreezeUpdateType::PLAYER);
+    sendHotPotatoPacket(HotPotatoUpdateType::HOTPLAYER);
 
     GameModeBase::begin();
 
@@ -169,14 +169,14 @@ void HotPotatoMode::end() {
     
     if(!GameModeManager::instance()->isPaused()) {
         if(mInfo->mIsPlayerFreeze)
-            trySetPlayerRunnerState(FreezeState::ALIVE);
+            trySetPlayerRunnerState(HotPotatoState::HOTALIVE);
         
         if(mTicket->mIsActive)
             al::endCamera(mCurScene, mTicket, 0, false);
         
         if(al::isAlive(mMainPlayerIceBlock) && !al::isNerve(mMainPlayerIceBlock, &nrvFreezePlayerBlockDisappear)) {
             mMainPlayerIceBlock->end();
-            trySetPostProcessingType(FreezePostProcessingType::HOTPPFROZEN);
+            trySetPostProcessingType(HotPotatoPostProcessingType::HOTPPFROZEN);
         }
     }
 
@@ -231,7 +231,7 @@ void HotPotatoMode::update() {
 
     //Verify you are never frozen on chaser team
     if(!mInfo->mIsPlayerRunner && mInfo->mIsPlayerFreeze)
-        trySetPlayerRunnerState(FreezeState::ALIVE);
+        trySetPlayerRunnerState(HotPotatoState::HOTALIVE);
     
     mInvulnTime += Time::deltaTime;
 
@@ -262,13 +262,13 @@ void HotPotatoMode::update() {
 
                 //Check for hotpotato
                 if (!mInfo->mIsPlayerFreeze && pupDist < 250.f && isP2D == curInfo->is2D && !isPDead && !curInfo->isHotPotatoRunner)
-                    trySetPlayerRunnerState(FreezeState::FREEZE);
+                    trySetPlayerRunnerState(HotPotatoState::HOTFREEZE);
 
                 //Check for unfreeze
                 float freezeMinTime = al::clamp(3.f + (mInfo->mFreezeCount * 0.5f), 3.f, 7.f);
                 if (mInvulnTime >= freezeMinTime && mInfo->mIsPlayerFreeze && pupDist < 200.f && isP2D == curInfo->is2D
                 && !isPDead && curInfo->isHotPotatoRunner && !curInfo->isHotPotatoFreeze) {
-                    trySetPlayerRunnerState(FreezeState::ALIVE);
+                    trySetPlayerRunnerState(HotPotatoState::HOTALIVE);
                 }
             }
         }
@@ -293,7 +293,7 @@ void HotPotatoMode::update() {
         if(mEndgameTimer > 6.f) {
             mInfo->mIsPlayerRunner = true;
             mInvulnTime = 0.f;
-            sendFreezePacket(FreezeUpdateType::PLAYER);
+            sendHotPotatoPacket(HotPotatoUpdateType::HOTPLAYER);
 
             mIsEndgameActive = false;
             tryStartRecoveryEvent(true);
@@ -304,14 +304,14 @@ void HotPotatoMode::update() {
     HotPotatoScore* score = &mInfo->mPlayerTagScore;
     if(score->mScore != score->mPrevScore) {
         score->mPrevScore = score->mScore;
-        sendFreezePacket(FreezeUpdateType::PLAYER);
+        sendHotPotatoPacket(HotPotatoUpdateType::HOTPLAYER);
     };
 
     // Main player's ice block state and post processing
     if(mInfo->mIsPlayerFreeze) {
         if(!al::isAlive(mMainPlayerIceBlock)) {
             mMainPlayerIceBlock->appear();
-            trySetPostProcessingType(FreezePostProcessingType::HOTPPFROZEN);
+            trySetPostProcessingType(HotPotatoPostProcessingType::HOTPPFROZEN);
         }
         
         //Lock block onto player
@@ -321,7 +321,7 @@ void HotPotatoMode::update() {
     } else {
         if(al::isAlive(mMainPlayerIceBlock) && mMainPlayerIceBlock->mIsLocked) {
             mMainPlayerIceBlock->end();
-            trySetPostProcessingType(FreezePostProcessingType::HOTPPFROZEN);
+            trySetPostProcessingType(HotPotatoPostProcessingType::HOTPPFROZEN);
         }
     }
 
@@ -331,7 +331,7 @@ void HotPotatoMode::update() {
         mInfo->mIsPlayerRunner = !mInfo->mIsPlayerRunner;
         mInvulnTime = 0.f;
 
-        sendFreezePacket(FreezeUpdateType::PLAYER);
+        sendHotPotatoPacket(HotPotatoUpdateType::HOTPLAYER);
     }
 
     if (al::isPadTriggerDown(-1) && al::isPadHoldL(-1) && !mInfo->mIsPlayerFreeze && mRecoveryEventFrames == 0 && !mIsEndgameActive)
@@ -339,11 +339,11 @@ void HotPotatoMode::update() {
     
     if (al::isPadTriggerUp(-1) && al::isPadHoldR(-1) && mInfo->mIsHostMode && !mInfo->mIsRound) {
         startRound(mInfo->mRoundLength);
-        sendFreezePacket(FreezeUpdateType::ROUNDSTART);
+        sendHotPotatoPacket(HotPotatoUpdateType::HOTROUNDSTART);
     }
     if (al::isPadTriggerDown(-1) && al::isPadHoldR(-1) && mInfo->mIsHostMode && mInfo->mIsRound) {
         endRound(true);
-        sendFreezePacket(FreezeUpdateType::ROUNDCANCEL);
+        sendHotPotatoPacket(HotPotatoUpdateType::HOTROUNDCANCEL);
     }
 
     //Debug freeze buttons
