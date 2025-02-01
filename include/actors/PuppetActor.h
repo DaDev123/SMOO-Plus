@@ -25,6 +25,7 @@
 #include "algorithms/CaptureTypes.h"
 
 #include "server/freeze/FreezePlayerBlock.h"
+#include "server/hotpotato/HotPotatoPlayerBlock"
 
 class PuppetActor : public al::LiveActor {
     public:
@@ -95,6 +96,7 @@ class PuppetActor : public al::LiveActor {
 
         float mClosingSpeed = 0;
         FreezePlayerBlock* mFreezeTagIceBlock = nullptr;
+        HotPotatoPlayerBlock* mHotPotatoIceBlock = nullptr;
 };
 
 PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo,
