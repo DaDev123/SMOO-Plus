@@ -274,12 +274,12 @@ void HideAndSeekMode::update() {
     mInfo->mHidingTime = mModeTimer->getTime();
 
     //Spectate camera
-    if(mTicket->mIsActive && mInfo->mIsPlayerFreeze)
+    if(mTicket->mIsActive && mInfo->mIsPlayerIt)
         updateSpectateCam(playerBase);
     
-    if(!mTicket->mIsActive && mInfo->mIsPlayerFreeze)
+    if(!mTicket->mIsActive && mInfo->mIsPlayerIt)
         al::startCamera(mCurScene, mTicket, -1);
-    if(mTicket->mIsActive && !mInfo->mIsPlayerFreeze)
+    if(mTicket->mIsActive && !mInfo->mIsPlayerIt)
         al::endCamera(mCurScene, mTicket, 0, false);
         mSpectateIndex = -1;
 }
@@ -335,11 +335,7 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
            }
         mPrevSpectateIndex = mSpectateIndex;
     }
+}
 
 
 // Hooks
-
-namespace al {
-    class Triangle;
-    bool isFloorCode(al::Triangle const&,char const*);
-}
