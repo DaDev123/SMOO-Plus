@@ -171,9 +171,6 @@ void HotPotatoMode::end() {
         if(mInfo->mIsPlayerFreeze)
             trySetPlayerRunnerState(HotState::HOTALIVE);
         
-        if(mTicket->mIsActive)
-            al::endCamera(mCurScene, mTicket, 0, false);
-        
         if(al::isAlive(mMainPlayerIceBlock) && !al::isNerve(mMainPlayerIceBlock, &nrvHotPlayerBlockDisappear)) {
             mMainPlayerIceBlock->end();
             trySetPostProcessingType(HotPostProcessingType::HOTPPDISABLED);
@@ -363,18 +360,4 @@ void HotPotatoMode::update() {
     // Verify standard hud is hidden
     if(!mCurScene->mSceneLayout->isEnd())
         mCurScene->mSceneLayout->end();
-
-    //Spectate camera
-    if(!mTicket->mIsActive && mInfo->mIsPlayerFreeze) {
-        al::startCamera(mCurScene, mTicket, -1);
-        al::requestStopCameraVerticalAbsorb(mCurScene);
     }
-
-    if(mTicket->mIsActive && !mInfo->mIsPlayerFreeze) {
-        al::endCamera(mCurScene, mTicket, 0, false);
-        al::requestStopCameraVerticalAbsorb(mCurScene);
-    }
-    
-    if(mTicket->mIsActive && mInfo->mIsPlayerFreeze)
-        updateSpectateCam(player);
-}
