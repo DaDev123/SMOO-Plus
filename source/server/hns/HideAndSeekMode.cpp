@@ -283,6 +283,7 @@ void HideAndSeekMode::update() {
         al::endCamera(mCurScene, mTicket, 0, false);
         mSpectateIndex = -1;
 }
+}
 
 void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
 {
