@@ -28,42 +28,31 @@
 #include "server/hns/HideAndSeekMode.hpp"
 
 bool checkpointPatch()
+bool checkpointPatch()
 {
-    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+    // Désactiver les checkpoints en mode Freeze Tag ou Hot Potato
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
         return false;
     
     return true;
 }
 
-bool comboBtnHook(int port) {
-    if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+bool comboBtnHook(int port) 
+{
+    // Désactiver le combo bouton en mode Freeze Tag ou Hot Potato
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
         return false;
 
-    if (GameModeManager::instance()->isActive()) { // only switch to combo if any gamemode is active
+    // Activer le combo si un mode de jeu est actif
+    if (GameModeManager::instance()->isActive()) { 
         return !al::isPadHoldL(port) && al::isPadTriggerDown(port);
     } else {
         return al::isPadTriggerDown(port);
     }
 }
 
-bool checkpointPatchHot()
-{
-    if (GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
-        return false;
-    
-    return true;
-}
-
-bool comboBtnHookHot(int port) {
-    if(GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO))
-        return false;
-
-    if (GameModeManager::instance()->isActive()) { // only switch to combo if any gamemode is active
-        return !al::isPadHoldL(port) && al::isPadTriggerDown(port);
-    } else {
-        return al::isPadTriggerDown(port);
-    }
-}
 
 void saveWriteHook(al::ByamlWriter* saveByml) {
 
