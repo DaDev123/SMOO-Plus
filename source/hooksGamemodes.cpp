@@ -28,6 +28,12 @@ bool newDeathArea(al::LiveActor const* player)
         if (!mode->isEndgameActive())
             mode->tryStartRecoveryEvent(false);
     }
+    // If player is in a death area but in Freeze Tag or Hot Potato mode, start a recovery event
+    if (al::isInAreaObj(player, "DeathArea")) {
+        HotPotatoMode* mode = GameModeManager::instance()->getMode<HotPotatoMode>();
+        if (!mode->isEndgameActive())
+            mode->tryStartRecoveryEvent(false);
+    }
 
     return false;
 }
