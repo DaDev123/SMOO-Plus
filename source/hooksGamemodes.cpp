@@ -8,7 +8,8 @@
 #include "rs/util/InputUtil.h"
 #include "rs/util/SensorUtil.h"
 #include "server/Client.hpp"
-#include "server/freeze/FreezeTagMode.hpp"
+#include "server/freeze/FreezeTagMode.hpp
+#include "server/hotpotato/HotPotatoMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 
 #include "al/nerve/Nerve.h"
