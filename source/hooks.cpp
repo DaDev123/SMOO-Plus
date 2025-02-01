@@ -179,6 +179,19 @@ al::PlayerHolder* createTicketHook(StageScene* curScene) {
             }
         }
     }
+    if (GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
+        al::CameraDirector* director = curScene->getCameraDirector();
+        if (director) {
+            if (director->mFactory) {
+                al::CameraTicket* spectateCamera = director->createCameraFromFactory(
+                    "CameraPoserActorSpectate", nullptr, 0, 5, sead::Matrix34f::ident);
+
+                HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
+
+                mode->setCameraTicket(spectateCamera);
+            }
+        }
+    }
 
     return al::getScenePlayerHolder(curScene);
 }
