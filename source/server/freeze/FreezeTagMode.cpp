@@ -308,7 +308,7 @@ void FreezeTagMode::update() {
     };
 
     // Main player's ice block state and post processing
-    if(mInfo->mIsPlayerFreeze) {
+    if(!mInfo->mIsPlayerRunner) {
         if(!al::isAlive(mMainPlayerIceBlock)) {
             mMainPlayerIceBlock->appear();
             trySetPostProcessingType(FreezePostProcessingType::PPFROZEN);
