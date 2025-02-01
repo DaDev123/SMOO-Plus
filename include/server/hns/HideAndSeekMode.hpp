@@ -8,6 +8,7 @@
 #include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
+#include "game/Player/PlayerActorBase.h"
 #include "server/hns/HideAndSeekConfigMenu.hpp"
 
 struct HideAndSeekInfo : GameModeInfoBase {
@@ -58,6 +59,8 @@ class HideAndSeekMode : public GameModeBase {
         void disableGravityMode() { mInfo->mIsUseGravity = false; }
         bool isUseGravity() const { return mInfo->mIsUseGravity; }
 
+
+        void updateSpectateCam(PlayerActorBase* playerBase);
         void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; }
 
     private:
@@ -66,5 +69,7 @@ class HideAndSeekMode : public GameModeBase {
         HideAndSeekIcon *mModeLayout = nullptr;
         HideAndSeekInfo* mInfo = nullptr;
         al::CameraTicket *mTicket = nullptr;
+    int mPrevSpectateIndex = -2;
+    int mSpectateIndex = -1;
 
 };
