@@ -75,5 +75,3 @@ class HideAndSeekMode : public GameModeBase {
     int mPrevSpectateIndex = -2;
     int mSpectateIndex = -1;
 };
-
-};
