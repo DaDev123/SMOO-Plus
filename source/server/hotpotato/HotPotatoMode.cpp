@@ -258,8 +258,14 @@ void HotPotatoMode::update() {
                     continue;
 
                 // Check to invert the player's Runner state
-if (!mInfo->mIsPlayerFreeze && pupDist < 250.f && isP2D == curInfo->is2D && !isPDead && !curInfo->isHotPotatoRunner)
-    trySetPlayerRunnerState(!mInfo->mIsPlayerRunner);
+if (!mInfo->mIsPlayerFreeze && pupDist < 250.f && isP2D == curInfo->is2D && !isPDead && !curInfo->isHotPotatoRunner) {
+    if (mInfo->mIsPlayerRunner) {
+        trySetPlayerRunnerState(HotState::NOTRUNNER);  // Set to NOTRUNNER if currently a runner
+    } else {
+        trySetPlayerRunnerState(HotState::RUNNER);  // Set to RUNNER if currently not a runner
+    }
+}
+
 
 
                 //Check for unfreeze
