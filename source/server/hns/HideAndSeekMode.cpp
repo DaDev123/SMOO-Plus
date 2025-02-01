@@ -264,7 +264,6 @@ void HideAndSeekMode::update() {
     if(mTicket->mIsActive && !mInfo->mIsPlayerIt)
         al::endCamera(mCurScene, mTicket, 0, false);
         mSpectateIndex = -1;
-}
 
     if (al::isPadTriggerUp(-1) && !al::isPadHoldZL(-1))
     {
