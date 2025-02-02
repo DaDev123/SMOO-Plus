@@ -169,6 +169,15 @@ void HideAndSeekMode::update() {
     if (rs::isActiveDemoPlayerPuppetable(playerBase)) {
         mInvulnTime = 0.0f; // if player is in a demo, reset invuln time
     }
+    //Spectate camera
+    if(mTicket->mIsActive && mInfo->mIsPlayerIt)
+        updateSpectateCam(playerBase);
+    
+    if(!mTicket->mIsActive && mInfo->mIsPlayerIt)
+        al::startCamera(mCurScene, mTicket, -1);
+    if(mTicket->mIsActive && !mInfo->mIsPlayerIt)
+        al::endCamera(mCurScene, mTicket, 0, false);
+        mSpectateIndex = -1;
 
     if (!mInfo->mIsPlayerIt) {
         if (mInvulnTime >= 5) {  
@@ -255,15 +264,6 @@ void HideAndSeekMode::update() {
         }
     }
 
-  //Spectate camera
-    if(mTicket->mIsActive && mInfo->mIsPlayerIt)
-        updateSpectateCam(playerBase);
-    
-    if(!mTicket->mIsActive && mInfo->mIsPlayerIt)
-        al::startCamera(mCurScene, mTicket, -1);
-    if(mTicket->mIsActive && !mInfo->mIsPlayerIt)
-        al::endCamera(mCurScene, mTicket, 0, false);
-        mSpectateIndex = -1;
 
     if (al::isPadTriggerUp(-1) && !al::isPadHoldZL(-1))
     {
@@ -316,7 +316,7 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
 
         //Force index to decrease if your current target changes stages
         if(mSpectateIndex != -1 && indexDirection == 0)
-            if(mInfo->isIt.at(mSpectateIndex)->isInSameStage)
+            if(!mInfo->isIt.at(mSpectateIndex)->isInSameStage)
                 indexDirection = -1; //Move index left
 
         //Loop over indexs until you find a sutible one in the same stage
