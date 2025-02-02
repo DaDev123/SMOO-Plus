@@ -16,9 +16,9 @@ struct HideAndSeekInfo : GameModeInfoBase {
     bool mIsPlayerIt = false;
     bool mIsUseGravity = false;
     bool mIsUseGravityCam = false;
+    sead::PtrArray<PuppetInfo> isIt;
     GameTime mHidingTime;
 
-    sead::PtrArray<PuppetInfo> isIt;
 };
 
 enum TagUpdateType : u8 {
