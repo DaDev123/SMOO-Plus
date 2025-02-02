@@ -124,14 +124,6 @@ void SardineMode::begin()
 
     mIsFirstFrame = true;
 
-    if (mInfo->mIsIt) {
-        mModeTimer->enableTimer();
-        mModeLayout->showPack();
-    } else {
-        mModeTimer->disableTimer();
-        mModeLayout->showSolo();
-    }
-
     CoinCounter* coinCollect = mCurScene->mSceneLayout->mCoinCollectLyt;
     CoinCounter* coinCounter = mCurScene->mSceneLayout->mCoinCountLyt;
     MapMini* compass = mCurScene->mSceneLayout->mMapMiniLyt;
