@@ -1,0 +1,292 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: linear-gradient(180deg, #2d2f36, #1e1f23);
+    color: white;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    text-align: center;
+    position: relative;
+    width: 90%;
+    max-width: 600px;
+}
+
+/* Logo Section */
+.logo {
+    margin-bottom: -23px;
+}
+
+.logo h1 {
+    font-size: 3.6rem;  /* Increased font size by 70% from 3rem */
+    font-weight: bold;
+    color: #fdb813;
+    position: relative;
+}
+
+.logo-icon {
+    width: 270px; /* Increased the width by 70% from 100px */
+}
+
+/* Main Button styling for index.html (same size for all buttons) */
+.main-button {
+    background-color: #000; /* Fully black background */
+    border: 2px solid white;
+    color: white; /* White text */
+    padding: 15px 30px; /* Set consistent padding */
+    margin: 10px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.3s ease;
+    width: 100%; /* Make the buttons take up 100% of the available space */
+    width: 200px; /* Max width to prevent stretching too wide */
+    margin: -1px auto; /* Center and add spacing between buttons */
+}
+
+/* Hover effect for main buttons */
+.main-button:hover {
+    background-color: #222; /* Darker shade on hover */
+}
+
+/* Back Button Styling */
+.back-button {
+    background-color: #000; /* Fully black background */
+    border: 2px solid white;
+    color: white; /* White text */
+    padding: 10px 20px; /* Adjust padding to suit your design */
+    margin: 10px 0;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: inline-block;
+    text-decoration: none; /* Remove underline */
+    transition: background 0.3s ease;
+}
+
+.back-button:hover {
+    background-color: #222; /* Darker shade on hover */
+}
+
+/* Download Button Styling - specific to the download page */
+.download-button {
+    background-color: #000; /* Fully black background */
+    border: 2px solid white;
+    color: white; /* White text */
+    padding: 20px 40px; /* Larger padding for download buttons */
+    margin: 10px;
+    border-radius: 8px;
+    font-size: 1.5rem; /* Slightly bigger text for emphasis */
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.3s ease;
+    width: 100%; /* Full width to make them long */
+    width: 600px; /* Optional: Max width to ensure they don’t get too large */
+    margin: 10px auto; /* Centered and spaced out */
+}
+
+
+/* Back to Home Button */
+.back-to-home-button {
+    background-color: #333;
+    color: white;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    margin-top: 20px;
+    border-radius: 8px;
+    display: block;
+    width: auto;
+    margin: 20px auto;
+    cursor: pointer;
+    text-align: center;
+    border: none;
+}
+
+/* Footer styling for the version */
+.version-footer {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    color: white;
+    font-size: 1rem;
+    font-family: Arial, sans-serif;
+    z-index: 999;
+}
+
+/* Make Buttons Stack Under Each Other */
+.button-group {
+    display: flex;
+    flex-direction: column;  /* Stack buttons vertically */
+    align-items: center;     /* Center buttons horizontally */
+    gap: 15px;               /* Add space between buttons */
+}
+
+/* Icon Buttons */
+.icon-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;  /* Ensures vertical alignment */
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.icon-btn {
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid white;
+    color: white;
+    padding: 10px;
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Ensure icon buttons have the same size */
+.icon-btn i {
+    font-size: 1.5rem; /* Ensures all icons are the same size */
+}
+
+.icon-btn:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* Download Page */
+h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+p {
+    font-size: 1.2rem;
+    margin: 10px 0;
+}
+
+/* Styling for Back to Home Link */
+p a {
+    color: #fdb813;
+    text-decoration: none;
+}
+
+/* Long Buttons Only on the Download Page */
+body.download-page {
+    width: 100%; /* Makes the buttons take up the full width of the container on the download page */
+}
+
+/* Long Buttons for Download Page */
+.long-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Adds space between the stacked buttons */
+}
+
+/* Remove underlines from all links */
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: none; /* Ensures there is no underline even when hovering */
+}
+
+/* Ensuring long buttons for the download page */
+.download-button {
+    body.download-page .main-button {
+    width: 100%; /* Makes the buttons take up the full width of the container on the download page */
+}
+
+.long-button {
+    width: 100%; /* Full width button */
+}
+
+.back-to-home-button {
+    background-color: #333;
+    color: white;
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    margin-top: 20px;
+    border-radius: 8px;
+    display: block;
+    width: auto;
+    margin: 20px auto;
+    cursor: pointer;
+    text-align: center;
+    border: none;
+}
+
+/* Footer styling for the version */
+.version-footer {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    color: white;
+    font-size: 1rem;
+    font-family: Arial, sans-serif;
+    z-index: 999;
+}
+
+/* Features Section Styling */
+.features-section {
+    margin-top: 20px;
+}
+
+.feature {
+    margin-bottom: 20px;
+    text-align: left; /* Align text to the left */
+    padding: 0 20px;
+}
+
+.feature h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #fdb813;
+}
+
+/* Small Text Container for Aligning Text and Image */
+.small-text-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: 10px;
+}
+
+.feature-icon {
+    margin-left: 10px; /* Space between text and image */
+    width: 50px; /* Set the width of the image */
+    height: auto; /* Maintain aspect ratio */
+    transform: rotate(30deg); /* Rotate the image 30 degrees */
+}
+
+/* Styling for the big and small text */
+.feature .big-text {
+    font-size: 1.5rem;
+    font-weight: normal;
+    margin-top: 10px;
+}
+
+.feature .small-text {
+    font-size: 1rem;
+    margin-top: 5px;
+    color: #ccc; /* Lighter color for description */
+}
+
+

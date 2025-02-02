@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - SMOO+</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="documentation-page">
+    <div class="container">
+        <div class="logo">
+<img src="logo_icon.png" alt="Logo Icon" class="logo-icon">
+            <h1>SMOO+ Documentation</h1>
+</div>
+
+        <!-- Documentation Section 1 -->
+        <section class="doc-section">
+            <h2 class="big-text">What is SMOO+?</h2>
+            <p class="small-text">
+                SMOO+ is an enhancement for Super Mario Odyssey Online, adding a variety of new features !
+            </p>
+        </section>
+        <hr> <!-- Separator -->
+
+        <!-- Documentation Section 2 -->
+        <section class="doc-section">
+            <h2 class="big-text">Keybinds</h2>
+            <p class="small-text">
+                <strong>EMOTE:</strong><br>
+                <span class="keybind-text"><zl> + Any <dup> <dleft> <dright> <ddown></span>
+            </p>
+        </section>
+        <hr> <!-- Separator after EMOTE -->
+
+
+        <!-- Freeze Tag Steps -->
+        <h3>Freeze Tag:</h3>
+        <ol class="small-text">
+            <li>Pause the Game</li>
+            <li>Press: SMOO Mod Menu</li>
+            <li>Press: Gamemode Config</li>
+            <li>Change Timer</li>
+            <li>Go back in game and press: <span class="keybind-text"><zr> + <dup></span></li>
+        </ol>
+
+        <hr> <!-- Separator after Keybinds Section -->
+
+        <!-- Back Button -->
+        <a href="index.html">
+            <button class="back-button">Back to Home</button>
+        </a>
+</div>
+
+    <!-- JavaScript to replace <zl>, <zr>, <dup>, <dleft>, <dright>, <ddown> with images -->
+    <script>
+        window.onload = function() {
+            // Define image replacements for each key
+            const zlImage = '<img src="inputs/zl.webp" alt="ZL Button" style="width: 20px; height: auto;">';
+            const zrImage = '<img src="inputs/zr.webp" alt="ZR Button" style="width: 20px; height: auto;">';
+            const dupImage = '<img src="inputs/dup.webp" alt="Up D-Pad" style="width: 20px; height: auto;">';
+            const dleftImage = '<img src="inputs/dleft.webp" alt="Left D-Pad" style="width: 20px; height: auto;">';
+            const drightImage = '<img src="inputs/dright.webp" alt="Right D-Pad" style="width: 20px; height: auto;">';
+            const ddownImage = '<img src="inputs/ddown.webp" alt="Down D-Pad" style="width: 20px; height: auto;">';
+
+            // Replace <zl>, <zr>, <dup>, <dleft>, <dright>, <ddown> tags in the content
+            document.body.innerHTML = document.body.innerHTML.replace(/<zl>/g, zlImage);
+            document.body.innerHTML = document.body.innerHTML.replace(/<zr>/g, zrImage);
+            document.body.innerHTML = document.body.innerHTML.replace(/<dup>/g, dupImage);
+            document.body.innerHTML = document.body.innerHTML.replace(/<dleft>/g, dleftImage);
+            document.body.innerHTML = document.body.innerHTML.replace(/<dright>/g, drightImage);
+            document.body.innerHTML = document.body.innerHTML.replace(/<ddown>/g, ddownImage);
+        }
+    </script>
+</body>
+</html>
+
