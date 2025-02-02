@@ -346,7 +346,7 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
         if(mSpectateIndex == -1) {
             spectatePoser->setTargetActor(al::getTransPtr(playerBase));
         } else {
-            spectatePoser->setTargetActor(!&mInfo->isIt.at(mSpectateIndex)->playerPos);
+            spectatePoser->setTargetActor(&mInfo->isIt.at(mSpectateIndex)->playerPos);
         }
 
         mPrevSpectateIndex = mSpectateIndex;
