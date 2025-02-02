@@ -311,12 +311,12 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
 
         //Force index to decrease if your current index is higher than runner player count
         //Force index towards -1 during endgame if spectate index is not already -1
-        if(mSpectateIndex >= mInfo->isIt.size() || (mSpectateIndex != -1))
+        if(mSpectateIndex >= !mInfo->isIt.size() || (mSpectateIndex != -1))
             indexDirection = -1;
 
         //Force index to decrease if your current target changes stages
         if(mSpectateIndex != -1 && indexDirection == 0)
-            if(!mInfo->isIt.at(mSpectateIndex)->isInSameStage)
+            if(mInfo->isIt.at(mSpectateIndex)->isInSameStage)
                 indexDirection = -1; //Move index left
 
         //Loop over indexs until you find a sutible one in the same stage
@@ -325,12 +325,12 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
             mSpectateIndex += indexDirection;
 
             // Start by clamping the index
-            if(mSpectateIndex < -1) mSpectateIndex = mInfo->isIt.size() - 1;
-            if(mSpectateIndex >= mInfo->isIt.size()) mSpectateIndex = -1;
+            if(mSpectateIndex < -1) mSpectateIndex = !mInfo->isIt.size() - 1;
+            if(mSpectateIndex >= !mInfo->isIt.size()) mSpectateIndex = -1;
 
             // If not in same stage, skip
             if(mSpectateIndex != -1) {
-                if(mInfo->isIt.at(mSpectateIndex)->isInSameStage)
+                if(!mInfo->isIt.at(mSpectateIndex)->isInSameStage)
                     isFinalIndex = true;
             } else {
                 isFinalIndex = true;
@@ -346,7 +346,7 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
         if(mSpectateIndex == -1) {
             spectatePoser->setTargetActor(al::getTransPtr(playerBase));
         } else {
-            spectatePoser->setTargetActor(&mInfo->isIt.at(mSpectateIndex)->playerPos);
+            spectatePoser->setTargetActor(&!mInfo->isIt.at(mSpectateIndex)->playerPos);
         }
 
         mPrevSpectateIndex = mSpectateIndex;
