@@ -61,10 +61,10 @@ namespace al
         virtual void draw() const;
         virtual void startClipped();
         virtual void endClipped();
-        // source = sensor belonging to this actor
-        // target = sensor belonging to other actor
-        virtual void attackSensor(HitSensor *source, HitSensor *target);
-        virtual bool receiveMsg(const SensorMsg *msg, HitSensor *source, HitSensor *target);
+        // sender = sensor that sender attacked
+        // receiver = sensor from actor sending message
+        virtual void attackSensor(HitSensor *sender, HitSensor *receiver);
+        virtual bool receiveMsg(const SensorMsg *msg, HitSensor *sender, HitSensor *receiver);
         virtual bool receiveMsgScreenPoint(const SensorMsg *, ScreenPointer *, ScreenPointTarget *);
 
         virtual const char *getName() const { return this->mActorName; };
