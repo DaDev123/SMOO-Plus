@@ -51,7 +51,7 @@ void PuppetCapActor::movement() {
 void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver) {
     // Disable attack behavior if specific game modes are active
     if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
-        GameModeManager::instance()->isModeAndActive(GameMode::INFECTION) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::Infection) ||
         GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
         GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO)) {
         return;  // Prevent attack behavior entirely
@@ -69,7 +69,7 @@ void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver
 bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender, al::HitSensor* receiver) {
     // Disable message handling if specific game modes are active
     if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
-        GameModeManager::instance()->isModeAndActive(GameMode::INFECTION) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::Infection) ||
         GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
         GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO)) {
         return false;  // Prevent message handling
