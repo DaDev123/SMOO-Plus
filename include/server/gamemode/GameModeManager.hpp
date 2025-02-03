@@ -27,6 +27,19 @@ public:
     template<class T> T* getInfo() const { return static_cast<T*>(mModeInfo); }
     template<class T> T* tryGetOrCreateInfo(GameMode mode);
     void setInfo(GameModeInfoBase* info) { mModeInfo = info; }
+    static bool tryReceivePuppetMsg(const al::SensorMsg* msg, al::HitSensor* source, al::HitSensor* target) {
+        return instance()->mCurModeBase && instance()->isActive() && instance()->mCurModeBase->mIsUsePuppetSensor ? instance()->mCurModeBase->receiveMsg(msg, source, target) : false;
+    }
+    static bool tryReceiveCapMsg(const al::SensorMsg* msg, al::HitSensor* source, al::HitSensor* target) {
+        return instance()->mCurModeBase && instance()->isActive() && instance()->mCurModeBase->mIsUseCapSensor ? instance()->mCurModeBase->receiveMsg(msg, source, target) : false;
+    }
+    // returns false if default attack behavior should be used instead 
+    static bool tryAttackPuppetSensor(al::HitSensor* source, al::HitSensor* target) {
+        return instance()->mCurModeBase && instance()->isActive() && instance()->mCurModeBase->mIsUsePuppetSensor ? instance()->mCurModeBase->attackSensor(source, target) : false;
+    }
+    static bool tryAttackCapSensor(al::HitSensor* source, al::HitSensor* target) {
+        return instance()->mCurModeBase && instance()->isActive() && instance()->mCurModeBase->mIsUseCapSensor ? instance()->mCurModeBase->attackSensor(source, target) : false;
+    }
 
     static void processModePacket(Packet *packet) {
         if(instance()->mCurModeBase) {
