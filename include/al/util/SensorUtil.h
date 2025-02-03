@@ -20,7 +20,11 @@ struct CapTargetInfo;
 struct GotogotonMark;
 struct FishingFish;
 
-typedef unsigned int uint;
+namespace alSensorFunction {
+    void updateHitSensorsAll(al::LiveActor *);
+    void clearHitSensors(al::LiveActor *);
+    uint findSensorTypeByName(char const*);
+}
 
 namespace al
 {
