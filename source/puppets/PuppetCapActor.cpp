@@ -63,6 +63,16 @@ bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender,
     if (GameModeManager::tryReceiveCapMsg(msg, sender, receiver)) {
         return true;
     }
+if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
+    GameModeManager::instance()->isModeAndActive(GameMode::Infection) ||
+    GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
+    GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO)) {
+    return false;  // Deactivate if ANY of these game modes are active
+}
+
+return true;       // Activate if NONE of these game modes are active
+
+    
     if (al::isMsgPlayerDisregard(msg)) {
         return true;
     }
