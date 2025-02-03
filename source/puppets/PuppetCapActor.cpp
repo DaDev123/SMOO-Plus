@@ -49,30 +49,37 @@ void PuppetCapActor::movement() {
 }
 
 void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver) {
-    // prevent normal attack behavior if gamemode requires custom behavior
+    // Disable attack behavior if specific game modes are active
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::INFECTION) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO)) {
+        return;  // Prevent attack behavior entirely
+    }
+
+    // Prevent normal attack behavior if gamemode requires custom behavior
     if (GameModeManager::tryAttackCapSensor(sender, receiver))
         return;
-    
+
     if (al::isSensorPlayer(receiver) && al::isSensorName(sender, "Push")) {
         rs::sendMsgPushToPlayer(receiver, sender);
     }
 }
-bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender,
-                             al::HitSensor* receiver) {
-    // try to use gamemode recieve logic, otherwise fallback to default behavior
+
+bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender, al::HitSensor* receiver) {
+    // Disable message handling if specific game modes are active
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::INFECTION) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO)) {
+        return false;  // Prevent message handling
+    }
+
+    // Try to use gamemode receive logic, otherwise fallback to default behavior
     if (GameModeManager::tryReceiveCapMsg(msg, sender, receiver)) {
         return true;
     }
-if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
-    GameModeManager::instance()->isModeAndActive(GameMode::Infection) ||
-    GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
-    GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO)) {
-    return false;  // Deactivate if ANY of these game modes are active
-}
 
-return true;       // Activate if NONE of these game modes are active
-
-    
     if (al::isMsgPlayerDisregard(msg)) {
         return true;
     }
@@ -83,8 +90,10 @@ return true;       // Activate if NONE of these game modes are active
         rs::requestHitReactionToAttacker(msg, receiver, *al::getSensorPos(sender));
         return true;
     }
+
     return false;
 }
+
 
 void PuppetCapActor::control() {
     if(mInfo->capAnim) {
