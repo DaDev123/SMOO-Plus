@@ -917,6 +917,8 @@ bool sendMsgRequestPlayerSpinJump(al::HitSensor*, al::HitSensor*, float);
 bool sendMsgRequestSphinxJump(al::HitSensor*, al::HitSensor*, float);
 bool sendMsgIgnoreTouchTarget(al::HitSensor*, al::HitSensor*);
 bool sendMsgIgnoreTouchTarget(al::ScreenPointer*, al::ScreenPointTarget*);
+bool requestHitReactionToAttacker(al::SensorMsg const*,al::HitSensor const*,al::HitSensor const*);
+bool requestHitReactionToAttacker(al::SensorMsg const*,al::HitSensor const*,sead::Vector3f const&);
 // bool sendMsgInitTouchTargetInfo(al::HitSensor*, al::HitSensor*, TouchTargetInfo*,
 //                                 sead::Vector3<float> const*);
 // bool sendMsgInitTouchTargetInfo(al::ScreenPointer*, al::ScreenPointTarget*, TouchTargetInfo*,
