@@ -10,6 +10,8 @@
 #include "puppets/PuppetInfo.h"
 #include "helpers.hpp"
 
+#include "al/sensor/HitSensor.h"
+
 class PuppetCapActor : public al::LiveActor {
     public:
         PuppetCapActor(const char *name);
@@ -17,6 +19,8 @@ class PuppetCapActor : public al::LiveActor {
         virtual void initAfterPlacement() override;
         virtual void control(void) override;
         virtual void movement(void) override;
+        virtual void attackSensor(al::HitSensor *, al::HitSensor *) override;
+        virtual bool receiveMsg(const al::SensorMsg*, al::HitSensor*, al::HitSensor*) override;
         void initOnline(PuppetInfo *info);
         
         void startAction(const char *actName);
