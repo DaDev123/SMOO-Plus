@@ -281,4 +281,4 @@ void SardineMode::update()
 
 }
 mInfo->mHidingTime = mModeTimer->getTime();
-;
+}
