@@ -278,4 +278,7 @@ void SardineMode::update()
         mModeLayout->showSolo();
     }
     Client::sendGamemodePacket();
+
 }
+mInfo->mHidingTime = mModeTimer->getTime();
+;
