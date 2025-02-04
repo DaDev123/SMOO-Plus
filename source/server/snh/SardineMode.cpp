@@ -269,17 +269,13 @@ void SardineMode::update()
     }
 
     if (al::isPadTriggerUp(-1) && !al::isPadHoldZL(-1)) {
-        if (!mInfo->mIsIt && !isAnyIt) {
-            mInfo->mIsIt = true;
-            mModeTimer->enableTimer();
-            mModeLayout->showPack();
-        } else {
-            mInfo->mIsIt = false;
-            mModeTimer->disableTimer();
-            mModeLayout->showSolo();
-        }
-        Client::sendGamemodePacket();
+    mInfo->mIsIt = !mInfo->mIsIt;  // Toggles the \"It\" state
+    if (mInfo->mIsIt) {
+        mModeTimer->enableTimer();
+        mModeLayout->showPack();
+    } else {
+        mModeTimer->disableTimer();
+        mModeLayout->showSolo();
     }
-
-    mInfo->mHidingTime = mModeTimer->getTime();
+    Client::sendGamemodePacket();
 }
