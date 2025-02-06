@@ -53,6 +53,7 @@ void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver
     if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
         GameModeManager::instance()->isModeAndActive(GameMode::Infection) ||
         GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::SARDINE) ||
         GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO)) {
         return;  // Prevent attack behavior entirely
     }
@@ -71,6 +72,7 @@ bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender,
     if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
         GameModeManager::instance()->isModeAndActive(GameMode::Infection) ||
         GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::SARDINE) ||
         GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO)) {
         return false;  // Prevent message handling
     }
