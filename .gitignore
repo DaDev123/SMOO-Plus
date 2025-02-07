@@ -9,3 +9,4 @@ Custom Stage Builds/**
 *.disabled
 
 compile_commands.json
+*.code-workspace
