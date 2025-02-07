@@ -4,6 +4,7 @@
 
 #include "actors/PuppetActor.h"
 #include "actors/PuppetHackActor.h"
+#include "server/freeze/FreezePlayerBlock.h"
 
 namespace al
 {
@@ -69,6 +70,7 @@ namespace al
 
 __attribute((used)) static al::NameToCreator<al::createActor> actorEntries[] = {
     // CUSTOM ACTOR ENTRIES HERE
+    {"FreezePlayerBlock", &al::createCustomActor<FreezePlayerBlock>},
     {"PuppetActor", &al::createCustomActor<PuppetActor>},
     {"PuppetHackActor", &al::createCustomActor<PuppetHackActor>},
     // VANILLA ACTOR ENTRIES

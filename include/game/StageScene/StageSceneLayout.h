@@ -5,6 +5,7 @@
 #include "al/layout/LayoutInitInfo.h"
 #include "al/layout/SimpleLayoutAppearWaitEnd.h"
 #include "al/nerve/NerveStateBase.h"
+#include "game/Layouts/CounterLifeCtrl.h"
 #include "game/Layouts/MapMini.h"
 
 namespace al {
@@ -65,7 +66,7 @@ class StageSceneLayout : public al::NerveStateBase {
         bool isActionEndAll(void) const;
 
         CoinCounter *mCoinCountLyt; // 0x18
-        struct CounterLifeCtrl * mHealthLyt; // 0x20
+        CounterLifeCtrl * mHealthLyt; // 0x20
         struct ShineCounter * mShineCountLyt; // 0x28
         CoinCounter * mCoinCollectLyt; // 0x30
         struct ShineChipLayoutParts * mShineChipPartsLyt; // 0x38

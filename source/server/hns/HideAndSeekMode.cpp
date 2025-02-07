@@ -27,8 +27,7 @@
 #include "basis/seadNew.h"
 #include "server/hns/HideAndSeekConfigMenu.hpp"
 
-//Spectator
-#include "al/util/CameraUtil.h"
+//Spectator Files
 #include "cameras/CameraPoserActorSpectate.h"
 
 HideAndSeekMode::HideAndSeekMode(const char* name) : GameModeBase(name) {}
@@ -118,6 +117,7 @@ void HideAndSeekMode::begin() {
     mIsFirstFrame = true;
     
     mInvulnTime = 0.0f;
+    mSpectateIndex = -1;
 
     GameModeBase::begin();
 }
@@ -153,7 +153,9 @@ void HideAndSeekMode::unpause() {
 
 void HideAndSeekMode::update() {
 
+
     PlayerActorBase* playerBase = rs::getPlayerActor(mCurScene);
+    
 
     bool isYukimaru = !playerBase->getPlayerInfo(); // if PlayerInfo is a nullptr, that means we're dealing with the bound bowl racer
 
@@ -169,15 +171,7 @@ void HideAndSeekMode::update() {
     if (rs::isActiveDemoPlayerPuppetable(playerBase)) {
         mInvulnTime = 0.0f; // if player is in a demo, reset invuln time
     }
-    //Spectate camera
-    if(mTicket->mIsActive && mInfo->mIsPlayerIt)
-        updateSpectateCam(playerBase);
-    
-    if(!mTicket->mIsActive && mInfo->mIsPlayerIt)
-        al::startCamera(mCurScene, mTicket, -1);
-    if(mTicket->mIsActive && !mInfo->mIsPlayerIt)
-        al::endCamera(mCurScene, mTicket, 0, false);
-        mSpectateIndex = -1;
+
 
     if (!mInfo->mIsPlayerIt) {
         if (mInvulnTime >= 5) {  
@@ -264,8 +258,7 @@ void HideAndSeekMode::update() {
         }
     }
 
-
-    if (al::isPadTriggerUp(-1) && !al::isPadHoldZL(-1))
+    if (al::isPadTriggerUp(-1) && !al::isPadHoldR(-1))
     {
         mInfo->mIsPlayerIt = !mInfo->mIsPlayerIt;
 
@@ -279,19 +272,32 @@ void HideAndSeekMode::update() {
         }
 
         Client::sendGamemodePacket();
-
+    }
 
     mInfo->mHidingTime = mModeTimer->getTime();
 
+// Check if R and D-pad Left are pressed at the same time
+if (al::isPadHoldR(-1) && al::isPadTriggerUp(-1)) {
+    if (!mTicket->mIsActive && mInfo->mIsPlayerIt) {
+        al::startCamera(mCurScene, mTicket, -1);  // Activate the camera
+    } else if (mTicket->mIsActive) {
+        al::endCamera(mCurScene, mTicket, 0, false);  // Deactivate the camera
+    }
 }
+
+// Existing Spectate Camera logic
+if (mTicket->mIsActive && mInfo->mIsPlayerIt) {
+    updateSpectateCam(playerBase);
 }
+
+}
+
 
 void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
 {
     //If the specate camera ticket is active, get the camera poser
     al::CameraPoser* curPoser;
     al::CameraDirector* director = mCurScene->getCameraDirector();
-
     if (director) {
         al::CameraPoseUpdater* updater = director->getPoseUpdater(0);
         if (updater && updater->mTicket) {
@@ -303,52 +309,49 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase)
     if (al::isEqualString(curPoser->getName(), "CameraPoserActorSpectate")) {
         cc::CameraPoserActorSpectate* spectatePoser = (cc::CameraPoserActorSpectate*)curPoser;
         spectatePoser->setPlayer(playerBase);
-
         //Increase or decrease spectate index, followed by clamping it
         int indexDirection = 0;
         if(al::isPadTriggerRight(-1)) indexDirection = 1; //Move index right
         if(al::isPadTriggerLeft(-1)) indexDirection = -1; //Move index left
-
-        //Force index to decrease if your current index is higher than runner player count
-        //Force index towards -1 during endgame if spectate index is not already -1
-        if(mSpectateIndex >= !mInfo->isIt.size() || (mSpectateIndex != -1))
-            indexDirection = -1;
-
-        //Force index to decrease if your current target changes stages
-        if(mSpectateIndex != -1 && indexDirection == 0)
-            if(mInfo->isIt.at(mSpectateIndex)->isInSameStage)
-                indexDirection = -1; //Move index left
-
+        //Force index to increase if your current target changes stages
+        if(mSpectateIndex != -1)
+            if(!mInfo->isIt.at(mSpectateIndex)->isInSameStage)
+                indexDirection = 1; //Move index right
         //Loop over indexs until you find a sutible one in the same stage
         bool isFinalIndex = false;
         while(!isFinalIndex) {
             mSpectateIndex += indexDirection;
-
             // Start by clamping the index
-            if(mSpectateIndex < -1) mSpectateIndex = !mInfo->isIt.size() - 1;
-            if(mSpectateIndex >= !mInfo->isIt.size()) mSpectateIndex = -1;
-
+            if(mSpectateIndex < -1) mSpectateIndex = mInfo->isIt.size() - 1;
+            if(mSpectateIndex >= mInfo->isIt.size()) mSpectateIndex = -1;
             // If not in same stage, skip
             if(mSpectateIndex != -1) {
-                if(!mInfo->isIt.at(mSpectateIndex)->isInSameStage)
+                if(mInfo->isIt.at(mSpectateIndex)->isInSameStage)
                     isFinalIndex = true;
             } else {
                 isFinalIndex = true;
             }
-
         }
         
         //If no index change is happening, end here
         if(mPrevSpectateIndex == mSpectateIndex)
             return;
-
         //Apply index to target actor and HUD
         if(mSpectateIndex == -1) {
             spectatePoser->setTargetActor(al::getTransPtr(playerBase));
         } else {
             spectatePoser->setTargetActor(&mInfo->isIt.at(mSpectateIndex)->playerPos);
         }
-
         mPrevSpectateIndex = mSpectateIndex;
     }
+}
+
+
+
+
+// Hooks
+
+namespace al {
+    class Triangle;
+    bool isFloorCode(al::Triangle const&,char const*);
 }

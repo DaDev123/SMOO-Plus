@@ -13,6 +13,9 @@
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include <cmath>
 #include <math.h>
+#include "al/sensor/HitSensor.h"
+#include "al/sensor/SensorMsg.h"
+#include "puppets/PuppetHolder.hpp"
 
 
 // enum for defining game mode types

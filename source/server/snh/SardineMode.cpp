@@ -124,6 +124,14 @@ void SardineMode::begin()
 
     mIsFirstFrame = true;
 
+    if (mInfo->mIsIt) {
+        mModeTimer->enableTimer();
+        mModeLayout->showPack();
+    } else {
+        mModeTimer->disableTimer();
+        mModeLayout->showSolo();
+    }
+
     CoinCounter* coinCollect = mCurScene->mSceneLayout->mCoinCollectLyt;
     CoinCounter* coinCounter = mCurScene->mSceneLayout->mCoinCountLyt;
     MapMini* compass = mCurScene->mSceneLayout->mMapMiniLyt;
@@ -261,17 +269,16 @@ void SardineMode::update()
     }
 
     if (al::isPadTriggerUp(-1) && !al::isPadHoldZL(-1)) {
-        if (!mInfo->mIsIt && mInfo->mIsIt) {
-            mInfo->mIsIt = true;
-            mModeTimer->enableTimer();
-            mModeLayout->showPack();
-        } else {
-            mInfo->mIsIt = false;
-            mModeTimer->disableTimer();
-            mModeLayout->showSolo();
-        }
-        Client::sendGamemodePacket();
+    mInfo->mIsIt = !mInfo->mIsIt;  // Toggles the \"It\" state
+    if (mInfo->mIsIt) {
+        mModeTimer->enableTimer();
+        mModeLayout->showPack();
+    } else {
+        mModeTimer->disableTimer();
+        mModeLayout->showSolo();
     }
+    Client::sendGamemodePacket();
 
-    mInfo->mHidingTime = mModeTimer->getTime();
+}
+mInfo->mHidingTime = mModeTimer->getTime();
 }

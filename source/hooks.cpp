@@ -127,19 +127,19 @@ void initNerveStateHook(StageSceneStatePauseMenu* stateParent, StageSceneStateOp
 
 // skips starting both coin counters
 void startCounterHook(CoinCounter* thisPtr) {
-    if (!GameModeManager::instance()->isActive()) {
+    if (!GameModeManager::instance()->isModeRequireUI()) {
         thisPtr->tryStart();
     }
 }
 
 // Simple hook that can be used to override isModeE3 checks to enable/disable certain behaviors
 bool modeE3Hook() {
-    return GameModeManager::instance()->isActive();
+    return GameModeManager::instance()->isModeRequireUI();
 }
 
 // Skips ending the play guide layout if a mode is active, since the mode would have already ended it
 void playGuideEndHook(al::SimpleLayoutAppearWaitEnd* thisPtr) {
-    if (!GameModeManager::instance()->isActive()) {
+    if (!GameModeManager::instance()->isModeRequireUI()) {
         thisPtr->end();
     }
 }
@@ -174,19 +174,6 @@ al::PlayerHolder* createTicketHook(StageScene* curScene) {
                     "CameraPoserActorSpectate", nullptr, 0, 5, sead::Matrix34f::ident);
 
                 FreezeTagMode* mode = GameModeManager::instance()->getMode<FreezeTagMode>();
-
-                mode->setCameraTicket(spectateCamera);
-            }
-        }
-    }
-    if (GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
-        al::CameraDirector* director = curScene->getCameraDirector();
-        if (director) {
-            if (director->mFactory) {
-                al::CameraTicket* spectateCamera = director->createCameraFromFactory(
-                    "CameraPoserActorSpectate", nullptr, 0, 5, sead::Matrix34f::ident);
-
-                HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
 
                 mode->setCameraTicket(spectateCamera);
             }

@@ -51,6 +51,8 @@ public:
     void disableGravityMode() { mInfo->mIsUseGravity = false; }
     bool isUseGravity() const { return mInfo->mIsUseGravity; }
 
+
+bool isUseNormalUI() const override { return false; }
     void processPacket(Packet* packet) override;
     Packet* createPacket() override;
 

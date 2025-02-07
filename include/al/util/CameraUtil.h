@@ -15,7 +15,6 @@ struct PauseCameraCtrl;
 struct CameraPoseInfo;
 
 sead::Vector3f* getCameraUp(al::IUseCamera const*, int);
-sead::Vector3f* getCameraPos(al::IUseCamera const*, int);
 
 void requestStopCameraVerticalAbsorb(al::IUseCamera *);
 

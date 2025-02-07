@@ -13,6 +13,7 @@ class Logger : public SocketBase {
         static void createInstance();
         static void setLogName(const char *name) { if(sInstance) sInstance->setName(name); }
         static void log(const char* fmt, ...);
+        static void line(const char* fmt, ...);
         static void log(const char* fmt, va_list args);
 
         static void enableName() { if(sInstance) sInstance->isDisableName = false; }

@@ -7,6 +7,8 @@
 #include "al/util/GraphicsUtil.h"
 #include "container/seadSafeArray.h"
 #include "game/GameData/GameDataHolderAccessor.h"
+#include "server/hotpotato/HotPotatoMode.hpp"
+#include "layouts/InfectionIcon.h"
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Player/PlayerHackKeeper.h"
@@ -31,11 +33,10 @@
 #include "layouts/HideAndSeekIcon.h"
 #include "logger.hpp"
 #include "rs/util.hpp"
+#include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
-#include "server/freeze/FreezeTagMode.hpp"
-#include "layouts/InfectionIcon.h"
 
 static int pInfSendTimer = 0;
 static int gameInfSendTimer = 0;
@@ -131,7 +132,7 @@ void drawMainHook(HakoniwaSequence *curSequence, sead::Viewport *viewport, sead:
     
     gTextWriter->printf("Send Queue Count: %d/%d\n", Client::instance()->mSocket->getSendCount(), Client::instance()->mSocket->getSendMaxCount());
     gTextWriter->printf("Recv Queue Count: %d/%d\n", Client::instance()->mSocket->getRecvCount(), Client::instance()->mSocket->getRecvMaxCount());
-
+    
     if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
         FreezeTagInfo* inf = GameModeManager::instance()->getInfo<FreezeTagInfo>();
         gTextWriter->printf("Is Runner: %s\n", BTOC(inf->mIsPlayerRunner));
@@ -352,9 +353,6 @@ bool threadInit(HakoniwaSequence *mainSeq) {  // hook for initializing client cl
     return GameDataFunction::isPlayDemoOpening(mainSeq->mGameDataHolder);
 }
 
-//  NOCLIP CODE
-// void NoClipCode(al::LiveActor* player);
-
 bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
     StageScene* stageScene = (StageScene*)sequence->curScene;
 
@@ -456,19 +454,6 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
             al::stopAllBgm(stageScene, 0);
         }
     }
-    
-
-    //  NOCLIP CODE
-//    static bool oneTimeDeal = true;
-//      if (al::isPadHoldR(-1)) {
- //         NoClipCode(playerBase);
- //         oneTimeDeal = true;
- //     } else {
- //         if (oneTimeDeal) {
- //             oneTimeDeal = false;
- //             al::onCollide(playerBase);
- //         }
- //     }
 
     if(isFirstStep && GameModeManager::instance()->isMode(GameMode::FREEZETAG))
         GameModeManager::instance()->getMode<FreezeTagMode>()->setWipeHolder(sequence->mWipeHolder);
@@ -486,54 +471,3 @@ void seadPrintHook(const char *fmt, ...)
 
     va_end(args);
 }
-
-//  NOCLIP CODE
-
-//  void NoClipCode(al::LiveActor* player) {
-//      float speed = 25.0f;
-//      float speedMax = 150.0f;
-//      float vspeed = 20.0f;
-//      float speedGain = 0.0f;
-//      float speedMult = 1.0f;
-
-//      if (al::isPadHoldL(-1))
-//          speedMult = 3.0f;
-//  
-//      sead::Vector3f* playerPos = al::getTransPtr(player);
-//      sead::Vector3f* cameraPos = al::getCameraPos(player, 0);
-//      sead::Vector2f* leftStick = al::getLeftStick(-1);
-//  
-//      // Its better to do this here because loading zones reset this.
-//      al::offCollide(player);
-//      al::setVelocityZero(player);
-//  
-//      // Mario slightly goes down even when velocity is 0. This is a hacky fix for that.
-//      playerPos->y += 1.4553f;
-//  
-//      float d = sqrt(al::powerIn(playerPos->x - cameraPos->x, 2) +
-//                     (al::powerIn(playerPos->z - cameraPos->z, 2)));
-//      float vx = ((speed + speedGain) / d) * (playerPos->x - cameraPos->x);
-//      float vz = ((speed + speedGain) / d) * (playerPos->z - cameraPos->z);
-//  
-//      if (!al::isPadHoldZR(-1)) {
-//          playerPos->x -= leftStick->x * vz * speedMult;
-//          playerPos->z += leftStick->x * vx * speedMult;
-//  
-//          playerPos->x += leftStick->y * vx * speedMult;
-//          playerPos->z += leftStick->y * vz * speedMult;
-//  
-//          if (al::isPadHoldX(-1))
-//              speedGain -= 0.5f;
-//          if (al::isPadHoldY(-1))
-//              speedGain += 0.5f;
-//          if (speedGain <= 0.0f)
-//              speedGain = 0.0f;
-//          if (speedGain >= speedMax)
-//              speedGain = speedMax;
-//  
-//          if (al::isPadHoldZL(-1) || al::isPadHoldA(-1))
-//              playerPos->y -= (vspeed + speedGain / 6);
-//          if (al::isPadHoldB(-1))
-//              playerPos->y += (vspeed + speedGain / 6);
-//      }
-//  }

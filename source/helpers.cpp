@@ -81,6 +81,10 @@ float vecMagnitude(sead::Vector3f const &input) {
     return (input.x * input.x + input.y * input.y + input.z * input.z);
 }
 
+float vecDistance(sead::Vector3f const& a, sead::Vector3f const& b) {
+    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
+}
+
 float quatAngle(sead::Quatf const &q1, sead::Quatf &q2) {
     float dot = (q1.x * q2.x) + (q1.y * q2.y) + (q1.z * q2.z) + (q1.w * q2.w);
     float dotAngle = sead::Mathf::min(abs(dot), 1.0f);

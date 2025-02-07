@@ -10,21 +10,21 @@ struct GameTime {
 class GameModeTimer {
 public:
     GameModeTimer(bool isCountUp, float milli, int seconds, int minutes, int hours); // can set start time or max time, depending on isCountUp
-    GameModeTimer(float milli, int seconds, int minutes, int hours);                 // defaults to counting down with a start time
-    GameModeTimer(GameTime const& time);                                             // sets timer's current time to time struct argument, defaults to incrementing
-    GameModeTimer();                                                                 // defaults to counting up with zero time
-    
-    void toggleTimer()  { mIsEnabled = !mIsEnabled; }
-    void enableTimer()  { mIsEnabled = true; }
+    GameModeTimer(float milli, int seconds, int minutes, int hours); // defaults to counting down with a start time
+    GameModeTimer(GameTime const& time); // sets timer's current time to time struct argument, defaults to incrementing
+    GameModeTimer(); // defaults to counting up with zero time
+
+    void toggleTimer() { mIsEnabled = !mIsEnabled; }
+    void enableTimer() { mIsEnabled = true; }
     void disableTimer() { mIsEnabled = false; }
 
-    void enableControl()  { mIsUseControl = true; }
+    void enableControl() { mIsUseControl = true; }
     void disableControl() { mIsUseControl = false; }
 
+    bool isEnabled() { return mIsEnabled; }
+
     void setTimerDirection(bool isCountUp) { mIsCountUp = isCountUp; }
-
     void setTime(float milli, int seconds, int minutes, int hours);
-
     void setTime(GameTime const& time);
 
     void resetTime() { setTime(0, 0, 0, 0); }
@@ -33,19 +33,16 @@ public:
     int getSeconds() { return mTime.mSeconds; }
     int getMinutes() { return mTime.mMinutes; }
     int getHours() { return mTime.mHours; }
+    float getTimeCombined() { return (mTime.mSeconds + (mTime.mMinutes * 60) + (mTime.mHours * 3600)) - mTime.mMilliseconds; }
 
     GameTime getTime() { return mTime; }
-    GameTime *getTimePtr() { return &mTime; }
+    GameTime* getTimePtr() { return &mTime; }
 
     void updateTimer();
-
-    bool isEnabled() { return mIsEnabled; }
 
     void timerControl();
 
     void setPaneTime();
-
-    float getTimeCombined() { return (mTime.mSeconds + (mTime.mMinutes * 60) + (mTime.mHours * 3600)) - mTime.mMilliseconds; }
 
 private:
     bool mIsCountUp = true;

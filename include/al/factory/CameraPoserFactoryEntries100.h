@@ -3,8 +3,8 @@
 #include "CameraPoserFactory.h"
 #include "al/factory/Factory.h"
 
-#include "cameras/CameraPoserCustom.h"
 #include "cameras/CameraPoserActorSpectate.h"
+#include "cameras/CameraPoserCustom.h"
 
 class CameraPoserFollowLimit;
 class ScenarioStartCameraPoserSimpleZoom;

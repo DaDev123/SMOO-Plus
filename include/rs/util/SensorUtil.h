@@ -516,7 +516,8 @@ bool setMsgYoshiTongueEatBindScale(al::SensorMsg const*, float);
 bool setMsgPlayerLookAtPosition(al::SensorMsg const*, sead::Vector3f const&);
 bool setMsgTargetMarkerPosition(al::SensorMsg const*, sead::Vector3f const&);
 
-bool requestHitReactionToAttacker(al::SensorMsg const*, al::HitSensor const*, al::HitSensor const*);
+bool requestHitReactionToAttacker(al::SensorMsg const*,al::HitSensor const*,al::HitSensor const*);
+bool requestHitReactionToAttacker(al::SensorMsg const*,al::HitSensor const*,sead::Vector3f const&);
 
 bool sendMsgHackerNoReaction(IUsePlayerHack const*, al::HitSensor*, al::HitSensor*);
 bool sendMsgHackerNoReactionWithoutShine(IUsePlayerHack const*, al::HitSensor*, al::HitSensor*);

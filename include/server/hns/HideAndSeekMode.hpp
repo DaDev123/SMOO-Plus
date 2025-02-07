@@ -8,7 +8,6 @@
 #include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
-#include "game/Player/PlayerActorBase.h"
 #include "server/hns/HideAndSeekConfigMenu.hpp"
 
 struct HideAndSeekInfo : GameModeInfoBase {
@@ -16,9 +15,9 @@ struct HideAndSeekInfo : GameModeInfoBase {
     bool mIsPlayerIt = false;
     bool mIsUseGravity = false;
     bool mIsUseGravityCam = false;
-    sead::PtrArray<PuppetInfo> isIt;
     GameTime mHidingTime;
 
+    sead::PtrArray<PuppetInfo> isIt;
 };
 
 enum TagUpdateType : u8 {
@@ -51,8 +50,6 @@ class HideAndSeekMode : public GameModeBase {
         void processPacket(Packet* packet) override;
         Packet* createPacket() override;
 
-        void updateSpectateCam(PlayerActorBase* playerBase);
-
         bool isPlayerIt() const { return mInfo->mIsPlayerIt; }
 
         float getInvulnTime() const { return mInvulnTime; }
@@ -64,15 +61,20 @@ class HideAndSeekMode : public GameModeBase {
         bool isUseGravity() const { return mInfo->mIsUseGravity; }
 
 
+        void updateSpectateCam(PlayerActorBase* playerBase); // Updates the frozen spectator camera
+
         void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; }
+        
 
     private:
         float mInvulnTime = 0.0f;
         GameModeTimer* mModeTimer = nullptr;
         HideAndSeekIcon *mModeLayout = nullptr;
         HideAndSeekInfo* mInfo = nullptr;
+
         // Spectate camera ticket and target information
     al::CameraTicket* mTicket = nullptr;
     int mPrevSpectateIndex = -2;
     int mSpectateIndex = -1;
+
 };

@@ -61,10 +61,10 @@ namespace al
         virtual void draw() const;
         virtual void startClipped();
         virtual void endClipped();
-        // source = sensor belonging to this actor
-        // target = sensor belonging to other actor
-        virtual void attackSensor(HitSensor *source, HitSensor *target);
-        virtual bool receiveMsg(const SensorMsg *msg, HitSensor *source, HitSensor *target);
+        // sender = sensor that sender attacked
+        // receiver = sensor from actor sending message
+        virtual void attackSensor(HitSensor *sender, HitSensor *receiver);
+        virtual bool receiveMsg(const SensorMsg *msg, HitSensor *sender, HitSensor *receiver);
         virtual bool receiveMsgScreenPoint(const SensorMsg *, ScreenPointer *, ScreenPointTarget *);
 
         virtual const char *getName() const { return this->mActorName; };
@@ -98,7 +98,23 @@ namespace al
 
         virtual void updateCollider();
 
+        void initPoseKeeper(al::ActorPoseKeeperBase *);
+        void initExecuteInfo(al::ActorExecuteInfo *);
+        void initModelKeeper(al::ModelKeeper *);
+        void initActionKeeper(al::ActorActionKeeper *);
+        void initNerveKeeper(al::NerveKeeper *);
+        void initHitSensor(int);
+        void initScreenPointKeeper(al::ScreenPointKeeper *);
+        void initEffectKeeper(al::EffectKeeper *);
+        void initAudioKeeper(al::AudioKeeper *);
+        void initRailKeeper(al::ActorInitInfo const&,char const*);
+        void initCollider(float,float,uint);
+        void initItemKeeper(int);
+        void initScoreKeeper(void);
+        void initActorPrePassLightKeeper(al::ActorPrePassLightKeeper *);
+        void initActorOcclusionKeeper(al::ActorOcclusionKeeper *);
         void initSubActorKeeper(al::SubActorKeeper *);
+        void initSceneInfo(al::ActorSceneInfo *);
 
         const char *mActorName;                                // 0x48
         al::ActorPoseKeeperBase *mPoseKeeper;                  // 0x50

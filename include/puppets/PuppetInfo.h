@@ -55,8 +55,8 @@ struct PuppetInfo {
     bool isFreezeTagFallenOff = false; // When runenr falls off and is automatically frozen, this flag is set
     float freezeIconSize = 0.f;
 // Hot Potato Gamemode Info
-    uint16_t hotPotatoScore = 0;
-    bool isHotPotatoRunner = true;
-    bool isHotPotatoFreeze = false;
-    bool isHotPotatoFallenOff = false; // When runenr falls off and is automatically frozen, this flag is set
+uint16_t hotPotatoScore = 0;
+bool isHotPotatoRunner = true;
+bool isHotPotatoFreeze = false;
+bool isHotPotatoFallenOff = false; // When runenr falls off and is automatically frozen, this flag is set
 };

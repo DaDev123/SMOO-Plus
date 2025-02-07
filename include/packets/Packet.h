@@ -76,7 +76,6 @@ struct PACKED Packet {
 #include "packets/PlayerConnect.h"
 #include "packets/PlayerDC.h"
 #include "packets/GameInf.h"
-
 #include "packets/CostumeInf.h"
 #include "packets/ServerCommand.h"
 #include "packets/ShineCollect.h"

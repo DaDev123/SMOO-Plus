@@ -3,7 +3,7 @@
 #include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/hotpotato/HotPotatoScore.hpp"
 
-enum HotPotatoState { // Runner team player's state
+enum HotState { // Runner team player's state
     HOTALIVE = 0,
     HOTFREEZE = 1
 };
@@ -12,7 +12,7 @@ struct HotPotatoInfo : GameModeInfoBase {
     HotPotatoInfo() { mMode = GameMode::HOTPOTATO; }
     bool mIsPlayerRunner = true;
     float mFreezeIconSize = 0.f;
-    HotPotatoState mIsPlayerFreeze = HotPotatoState::HOTALIVE;
+    HotState mIsPlayerFreeze = HotState::HOTALIVE;
 
     bool mIsRound = false;
     int mFreezeCount = 0;

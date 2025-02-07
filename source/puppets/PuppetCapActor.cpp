@@ -1,5 +1,13 @@
 #include "actors/PuppetCapActor.h"
+#include "al/sensor/HitSensor.h"
+#include "al/util.hpp"
 #include "al/util/MathUtil.h"
+#include "logger.hpp"
+#include "math/seadVector.h"
+#include "rs/util/SensorUtil.h"
+#include "al/util/SensorUtil.h"
+#include "server/gamemode/GameModeManager.hpp"
+#include "server/gamemode/GameModeBase.hpp"
 
 PuppetCapActor::PuppetCapActor(const char *name) : al::LiveActor(name) {}
 
@@ -10,6 +18,12 @@ void PuppetCapActor::init(al::ActorInitInfo const &initInfo) {
     PlayerFunction::createCapModelName(&capModelName, tryGetPuppetCapName(mInfo));
 
     PlayerFunction::initCapModelActorDemo(this, initInfo, capModelName.cstr());
+
+    initHitSensor(2);
+    al::addHitSensor(this, initInfo, "Push", SensorType::MapObjSimple, 60.0f, 8,
+                     sead::Vector3f::zero);
+    al::addHitSensor(this, initInfo, "Attack", SensorType::EnemyAttack, 300.0f, 8,
+                     sead::Vector3f::zero);
 
     al::hideSilhouetteModelIfShow(this);
 
@@ -33,6 +47,55 @@ void PuppetCapActor::initOnline(PuppetInfo *pupInfo) {
 void PuppetCapActor::movement() {
     al::LiveActor::movement();
 }
+
+void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver) {
+    // Disable attack behavior if specific game modes are active
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::Infection) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::SARDINE) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO)) {
+        return;  // Prevent attack behavior entirely
+    }
+
+    // Prevent normal attack behavior if gamemode requires custom behavior
+    if (GameModeManager::tryAttackCapSensor(sender, receiver))
+        return;
+
+    if (al::isSensorPlayer(receiver) && al::isSensorName(sender, "Push")) {
+        rs::sendMsgPushToPlayer(receiver, sender);
+    }
+}
+
+bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender, al::HitSensor* receiver) {
+    // Disable message handling if specific game modes are active
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::Infection) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::SARDINE) ||
+        GameModeManager::instance()->isModeAndActive(GameMode::HOTPOTATO)) {
+        return false;  // Prevent message handling
+    }
+
+    // Try to use gamemode receive logic, otherwise fallback to default behavior
+    if (GameModeManager::tryReceiveCapMsg(msg, sender, receiver)) {
+        return true;
+    }
+
+    if (al::isMsgPlayerDisregard(msg)) {
+        return true;
+    }
+    if (rs::isMsgPlayerCapTouchJump(msg)) {
+        return true;
+    }
+    if (rs::isMsgPlayerCapTrample(msg)) {
+        rs::requestHitReactionToAttacker(msg, receiver, *al::getSensorPos(sender));
+        return true;
+    }
+
+    return false;
+}
+
 
 void PuppetCapActor::control() {
     if(mInfo->capAnim) {

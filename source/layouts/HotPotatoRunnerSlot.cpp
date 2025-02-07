@@ -102,7 +102,7 @@ void HotPotatoRunnerSlot::exeWait()
             return;
 
         setSlotName(mInfo->mRunnerPlayers.at(mRunnerIndex - mInfo->mIsPlayerRunner)->puppetName);
-        setSlotScore(mInfo->mRunnerPlayers.at(mRunnerIndex - mInfo->mIsPlayerRunner)->freezeTagScore);
+        setSlotScore(mInfo->mRunnerPlayers.at(mRunnerIndex - mInfo->mIsPlayerRunner)->hotPotatoScore);
     }
 }
 

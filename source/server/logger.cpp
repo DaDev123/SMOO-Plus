@@ -1,4 +1,5 @@
 #include "logger.hpp"
+#include "al/util/ControllerUtil.h"
 #include "helpers.hpp"
 #include "nn/result.h"
 
@@ -53,6 +54,9 @@ nn::Result Logger::init(const char* ip, u16 port) {
     serverAddress.address = hostAddress;
     serverAddress.port = nn::socket::InetHtons(this->port);
     serverAddress.family = 2;
+
+    if(al::isPadHoldZR(-1))
+        return -1;
 
     nn::Result result;
     bool connected = false;

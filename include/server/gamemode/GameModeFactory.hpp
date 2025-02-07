@@ -5,8 +5,8 @@
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/inf/InfectionMode.hpp"
 #include "server/freeze/FreezeTagMode.hpp"
-#include "server/snh/SardineMode.hpp"
 #include "server/hotpotato/HotPotatoMode.hpp"
+#include "server/snh/SardineMode.hpp"
 
 typedef GameModeBase* (*createMode)(const char* name);
 

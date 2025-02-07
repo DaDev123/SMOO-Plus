@@ -6,9 +6,6 @@
 #include "logger.hpp"
 #include "packets/Packet.h"
 #include "server/hns/HideAndSeekMode.hpp"
-#include "server/inf/InfectionMode.hpp"
-#include "server/snh/SardineMode.hpp"
-#include "server/freeze/FreezeTagMode.hpp"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
@@ -613,7 +610,6 @@ void Client::sendGamemodePacket() {
 
 }
 
-
 /**
  * @brief 
  * 
@@ -873,7 +869,6 @@ void Client::updateGameInfo(GameInf *packet) {
     }
 }
 
-
 /**
  * @brief 
  * 
@@ -1036,6 +1031,7 @@ PuppetInfo *Client::getLatestInfo() {
         return nullptr;
     }
 }
+
 /**
  * @brief 
  * Returns Puppet Info based off index in array.

@@ -42,6 +42,8 @@ namespace rs {
 
     void get2DAreaPos(sead::Vector3<f32> *, al::AreaObj const *);
 
+    bool isInvalidChangeStage(al::LiveActor const*);
+
     bool isInChangeStageArea(PlayerActorHakoniwa const*, sead::Vector3f const *);
 
     bool isPlayerOnGround(const al::LiveActor *);
@@ -85,4 +87,6 @@ namespace rs {
     int getStageShineAnimFrame(al::LiveActor const*, char const*);
     const char* getStageShineArchiveName(al::LiveActor const*, char const*);
     const char* getStageShineEmptyArchiveName(al::LiveActor const*, char const*);
+
+    bool isActionEndDemoPlayer(al::LiveActor const*);
 }

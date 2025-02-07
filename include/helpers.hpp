@@ -24,7 +24,8 @@ void logQuat(const char *quatName, sead::Quatf quat);
 
 sead::Vector3f QuatToEuler(sead::Quatf *quat);
 
-float vecMagnitude(sead::Vector3f const &input);
+float vecMagnitude(sead::Vector3f const& input);
+float vecDistance(sead::Vector3f const& a, sead::Vector3f const& b);
 
 float quatAngle(sead::Quatf const &q1, sead::Quatf &q2);
 

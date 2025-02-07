@@ -130,6 +130,8 @@ namespace al {
     sead::Vector3f* getFrontPtr(LiveActor*);
     sead::Vector3f& getVelocity(const LiveActor*);
     sead::Vector3f* getVelocityPtr(LiveActor*);
+    sead::Vector3f& getRotate(al::LiveActor const*);
+    sead::Vector3f* getRotatePtr(al::LiveActor*);
     sead::Quatf& getQuat(al::LiveActor const*);
     sead::Quatf* getQuatPtr(al::LiveActor *);
     Collider* getActorCollider(LiveActor*);
