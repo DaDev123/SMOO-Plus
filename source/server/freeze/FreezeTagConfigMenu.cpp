@@ -25,7 +25,7 @@ const sead::WFixedSafeString<0x200> *FreezeTagConfigMenu::getStringData() {
 
     gamemodeConfigOptions->mBuffer[0].copy(u"Set Score");
     gamemodeConfigOptions->mBuffer[1].copy(u"Config Host Controls");
-    gamemodeConfigOptions->mBuffer[2].copy(u"Toggle Debug Mode");
+    gamemodeConfigOptions->mBuffer[2].copy(u"Toggle Host Mode");
 
     return gamemodeConfigOptions->mBuffer;
 }
@@ -108,7 +108,7 @@ bool FreezeTagConfigMenu::updateMenu(int selectIndex) {
         }
         case 2: {
             if (GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
-                curMode->mIsDebugMode = !curMode->mIsDebugMode;
+                curMode->mIsHostMode = true;
             }
             return true;
         }
