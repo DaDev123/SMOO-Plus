@@ -208,7 +208,7 @@ void SardineMode::update()
             if (curInfo->isIt)
                 isAnyIt = true;
 
-            if (curInfo->isConnected && curInfo->isInSameStage && curInfo->isIt && !mInfo->mIsIt && !isYukimaru && pupDist < 300.f) {
+            if (curInfo->isConnected && curInfo->isInSameStage && curInfo->isIt && !mInfo->mIsIt && !isYukimaru && pupDist < 100.f) {
                 if (((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D && !PlayerFunction::isPlayerDeadStatus(playerBase)) {
                     mInfo->mIsIt = true;
                     mModeTimer->enableTimer();

@@ -41,6 +41,9 @@
 static int pInfSendTimer = 0;
 static int gameInfSendTimer = 0;
 
+int curSize = PlayerSize::SMALL;
+float scale = 0.3f;
+
 void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru) {
     
     if (pInfSendTimer >= 3) {
@@ -362,6 +365,7 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
 
     al::PlayerHolder *pHolder = al::getScenePlayerHolder(stageScene);
     PlayerActorBase* playerBase = al::tryGetPlayerActor(pHolder, 0);
+    PlayerActorHakoniwa* p1 = (PlayerActorHakoniwa*)al::tryGetPlayerActor(pHolder, 0); //Small Mario Stuff
     
     bool isYukimaru = !playerBase->getPlayerInfo();
 
@@ -457,6 +461,30 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
 
     if(isFirstStep && GameModeManager::instance()->isMode(GameMode::FREEZETAG))
         GameModeManager::instance()->getMode<FreezeTagMode>()->setWipeHolder(sequence->mWipeHolder);
+
+    sead::Vector3f* pScale = al::getScale(p1);
+    sead::Vector3f *capScale = al::getScale(p1->mHackCap);
+    switch(curSize){
+        case NORMAL:
+            scale = 1.f;   
+            break;
+        case SMALL:
+            scale = 0.3f;
+            break;
+        case BIG:
+            scale = 4.f;
+            break;
+        case VERYBIG:
+            scale = 8.f;
+            break;
+    }
+    
+    if(pScale->x != scale) {
+        al::setScaleAll(p1, scale);
+    }
+    if(capScale->x != scale) {
+        al::setScaleAll(p1->mHackCap, scale);
+    }
 
     return isFirstStep;
 

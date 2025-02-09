@@ -193,7 +193,7 @@ void HideAndSeekMode::update() {
                         float pupDist = al::calcDistance(playerBase, curInfo->playerPos); // TODO: remove distance calculations and use hit sensors to determine this
 
                         if (!isYukimaru) {
-                            if(pupDist < 200.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D) {
+                            if(pupDist < 55.f && ((PlayerActorHakoniwa*)playerBase)->mDimKeeper->is2DModel == curInfo->is2D) {
                                 if(!PlayerFunction::isPlayerDeadStatus(playerBase)) {
                                     
                                     GameDataFunction::killPlayer(GameDataHolderAccessor(this));

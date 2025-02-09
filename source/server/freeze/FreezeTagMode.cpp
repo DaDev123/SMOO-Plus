@@ -261,12 +261,12 @@ void FreezeTagMode::update() {
                     continue;
 
                 //Check for freeze
-                if (!mInfo->mIsPlayerFreeze && pupDist < 250.f && isP2D == curInfo->is2D && !isPDead && !curInfo->isFreezeTagRunner)
+                if (!mInfo->mIsPlayerFreeze && pupDist < 75.f && isP2D == curInfo->is2D && !isPDead && !curInfo->isFreezeTagRunner)
                     trySetPlayerRunnerState(FreezeState::FREEZE);
 
                 //Check for unfreeze
                 float freezeMinTime = al::clamp(3.f + (mInfo->mFreezeCount * 0.5f), 3.f, 7.f);
-                if (mInvulnTime >= freezeMinTime && mInfo->mIsPlayerFreeze && pupDist < 200.f && isP2D == curInfo->is2D
+                if (mInvulnTime >= freezeMinTime && mInfo->mIsPlayerFreeze && pupDist < 60.f && isP2D == curInfo->is2D
                 && !isPDead && curInfo->isFreezeTagRunner && !curInfo->isFreezeTagFreeze) {
                     trySetPlayerRunnerState(FreezeState::ALIVE);
                 }
