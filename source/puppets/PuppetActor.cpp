@@ -298,7 +298,6 @@ void PuppetActor::makeActorDead() {
 }
 
 void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
-void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
 
     // Prevent normal attack behavior if gamemode requires custom behavior
     if (GameModeManager::tryAttackPuppetSensor(source, target))
