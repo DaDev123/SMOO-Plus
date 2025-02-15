@@ -319,6 +319,11 @@ void stageInitHook(al::ActorInitInfo *info, StageScene *curScene, al::PlacementI
 
     Client::sendGameInfPacket(info->mActorSceneInfo.mSceneObjHolder);
 
+    if(curSize == PlayerSize::VERYBIG)
+        curSize = PlayerSize::NORMAL;
+    else
+        curSize++;
+
 }
 
 PlayerCostumeInfo *setPlayerModel(al::LiveActor *player, const al::ActorInitInfo &initInfo, const char *bodyModel, const char *capModel, al::AudioKeeper *keeper, bool isCloset) {
@@ -362,6 +367,7 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
 
     al::PlayerHolder *pHolder = al::getScenePlayerHolder(stageScene);
     PlayerActorBase* playerBase = al::tryGetPlayerActor(pHolder, 0);
+    PlayerActorHakoniwa* p1 = (PlayerActorHakoniwa*)al::tryGetPlayerActor(pHolder, 0);
     
     bool isYukimaru = !playerBase->getPlayerInfo();
 
