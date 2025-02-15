@@ -55,6 +55,18 @@ static bool isInGame = false;
 
 static bool debugMode = false;
 
+enum PlayerSize {
+    NORMAL,
+    SMALL,
+    BIG,
+    VERYBIG
+};
+
+extern int curSize;
+extern float scale;
+
+extern float camDist;
+
 constexpr const char* captureNames[] = {
     "AnagramAlphabetCharacter", "Byugo", "Bubble", "Bull", "Car", "ElectricWire",
     "KillerLauncherMagnum", "KuriboPossessed",
