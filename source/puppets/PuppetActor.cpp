@@ -298,15 +298,16 @@ void PuppetActor::makeActorDead() {
 }
 
 void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
+    // Disable all behavior in FREEZETAG mode
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
+        return;
+    }
 
     // Prevent normal attack behavior if gamemode requires custom behavior
     if (GameModeManager::tryAttackPuppetSensor(source, target))
         return;
 
-    // Disable normal attack behavior in FREEZETAG mode
-    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
-        return;
-
+    // Regular attack behavior
     if (!al::sendMsgPush(target, source)) {
         rs::sendMsgPushToPlayer(target, source);
         rs::sendMsgPlayerDisregardTargetMarker(target, source);
@@ -315,17 +316,17 @@ void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
 
 bool PuppetActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* source,
                              al::HitSensor* target) {
+    // Disable all behavior in FREEZETAG mode
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
+        return false;  // No hit reaction in Freeze Tag mode
+    }
 
     // Try to use gamemode receive logic, otherwise fallback to default behavior
     if (GameModeManager::tryReceivePuppetMsg(msg, source, target)) {
         return true;
     }
 
-    // Disable hit reaction behavior in FREEZETAG mode
-    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
-        return false;
-    }
-
+    // Handle normal hit reactions outside of FREEZETAG mode
     if ((al::isMsgPlayerTrampleReflect(msg) || rs::isMsgPlayerAndCapObjHipDropReflectAll(msg)) && 
         al::isSensorName(target, "Body")) {
         
