@@ -33,6 +33,8 @@ void PuppetCapActor::init(al::ActorInitInfo const &initInfo) {
 
     mJointKeeper->initCapJointControl(this);
 
+    al::setScaleAll(this, 0.3f); // TEMP
+
     makeActorDead();
 }
 
