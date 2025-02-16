@@ -243,17 +243,17 @@ void updateDrawHook(al::ExecuteDirector* thisPtr, const char* listName, const ch
 float followDistHook() {
     switch(curSize){
         case NORMAL:
-            return 220.f;
+            return 330.f;
             break;
         case SMALL:
-            return 220.f;
+            return 330.f;
             break;
         case BIG:
-            return 220.f;
+            return 330.f;
             break;
             break;
         case VERYBIG:
-            return 220.f;
+            return 330.f;
             break;
     }
 }
