@@ -41,6 +41,10 @@
 static int pInfSendTimer = 0;
 static int gameInfSendTimer = 0;
 
+int curSize = PlayerSize::SMALL;
+float scale = 0.3f;
+
+
 void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru) {
     
     if (pInfSendTimer >= 3) {
@@ -463,6 +467,31 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
 
     if(isFirstStep && GameModeManager::instance()->isMode(GameMode::FREEZETAG))
         GameModeManager::instance()->getMode<FreezeTagMode>()->setWipeHolder(sequence->mWipeHolder);
+
+	sead::Vector3f* pScale = al::getScale(p1);
+    sead::Vector3f *capScale = al::getScale(p1->mHackCap);
+    switch(curSize){
+        case NORMAL:
+            scale = 0.3f;
+            break;
+        case SMALL:
+            scale = 0.3f;
+            break;
+        case BIG:
+            scale = 0.3f;
+            break;
+        case VERYBIG:
+            scale = 0.3f;
+            break;
+    }
+    
+    if(pScale->x != scale) {
+        al::setScaleAll(p1, 0.3f);
+    }
+    if(capScale->x != scale) {
+        al::setScaleAll(p1->mHackCap, 0.3f);
+    }
+
 
     return isFirstStep;
 
