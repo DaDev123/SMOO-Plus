@@ -259,10 +259,23 @@ float followDistHook() {
 }
 const char* offsetOverideHook(al::ByamlIter const& iter, char const* key) {
     switch(curSize){
-        case SMALL:
+        case SMALL: {
+             return "Y0.5m";
+            break;
+    }
+        case NORMAL: {
+             return "Y0.5m";
+            break;
+}
+case BIG: {
              return "Y0.5m";
             break;
         default:
+}
+            case VERYBIG: {
+             return "Y0.5m";
+            break;
+            }
              return al::tryGetByamlKeyStringOrNULL(iter, key);
             break;
             break;
@@ -300,7 +313,7 @@ PlayerConst* createPlayerConstHook(char const* suffix) {
 // }
 
 void effectHook(al::ActionEffectCtrl* effectController, char const* effectName) {
-    if (curSize == PlayerSize::SMALL) {
+    if (curSize == PlayerSize::SMALL || curSize == PlayerSize::NORMAL || curSize == PlayerSize::BIG || curSize == PlayerSize::VERYBIG) {
         if(al::isEqualString(effectName, "RollingStart") || al::isEqualString(effectName, "Rolling") || al::isEqualString(effectName, "RollingStandUp") || al::isEqualString(effectName, "Jump") || al::isEqualString(effectName, "LandDownFall")|| al::isEqualString(effectName, "SpinCapStart") || al::isEqualString(effectName, "FlyingWaitR") || al::isEqualString(effectName, "StayR")|| al::isEqualString(effectName, "SpinGroundR")|| al::isEqualString(effectName, "StartSpinJumpR")|| al::isEqualString(effectName, "SpinJumpDownFallR")|| al::isEqualString(effectName, "Move")|| al::isEqualString(effectName, "Brake")) {
             al::tryDeleteEffect(effectController->mEffectKeeper, effectName);
             return;
@@ -312,7 +325,7 @@ void capVelScaleHook(al::LiveActor* hackCap, sead::Vector3f const& addition) {
     al::setVelocity(hackCap, addition * (0.3f * 0.8f));
 }
 void capReturnVelHook(HackCap *hackCap, sead::Vector3f const& addition) {
-    if (curSize == PlayerSize::SMALL || curSize == PlayerSize::VERYBIG) {
+    if (curSize == PlayerSize::SMALL || curSize == PlayerSize::VERYBIG || curSize == PlayerSize::NORMAL || curSize == PlayerSize::BIG) {
         PlayerActorHakoniwa *pActor = (PlayerActorHakoniwa*)al::getPlayerActor(hackCap, 0);
         CapFunction::putOnCapPlayer(hackCap, pActor->mPlayerAnimator);
     } else {
@@ -343,8 +356,8 @@ float fpScaleHook() {
         case BIG:
             return 0.94f;
             break;
-            break;
         case VERYBIG:
+            return 0.94f;
             break;
     }
 }
