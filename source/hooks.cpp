@@ -270,12 +270,12 @@ const char* offsetOverideHook(al::ByamlIter const& iter, char const* key) {
 case BIG: {
              return "Y0.5m";
             break;
-        default:
 }
             case VERYBIG: {
              return "Y0.5m";
             break;
             }
+        default:
              return al::tryGetByamlKeyStringOrNULL(iter, key);
             break;
             break;
