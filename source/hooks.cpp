@@ -309,7 +309,7 @@ void effectHook(al::ActionEffectCtrl* effectController, char const* effectName) 
     effectController->startAction(effectName);
 }
 void capVelScaleHook(al::LiveActor* hackCap, sead::Vector3f const& addition) {
-    al::setVelocity(hackCap, addition * (scale * 0.8f));
+    al::setVelocity(hackCap, addition * (0.3f * 0.8f));
 }
 void capReturnVelHook(HackCap *hackCap, sead::Vector3f const& addition) {
     if (curSize == PlayerSize::SMALL || curSize == PlayerSize::VERYBIG) {
@@ -321,27 +321,27 @@ void capReturnVelHook(HackCap *hackCap, sead::Vector3f const& addition) {
     
 }
 void spinFlowerHook(al::LiveActor* actor, float velocity) {
-    al::addVelocityToGravity(actor, velocity * scale);
+    al::addVelocityToGravity(actor, velocity * 0.3f);
 }
 void sensorHook(al::LiveActor *actor, al::ActorInitInfo const &initInfo, char const *sensorName, uint typeEnum, float radius, ushort maxCount, sead::Vector3f const& position) {
     sead::Vector3f newPos = sead::Vector3f(position);
     if(position.y > 0)
-        newPos.y = position.y * scale;
+        newPos.y = position.y * 0.3f;
     al::addHitSensor(actor, initInfo, sensorName, typeEnum, radius, maxCount, newPos);
 }
 float fpHook() {
-    return 300.0f * scale;
+    return 300.0f * 0.3f;
 }
 float fpScaleHook() {
     switch(curSize){
         case NORMAL:
-            return 31.3f;
+            return 0.94f;
             break;
         case SMALL:
-            return 31.3f;
+            return 0.94f;
             break;
         case BIG:
-            return 31.3f;
+            return 0.94f;
             break;
             break;
         case VERYBIG:
