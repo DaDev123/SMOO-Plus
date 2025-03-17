@@ -1,0 +1,10 @@
+@smo:100,101,110,120
+
+_ZNK14DoorAreaChange6isOpenEv
+
+_ZNK9ShineChip5isGotEv
+_ZN2al8setNerveEPNS_9IUseNerveEPKNS_5NerveE
+
+_ZNK13GrowFlowerPot12isEnableGrowEv
+
+_ZN14PlayerAnimator9startAnimERKN4sead14SafeStringBaseIcEE

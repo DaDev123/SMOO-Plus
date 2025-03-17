@@ -1,0 +1,2 @@
+## Demangle
+    see helpers::isGetShineState()

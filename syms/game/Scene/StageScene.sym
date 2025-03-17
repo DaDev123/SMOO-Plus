@@ -1,0 +1,9 @@
+@smo:100,101,110,120
+
+_ZN10StageScene7controlEv
+_ZNK10StageScene12isEnableSaveEv
+_ZNK10StageScene16isDefeatKoopaLv1Ev
+
+@smo:130
+
+_ZNK10StageScene16isDefeatKoopaLv1Ev = 0x473080

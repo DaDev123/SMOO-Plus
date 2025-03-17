@@ -1,0 +1,7 @@
+@smo:100,101,110,120
+
+_ZN2rs31setTouchCheckpointFlagToWatcherEP14CheckpointFlag
+
+@smo:130
+
+_ZN2rs31setTouchCheckpointFlagToWatcherEP14CheckpointFlag = 0x0021dd90

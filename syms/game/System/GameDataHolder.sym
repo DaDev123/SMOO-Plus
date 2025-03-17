@@ -1,0 +1,8 @@
+@smo:100,101,110,120
+
+_ZN14GameDataHolder15changeNextStageEPK15ChangeStageInfoi
+_ZNK14GameDataHolder18findUnlockShineNumEPbi
+_ZN22GameDataHolderAccessorC1EPKN2al18IUseSceneObjHolderE
+_ZN22GameDataHolderAccessorC2EPKN2al18IUseSceneObjHolderE
+
+@smo:130

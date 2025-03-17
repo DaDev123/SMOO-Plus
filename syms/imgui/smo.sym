@@ -1,0 +1,7 @@
+@smo:100,101,110,120
+
+_ZN2nn3gfx6detail8GlslcDll11GetInstanceEv
+_ZNK2nn3gfx6detail8GlslcDll13IsInitializedEv
+_ZN2nn3gfx6detail8GlslcDll8FinalizeEv
+
+@smo:130

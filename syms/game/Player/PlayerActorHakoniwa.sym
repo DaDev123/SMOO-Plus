@@ -1,0 +1,7 @@
+@smo:100,101,110,120
+
+_ZN19PlayerActorHakoniwa7controlEv
+_ZTI19PlayerActorHakoniwa
+
+@smo:130
+_ZN19PlayerActorHakoniwa7controlEv = 0x003c3200

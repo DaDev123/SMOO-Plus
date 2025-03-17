@@ -1,0 +1,6 @@
+@smo:100,101,110,120
+
+_ZN2al12isPlayingBgmEPKNS_15IUseAudioKeeperE
+_ZN2al10stopAllBgmEPKNS_15IUseAudioKeeperEi
+
+@smo:130

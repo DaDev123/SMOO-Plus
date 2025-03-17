@@ -1,0 +1,7 @@
+@smo:100,101,110,120
+
+_ZN2rs18getPlayerJumpCountEPK14GameDataHolder
+_ZN2rs22getPlayerThrowCapCountEPK14GameDataHolder
+_ZN2rs15getTotalCoinNumEPK14GameDataHolder
+
+@smo:130

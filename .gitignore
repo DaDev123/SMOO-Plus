@@ -1,11 +1,4 @@
-starlight_patch_100/**
-build100/**
-romfs stuff/**
-.vscode/**
-Crash Reports/**
-.cache/**
-Custom Stage Builds/**
-*.lst
-*.disabled
-
+build/
+.cache/
 compile_commands.json
+lib/std

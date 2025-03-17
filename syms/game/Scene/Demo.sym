@@ -1,0 +1,9 @@
+@smo:100,101,110,120
+
+_ZN2rs11isFirstDemoEPKN2al5SceneE
+_ZN2rs30isFirstDemoScenarioStartCameraEPKN2al9LiveActorE
+_ZN2rs27isFirstDemoWorldIntroCameraEPKN2al5SceneE
+_ZNK12MoonRockData38isEnableShowDemoAfterOpenMoonRockFirstEv
+_ZNK18DemoStateHackFirst20isEnableShowHackDemoEv
+
+@smo:130

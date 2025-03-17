@@ -1,0 +1,4 @@
+@sdk
+
+_ZN2nn2fs15CreateDirectoryEPKc
+_ZN2nn2fs11MountSdCardEPKc

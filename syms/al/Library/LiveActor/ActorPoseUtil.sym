@@ -1,0 +1,14 @@
+@smo:100,101,110,120
+
+_ZN2al11getTransPtrEPNS_9LiveActorE
+_ZN2al8getTransEPKNS_9LiveActorE
+
+_ZN2al7getQuatEPKNS_9LiveActorE
+_ZN2al10getQuatPtrEPNS_9LiveActorE
+
+_ZN2al14updatePoseQuatEPNS_9LiveActorERKN4sead4QuatIfEE
+_ZN2al8setTransEPNS_9LiveActorERKN4sead7Vector3IfEE
+
+@smo:130
+_ZN2al11getTransPtrEPNS_9LiveActorE = 0x0066d810
+_ZN2al8getTransEPKNS_9LiveActorE = 0x0x0066d810 // lol !!!!!!!!!

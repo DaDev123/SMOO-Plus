@@ -1,0 +1,6 @@
+[submodule "lib/OdysseyHeaders"]
+	path = lib/OdysseyHeaders
+	url = https://github.com/MonsterDruide1/OdysseyHeaders
+[submodule "lib/imgui"]
+	path = lib/imgui
+	url = https://github.com/ocornut/imgui

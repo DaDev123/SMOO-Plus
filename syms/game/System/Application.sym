@@ -1,0 +1,7 @@
+@smo:100,101,110,120
+
+_ZN11Application9sInstanceE
+
+@smo:130
+
+_ZN11Application9sInstanceE = 0x01374e08
