@@ -4,6 +4,7 @@
 #include "InputHelper.h"
 
 #include <cstdio>
+#include <cstdint>
 #include <heap/seadHeapMgr.h>
 #include <nn/oe.h>
 #include "al/Library/Camera/CameraUtil.h"
@@ -44,22 +45,21 @@ void Menu::draw() {
     ImGui::Text("Toggle Input: R + ZR + L");
     ImGui::Separator();
 
-    char fmt[17] = "Toggle Mouse OFF";
-    snprintf(fmt, 17, "Toggle Mouse %s", InputHelper::isDisableMouse() ? "ON" : "OFF");
+    char fmt[17] = "%s Mouse";
+    snprintf(fmt, 17, "%s Mouse", InputHelper::isDisableMouse() ? "Activate" : "Deactivate");
 
     if (ImGui::Button(fmt)) {
         InputHelper::setDisableMouse(!InputHelper::isDisableMouse());
     }
 
-    drawStageWarpWindow();
-
-    if (ImGui::CollapsingHeader("Misc")) {
-        ImGui::Indent();
-        drawTeleportCat();
-        drawMiscCat();
-        ImGui::Unindent();
+    if (ImGui::Button("Reload Stage")) {
+        if (stageScene) stageScene->kill();
     }
 
+    drawStageWarpWindow();
+
+    
+    drawHotkeysCat();
     if (ImGui::CollapsingHeader("Input Display")) {
         static int bgColor = u8(set->getSettings()->mInputDisplayBackColor);
         static int ringColor = u8(set->getSettings()->mInputDisplayRingColor);
@@ -99,7 +99,6 @@ void Menu::draw() {
         }
         ImGui::Unindent();
     }
-    drawHotkeysCat();
     drawInfoCat();
 
     ImGui::End();
@@ -126,25 +125,17 @@ void Menu::handleAlways() {
         mIsEnabledMenu = true;
         prevTime = globalTimer;
     }
-    if (globalTimer - prevTime < 5) {
+    if (globalTimer - prevTime == 5) {
         if (prevNavId) ImGui::SetFocusID(prevNavId, ImGui::FindWindowByName("SMOO+ Panel"));
         GImGui->NavDisableHighlight = false;
     }
 
-    if (InputHelper::isPressPadLeft() && set->getSettings()->mIsEnableTpHotkeys && (!InputHelper::isInputToggled() || !mIsEnabledMenu)) {
-        saveTeleport(tpStates[tpIndex]);
-    } else if (InputHelper::isPressPadRight() && set->getSettings()->mIsEnableTpHotkeys && (!InputHelper::isInputToggled() || !mIsEnabledMenu)) {
-        loadTeleport(tpStates[tpIndex]);
-    }
-
-    if (isHotkey(set->getSettings()->mKillSceneKey)) {
-        if (stageScene) stageScene->kill();
-    }
     if (isAnimHotkey(2)) {
         playerHak->endDemoPuppetable();
     }
 
      if (isAnimHotkey(4)) {
+        playerHak->endDemoPuppetable();
         playerHak->startDemoPuppetable();
         if(playerHak)playerHak->mAnimator->startAnim(Animation[set->mSettings.mPlayAnim]);
 
@@ -193,113 +184,10 @@ void Menu::drawInputDisabled() {
     ImGui::End();
 }
 
-void Menu::drawTeleportCat() {
-    if (ImGui::CollapsingHeader("Teleport")) {
-        ImGui::Indent();
-        ImGui::PushItemWidth(200);
-        ImGui::InputInt("Teleport Index", &tpIndex);
-        if (tpIndex < 0) tpIndex = hk::util::arraySize(tpStates) - 1;
-        if (tpIndex >= hk::util::arraySize(tpStates)) tpIndex = 0;
-        ImGui::PopItemWidth();
-
-        if (ImGui::Button("Save")) saveTeleport(tpStates[tpIndex]);
-        ImGui::SameLine();
-        if (ImGui::Button("Load")) loadTeleport(tpStates[tpIndex]);
-        ImGui::SameLine();
-        ImGui::PushID("TpHotkeys");
-        ImGui::Checkbox("Hotkeys", &set->getSettings()->mIsEnableTpHotkeys);
-        ImGui::PopID();
-        ImGui::SameLine();
-        ImGui::BeginDisabled();
-        ImGui::Checkbox("Saved", &tpStates[tpIndex].saved);
-        ImGui::Text("Stage: %s", tpStates[tpIndex].stageName);
-        ImGui::EndDisabled();
-
-        if (ImGui::Button("Save To File")) {
-            SaveFileHelper::instance()->saveTeleport(tpStates, hk::util::arraySize(tpStates));
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Load From File")) {
-            SaveFileHelper::instance()->loadTeleport(tpStates, hk::util::arraySize(tpStates));
-        }
-        ImGui::Unindent();
-    }
-}
-
-void Menu::saveTeleport(TpState& state) {
-    if (!stageScene || !playerHak) return;
-
-    state.saved = true;
-    state.pos = al::getTrans(playerHak);
-    state.quat = al::getQuat(playerHak);
-    strcpy(state.stageName, getEnglishName(GameDataFunction::getCurrentStageName(GameDataHolderAccessor(stageScene))));
-}
-
-void Menu::loadTeleport(TpState& state) {
-    if (!stageScene || !playerHak) return;
-    al::LiveActor* hack = playerHak->mHackKeeper->mCurrentHackActor;
-
-    if (hack) {
-        al::setTrans(hack, state.pos);
-        al::updatePoseQuat(hack, state.quat);
-        al::setVelocityZero(hack);
-        return;
-    }
-
-    if (set->getSettings()->mIsEnableDisableTpPuppet && helpers::isGetShineState(stageScene)) {
-        al::setTrans(playerHak, state.pos);
-        al::updatePoseQuat(playerHak, state.quat);
-    } else {
-        playerHak->startDemoPuppetable();
-        al::setTrans(playerHak, state.pos);
-        al::updatePoseQuat(playerHak, state.quat);
-        playerHak->endDemoPuppetable();
-    }
-}
-
-void Menu::drawMiscCat() {
-    if (ImGui::Button("Kill Mario")) {
-        if (playerHak) GameDataFunction::killPlayer(GameDataHolderWriter(playerHak));
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Damage Mario")) {
-        if (playerHak) {
-            bool tmpDamage = SettingsMgr::instance()->getSettings()->mIsEnableNoDamage;
-            SettingsMgr::instance()->getSettings()->mIsEnableNoDamage = false;
-            GameDataFunction::damagePlayer(GameDataHolderWriter(playerHak));
-            SettingsMgr::instance()->getSettings()->mIsEnableNoDamage = tmpDamage;
-        }
-    }
-    if (ImGui::Button("Life Up Heart")) {
-        if (playerHak) GameDataFunction::getLifeMaxUpItem(playerHak);
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Heal Mario")) {
-        if (playerHak) GameDataFunction::recoveryPlayer(playerHak);
-    }
-    if (ImGui::Button("Add 1000 coins")) {
-        if (stageScene) GameDataFunction::addCoin(GameDataHolderWriter(stageScene), 1000);
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Remove 1000 coins")) {
-        if (stageScene) {
-            if (GameDataFunction::getCoinNum(GameDataHolderAccessor(stageScene)) >= 1000) GameDataFunction::addCoin(GameDataHolderWriter(stageScene), -1000);
-        }
-    }
-    if (ImGui::Button("Remove Cappy")) {
-        if (playerHak) GameDataFunction::disableCapByPlacement((al::LiveActor*)playerHak->mHackCap);
-    }
-    ImGui::PushItemWidth(200);
-    ImGui::Combo("Moon Refresh Text", &set->getSettings()->mMoonRefreshText, MoonRefreshTexts, IM_ARRAYSIZE(MoonRefreshTexts));
-    ImGui::PopItemWidth();
-}
-
 void Menu::drawHotkeysCat() {
-    if (ImGui::CollapsingHeader("Hotkeys")) {
+    if (ImGui::CollapsingHeader("Animation Player")) {
         ImGui::Indent();
-        ImGui::Combo("Kill Scene", &set->mSettings.mKillSceneKey, Keys, IM_ARRAYSIZE(Keys));
-        ImGui::Combo("Play Anim", &set->mSettings.mPlayAnim, Animation, IM_ARRAYSIZE(Animation));
+        ImGui::Combo("Play an Animation", &set->mSettings.mPlayAnim, Animation, IM_ARRAYSIZE(Animation));
         ImGui::Unindent();
     }
 }
@@ -334,9 +222,9 @@ bool Menu::isAnimHotkey(int key) {
     bool ZR = InputHelper::isHoldZR();
     if (key == 0) return 0;
     if (key == 1) return Up && !InputHelper::isInputToggled();
-    if (key == 2) return Up && L && !R && !ZL && !ZR && !InputHelper::isInputToggled();
+    if (key == 2) return Up && !L && !R && ZL && !ZR && !InputHelper::isInputToggled();
     if (key == 3) return Up && R && !L && !ZL && !ZR && !InputHelper::isInputToggled(); 
-    if (key == 4) return Up && !ZL && !L && !Down && R && !ZR && !InputHelper::isInputToggled();
+    if (key == 4) return Up && !ZL && !L && !Down && !R && ZR && !InputHelper::isInputToggled();
     if (key == 5) return Up && ZR && !L && !R && !ZL && !InputHelper::isInputToggled();
     if (key == 6) return Up && L && R && !ZL && !ZR && !InputHelper::isInputToggled(); 
     if (key == 7) return Up && L && ZL && !R && !ZR && !InputHelper::isInputToggled();
@@ -362,20 +250,13 @@ void Menu::drawInfoCat() {
         u64 playTimeTotal = GameDataFunction::getPlayTimeTotal(*accessor);
         u64 playTimeAcrossFile = GameDataFunction::getPlayTimeAcrossFile(*accessor);
         s32 totalCoinNum = rs::getTotalCoinNum(holder);
-        ImGui::Text("Enable Emotes: R + UP");
-        ImGui::Text("Disable Emotes: L + UP");
-        ImGui::Text("PlaceHolder: ");
-        ImGui::Text("PlaceHolder: ");
-        ImGui::Text("PlaceHolder: ");
+        ImGui::Text("---------->Emotes<---------- ");
+        ImGui::Text("Enable Emotes: ZR + UP");
+        ImGui::Text("Disable Emotes: ZL + UP");
+        ImGui::Text("---------->Credits<---------- ");
+        ImGui::Text("Panel: BTT-Studio ");
+        ImGui::Text("Features: BTT-Studio + SrDev ");
         ImGui::Unindent();
-    }
-}
-
-const char* Menu::getMoonRefreshText() {
-    if (strcmp(MoonRefreshTexts[set->getSettings()->mMoonRefreshText], "<blank>") != 0) {
-        return MoonRefreshTexts[set->getSettings()->mMoonRefreshText];
-    } else {
-        return "";
     }
 }
 

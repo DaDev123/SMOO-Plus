@@ -19,6 +19,8 @@
 
 #include "imgui.h"
 
+#include "stage_warp.h"
+
 using namespace hk;
 using namespace btt;
 

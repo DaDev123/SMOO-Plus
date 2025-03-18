@@ -13,7 +13,6 @@
 #include "hk/ro/RoUtil.h"
 #include "hk/sail/detail.h"
 #include "game/System/PlayerHitPointData.h"
-#include "settings/DemoHooks.hpp"
 #include "al/Library/Nerve/NerveUtil.h"
 
 using namespace hk;
@@ -22,7 +21,5 @@ using namespace btt;
 class ShineInfo;
 
 void SettingsHooks::installSettingsHooks() {
-
-    installDemoHooks();
 
 }

@@ -32,24 +32,8 @@ public:
     };
 
     struct Settings {
-        SETTING(MoonRefresh);
-        SETTING(NoDamage);
-        SETTING(DisableMoonLock);
-        SETTING(AlwaysManualCutscene);
-        SETTING(DisableAutoSave);
         SETTING(DisableMusic);
-        SETTING(AlwaysCheckpoints);
-        SETTING(RefreshWarpText);
-        SETTING(RefreshKingdomEnter);
-        SETTING(TpHotkeys);
-        SETTING(DisableTpPuppet);
-        SETTING(RefreshPurps);
         SETTING(InputDisplay);
-        SETTING(DoorRefresh);
-        SETTING(ShardRefresh);
-        SETTING(FlowerPotRefresh);
-        SETTING(NoCheckpointTouch);
-        SETTING(SkipCloud);
         InputDisplayColor mInputDisplayButtonColor = InputDisplayColor::White;
         InputDisplayColor mInputDisplayButtonPressedColor = InputDisplayColor::Pink;
         InputDisplayColor mInputDisplayStickColor = InputDisplayColor::White;
@@ -65,7 +49,7 @@ public:
 
     // Settings* mSettings = nullptr;
     Settings* getSettings() { return &mSettings; }
-    char* mPath = "sd:/BTT-Studio/Settings.bin";
+    char* mPath = "sd:/SMOO-Plus/Settings.bin";
     };
 
 

@@ -7,8 +7,8 @@ class SaveFileHelper {
     SEAD_SINGLETON_DISPOSER(SaveFileHelper)
 
 private:
-    char* mSettingsPath = "sd:/BTT-Studio/Settings.bin";
-    char* mtpPath = "sd:/BTT-Studio/Teleport-States.bin";
+    char* mSettingsPath = "sd:/SMOO-Plus/Settings.bin";
+    char* mtpPath = "sd:/SMOO-Plus/Teleport-States.bin";
 
 public:
     SaveFileHelper() = default;

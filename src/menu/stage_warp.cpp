@@ -1,6 +1,8 @@
+#include <cstddef>
 #include <stage_warp.h>
 
 #include <cstdio>
+#include <vector>
 
 #include "al/Library/Base/StringUtil.h"
 #include "al/Library/Scene/Scene.h"
@@ -13,31 +15,37 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
-struct KingdomEnglishName {
+
+struct KingdomEnglishNameSub {
     const char* mInternal;
     const char* mEnglish;
+};
+
+struct KingdomEnglishNameMain {
+    const char* mInternal;
+    const char* mEnglish;
+    const int clearMainScenario;
+    const int endingScenario;
+    const int moonRockScenario;
+    const KingdomEnglishNameSub* mSubNames;
+    const size_t mSubNamesCount;
 };
 
 bool isShowMenu = false;
 s32 curScenario = 0;
 
-KingdomEnglishName names[] = {
-
-    { "CapWorldHomeStage", "Cap Kingdom" },
-    { "FrogSearchExStage", "Frog Pond" },
-    { "CapWorldTowerStage", "Inside Cap Tower" },
-    { "PoisonWaveExStage", "Poison Tides" },
-    { "RollingExStage", "Precision Rolling" },
-    { "PushBlockExStage", "Push Block Peril" },
-
-    { "WaterfallWorldHomeStage", "Cascade Kingdom" },
+KingdomEnglishNameSub subNamesCap[] = {
+    { "FrogSearchExStage", "Frog Pond" },      { "CapWorldTowerStage", "Inside Cap Tower" }, { "PoisonWaveExStage", "Poison Tides" },
+    { "RollingExStage", "Precision Rolling" }, { "PushBlockExStage", "Push Block Peril" },
+};
+KingdomEnglishNameSub subNamesCascade[] = {
     { "Lift2DExStage", "8-Bit Chasm Lifts" },
     { "TrexPoppunExStage", "Dinosaur Nest" },
     { "WindBlowExStage", "Gusty Bridges" },
     { "CapAppearExStage", "Mysterious Clouds" },
     { "WanwanClashExStage", "Nice Shots with Chain Chomps" },
-
-    { "SandWorldHomeStage", "Sand Kingdom" },
+};
+KingdomEnglishNameSub subNamesSand[] = {
     { "SandWorldKillerExStage", "Bullet Bill Maze" },
     { "RocketFlowerExStage", "Colossal Ruins" },
     { "SandWorldCostumeStage", "Costume Room" },
@@ -55,8 +63,8 @@ KingdomEnglishName names[] = {
     { "SandWorldSlotStage", "Tostarena Slots" },
     { "SandWorldMeganeExStage", "Transparent Lifts" },
     { "SandWorldUnderground000Stage", "Underground Ruins" },
-
-    { "ForestWorldHomeStage", "Wooded Kingdom" },
+};
+KingdomEnglishNameSub subNamesWooded[] = {
     { "KillerRoadExStage", "Breakdown Road" },
     { "ForestWorldWoodsCostumeStage", "Costume Room" },
     { "ShootingElevatorExStage", "Crowded Elevator" },
@@ -71,24 +79,22 @@ KingdomEnglishName names[] = {
     { "ForestWorldTowerStage", "Sky Garden Tower" },
     { "ForestWorldBonusStage", "Spinning-Platforms Treasure Vault" },
     { "ForestWorldCloudBonusExStage", "Walking on Clouds" },
-
-    { "LakeWorldHomeStage", "Lake Kingdom" },
-    { "LakeWorldShopStage", "Crazy Cap Store" },
-    { "TrampolineWallCatchExStage", "Jump, Grab, Cling, Climb" },
-    { "GotogotonExStage", "Puzzle Room" },
-    { "FastenerExStage", "Unzipping the Chasm" },
+};
+KingdomEnglishNameSub subNamesLake[] = {
+    { "LakeWorldShopStage", "Crazy Cap Store" }, { "TrampolineWallCatchExStage", "Jump, Grab, Cling, Climb" },
+    { "GotogotonExStage", "Puzzle Room" },       { "FastenerExStage", "Unzipping the Chasm" },
     { "FrogPoisonExStage", "Waves of Poison" },
-
-    { "CloudWorldHomeStage", "Cloud Kingdom" },
+};
+KingdomEnglishNameSub subNamesCloud[] = {
     { "Cube2DExStage", "2D Cube" },
     { "FukuwaraiKuriboStage", "Picture Match" },
-
-    { "ClashWorldHomeStage", "Lost Kingdom" },
+};
+KingdomEnglishNameSub subNamesLost[] = {
     { "ClashWorldShopStage", "Crazy Cap Store" },
     { "ImomuPoisonExStage", "Stretch and Traverse the Jungle" },
     { "JangoExStage", "Klepto 2 - Lava Boogaloo" },
-
-    { "CityWorldHomeStage", "Metro Kingdom" },
+};
+KingdomEnglishNameSub subNamesMetro[] = {
     { "PoleKillerExStage", "Bullet Billding" },
     { "CityPeopleRoadStage", "Crowded Alleyway" },
     { "CityWorldShop01Stage", "Crazy Cap Store" },
@@ -107,7 +113,8 @@ KingdomEnglishName names[] = {
     { "PoleGrabCeilExStage", "Swinging Along the High-Rises" },
     { "SwingSteelExStage", "Swinging Scaffolding" },
 
-    { "SnowWorldHomeStage", "Snow Kingdom" },
+};
+KingdomEnglishNameSub subNamesSnow[] = {
     { "SnowWorldLobby000Stage", "Class A Lobby" },
     { "SnowWorldLobbyExStage", "Class S Lobby" },
     { "SnowWorldCostumeStage", "Cold Room" },
@@ -119,8 +126,8 @@ KingdomEnglishName names[] = {
     { "SnowWorldCloudBonusExStage", "Spinning Above the Clouds" },
     { "ByugoPuzzleExStage", "Ty-Foo Sliding Puzzle" },
     { "KillerRailCollisionExStage", "Wintery Flower Road" },
-
-    { "SeaWorldHomeStage", "Seaside Kingdom" },
+};
+KingdomEnglishNameSub subNamesSeaside[] = {
     { "CloudExStage", "A Sea of Clouds" },
     { "SeaWorldCostumeStage", "Costume Room" },
     { "WaterValleyExStage", "Flying Through the Narrow Valley" },
@@ -132,7 +139,8 @@ KingdomEnglishName names[] = {
     { "SeaWorldUtsuboCaveStage", "Underwater Tunnel" },
     { "SeaWorldSneakingManStage", "Wriggling Power Moon" },
 
-    { "LavaWorldHomeStage", "Luncheon Kingdom" },
+};
+KingdomEnglishNameSub subNamesLuncheon[] = {
     { "GabuzouClockExStage", "Blazing Above the Gears" },
     { "LavaWorldShopStage", "Crazy Cap Store(?)" },
     { "ForkExStage", "Fork-Flickin to the Summit" },
@@ -145,13 +153,13 @@ KingdomEnglishName names[] = {
     { "LavaWorldCostumeStage", "Simmering in the Kitchen" },
     { "LavaWorldClockExStage", "Spinning Athletics" },
     { "CapAppearLavaLiftExStage", "Volcano Cave Cruising" },
-
-    { "BossRaidWorldHomeStage", "Ruined Kingdom" },
+};
+KingdomEnglishNameSub subNamesRuined[] = {
     { "AttackWorldHomeStage", "Ruined Kingdom" },
     { "BullRunExStage", "Mummy Army" },
     { "DotTowerExStage", "Roulette Tower" },
-
-    { "SkyWorldHomeStage", "Bowser's Kingdom" },
+};
+KingdomEnglishNameSub subNamesBowser[] = {
     { "SkyWorldShopStage", "Crazy Cap Store" },
     { "SkyWorldTreasureStage", "Bowser's Kingdom Treasure Vault" },
     { "SkyWorldCloudBonusExStage", "Dashing Above the Clouds" },
@@ -160,8 +168,8 @@ KingdomEnglishName names[] = {
     { "SkyWorldCostumeStage", "Scene in the Folding Screen" },
     { "TsukkunRotateExStage", "Spinning Tower" },
     { "TsukkunClimbExStage", "Wooden Tower" },
-
-    { "MoonWorldHomeStage", "Moon Kingdom" },
+};
+KingdomEnglishNameSub subNamesMoon[] = {
     { "Galaxy2DExStage", "8-Bit Galaxy" },
     { "MoonWorldShopRoom", "Crazy Cap Store" },
     { "MoonAthleticExStage", "Giant Swings" },
@@ -169,8 +177,8 @@ KingdomEnglishName names[] = {
     { "MoonWorldSphinxRoom", "Moon Kingdom Treasure Vault" },
     { "MoonWorldCaptureParadeStage", "Underground Caverns" },
     { "MoonWorldWeddingRoomStage", "Wedding Room" },
-
-    { "PeachWorldHomeStage", "Mushroom Kingdom" },
+};
+KingdomEnglishNameSub subNamesMushroom[] = {
     { "DotHardExStage", "8-Bit Bullet Bills" },
     { "PeachWorldCostumeStage", "Castle Courtyard 64" },
     { "RevengeBossMagmaStage", "Cookatiel Boss Re-fight" },
@@ -189,8 +197,8 @@ KingdomEnglishName names[] = {
     { "PeachWorldCastleStage", "Peach's Castle" },
     { "FukuwaraiMarioStage", "Picture Match" },
     { "YoshiCloudExStage", "Yoshi in the Sea of Clouds" },
-
-    { "Special1WorldHomeStage", "Dark Side" },
+};
+KingdomEnglishNameSub subNamesDark[] = {
     { "KillerRoadNoCapExStage", "Breakdown Road Capless" },
     { "Special1WorldTowerBombTailStage", "Rabbit Ridge Tower: Hariet Battle" },
     { "Special1WorldTowerStackerStage", "Rabbit Ridge Tower: Topper Battle" },
@@ -201,21 +209,94 @@ KingdomEnglishName names[] = {
     { "SenobiTowerYoshiExStage", "Yoshi on the Sinking Island" },
     { "ShootingCityYoshiExStage", "Yoshi Under Siege" },
     { "LavaWorldUpDownYoshiExStage", "Yoshi's Magma Swamp" },
-
-    { "Special2WorldHomeStage", "Darker Side" },
+};
+KingdomEnglishNameSub subNamesDarker[] = {
+    { "Special2WorldTowerStage", "Inside the Tower" },
     { "Special2WorldKoopaStage", "Culmina Crater: Bowser Escape" },
     { "Special2WorldCloudStage", "Culmina Crater: Pokio Section" },
     { "Special2WorldLavaStage", "Inside Culmina Crater" },
 };
 
+KingdomEnglishNameMain mainNames[] = {
+    { "HomeShipInsideStage", "Odyssey", 0, 0, 0, },
+    { "CapWorldHomeStage", "Cap Kingdom", 2, 3, 4, subNamesCap, 5 },
+    { "WaterfallWorldHomeStage", "Cascade Kingdom", 7, 3, 4, subNamesCascade, 5 },
+    { "SandWorldHomeStage", "Sand Kingdom", 3, 4, 5, subNamesSand, 16 },
+    { "ForestWorldHomeStage", "Wooded Kingdom", 3, 4, 5, subNamesWooded, 14 },
+    { "LakeWorldHomeStage", "Lake Kingdom", 2, 3, 4, subNamesLake, 5 },
+    { "CloudWorldHomeStage", "Cloud Kingdom", 2, 3, 4, subNamesCloud, 2 },
+    { "ClashWorldHomeStage", "Lost Kingdom", 2, 3, 4, subNamesLost, 3 },
+    { "CityWorldHomeStage", "Metro Kingdom", 4, 5, 8, subNamesMetro, 17 },
+    { "SnowWorldHomeStage", "Snow Kingdom", 2, 3, 4, subNamesSnow, 11 },
+    { "SeaWorldHomeStage", "Seaside Kingdom", 2, 3, 4, subNamesSeaside, 10 },
+    { "LavaWorldHomeStage", "Luncheon Kingdom", 3, 7, 8, subNamesLuncheon, 12 },
+    { "BossRaidWorldHomeStage", "Ruined Kingdom", 2, 3, 4, subNamesRuined, 3 },
+    { "SkyWorldHomeStage", "Bowser's Kingdom", 2, 3, 4, subNamesBowser, 8 },
+    { "MoonWorldHomeStage", "Moon Kingdom", 2, -1, 3, subNamesMoon, 7 },
+    { "PeachWorldHomeStage", "Mushroom Kingdom", -1, 2, 9, subNamesMushroom, 18 },
+    { "Special1WorldHomeStage", "Dark Side", 2, -1, 9, subNamesDark, 10 },
+    { "Special2WorldHomeStage", "Darker Side", 2, -1, 9, subNamesDarker, 4 },
+};
+
 const char* getEnglishName(const char* internalName) {
-    for (const auto& entry : names) {
+    for (const auto& entry : mainNames) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesCap) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesCascade) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesSand) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesWooded) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesLake) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesCloud) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesLost) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesMetro) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesSnow) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesSeaside) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesLuncheon) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesRuined) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesBowser) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesMoon) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesMushroom) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesDark) {
+        if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
+    }
+    for (const auto& entry : subNamesDarker) {
         if (al::isEqualString(entry.mInternal, internalName)) return entry.mEnglish;
     }
     return internalName;
 }
 
-inline const char* getScenarioType(WorldListEntry& entry, int scenario) {
+inline const char* getScenarioType(KingdomEnglishNameMain& entry, int scenario) {
     if (scenario == 0) return " (NC)";
     if (scenario == 1) return " ()";
     if (scenario == entry.clearMainScenario) return " (Peace)";
@@ -243,24 +324,24 @@ void drawStageWarpWindow() {
         ImGui::PopItemWidth();
         if (ctx->NavId == ImGui::GetID("Scenario")) ImGui::SetTooltip("(NC) = No Change, () = First Arrival,\n(PG) = Post-Game, (MR) = Moon Rock");
 
-        for (auto& entry : gameSeq->mGameDataHolderAccessor.mData->mWorldList->mWorldList) {
+        for (KingdomEnglishNameMain& entry : mainNames) {
             char popupStr[0x60] = {};
-            snprintf(popupStr, sizeof(popupStr), "SubAreaList_%s", entry.mainStageName);
+            snprintf(popupStr, sizeof(popupStr), "SubAreaList_%s", entry.mInternal);
             char warpButtonId[0x60] = {};
-            sprintf(warpButtonId, "Warp##%s", entry.mainStageName);
+            sprintf(warpButtonId, "Warp##%s", entry.mInternal);
             char subAreaButtonId[0x60] = {};
-            sprintf(subAreaButtonId, "Sub-Areas##%s", entry.mainStageName);
+            sprintf(subAreaButtonId, "Sub-Areas##%s", entry.mInternal);
 
             ImGui::AlignTextToFramePadding();
-            ImGui::BulletText("%s%s", getEnglishName(entry.mainStageName), getScenarioType(entry, curScenario));
+            ImGui::BulletText("%s%s", getEnglishName(entry.mInternal), getScenarioType(entry, curScenario));
             ImGui::SameLine();
             if (ImGui::Button(warpButtonId)) {
                 if (!isInGame) continue;
                 if (curScenario == 0) curScenario = -1;
                 ChangeStageInfo stageInfo(
-                    gameSeq->mGameDataHolderAccessor, "start", entry.mainStageName, false, curScenario, ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO
+                    gameSeq->mGameDataHolderAccessor.mData, "start", entry.mInternal, false, curScenario, ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO
                 );
-                GameDataFunction::tryChangeNextStage(GameDataHolderWriter(curScene), &stageInfo);
+                gameSeq->mGameDataHolderAccessor.mData->changeNextStage(&stageInfo, 0);
                 if (curScenario == -1) curScenario = 0;
             }
 
@@ -268,18 +349,20 @@ void drawStageWarpWindow() {
             if (ImGui::Button(subAreaButtonId)) ImGui::OpenPopup(popupStr);
             if (ImGui::IsItemHovered()) ImGui::SetTooltip("Warp to Sub-Area");
             if (ImGui::BeginPopup(popupStr)) {
-                for (auto& dbEntry : entry.stageNames) {
-                    const char* stageName = dbEntry.stageName.cstr();
+                for (int i = 0; i < entry.mSubNamesCount - 1; i++) {
+                    const auto& subEntry = entry.mSubNames[i];
+                    const char* stageName = subEntry.mInternal;
 
-                    if (al::isEqualString(stageName, entry.mainStageName) || al::isStartWithString(stageName, "Demo")) continue;
+                    if (al::isEqualString(stageName, entry.mInternal) || al::isStartWithString(stageName, "Demo")) continue;
 
                     if (isInGame) {
                         if (ImGui::MenuItem(getEnglishName(stageName))) {
                             if (curScenario == 0) curScenario = -1;
                             ChangeStageInfo stageInfo(
-                                gameSeq->mGameDataHolderAccessor, "start", stageName, false, curScenario, ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO
+                                gameSeq->mGameDataHolderAccessor.mData, "start", stageName, false, curScenario,
+                                ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO
                             );
-                            GameDataFunction::tryChangeNextStage(GameDataHolderWriter(curScene), &stageInfo);
+                            gameSeq->mGameDataHolderAccessor.mData->changeNextStage(&stageInfo, 0);
                             if (curScenario == -1) curScenario = 0;
                         }
                     } else {

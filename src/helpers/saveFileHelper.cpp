@@ -6,8 +6,8 @@
 SEAD_SINGLETON_DISPOSER_IMPL(SaveFileHelper);
 
 void SaveFileHelper::saveSettings() {
-    if (!FsHelper::isDirExist("sd:/BTT-Studio")) {
-        nn::fs::CreateDirectory("sd:/BTT-Studio");
+    if (!FsHelper::isDirExist("sd:/SMOO-Plus")) {
+        nn::fs::CreateDirectory("sd:/SMOO-Plus");
     }
 
     FsHelper::writeFileToPath(reinterpret_cast<void*>(&btt::SettingsMgr::instance()->mSettings), sizeof(btt::SettingsMgr::Settings), mSettingsPath);
@@ -30,8 +30,8 @@ void SaveFileHelper::loadSettings() {
 }
 
 void SaveFileHelper::saveTeleport(btt::Menu::TpState* states, size_t count) {
-    if (!FsHelper::isDirExist("sd:/BTT-Studio")) {
-        nn::fs::CreateDirectory("sd:/BTT-Studio");
+    if (!FsHelper::isDirExist("sd:/SMOO-Plus")) {
+        nn::fs::CreateDirectory("sd:/SMOO-Plus");
     }
 
     FsHelper::writeFileToPath(reinterpret_cast<void*>(states), sizeof(btt::Menu::TpState) * count, mtpPath);
