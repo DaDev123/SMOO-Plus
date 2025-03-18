@@ -187,7 +187,7 @@ void Menu::drawInputDisabled() {
 void Menu::drawHotkeysCat() {
     if (ImGui::CollapsingHeader("Animation Player")) {
         ImGui::Indent();
-        ImGui::Combo("Play an Animation", &set->mSettings.mPlayAnim, Animation, IM_ARRAYSIZE(Animation));
+        ImGui::Combo("Animations", &set->mSettings.mPlayAnim, Animation, IM_ARRAYSIZE(Animation));
         ImGui::Unindent();
     }
 }
