@@ -6,6 +6,9 @@
 #include "logger.hpp"
 #include "packets/Packet.h"
 #include "server/hns/HideAndSeekMode.hpp"
+#include "al/wipe/WipeHolder.h"
+#include "game/GameData/GameDataFunction.h"
+#include "game/HakoniwaSequence/HakoniwaSequence.h"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
@@ -884,6 +887,7 @@ void Client::sendToStage(ChangeStagePacket* packet) {
         
         ChangeStageInfo info(accessor.mData, packet->changeID, packet->changeStage, false, packet->scenarioNo, static_cast<ChangeStageInfo::SubScenarioType>(packet->subScenarioType));
         GameDataFunction::tryChangeNextStage(accessor, &info);
+        mSequence->mWipeHolder->startClose("FadeWhite", -1);
     }
 }
 
