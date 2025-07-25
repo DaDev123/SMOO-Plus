@@ -16,6 +16,8 @@ struct FreezeTagInfo : GameModeInfoBase {
 
     bool mIsRound = false;
     int mFreezeCount = 0;
+    nn::account::Uid mHostUserId;
+
     FreezeTagScore mPlayerTagScore;
     GameTime mRoundTimer;
 
