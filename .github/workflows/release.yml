@@ -16,7 +16,7 @@ jobs:
     steps:
     -
       name : Checkout
-      uses : actions/checkout@v3
+      uses : actions/checkout@v4
     -
       name : Build artifacts
       id   : build
@@ -30,7 +30,7 @@ jobs:
     steps:
     -
       name : Checkout
-      uses : actions/checkout@v3
+      uses : actions/checkout@v4
     -
       name : Create release
       id   : release
