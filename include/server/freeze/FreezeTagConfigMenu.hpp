@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Keyboard.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include "game/Layouts/CommonVerticalList.h"
 #include "server/gamemode/GameModeBase.hpp"
+
+class Keyboard; // Forward declaration
 
 class FreezeTagConfigMenu : public GameModeConfigMenu {
 public:
@@ -17,6 +18,10 @@ public:
 
 private:
     static constexpr int mItemCount = 3;
+    sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>* mConfigOptions;
+    
     Keyboard* mScoreKeyboard;
     Keyboard* mRoundKeyboard;
+    
+    void updateOptionsText();
 };

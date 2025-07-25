@@ -143,8 +143,9 @@ void FreezeTagMode::begin() {
     mPrevSpectateIndex = -2;
     mIsScoreEventsValid = true;
 
-    if(mInfo->mIsRound)
-        mModeTimer->enableTimer();
+    // if(mInfo->mIsRound)
+    //     mModeTimer->enableTimer();
+
     mModeTimer->disableControl();
     mModeTimer->setTimerDirection(false);
 

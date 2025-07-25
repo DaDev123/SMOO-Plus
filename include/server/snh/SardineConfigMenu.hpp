@@ -15,5 +15,7 @@ public:
     const int getMenuSize() override { return mItemCount; }
 
 private:
-    static constexpr int mItemCount = 6;
+    static constexpr int mItemCount = 3;
+    sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>* mConfigOptions;
+    void updateOptionsText();
 };

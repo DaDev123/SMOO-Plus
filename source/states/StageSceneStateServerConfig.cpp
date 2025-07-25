@@ -295,6 +295,12 @@ void StageSceneStateServerConfig::exeGamemodeConfig() {
         mGamemodeConfigMenu = &mGamemodeConfigMenus[GameModeManager::instance()->getGameMode()];
         mCurrentList = mGamemodeConfigMenu->mList;
         mCurrentMenu = mGamemodeConfigMenu->mLayout;
+        
+        // Refresh the menu data to show current toggle states
+        mGamemodeConfigMenu->mList->initDataNoResetSelected(mGamemodeConfigMenu->mMenu->getMenuSize());
+        mGamemodeConfigMenu->mList->addStringData(mGamemodeConfigMenu->mMenu->getStringData(), "TxtContent");
+        mGamemodeConfigMenu->mList->updateParts();
+        
         subMenuStart();
     }
 

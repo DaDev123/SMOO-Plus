@@ -117,6 +117,7 @@ Packet *SardineMode::createPacket() {
     return packet;
 }
 
+
 void SardineMode::begin()
 {
     mModeLayout->appear();
@@ -142,6 +143,27 @@ void SardineMode::end()
     mModeTimer->disableTimer();
 
     GameModeBase::end();
+}
+
+void SardineMode::pause() {
+    GameModeBase::pause();
+
+    mModeLayout->tryEnd();
+    mModeTimer->disableTimer();
+}
+
+void SardineMode::unpause() {
+    GameModeBase::unpause();
+
+    mModeLayout->appear();
+    
+    if (!mInfo->mIsIt) {
+        mModeTimer->disableTimer();
+        mModeLayout->showSolo();
+    } else {
+        mModeTimer->enableTimer();
+        mModeLayout->showPack();
+    }
 }
 
 void SardineMode::update()

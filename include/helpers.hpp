@@ -84,7 +84,9 @@ __attribute__((used)) static const char* costumeNames[] = {
     "MarioSwimwear",
     "MarioTailCoat",
     "MarioTuxedo",
-    "MarioUnderwear"
+    "MarioUnderwear",
+    "MarioTanooki",
+    "MarioWooper"
 };
 
 struct HackActorName {
