@@ -6,6 +6,7 @@
 #include "math/seadVector.h"
 #include "rs/util/SensorUtil.h"
 #include "al/util/SensorUtil.h"
+#include "game/StageScene/StageSceneStateServerConfig.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 
@@ -74,16 +75,10 @@ void PuppetCapActor::update() {
 }
 
 void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver) {
-if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
-   GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
-   GameModeManager::instance()->isModeAndActive(GameMode::SARDINE)) {
-    return;
-}
 
-
-    // prevent normal attack behavior if gamemode requires custom behavior
-    if (GameModeManager::tryAttackCapSensor(sender, receiver))
+    if (!StageSceneStateServerConfig::isCapAttackEnabled()) {
         return;
+    }
     
     if (al::isSensorPlayer(receiver) && al::isSensorName(sender, "Push")) {
         rs::sendMsgPushToPlayer(receiver, sender);
@@ -93,18 +88,11 @@ if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
 
 bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender,
                              al::HitSensor* receiver) {
-
-    if(GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ||
-       GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK) ||
-       GameModeManager::instance()->isModeAndActive(GameMode::SARDINE)) {
-    return false;
-}
-
-
-    // try to use gamemode recieve logic, otherwise fallback to default behavior
-    if (GameModeManager::tryReceiveCapMsg(msg, sender, receiver)) {
-        return true;
+                                
+    if (!StageSceneStateServerConfig::isCapReceiveEnabled()) {
+        return false;
     }
+
 
     if (al::isMsgPlayerDisregard(msg)) {
         return true;

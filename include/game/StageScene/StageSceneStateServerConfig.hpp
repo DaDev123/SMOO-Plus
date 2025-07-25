@@ -31,6 +31,7 @@ class StageSceneStateServerConfig : public al::HostStateBase<al::Scene>, public 
         enum ServerConfigOption {
             GAMEMODECONFIG,
             GAMEMODESWITCH,
+            TOGGLESENSORS,
             SETIP,
             SETPORT,
             TOGGLEMUSIC,
@@ -47,17 +48,34 @@ class StageSceneStateServerConfig : public al::HostStateBase<al::Scene>, public 
         void exeOpenKeyboardPort();
         void exeHideServer();
         void exeToggleMusic();
+        void exeToggleSensors();
         void exeGamemodeConfig();
         void exeGamemodeSelect();
         void exeSaveData();
+        void updateSensorsOptions();
 
         void endSubMenu();
+
+        static bool isCapAttackEnabled();
+        static bool isCapReceiveEnabled();
+        static bool isPuppetAttackEnabled();
+        static bool isPuppetReceiveEnabled();
 
     private:
         inline void subMenuStart();
         inline void subMenuUpdate();
         inline void subMenuRefresh();
         inline void mainMenuRefresh();
+
+        static bool sCapAttackEnabled;
+        static bool sCapReceiveEnabled;
+        static bool sPuppetAttackEnabled;
+        static bool sPuppetReceiveEnabled;
+
+        // Add these menu components
+        SimpleLayoutMenu* mToggleSensorsMenu;
+        CommonVerticalList* mToggleSensorsList;
+        sead::SafeArray<sead::WFixedSafeString<0x200>, 4>* mToggleSensorsOptions; // 4 options
 
         al::MessageSystem* mMsgSystem      = nullptr;
         FooterParts*       mFooterParts    = nullptr;
@@ -89,7 +107,7 @@ class StageSceneStateServerConfig : public al::HostStateBase<al::Scene>, public 
         inline void deactivateInput();
 
         // Main Menu Options - Updated count
-        static constexpr int mMainMenuOptionsCount = 6;
+        static constexpr int mMainMenuOptionsCount = 7;
         sead::SafeArray<sead::WFixedSafeString<0x200>, mMainMenuOptionsCount>* mMainMenuOptions = nullptr;
         const sead::WFixedSafeString<0x200>* getMainMenuOptions();
 
@@ -104,5 +122,6 @@ namespace {
     NERVE_HEADER(StageSceneStateServerConfig, ToggleMusic)
     NERVE_HEADER(StageSceneStateServerConfig, GamemodeConfig)
     NERVE_HEADER(StageSceneStateServerConfig, GamemodeSelect)
+    NERVE_HEADER(StageSceneStateServerConfig, ToggleSensors)
     NERVE_HEADER(StageSceneStateServerConfig, SaveData)
 }

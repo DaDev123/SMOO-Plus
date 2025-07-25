@@ -24,6 +24,11 @@
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 
+bool StageSceneStateServerConfig::sCapAttackEnabled = false;
+bool StageSceneStateServerConfig::sCapReceiveEnabled = false;
+bool StageSceneStateServerConfig::sPuppetAttackEnabled = true;
+bool StageSceneStateServerConfig::sPuppetReceiveEnabled = true;
+
 StageSceneStateServerConfig::StageSceneStateServerConfig(
     const char* name,
     al::Scene* scene,
@@ -52,12 +57,27 @@ StageSceneStateServerConfig::StageSceneStateServerConfig(
     mMainMenuOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, mMainMenuOptionsCount>();
     mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODECONFIG].copy(u"Gamemode Config");
     mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODESWITCH].copy(u"Change Gamemode               "); // TBD
+    mMainMenuOptions->mBuffer[ServerConfigOption::TOGGLESENSORS].copy(u"Player Settings");
     mMainMenuOptions->mBuffer[ServerConfigOption::SETIP].copy(u"Change Server (needs restart)");
     mMainMenuOptions->mBuffer[ServerConfigOption::SETPORT].copy(u"Change Port (needs restart)");
     mMainMenuOptions->mBuffer[ServerConfigOption::TOGGLEMUSIC].copy(u"Play In-Game Music (OFF)"); // TBD
     mMainMenuOptions->mBuffer[ServerConfigOption::HIDESERVER].copy(u"Hide Server in Debug (OFF)"); // TBD
 
     mMainOptionsList->addStringData(getMainMenuOptions(), "TxtContent");
+
+    // Initialize sensor toggle menu
+    mToggleSensorsMenu = new SimpleLayoutMenu("ToggleSensorsMenu", "OptionSelect", initInfo, 0, false);
+    mToggleSensorsList = new CommonVerticalList(mToggleSensorsMenu, initInfo, true);
+    
+    al::setPaneString(mToggleSensorsMenu, "TxtOption", u"Player Settings", 0);
+    
+    mToggleSensorsList->unkInt1 = 1;
+    mToggleSensorsList->initDataNoResetSelected(4);
+    
+    mToggleSensorsOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, 4>();
+    updateSensorsOptions();
+    
+    mToggleSensorsList->addStringData(mToggleSensorsOptions->mBuffer, "TxtContent");
 
     // gamemode select menu
 
@@ -137,6 +157,22 @@ al::MessageSystem* StageSceneStateServerConfig::getMessageSystem(void) const {
     return mMsgSystem;
 }
 
+
+void StageSceneStateServerConfig::updateSensorsOptions() {
+    mToggleSensorsOptions->mBuffer[0].copy(
+        sCapAttackEnabled ? u"Cap Collision (ON) " : u"Cap Collision (OFF)"
+    );
+    mToggleSensorsOptions->mBuffer[1].copy(
+        sCapReceiveEnabled ? u"Cap Bouncing (ON) " : u"Cap Bouncing (OFF)"
+    );
+    mToggleSensorsOptions->mBuffer[2].copy(
+        sPuppetAttackEnabled ? u"Player Collision (ON) " : u"Player Collision (OFF)"
+    );
+    mToggleSensorsOptions->mBuffer[3].copy(
+        sPuppetReceiveEnabled ? u"Player Bouncing (ON) " : u"Player Bouncing (OFF)"
+    );
+}
+
 void StageSceneStateServerConfig::exeMainMenu() {
     if (al::isFirstStep(this)) {
         activateInput();
@@ -170,6 +206,10 @@ void StageSceneStateServerConfig::exeMainMenu() {
             }
             case ServerConfigOption::GAMEMODESWITCH: {
                 al::setNerve(this, &nrvStageSceneStateServerConfigGamemodeSelect);
+                break;
+            }
+            case ServerConfigOption::TOGGLESENSORS: {
+                al::setNerve(this, &nrvStageSceneStateServerConfigToggleSensors);
                 break;
             }
             case ServerConfigOption::SETIP: {
@@ -285,6 +325,59 @@ void StageSceneStateServerConfig::exeGamemodeSelect() {
         endSubMenu();
     }
 }
+
+void StageSceneStateServerConfig::exeToggleSensors() {
+    if (al::isFirstStep(this)) {
+        mCurrentList = mToggleSensorsList;
+        mCurrentMenu = mToggleSensorsMenu;
+        subMenuStart();
+    }
+
+    subMenuUpdate();
+
+    if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
+        switch (mCurrentList->mCurSelected) {
+            case 0: { // Toggle Cap Attack
+                sCapAttackEnabled = !sCapAttackEnabled;
+                updateSensorsOptions();
+                mToggleSensorsList->initDataNoResetSelected(4);
+                mToggleSensorsList->addStringData(mToggleSensorsOptions->mBuffer, "TxtContent");
+                mToggleSensorsList->updateParts();
+                activateInput();
+                break;
+            }
+            case 1: { // Toggle Cap Receive
+                sCapReceiveEnabled = !sCapReceiveEnabled;
+                updateSensorsOptions();
+                mToggleSensorsList->initDataNoResetSelected(4);
+                mToggleSensorsList->addStringData(mToggleSensorsOptions->mBuffer, "TxtContent");
+                mToggleSensorsList->updateParts();
+                activateInput();
+                break;
+            }
+            case 2: { // Toggle Puppet Attack
+                sPuppetAttackEnabled = !sPuppetAttackEnabled;
+                updateSensorsOptions();
+                mToggleSensorsList->initDataNoResetSelected(4);
+                mToggleSensorsList->addStringData(mToggleSensorsOptions->mBuffer, "TxtContent");
+                mToggleSensorsList->updateParts();
+                activateInput();
+                break;
+            }
+            case 3: { // Toggle Puppet Receive
+                sPuppetReceiveEnabled = !sPuppetReceiveEnabled;
+                updateSensorsOptions();
+                mToggleSensorsList->initDataNoResetSelected(4);
+                mToggleSensorsList->addStringData(mToggleSensorsOptions->mBuffer, "TxtContent");
+                mToggleSensorsList->updateParts();
+                activateInput();
+                break;
+            }
+        }
+    }
+}
+
+
 void StageSceneStateServerConfig::exeSaveData() {
     if (al::isFirstStep(this)) {
         SaveDataAccessFunction::startSaveDataWrite(mGameDataHolder);
@@ -355,6 +448,22 @@ void StageSceneStateServerConfig::mainMenuRefresh() {
     mMainOptionsList->updateParts();
 }
 
+bool StageSceneStateServerConfig::isCapAttackEnabled() {
+    return sCapAttackEnabled;
+}
+
+bool StageSceneStateServerConfig::isCapReceiveEnabled() {
+    return sCapReceiveEnabled;
+}
+
+bool StageSceneStateServerConfig::isPuppetAttackEnabled() {
+    return sPuppetAttackEnabled;
+}
+
+bool StageSceneStateServerConfig::isPuppetReceiveEnabled() {
+    return sPuppetReceiveEnabled;
+}
+
 const sead::WFixedSafeString<0x200>* StageSceneStateServerConfig::getMainMenuOptions() {
     // "$gameModeName Config" option
     const char* gameModeName = GameModeFactory::getModeName(GameModeManager::instance()->getGameMode());
@@ -369,6 +478,9 @@ const sead::WFixedSafeString<0x200>* StageSceneStateServerConfig::getMainMenuOpt
         ? u"Change Gamemode (needs reload)"
         : u"Change Gamemode               "
     );
+
+    // Add cap toggle option
+    mMainMenuOptions->mBuffer[ServerConfigOption::TOGGLESENSORS].copy(u"Player Settings");
 
     // "Hide Server in Debug" option
     mMainMenuOptions->mBuffer[ServerConfigOption::HIDESERVER].copy(
@@ -409,5 +521,6 @@ namespace {
     NERVE_IMPL(StageSceneStateServerConfig, HideServer)
     NERVE_IMPL(StageSceneStateServerConfig, GamemodeConfig)
     NERVE_IMPL(StageSceneStateServerConfig, GamemodeSelect)
+    NERVE_IMPL(StageSceneStateServerConfig, ToggleSensors)
     NERVE_IMPL(StageSceneStateServerConfig, SaveData)
 }

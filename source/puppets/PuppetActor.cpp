@@ -18,6 +18,7 @@
 #include "math/seadQuat.h"
 #include "math/seadVector.h"
 #include "server/freeze/FreezeTagMode.hpp"
+#include "game/StageScene/StageSceneStateServerConfig.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
@@ -289,9 +290,9 @@ void PuppetActor::makeActorDead() {
 
 void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
 
-    // prevent normal attack behavior if gamemode requires custom behavior
-    if (GameModeManager::tryAttackPuppetSensor(source, target))
+    if (!StageSceneStateServerConfig::isPuppetAttackEnabled()) {
         return;
+    }
     
     if (!al::sendMsgPush(target, source)) {
         rs::sendMsgPushToPlayer(target, source);
@@ -303,17 +304,15 @@ void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
 bool PuppetActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* source,
                              al::HitSensor* target) {
 
-    // try to use gamemode recieve logic, otherwise fallback to default behavior
-    if (GameModeManager::tryReceivePuppetMsg(msg, source, target)) {
-        return true;
+    if (!StageSceneStateServerConfig::isPuppetReceiveEnabled()) {
+        return false;
     }
 
     if ((al::isMsgPlayerTrampleReflect(msg) || rs::isMsgPlayerAndCapObjHipDropReflectAll(msg)) && al::isSensorName(target, "Body"))
     {
-        if(!GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
             rs::requestHitReactionToAttacker(msg, target, source);
             return true;
-        }
+        
     }
 
     return false;
