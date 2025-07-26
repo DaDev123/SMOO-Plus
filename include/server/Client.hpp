@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Keyboard.hpp"
+#include "layouts/CustomMsg.h"
 #include "al/actor/ActorInitInfo.h"
 #include "al/actor/ActorSceneInfo.h"
 #include "al/async/AsyncFunctorThread.h"
@@ -215,6 +216,9 @@ class Client {
         GameInf*    getLastGameInfPacket()    { return &this->lastGameInfPacket;    }
         CostumeInf* getLastCostumeInfPacket() { return &this->lastCostumeInfPacket; }
         CaptureInf* getLastCaptureInfPacket() { return &this->lastCaptureInfPacket; }
+
+        CustomMsg* mCustomMsgLayout;
+        CustomMsg* getCustomMsg() const { return mCustomMsgLayout; }
 
     private:
         void updatePlayerInfo(PlayerInf *packet);

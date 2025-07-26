@@ -80,6 +80,7 @@ void Client::init(al::LayoutInitInfo const &initInfo, GameDataHolderAccessor hol
 
     al::setPaneString(mConnectStatus, "TxtSave", u" ", 0);
     al::setPaneString(mConnectStatus, "TxtSaveSh", u" .", 0);
+    mCustomMsgLayout = new CustomMsg("CustomMsg", initInfo);
 
     mHolder = holder;
 
