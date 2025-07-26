@@ -349,6 +349,8 @@ void stageInitHook(al::ActorInitInfo *info, StageScene *curScene, al::PlacementI
         GameModeManager::instance()->initScene(initModeInfo);
     }
 
+    TwistsConfig::handleStageInit();
+
     Client::sendGameInfPacket(info->mActorSceneInfo.mSceneObjHolder);
 
 }
@@ -394,6 +396,7 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
 
     al::PlayerHolder *pHolder = al::getScenePlayerHolder(stageScene);
     PlayerActorBase* playerBase = al::tryGetPlayerActor(pHolder, 0);
+    auto *player = (PlayerActorHakoniwa*)al::tryGetPlayerActor(pHolder, 0);
     
     bool isYukimaru = !playerBase->getPlayerInfo();
 
@@ -405,6 +408,8 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
     Client::update();
 
     updatePlayerInfo(stageScene->mHolder, playerBase, isYukimaru);
+
+    TwistsConfig::updateCappyProximity(player, stageScene);
 
     if (al::isPadHoldZR(-1)) {
         if (al::isPadTriggerUp(-1)) { // ZR + Up => Debug menu
