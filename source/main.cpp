@@ -56,6 +56,11 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
         pInfSendTimer = 0;
     }
 
+ /*
+handle Extras();
+ */
+
+
     if (gameInfSendTimer >= 60) {
 
         if (isYukimaru) {
@@ -444,30 +449,37 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
             GameModeManager::instance()->toggleActive();
         }
     } else if (al::isPadHoldR(-1)) {
-    if (al::isPadTriggerUp(-1)) { // R + Up => Toggle CustomMsg layout
-        CustomMsg* customMsg = Client::instance()->getCustomMsg();
-        if (customMsg) {
-            if (customMsg->isActive()) {
-                customMsg->tryEnd(); // Hide it
-            } else {
-                customMsg->tryStart(); // Show it
-                customMsg->showHiding(); // Show with hiding status
+        if (al::isPadTriggerLeft(-1)) { // R + Left => Set custom text for CustomMsg
+            CustomMsg* customMsg = Client::instance()->getCustomMsg();
+            if (customMsg) {
+                // Set custom text - you can change this to whatever text you want
+                customMsg->setCustomText("This is my custom message!");
+            }
+        }
+        if (al::isPadTriggerUp(-1)) { // R + Up => Toggle CustomMsg layout
+            CustomMsg* customMsg = Client::instance()->getCustomMsg();
+            if (customMsg) {
+                if (customMsg->isActive()) {
+                    customMsg->tryEnd(); // Hide it
+                } else {
+                    customMsg->tryStart(); // Show it
+                    customMsg->showHiding(); // Show with hiding status
+                }
+            }
+        }
+        if (al::isPadTriggerDown(-1)) { // R + Down => Toggle between hiding/seeking
+            CustomMsg* customMsg = Client::instance()->getCustomMsg();
+            if (customMsg && customMsg->isActive()) {
+                static bool showingHiding = true;
+                if (showingHiding) {
+                    customMsg->showSeeking();
+                } else {
+                    customMsg->showHiding();
+                }
+                showingHiding = !showingHiding;
             }
         }
     }
-    if (al::isPadTriggerDown(-1)) { // R + Down => Toggle between hiding/seeking
-        CustomMsg* customMsg = Client::instance()->getCustomMsg();
-        if (customMsg && customMsg->isActive()) {
-            static bool showingHiding = true;
-            if (showingHiding) {
-                customMsg->showSeeking();
-            } else {
-                customMsg->showHiding();
-            }
-            showingHiding = !showingHiding;
-        }
-    }
-}
 
     if (Client::isMusicDisabled()) {
         if (al::isPlayingBgm(stageScene)) {

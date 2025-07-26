@@ -6,6 +6,7 @@
 #include "logger.hpp"
 #include "packets/Packet.h"
 #include "server/hns/HideAndSeekMode.hpp"
+#include "layouts/CustomMsg.h"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
@@ -80,7 +81,7 @@ void Client::init(al::LayoutInitInfo const &initInfo, GameDataHolderAccessor hol
 
     al::setPaneString(mConnectStatus, "TxtSave", u" ", 0);
     al::setPaneString(mConnectStatus, "TxtSaveSh", u" .", 0);
-    mCustomMsgLayout = new CustomMsg("CustomMsg", initInfo);
+    mCustomMsgLayout = new CustomMsg("CustomMsg", "CustomMsg", initInfo);
 
     mHolder = holder;
 
@@ -911,6 +912,7 @@ void Client::updateGameInfo(GameInf *packet) {
 void Client::sendToStage(ChangeStagePacket* packet) {
     if (mSceneInfo && mSceneInfo->mSceneObjHolder) {
 
+        
         GameDataHolderAccessor accessor(mSceneInfo->mSceneObjHolder);
 
         Logger::log("Sending Player to %s at Entrance %s in Scenario %d\n", packet->changeStage,
@@ -918,6 +920,7 @@ void Client::sendToStage(ChangeStagePacket* packet) {
         
         ChangeStageInfo info(accessor.mData, packet->changeID, packet->changeStage, false, packet->scenarioNo, static_cast<ChangeStageInfo::SubScenarioType>(packet->subScenarioType));
         GameDataFunction::tryChangeNextStage(accessor, &info);
+
     }
 }
 

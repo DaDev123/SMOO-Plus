@@ -10,9 +10,9 @@
 #include "rs/util.hpp"
 #include "main.hpp"
 
-CustomMsg::CustomMsg(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
+CustomMsg::CustomMsg(const char* text, const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
 
-    al::initLayoutActor(this, initInfo, "CustomMsg", 0);
+    al::initLayoutActor(this, initInfo, text, 0);
 
     initNerve(&nrvCustomMsgEnd, 0);
 
@@ -33,6 +33,17 @@ CustomMsg::CustomMsg(const char* name, const al::LayoutInitInfo& initInfo) : al:
     }
 
     kill();
+}
+
+void CustomMsg::setCustomText(const char* text) {
+    if (text && strlen(text) > 0) {
+        strncpy(mCustomText, text, sizeof(mCustomText) - 1);
+        mCustomText[sizeof(mCustomText) - 1] = '\0'; // Ensure null termination
+        mHasCustomText = true;
+    } else {
+        mHasCustomText = false;
+        mCustomText[0] = '\0';
+    }
 }
 
 void CustomMsg::appear() {
@@ -70,40 +81,47 @@ void CustomMsg::exeWait() {
         al::startAction(this, "Wait", 0);
     }
 
-    // Use TxtRank to show status - only if pane exists
-    if (mHasTxtRank) {
-        al::setPaneStringFormat(this, "TxtRank", "CustomMsg Active");
-    }
-
-    int playerCount = Client::getMaxPlayerCount();
-
-    if (playerCount > 0 && mHasTxtName) {
-        char playerNameBuf[0x300] = {0};
-        sead::BufferedSafeStringBase<char> playerList =
-            sead::BufferedSafeStringBase<char>(playerNameBuf, sizeof(playerNameBuf));
-        
-        // Add your own name first
-        playerList.appendWithFormat("%s (You)", Client::instance()->getClientName());
-
-        // Add other connected players
-        int connectedCount = 0;
-        for(int i = 0; i < playerCount; i++){
-            PuppetInfo* curPuppet = Client::getPuppetInfo(i);
-            if (curPuppet && curPuppet->isConnected) {
-                if (connectedCount == 0) {
-                    playerList.appendWithFormat(", %s", curPuppet->puppetName);
-                } else {
-                    playerList.appendWithFormat(", %s", curPuppet->puppetName);
-                }
-                connectedCount++;
-            }
+    // Wenn Custom-Text gesetzt ist, beide Panes ersetzen
+    if (mHasCustomText) {
+        if (mHasTxtName)
+            al::setPaneStringFormat(this, "TxtName", mCustomText);
+        if (mHasTxtRank)
+            al::setPaneStringFormat(this, "TxtRank", mCustomText);
+    } else {
+        if (mHasTxtRank) {
+            al::setPaneStringFormat(this, "TxtRank", mCustomText);
         }
-        
-        // Use TxtName to show the player list (truncated if too long)
-        al::setPaneStringFormat(this, "TxtName", playerList.cstr());
-    } else if (mHasTxtName) {
-        // No other players connected
-        al::setPaneStringFormat(this, "TxtName", Client::instance()->getClientName());
+
+        int playerCount = Client::getMaxPlayerCount();
+
+        if (playerCount > 0 && mHasTxtName) {
+            char playerNameBuf[0x300] = {0};
+            sead::BufferedSafeStringBase<char> playerList =
+                sead::BufferedSafeStringBase<char>(playerNameBuf, sizeof(playerNameBuf));
+            
+            // Add your own name first
+            playerList.appendWithFormat("%s (You)", Client::instance()->getClientName());
+
+            // Add other connected players
+            int connectedCount = 0;
+            for(int i = 0; i < playerCount; i++){
+                PuppetInfo* curPuppet = Client::getPuppetInfo(i);
+                if (curPuppet && curPuppet->isConnected) {
+                    if (connectedCount == 0) {
+                        playerList.appendWithFormat(", %s", curPuppet->puppetName);
+                    } else {
+                        playerList.appendWithFormat(", %s", curPuppet->puppetName);
+                    }
+                    connectedCount++;
+                }
+            }
+            
+            // Use TxtName to show the player list (truncated if too long)
+            al::setPaneStringFormat(this, "TxtName", playerList.cstr());
+        } else if (mHasTxtName) {
+            // No other players connected
+            al::setPaneStringFormat(this, "TxtName", Client::instance()->getClientName());
+        }
     }
 }
 

@@ -8,7 +8,7 @@
 
 class CustomMsg : public al::LayoutActor {
     public:
-        CustomMsg(const char* name, const al::LayoutInitInfo& initInfo);
+        CustomMsg(const char* text, const char* name, const al::LayoutInitInfo& initInfo);
 
         void appear() override;
 
@@ -17,6 +17,9 @@ class CustomMsg : public al::LayoutActor {
 
         void showHiding();
         void showSeeking();
+        
+        // New method to set custom text
+        void setCustomText(const char* text);
         
         void exeAppear();
         void exeWait();
@@ -28,6 +31,8 @@ class CustomMsg : public al::LayoutActor {
         bool mHasTxtIcon = false;
         bool mHasTxtRank = false;
         bool mHasTxtName = false;
+        char mCustomText[256] = {0}; // Store custom text
+        bool mHasCustomText = false; // Flag to indicate if custom text is set
 };
 
 namespace {

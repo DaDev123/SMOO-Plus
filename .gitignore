@@ -9,3 +9,5 @@ Custom Stage Builds/**
 *.disabled
 
 compile_commands.json
+
+Ultimate_SMO_Compiler.bat
