@@ -22,53 +22,54 @@
 
 
 void handleNoclip(PlayerActorHakoniwa* hakoniwa, bool gNoclip, bool isYukimaru) {
-    if (gNoclip && hakoniwa && !isYukimaru) {
+    if (hakoniwa && !isYukimaru) {
         static bool wasNoclipOn = false;
-        bool isNoclip = gNoclip;
-
-        if (!isNoclip && wasNoclipOn)
+        
+        // Transitioning FROM noclip TO normal
+        if (!gNoclip && wasNoclipOn) {
             al::onCollide(hakoniwa);
-        wasNoclipOn = isNoclip;
-        hakoniwa->endDemoPuppetable();
-
-        if (isNoclip) {
+            hakoniwa->endDemoPuppetable();
+            al::setVelocityZero(hakoniwa); // Clear any remaining velocity
+        }
+        // Transitioning FROM normal TO noclip  
+        else if (gNoclip && !wasNoclipOn) {
+            hakoniwa->startDemoPuppetable();
+            hakoniwa->mPlayerAnimator->startAnim("Wait");
+            hakoniwa->exeJump();
+            al::offCollide(hakoniwa);
+        }
+        
+        // Currently in noclip mode - handle movement
+        if (gNoclip) {
             static float speed = 20.0f;
             static float speedMax = 250.0f;
             static float vspeed = 10.0f;
             static float speedGain = 0.0f;
-
+            
             sead::Vector3f *playerPos = al::getTransPtr(hakoniwa);
             sead::Vector3f *cameraPos = al::getCameraPos(hakoniwa, 0);
             sead::Vector2f *leftStick = al::getLeftStick(-1);
-
-            hakoniwa->startDemoPuppetable();
-            hakoniwa->mPlayerAnimator->startAnim("Wait");
-
-
-            hakoniwa->exeJump();
-            al::offCollide(hakoniwa);
+            
             al::setVelocityZero(hakoniwa);
-
-            //playerPos->y += 1.5f; //isnt needed because of the demo puppetable
-
+            
+            // Your movement code here...
             float d = sqrt(al::powerIn(playerPos->x - cameraPos->x, 2) + (al::powerIn(playerPos->z - cameraPos->z, 2)));
             float vx = ((speed + speedGain) / d) * (playerPos->x - cameraPos->x);
             float vz = ((speed + speedGain) / d) * (playerPos->z - cameraPos->z);
-
             playerPos->x -= leftStick->x * vz;
             playerPos->z += leftStick->x * vx;
-
             playerPos->x += leftStick->y * vx;
             playerPos->z += leftStick->y * vz;
-
+            
             if (al::isPadHoldX(-1) || al::isPadHoldY(-1)) speedGain += 0.5f;
             if (al::isPadHoldA(-1) || al::isPadHoldB(-1)) speedGain -= 0.5f;
             if (speedGain <= 0.0f) speedGain = 0.0f;
             if (speedGain >= speedMax) speedGain = speedMax;
-
             if (al::isPadHoldZL(-1)) playerPos->y -= (vspeed + speedGain / 3);
             if (al::isPadHoldZR(-1)) playerPos->y += (vspeed + speedGain / 3);
         }
+        
+        wasNoclipOn = gNoclip;
     }
 }
 

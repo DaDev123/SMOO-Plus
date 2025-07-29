@@ -35,6 +35,7 @@ class PlayerActorHakoniwa : public PlayerActorBase , public IUseDimension {
         PlayerHackKeeper *getPlayerHackKeeper() const;
         void attackSensor(al::HitSensor *target, al::HitSensor *source);
         void startDemoPuppetable(void);
+        void endDemoPuppetable(void);
         void startPlayerPuppet(void);
         void initPlayer(al::ActorInitInfo const&, PlayerInitInfo const&);
         void exeJump();
