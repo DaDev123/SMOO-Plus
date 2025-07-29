@@ -58,12 +58,27 @@ StageSceneStateServerConfig::StageSceneStateServerConfig(
     mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODECONFIG].copy(u"Gamemode Config");
     mMainMenuOptions->mBuffer[ServerConfigOption::GAMEMODESWITCH].copy(u"Change Gamemode               "); // TBD
     mMainMenuOptions->mBuffer[ServerConfigOption::TOGGLESENSORS].copy(u"Player Settings");
+    mMainMenuOptions->mBuffer[ServerConfigOption::TOGGLETWISTS].copy(u"Twists Configuration");
     mMainMenuOptions->mBuffer[ServerConfigOption::SETIP].copy(u"Change Server (needs restart)");
     mMainMenuOptions->mBuffer[ServerConfigOption::SETPORT].copy(u"Change Port (needs restart)");
     mMainMenuOptions->mBuffer[ServerConfigOption::TOGGLEMUSIC].copy(u"Play In-Game Music (OFF)"); // TBD
     mMainMenuOptions->mBuffer[ServerConfigOption::HIDESERVER].copy(u"Hide Server in Debug (OFF)"); // TBD
 
     mMainOptionsList->addStringData(getMainMenuOptions(), "TxtContent");
+
+    // Initialize twists toggle menu
+mToggleTwistsMenu = new SimpleLayoutMenu("ToggleTwistsMenu", "OptionSelect", initInfo, 0, false);
+mToggleTwistsList = new CommonVerticalList(mToggleTwistsMenu, initInfo, true);
+
+al::setPaneString(mToggleTwistsMenu, "TxtOption", u"Twists Configuration", 0);
+
+mToggleTwistsList->unkInt1 = 1;
+mToggleTwistsList->initDataNoResetSelected(2); // Changed from 1 to 2
+
+mToggleTwistsOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, 2>(); // Changed from 1 to 2
+updateTwistsOptions();
+
+mToggleTwistsList->addStringData(mToggleTwistsOptions->mBuffer, "TxtContent");
 
     // Initialize sensor toggle menu
     mToggleSensorsMenu = new SimpleLayoutMenu("ToggleSensorsMenu", "OptionSelect", initInfo, 0, false);
@@ -157,6 +172,13 @@ al::MessageSystem* StageSceneStateServerConfig::getMessageSystem(void) const {
     return mMsgSystem;
 }
 
+void StageSceneStateServerConfig::updateTwistsOptions() {
+    mToggleTwistsOptions->mBuffer[0].copy(
+        TwistsConfig::isCappyDisableEnabled() ? u"Disable Cappy (OFF) " : u"Disable Cappy (ON)"
+    );
+    mToggleTwistsOptions->mBuffer[1].copy(u"Placeholder Option (TBD)"); // New placeholder option
+}
+
 
 void StageSceneStateServerConfig::updateSensorsOptions() {
     mToggleSensorsOptions->mBuffer[0].copy(
@@ -206,6 +228,10 @@ void StageSceneStateServerConfig::exeMainMenu() {
             }
             case ServerConfigOption::GAMEMODESWITCH: {
                 al::setNerve(this, &nrvStageSceneStateServerConfigGamemodeSelect);
+                break;
+            }
+            case ServerConfigOption::TOGGLETWISTS: {
+                al::setNerve(this, &nrvStageSceneStateServerConfigToggleTwists);
                 break;
             }
             case ServerConfigOption::TOGGLESENSORS: {
@@ -307,9 +333,16 @@ void StageSceneStateServerConfig::exeGamemodeConfig() {
     subMenuUpdate();
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
-        if (mGamemodeConfigMenu->mMenu->updateMenu(mCurrentList->mCurSelected)) {
-            endSubMenu();
-        }
+        // Update the menu option but don't exit
+        mGamemodeConfigMenu->mMenu->updateMenu(mCurrentList->mCurSelected);
+        
+        // Refresh the menu to show updated toggle states
+        mGamemodeConfigMenu->mList->initDataNoResetSelected(mGamemodeConfigMenu->mMenu->getMenuSize());
+        mGamemodeConfigMenu->mList->addStringData(mGamemodeConfigMenu->mMenu->getStringData(), "TxtContent");
+        mGamemodeConfigMenu->mList->updateParts();
+        
+        // Reactivate input to stay in the menu
+        activateInput();
     }
 }
 
@@ -329,6 +362,38 @@ void StageSceneStateServerConfig::exeGamemodeSelect() {
         Logger::log("Setting Server Mode to: %d\n", mCurrentList->mCurSelected);
         GameModeManager::instance()->setMode(static_cast<GameMode>(mCurrentList->mCurSelected));
         endSubMenu();
+    }
+}
+
+void StageSceneStateServerConfig::exeToggleTwists() {
+    if (al::isFirstStep(this)) {
+        mCurrentList = mToggleTwistsList;
+        mCurrentMenu = mToggleTwistsMenu;
+        subMenuStart();
+    }
+
+    subMenuUpdate();
+
+    if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
+        switch (mCurrentList->mCurSelected) {
+            case 0: { // Toggle Cappy Disable
+                TwistsConfig::toggleCappyDisable();
+                updateTwistsOptions();
+                
+                // Reinitialize the list properly (this clears old data automatically)
+                mToggleTwistsList->initDataNoResetSelected(2); // Changed from 1 to 2
+                mToggleTwistsList->addStringData(mToggleTwistsOptions->mBuffer, "TxtContent");
+                mToggleTwistsList->updateParts();
+                activateInput();
+                break;
+            }
+            case 1: { // Placeholder option
+                // For now, just reactivate input without doing anything
+                // You can add functionality here later
+                activateInput();
+                break;
+            }
+        }
     }
 }
 
@@ -485,8 +550,10 @@ const sead::WFixedSafeString<0x200>* StageSceneStateServerConfig::getMainMenuOpt
         : u"Change Gamemode               "
     );
 
-    // Add cap toggle option
+    // "Player Settings" option
     mMainMenuOptions->mBuffer[ServerConfigOption::TOGGLESENSORS].copy(u"Player Settings");
+    // Twists Configuration" option
+    mMainMenuOptions->mBuffer[ServerConfigOption::TOGGLETWISTS].copy(u"Twists Configuration");
 
     // "Hide Server in Debug" option
     mMainMenuOptions->mBuffer[ServerConfigOption::HIDESERVER].copy(
@@ -527,6 +594,7 @@ namespace {
     NERVE_IMPL(StageSceneStateServerConfig, HideServer)
     NERVE_IMPL(StageSceneStateServerConfig, GamemodeConfig)
     NERVE_IMPL(StageSceneStateServerConfig, GamemodeSelect)
+    NERVE_IMPL(StageSceneStateServerConfig, ToggleTwists)
     NERVE_IMPL(StageSceneStateServerConfig, ToggleSensors)
     NERVE_IMPL(StageSceneStateServerConfig, SaveData)
 }

@@ -194,16 +194,32 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     gTextWriter->printf("Your TCP status: %s\n", socket->getStateChar());
 
     sead::Heap* clientHeap = Client::getClientHeap();
-    if (clientHeap) {
-        sead::Heap* gmHeap = GameModeManager::instance()->getHeap();
-        gTextWriter->printf(
-            "Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode)\n",
-            0.0009765625 * (clientHeap->getSize() - clientHeap->getFreeSize()),
-            0.0009765625 * clientHeap->getSize(),
-            0.0009765625 * (gmHeap->getSize() - gmHeap->getFreeSize()),
-            0.0009765625 * gmHeap->getSize()
-        );
+if (clientHeap) {
+    sead::Heap* gmHeap = GameModeManager::instance()->getHeap();
+    if (gmHeap) {
+        // Validate heaps before using them
+        if (clientHeap->getSize() > 0 && gmHeap->getSize() > 0) {
+            size_t clientUsed = clientHeap->getSize() - clientHeap->getFreeSize();
+            size_t clientTotal = clientHeap->getSize();
+            size_t gmUsed = gmHeap->getSize() - gmHeap->getFreeSize();
+            size_t gmTotal = gmHeap->getSize();
+            
+            gTextWriter->printf(
+                "Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode)\n",
+                0.0009765625 * clientUsed,
+                0.0009765625 * clientTotal,
+                0.0009765625 * gmUsed,
+                0.0009765625 * gmTotal
+            );
+        } else {
+            gTextWriter->printf("Heap Use: Invalid heap sizes\n");
+        }
+    } else {
+        gTextWriter->printf("Heap Use: GameMode heap unavailable\n");
     }
+} else {
+    gTextWriter->printf("Heap Use: Client heap unavailable\n");
+}
 
     gTextWriter->printf(
         "Queue Count: %d/%d (Send) %d/%d (Receive)\n",
@@ -407,6 +423,8 @@ void stageInitHook(al::ActorInitInfo *info, StageScene *curScene, al::PlacementI
 
     Client::sendGameInfPacket(info->mActorSceneInfo.mSceneObjHolder);
 
+    TwistsConfig::handleStageInit();
+
 }
 
 PlayerCostumeInfo *setPlayerModel(al::LiveActor *player, const al::ActorInitInfo &initInfo, const char *bodyModel, const char *capModel, al::AudioKeeper *keeper, bool isCloset) {
@@ -450,6 +468,7 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
 
     al::PlayerHolder *pHolder = al::getScenePlayerHolder(stageScene);
     PlayerActorBase* playerBase = al::tryGetPlayerActor(pHolder, 0);
+    auto *player = (PlayerActorHakoniwa*)al::tryGetPlayerActor(pHolder, 0);
     
     bool isYukimaru = !playerBase->getPlayerInfo();
 
@@ -461,6 +480,8 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
     Client::update();
 
     updatePlayerInfo(stageScene->mHolder, playerBase, isYukimaru);
+
+    TwistsConfig::updateCappyProximity(player, stageScene);
 
     if (al::isPadHoldZR(-1)) {
         if (al::isPadTriggerUp(-1)) { // ZR + Up => Debug menu
@@ -500,38 +521,38 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
             GameModeManager::instance()->toggleActive();
         }
     }
-     else if (al::isPadHoldR(-1)) {
-        if (al::isPadTriggerLeft(-1)) { // R + Left => Set custom text for CustomMsg
-            CustomMsg* customMsg = Client::instance()->getCustomMsg();
-            if (customMsg) {
-                // Set custom text - you can change this to whatever text you want
-                customMsg->setCustomText("This is my custom message!");
-            }
-        }
-        if (al::isPadTriggerUp(-1)) { // R + Up => Toggle CustomMsg layout
-            CustomMsg* customMsg = Client::instance()->getCustomMsg();
-            if (customMsg) {
-                if (customMsg->isActive()) {
-                    customMsg->tryEnd(); // Hide it
-                } else {
-                    customMsg->tryStart(); // Show it
-                    customMsg->showHiding(); // Show with hiding status
-                }
-            }
-        }
-        if (al::isPadTriggerDown(-1)) { // R + Down => Toggle between hiding/seeking
-            CustomMsg* customMsg = Client::instance()->getCustomMsg();
-            if (customMsg && customMsg->isActive()) {
-                static bool showingHiding = true;
-                if (showingHiding) {
-                    customMsg->showSeeking();
-                } else {
-                    customMsg->showHiding();
-                }
-                showingHiding = !showingHiding;
-            }
-        }
-    }
+    //else if (al::isPadHoldR(-1)) {
+    //   if (al::isPadTriggerLeft(-1)) { // R + Left => Set custom text for CustomMsg
+    //       CustomMsg* customMsg = Client::instance()->getCustomMsg();
+    //       if (customMsg) {
+    //           // Set custom text - you can change this to whatever text you want
+    //           customMsg->setCustomText("This is my custom message!");
+    //       }
+    //   }
+    //   if (al::isPadTriggerUp(-1)) { // R + Up => Toggle CustomMsg layout
+    //       CustomMsg* customMsg = Client::instance()->getCustomMsg();
+    //       if (customMsg) {
+    //           if (customMsg->isActive()) {
+    //               customMsg->tryEnd(); // Hide it
+    //           } else {
+    //               customMsg->tryStart(); // Show it
+    //               customMsg->showHiding(); // Show with hiding status
+    //           }
+    //       }
+    //   }
+    //   if (al::isPadTriggerDown(-1)) { // R + Down => Toggle between hiding/seeking
+    //       CustomMsg* customMsg = Client::instance()->getCustomMsg();
+    //       if (customMsg && customMsg->isActive()) {
+    //           static bool showingHiding = true;
+    //           if (showingHiding) {
+    //               customMsg->showSeeking();
+    //           } else {
+    //               customMsg->showHiding();
+    //           }
+    //           showingHiding = !showingHiding;
+    //       }
+    //   }
+    //
 
     if (Client::isMusicDisabled()) {
         if (al::isPlayingBgm(stageScene)) {

@@ -21,7 +21,7 @@ void SardineConfigMenu::updateOptionsText() {
     bool isTetherSnapEnabled = curMode ? curMode->mIsTetherSnap : false;
     
     mConfigOptions->mBuffer[0].copy(
-        isGravityEnabled ? u"Sardine Gravity (ON) " : u"Sardine Gravity (OFF)"
+        isGravityEnabled ? u"Galaxy  Gravity (ON) " : u"Galaxy  Gravity (OFF)"
     );
     mConfigOptions->mBuffer[1].copy(
         isTetherEnabled ? u"Sardine Tether (ON) " : u"Sardine Tether (OFF)"
