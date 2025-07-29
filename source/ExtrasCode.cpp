@@ -110,6 +110,12 @@ void giveLifeUpHeart(PlayerActorHakoniwa* hakoniwa) {
 
 
 void setOutfit(PlayerActorHakoniwa* hakoniwa, std::string body, std::string cap) {
+
+    // sets the current worn costume
+   // static void wearCostume(GameDataHolderWriter, char const *);
+
+   // // sets the current worn cap
+   // static void wearCap(GameDataHolderWriter, char const*);
     if (!hakoniwa) return;
 
     // Get the current scene
@@ -133,5 +139,11 @@ void setOutfit(PlayerActorHakoniwa* hakoniwa, std::string body, std::string cap)
     // Send costume info to other players
     extern void sendCostumeInfPacket(const char* body, const char* cap);
     sendCostumeInfPacket(body.c_str(), cap.c_str());
+    GameDataHolder* gameDataHolder = tryGetGameDataHolder();
+    if (gameDataHolder) {
+        GameDataHolderWriter writer(gameDataHolder);
+        GameDataFunction::wearCostume(writer, body.c_str());
+        GameDataFunction::wearCap(writer, cap.c_str());
+    }
 }
 
