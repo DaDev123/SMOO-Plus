@@ -218,13 +218,18 @@ void PuppetActor::control() {
             }
         }
 
-        if(mNameTag && !GameModeManager::instance()->isActive())
-            if(!mNameTag->mIsAlive)
-                mNameTag->appear();
-
-        if (mNameTag && GameModeManager::instance()->isActive()) {
-            GameMode curMode = GameModeManager::instance()->getGameMode();
-            switch(curMode) {
+       if (mNameTag) {
+    if (!GameModeManager::instance()->isActive()) {
+        // If no active mode and nametag is not alive, make it appear
+        if (!mNameTag->mIsAlive)
+            mNameTag->appear();
+    } else {
+        GameMode curMode = GameModeManager::instance()->getGameMode();
+        
+        if (mInfo->gameMode != curMode) {
+            mNameTag->mIsAlive = true;
+        } else {
+            switch (curMode) {
                 case GameMode::HIDEANDSEEK:
                     mNameTag->mIsAlive = GameModeManager::instance()->getMode<HideAndSeekMode>()->isPlayerSeeking() && mInfo->isIt;
                     break;
@@ -238,9 +243,13 @@ void PuppetActor::control() {
                 }
                 default:
                     Logger::log("Name tag display failed due to unknown active game mode!\n");
+                    mNameTag->mIsAlive = true; // fallback: show nametag
                     break;
-            };
+            }
         }
+    }
+}
+
 
         // Sub-Actor Updating
 
