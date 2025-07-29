@@ -9,6 +9,7 @@
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
 #include "server/hns/HideAndSeekConfigMenu.hpp"
+#include "server/hns/HideAndSeekPacket.hpp"
 
 #include "packets/Packet.h"
 
@@ -19,19 +20,9 @@ struct HideAndSeekInfo : GameModeInfoBase {
     bool mIsUseGravityCam = false;
     bool mIsUseSlipperyGround = true;
     GameTime mHidingTime;
-};
 
-enum TagUpdateType : u8 {
-    TIME                 = 1 << 0,
-    STATE                = 1 << 1
-};
-
-struct PACKED HideAndSeekPacket : Packet {
-    HideAndSeekPacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(HideAndSeekPacket) - sizeof(Packet);};
-    TagUpdateType updateType;
-    bool1 isIt = false;
-    u8 seconds;
-    u16 minutes;
+    inline bool isPlayerSeeking() const { return  mIsPlayerIt; }
+    inline bool isPlayerHiding()  const { return !mIsPlayerIt; }
 };
 
 class HideAndSeekMode : public GameModeBase {
@@ -52,7 +43,8 @@ class HideAndSeekMode : public GameModeBase {
         void processPacket(Packet* packet) override;
         Packet* createPacket() override;
 
-        bool isPlayerIt() const { return mInfo->mIsPlayerIt; }
+        inline bool isPlayerSeeking() const { return mInfo->isPlayerSeeking(); }
+        inline bool isPlayerHiding()  const { return mInfo->isPlayerHiding();  }
 
         float getInvulnTime() const { return mInvulnTime; }
 
@@ -77,5 +69,7 @@ class HideAndSeekMode : public GameModeBase {
         al::CameraTicket *mTicket = nullptr;
         int mPrevSpectateIndex = -2;
         int mSpectateIndex = -1;
+
+        void updateTagState(bool isSeeking);
 
 };

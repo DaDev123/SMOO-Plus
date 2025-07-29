@@ -75,59 +75,84 @@ void FreezeTagMode::init(const GameModeInitInfo& info) {
     mHintArrow->init(*info.mActorInitInfo);
 }
 
-void FreezeTagMode::processPacket(Packet *packet) {
-    FreezeTagPacket* frzPak = (FreezeTagPacket*)packet;
-    PuppetInfo* curInfo = Client::findPuppetInfo(frzPak->mUserID, false);
+void FreezeTagMode::processPacket(Packet* _packet) {
+    FreezeTagPacket* packet     = (FreezeTagPacket*)_packet;
+    FreezeUpdateType updateType = packet->updateType();
 
-    if (!curInfo)
+    /**
+     * Ignore legacy game mode packets for other game modes
+     *
+     * Legacy Freeze-Tag packets that we are interested in should have been automatically
+     * transformed from LEGACY to FREEZETAG by the logic in the gameMode() function.
+     */
+    if (packet->gameMode() == GameMode::NONE) {
         return;
+    }
 
-    if (frzPak->updateType & FreezeUpdateType::PLAYER) {
-        tryScoreEvent(frzPak, curInfo);
+    PuppetInfo* other = Client::findPuppetInfo(packet->mUserID, false);
+    if (!other) {
+        return;
+    }
+
+    if (updateType == FreezeUpdateType::PLAYER) {
+        tryScoreEvent(packet, other);
 
         // When puppet transitioning from frozen to unfrozen, disable the fall off flag
-        if(curInfo->isFreezeTagFreeze && !frzPak->isFreeze)
-            curInfo->isFreezeTagFallenOff = false;
+        if (other->ftIsFrozen() && !packet->isFreeze) {
+            other->isFreezeTagFallenOff = false;
+        }
 
-        curInfo->isFreezeTagRunner = frzPak->isRunner;
-        curInfo->isFreezeTagFreeze = frzPak->isFreeze;
-        curInfo->freezeTagScore = frzPak->score;
+        other->isFreezeTagRunner = packet->isRunner;
+        other->isFreezeTagFreeze = packet->isFreeze;
+        other->freezeTagScore    = packet->score;
     }
 
-    if (frzPak->updateType & FreezeUpdateType::ROUNDSTART && !mInfo->mIsRound) {
-        FreezeTagRoundPacket* roundPak = (FreezeTagRoundPacket*)frzPak;
-        startRound(al::clamp(roundPak->roundTime, u8(2), u8(60))); // Start round if round not already started
-    }
+    if (isRound()) {
 
-    if (frzPak->updateType & FreezeUpdateType::ROUNDCANCEL && mInfo->mIsRound)
+         if (updateType & FreezeUpdateType::ROUNDCANCEL && mInfo->mIsRound)
         endRound(true); // Abort round early on receiving cancel packet
 
-    if (frzPak->updateType & FreezeUpdateType::FALLOFF && mInfo->mIsRound) {
-        curInfo->isFreezeTagFallenOff = true;
-        
-        if(!mInfo->mIsPlayerRunner)
-            mInfo->mPlayerTagScore.eventScoreFallOff();
+        if (updateType == FreezeUpdateType::FALLOFF) {
+            other->isFreezeTagFallenOff = true;
+
+            if (isPlayerChaser()) {
+                mInfo->mPlayerTagScore.eventScoreFallOff();
+            }
+        }
+    } else if (updateType == FreezeUpdateType::ROUNDSTART) {
+        FreezeTagRoundStartPacket* roundStart = (FreezeTagRoundStartPacket*)packet;
+        startRound(al::clamp(roundStart->roundTime, u8(2), u8(60))); // Start round if round not already started
     }
 }
 
 Packet* FreezeTagMode::createPacket() {
-    FreezeTagPacket *packet = new FreezeTagPacket();
-    
-    packet->mUserID = Client::getClientId();
-    packet->updateType = mNextUpdateType;
-
-    if(packet->updateType != FreezeUpdateType::ROUNDSTART) {
-        packet->isRunner = mInfo->mIsPlayerRunner;
-        packet->isFreeze = mInfo->mIsPlayerFreeze;
-        packet->score = mInfo->mPlayerTagScore.mScore;
-
+    if (!isModeActive()) {
+        DisabledGameModeInf* packet = new DisabledGameModeInf(Client::getClientId());
+        packet->setUpdateType(0); // so that legacy freeze-tag clients don't wrongly interpret this as a round start
         return packet;
     }
 
-    FreezeTagRoundPacket* roundPak = (FreezeTagRoundPacket*)packet;
-    roundPak->roundTime = u8(mInfo->mRoundLength);
+    if (mNextUpdateType == FreezeUpdateType::ROUNDSTART) {
+        FreezeTagRoundStartPacket* packet = new FreezeTagRoundStartPacket();
+        packet->mUserID   = Client::getClientId();
+        packet->roundTime = u8(mInfo->mRoundLength);
+        return packet;
+    }
 
-    return roundPak;
+    if (mNextUpdateType == FreezeUpdateType::ROUNDCANCEL) {
+        FreezeTagRoundCancelPacket* packet = new FreezeTagRoundCancelPacket();
+        packet->mUserID       = Client::getClientId();
+        return packet;
+    }
+
+    FreezeTagPacket* packet = new FreezeTagPacket();
+    packet->mUserID  = Client::getClientId();
+    packet->isRunner = isPlayerRunner();
+    packet->isFreeze = isPlayerFrozen();
+    packet->score    = getScore();
+    packet->setUpdateType(mNextUpdateType);
+
+    return packet;
 }
 
 void FreezeTagMode::sendFreezePacket(FreezeUpdateType updateType) {

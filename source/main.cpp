@@ -34,6 +34,7 @@
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
+#include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "speedboot/SpeedbootLoad.hpp"
 #include "layouts/CustomMsg.h"
@@ -209,7 +210,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
                 if (debugPuppetIndex == 0) {
                     gTextWriter->printf("Player Name: %s\n",       Client::getClientName());
                     gTextWriter->printf("Connection Status: %s\n", isConnected ? "Online" : "Offline");
-                    // gTextWriter->printf("Game mode: %i | %s\n",    gameMode, GameModeFactory::getModeName(gameMode));
+                    gTextWriter->printf("Game mode: %i | %s\n",    gameMode, GameModeFactory::getModeName(gameMode));
                     gTextWriter->printf("Is in same Stage: Yes\n");
                     gTextWriter->printf("Stage: %s\n",            client->getLastGameInfPacket()->stageName);
                     gTextWriter->printf("Scenario: %u\n",         client->getLastGameInfPacket()->scenarioNo);
@@ -234,7 +235,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
                     if (curModel && curPupInfo) {
                         gTextWriter->printf("Player Name: %s\n",       curPupInfo->puppetName);
                         gTextWriter->printf("Connection Status: %s\n", curPupInfo->isConnected ? "Online" : "Offline");
-                        // gTextWriter->printf("Game mode: %i | %s\n",    curPupInfo->gameMode, GameModeFactory::getModeName(curPupInfo->gameMode));
+                        gTextWriter->printf("Game mode: %i | %s\n",    curPupInfo->gameMode, GameModeFactory::getModeName(curPupInfo->gameMode));
                         gTextWriter->printf("Is in same Stage: %s\n",  curPupInfo->isInSameStage ? "Yes" : "No");
                         gTextWriter->printf("Stage: %s\n",             curPupInfo->stageName);
                         gTextWriter->printf("Scenario: %u\n",          curPupInfo->scenarioNo);

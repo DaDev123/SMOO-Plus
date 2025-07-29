@@ -19,6 +19,29 @@ GameModeManager::GameModeManager() {
     setMode(GameMode::HIDEANDSEEK); // set default gamemode
 }
 
+void GameModeManager::processModePacket(Packet* _packet) {
+    GameModeInf<u8>* packet = (GameModeInf<u8>*)_packet;
+    GameMode theirGameMode  = packet->gameMode();
+
+    PuppetInfo* other = Client::findPuppetInfo(packet->mUserID, false);
+
+    auto curModeBase    = instance()->mCurModeBase;
+    bool hasOurGameMode = curModeBase && (theirGameMode == curModeBase->getMode());
+
+    // only process if it is for our game mode
+    if (hasOurGameMode) {
+        curModeBase->processPacket(packet);
+    } else if (other) {
+        other->isIt = false;
+    }
+
+    // has the game mode of the other client changed?
+    if (other && other->gameMode != theirGameMode) {
+        other->gameMode = theirGameMode;
+            Client::sendGamemodePacket();
+    }
+}
+
 void GameModeManager::begin() {
     if (mCurModeBase) {
         sead::ScopedCurrentHeapSetter heapSetter(mHeap);

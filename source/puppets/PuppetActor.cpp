@@ -226,10 +226,10 @@ void PuppetActor::control() {
             GameMode curMode = GameModeManager::instance()->getGameMode();
             switch(curMode) {
                 case GameMode::HIDEANDSEEK:
-                    mNameTag->mIsAlive = GameModeManager::instance()->getMode<HideAndSeekMode>()->isPlayerIt() && mInfo->isIt;
+                    mNameTag->mIsAlive = GameModeManager::instance()->getMode<HideAndSeekMode>()->isPlayerSeeking() && mInfo->isIt;
                     break;
                 case GameMode::SARDINE:
-                    mNameTag->mIsAlive = GameModeManager::instance()->getMode<SardineMode>()->isPlayerIt() && mInfo->isIt;
+                    mNameTag->mIsAlive = GameModeManager::instance()->getMode<SardineMode>()->isPlayerPack() && mInfo->isIt;
                     break;
                 case GameMode::FREEZETAG: {
                     bool isRun = GameModeManager::instance()->getInfo<FreezeTagInfo>()->mIsPlayerRunner;

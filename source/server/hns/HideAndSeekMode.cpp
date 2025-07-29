@@ -60,51 +60,56 @@ void HideAndSeekMode::init(const GameModeInitInfo& info) {
 
 }
 
-void HideAndSeekMode::processPacket(Packet *packet) {
-    HideAndSeekPacket* tagPacket = (HideAndSeekPacket*)packet;
+void HideAndSeekMode::processPacket(Packet* _packet) {
+    HideAndSeekPacket* packet     = (HideAndSeekPacket*)_packet;
+    HnSUpdateType      updateType = packet->updateType();
 
     // if the packet is for our player, edit info for our player
-    if (tagPacket->mUserID == Client::getClientId() && GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
-
-        HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-        HideAndSeekInfo* curInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
-
-        if (tagPacket->updateType & TagUpdateType::STATE) {
-            mode->setPlayerTagState(tagPacket->isIt);
+    if (packet->mUserID == Client::getClientId()) {
+        if (updateType & HnSUpdateType::TIME) {
+            mInfo->mHidingTime.mMilliseconds = 0.0;
+            mInfo->mHidingTime.mSeconds      = packet->seconds;
+            mInfo->mHidingTime.mMinutes      = packet->minutes % 60;
+            mInfo->mHidingTime.mHours        = packet->minutes / 60;
+            mModeTimer->setTime(mInfo->mHidingTime);
         }
 
-        if (tagPacket->updateType & TagUpdateType::TIME) {
-            curInfo->mHidingTime.mSeconds = tagPacket->seconds;
-            curInfo->mHidingTime.mMinutes = tagPacket->minutes;
+        if (updateType & HnSUpdateType::STATE) {
+            updateTagState(packet->isIt);
+        } else if (updateType & HnSUpdateType::TIME) {
+            Client::sendGamemodePacket();
         }
 
         return;
-
     }
 
-    PuppetInfo* curInfo = Client::findPuppetInfo(tagPacket->mUserID, false);
-
-    if (!curInfo) {
+    PuppetInfo* other = Client::findPuppetInfo(packet->mUserID, false);
+    if (!other) {
         return;
     }
 
-    curInfo->isIt = tagPacket->isIt;
-    curInfo->seconds = tagPacket->seconds;
-    curInfo->minutes = tagPacket->minutes;
+    if (updateType & HnSUpdateType::STATE) {
+        other->isIt = packet->isIt;
+    }
+
+    if (updateType & HnSUpdateType::TIME) {
+        other->seconds = packet->seconds;
+        other->minutes = packet->minutes;
+    }
 }
 
-Packet *HideAndSeekMode::createPacket() {
+Packet* HideAndSeekMode::createPacket() {
+    if (!isModeActive()) {
+        DisabledGameModeInf* packet = new DisabledGameModeInf(Client::getClientId());
+        return packet;
+    }
 
-    HideAndSeekPacket *packet = new HideAndSeekPacket();
-
-    packet->mUserID = Client::getClientId();
-
-    packet->isIt = isPlayerIt();
-
-    packet->minutes = mInfo->mHidingTime.mMinutes;
-    packet->seconds = mInfo->mHidingTime.mSeconds;
-    packet->updateType = static_cast<TagUpdateType>(TagUpdateType::STATE | TagUpdateType::TIME);
-
+    HideAndSeekPacket* packet = new HideAndSeekPacket();
+    packet->mUserID    = Client::getClientId();
+    packet->isIt       = isPlayerSeeking();
+    packet->seconds    = mInfo->mHidingTime.mSeconds;
+    packet->minutes    = mInfo->mHidingTime.mMinutes + mInfo->mHidingTime.mHours * 60;
+    packet->setUpdateType(static_cast<HnSUpdateType>(HnSUpdateType::STATE | HnSUpdateType::TIME));
     return packet;
 }
 
