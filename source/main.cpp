@@ -34,6 +34,7 @@
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
+#include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "speedboot/SpeedbootLoad.hpp"
 #include "layouts/CustomMsg.h"
@@ -256,7 +257,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
                 if (debugPuppetIndex == 0) {
                     gTextWriter->printf("Player Name: %s\n",       Client::getClientName());
                     gTextWriter->printf("Connection Status: %s\n", isConnected ? "Online" : "Offline");
-                    // gTextWriter->printf("Game mode: %i | %s\n",    gameMode, GameModeFactory::getModeName(gameMode));
+                    gTextWriter->printf("Game mode: %i | %s\n",    gameMode, GameModeFactory::getModeName(gameMode));
                     gTextWriter->printf("Is in same Stage: Yes\n");
                     gTextWriter->printf("Stage: %s\n",            client->getLastGameInfPacket()->stageName);
                     gTextWriter->printf("Scenario: %u\n",         client->getLastGameInfPacket()->scenarioNo);
@@ -281,7 +282,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
                     if (curModel && curPupInfo) {
                         gTextWriter->printf("Player Name: %s\n",       curPupInfo->puppetName);
                         gTextWriter->printf("Connection Status: %s\n", curPupInfo->isConnected ? "Online" : "Offline");
-                        // gTextWriter->printf("Game mode: %i | %s\n",    curPupInfo->gameMode, GameModeFactory::getModeName(curPupInfo->gameMode));
+                        gTextWriter->printf("Game mode: %i | %s\n",    curPupInfo->gameMode, GameModeFactory::getModeName(curPupInfo->gameMode));
                         gTextWriter->printf("Is in same Stage: %s\n",  curPupInfo->isInSameStage ? "Yes" : "No");
                         gTextWriter->printf("Stage: %s\n",             curPupInfo->stageName);
                         gTextWriter->printf("Scenario: %u\n",          curPupInfo->scenarioNo);
@@ -490,6 +491,31 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
         if (al::isPadTriggerLeft(-1)) { // L + Left => Activate gamemode
             GameModeManager::instance()->toggleActive();
         }
+    }//  else if (al::isPadHoldR(-1)) {
+     //        if (al::isPadTriggerUp(-1)) { // R + Up => Toggle CustomMsg layout
+     //        CustomMsg* customMsg = Client::instance()->getCustomMsg();
+     //        if (customMsg) {
+     //            if (customMsg->isActive()) {
+     //                customMsg->tryEnd(); // Hide it
+     //            } else {
+     //                customMsg->tryStart(); // Show it
+     //                customMsg->showHiding(); // Show with hiding status
+     //            }
+     //        }
+     //    }
+     //    if (al::isPadTriggerDown(-1)) { // R + Down => Toggle between hiding/seeking
+     //        CustomMsg* customMsg = Client::instance()->getCustomMsg();
+     //        if (customMsg && customMsg->isActive()) {
+     //            static bool showingHiding = true;
+     //            if (showingHiding) {
+     //                customMsg->showSeeking();
+     //            } else {
+     //                customMsg->showHiding();
+     //            }
+     //            showingHiding = !showingHiding;
+     //        }
+     //    }
+     //    }
     } else if (al::isPadHoldR(-1)) {
         if (al::isPadTriggerLeft(-1)) { // R + Left => Set custom text for CustomMsg
             CustomMsg* customMsg = Client::instance()->getCustomMsg();

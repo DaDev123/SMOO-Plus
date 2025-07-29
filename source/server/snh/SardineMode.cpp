@@ -69,51 +69,56 @@ void SardineMode::init(const GameModeInitInfo& info)
     // mModeTimer->disableTimer();
 }
 
-void SardineMode::processPacket(Packet *packet) {
-    SardinePacket* sardinePacket = (SardinePacket*)packet;
+void SardineMode::processPacket(Packet* _packet) {
+    SardinePacket*    packet     = (SardinePacket*)_packet;
+    SardineUpdateType updateType = packet->updateType();
 
     // if the packet is for our player, edit info for our player
-    if (sardinePacket->mUserID == Client::getClientId() && GameModeManager::instance()->isMode(GameMode::SARDINE)) {
-
-        SardineMode* mode = GameModeManager::instance()->getMode<SardineMode>();
-        SardineInfo* curInfo = GameModeManager::instance()->getInfo<SardineInfo>();
-
-        if (sardinePacket->updateType & SardineUpdateType::SARDINESTATE) {
-            mode->setPlayerTagState(sardinePacket->isIt);
+    if (packet->mUserID == Client::getClientId()) {
+        if (updateType & SardineUpdateType::TIME) {
+            mInfo->mHidingTime.mMilliseconds = 0.0;
+            mInfo->mHidingTime.mSeconds      = packet->seconds;
+            mInfo->mHidingTime.mMinutes      = packet->minutes % 60;
+            mInfo->mHidingTime.mHours        = packet->minutes / 60;
+            mModeTimer->setTime(mInfo->mHidingTime);
         }
 
-        if (sardinePacket->updateType & SardineUpdateType::SARDINETIME) {
-            curInfo->mHidingTime.mSeconds = sardinePacket->seconds;
-            curInfo->mHidingTime.mMinutes = sardinePacket->minutes;
+        if (updateType & SardineUpdateType::STATE) {
+            updateTagState(packet->isIt);
+        } else if (updateType & SardineUpdateType::TIME) {
+            Client::sendGamemodePacket();
         }
 
         return;
-
     }
 
-    PuppetInfo* curInfo = Client::findPuppetInfo(sardinePacket->mUserID, false);
-
-    if (!curInfo) {
+    PuppetInfo* other = Client::findPuppetInfo(packet->mUserID, false);
+    if (!other) {
         return;
     }
 
-    curInfo->isIt = sardinePacket->isIt;
-    curInfo->seconds = sardinePacket->seconds;
-    curInfo->minutes = sardinePacket->minutes;
+    if (updateType & SardineUpdateType::STATE) {
+        other->isIt = packet->isIt;
+    }
+
+    if (updateType & SardineUpdateType::TIME) {
+        other->seconds = packet->seconds;
+        other->minutes = packet->minutes;
+    }
 }
 
-Packet *SardineMode::createPacket() {
+Packet* SardineMode::createPacket() {
+    if (!isModeActive()) {
+        DisabledGameModeInf* packet = new DisabledGameModeInf(Client::getClientId());
+        return packet;
+    }
 
-    SardinePacket *packet = new SardinePacket();
-
-    packet->mUserID = Client::getClientId();
-
-    packet->isIt = isPlayerIt();
-
-    packet->minutes = mInfo->mHidingTime.mMinutes;
-    packet->seconds = mInfo->mHidingTime.mSeconds;
-    packet->updateType = static_cast<SardineUpdateType>(SardineUpdateType::SARDINESTATE | SardineUpdateType::SARDINETIME);
-
+    SardinePacket* packet = new SardinePacket();
+    packet->mUserID    = Client::getClientId();
+    packet->isIt       = isPlayerPack();
+    packet->seconds    = mInfo->mHidingTime.mSeconds;
+    packet->minutes    = mInfo->mHidingTime.mMinutes + mInfo->mHidingTime.mHours * 60;
+    packet->setUpdateType(static_cast<SardineUpdateType>(SardineUpdateType::STATE | SardineUpdateType::TIME));
     return packet;
 }
 

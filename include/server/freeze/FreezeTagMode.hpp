@@ -13,6 +13,7 @@
 #include "server/freeze/FreezePlayerBlock.h"
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/freeze/FreezeTagScore.hpp"
+#include "server/freeze/FreezeTagPacket.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/gamemode/GameModeInfoBase.hpp"
@@ -21,13 +22,6 @@
 #include <math.h>
 #include <stdint.h>
 
-enum FreezeUpdateType : u8 { // Type of packets to send between players
-    PLAYER                 = 1 << 0,
-    ROUNDSTART             = 1 << 1,
-    ROUNDCANCEL            = 1 << 2,
-    FALLOFF                = 1 << 3
-};
-
 enum FreezePostProcessingType : u8 { // Snapshot mode post processing state
     PPDISABLED = 0,
     PPFROZEN = 1,
@@ -35,20 +29,7 @@ enum FreezePostProcessingType : u8 { // Snapshot mode post processing state
     PPENDGAMEWIN = 3
 };
 
-struct PACKED FreezeTagPacket : Packet {
-    FreezeTagPacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(FreezeTagPacket) - sizeof(Packet);};
-    FreezeUpdateType updateType;
-    bool isRunner = false;
-    bool isFreeze = false;
-    uint16_t score = 0;
-};
 
-struct PACKED FreezeTagRoundPacket : Packet {
-    FreezeTagRoundPacket() : Packet() { this->mType = PacketType::GAMEMODEINF; mPacketSize = sizeof(FreezeTagPacket) - sizeof(Packet);};
-    FreezeUpdateType updateType;
-    uint8_t roundTime = 10;
-    const char padding[3] = "\0\0";
-};
 
 class FreezeTagMode : public GameModeBase {
 public:
@@ -73,8 +54,6 @@ public:
     void endRound(bool isAbort); // Ends round, allows setting for if this was a natural end or abort (used for scoring)
 
     bool isScoreEventsEnabled() const { return mIsScoreEventsValid; };
-    bool isPlayerRunner() const { return mInfo->mIsPlayerRunner; };
-    bool isPlayerFreeze() const { return mInfo->mIsPlayerFreeze; };
     bool isEndgameActive() { return mIsEndgameActive; }  // The endagme is the time during the WIPEOUT message is on screen
     bool isPlayerLastSurvivor(PuppetInfo* changingPuppet); // Only meant to be called on getting a packet
     bool isAllRunnerFrozen(PuppetInfo* changingPuppet); // Only meant to be called on getting a packet, starts the endgame
@@ -94,6 +73,18 @@ public:
 
     void updateSpectateCam(PlayerActorBase* playerBase); // Updates the frozen spectator camera
     void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; } // Called when the camera ticket is constructed to get a pointer
+
+    // implemented here:
+        inline bool     isHost()               const { return mInfo->isHost();           }
+        inline bool     isRound()              const { return mInfo->isRound();          }
+        inline bool     isPlayerRunner()       const { return mInfo->isPlayerRunner();   }
+        inline bool     isPlayerChaser()       const { return mInfo->isPlayerChaser();   }
+        inline bool     isPlayerFrozen()       const { return mInfo->isPlayerFrozen();   }
+        inline bool     isPlayerUnfrozen()     const { return mInfo->isPlayerUnfrozen(); }
+        inline bool     isWipeout()            const { return mIsEndgameActive;          }
+        inline uint16_t getScore()             const { return mInfo->getScore();         }
+        inline int      runners()              const { return mInfo->runners();          }
+        inline int      chasers()              const { return mInfo->chasers();          }
 
 private:
     FreezeUpdateType mNextUpdateType = FreezeUpdateType::PLAYER; // Set for the sendPacket funtion to know what packet type is sent

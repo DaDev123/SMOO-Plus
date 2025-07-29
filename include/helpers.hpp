@@ -121,6 +121,7 @@ __attribute__((used)) static HackActorName classHackNames[] = {
     {"TRexSleep", "TRex"},
     {"TRexPatrol", "TRex"},
     {"Koopa","KoopaHack"},
+    {"WanwanBig", "Wanwan"},
     {"PukupukuSnow", "Pukupuku"},  // Maps PukupukuSnow to same hack name as Pukupuku for syncing
 };
 

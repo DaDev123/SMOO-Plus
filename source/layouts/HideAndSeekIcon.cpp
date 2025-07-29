@@ -12,6 +12,8 @@
 #include "rs/util.hpp"
 #include "main.hpp"
 
+#define curGamemodeID 0
+
 HideAndSeekIcon::HideAndSeekIcon(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
 
     al::initLayoutActor(this, initInfo, "HideAndSeekIcon", 0);
@@ -82,32 +84,36 @@ void HideAndSeekIcon::exeWait() {
 
     int playerCount = Client::getMaxPlayerCount();
 
-    if (playerCount > 0) {
+if (playerCount > 0) {
+    char playerNameBuf[0x200] = {0};
+    sead::BufferedSafeStringBase<char> playerList =
+        sead::BufferedSafeStringBase<char>(playerNameBuf, sizeof(playerNameBuf));
 
-        char playerNameBuf[0x100] = {0}; // max of 16 player names if player name size is 0x10
+    playerList.appendWithFormat("%s %s\n", mInfo->mIsPlayerIt ? "&" : "%%", Client::instance()->getClientName());
 
-        sead::BufferedSafeStringBase<char> playerList =
-            sead::BufferedSafeStringBase<char>(playerNameBuf, 0x200);
-        
-        // Add your own name to the list at the top
-        playerList.appendWithFormat("%s %s\n", mInfo->mIsPlayerIt ? "&" : "%%", Client::instance()->getClientName());
+    for (int i = 0; i < playerCount; i++) {
+        PuppetInfo* curPuppet = Client::getPuppetInfo(i);
+        if (!curPuppet || !curPuppet->isConnected)
+            continue;
 
-        // Add all it players to list
-        for(int i = 0; i < playerCount; i++){
-            PuppetInfo* curPuppet = Client::getPuppetInfo(i);
-            if (curPuppet && curPuppet->isConnected && curPuppet->isIt)
-                playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "&" : "%%", curPuppet->puppetName);
+        if (curPuppet->gameMode == curGamemodeID) {
+            playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "&" : "%%", curPuppet->puppetName);
         }
-
-        // Add not it players to list
-        for(int i = 0; i < playerCount; i++){
-            PuppetInfo* curPuppet = Client::getPuppetInfo(i);
-            if (curPuppet && curPuppet->isConnected && !curPuppet->isIt)
-                playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "&" : "%%", curPuppet->puppetName);
-        }
-        
-        al::setPaneStringFormat(this, "TxtPlayerList", playerList.cstr());
     }
+
+    for (int i = 0; i < playerCount; i++) {
+        PuppetInfo* curPuppet = Client::getPuppetInfo(i);
+        if (!curPuppet || !curPuppet->isConnected)
+            continue;
+
+        if (curPuppet->gameMode != curGamemodeID) {
+            playerList.appendWithFormat("   %s\n", curPuppet->puppetName); // no icon, indented
+        }
+    }
+
+    al::setPaneStringFormat(this, "TxtPlayerList", playerList.cstr());
+}
+
     
 }
 

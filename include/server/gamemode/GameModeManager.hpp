@@ -29,11 +29,7 @@ public:
     void setInfo(GameModeInfoBase* info) { mModeInfo = info; }
 
 
-    static void processModePacket(Packet *packet) {
-        if(instance()->mCurModeBase) {
-            instance()->mCurModeBase->processPacket(packet);
-        }
-    }
+    static void processModePacket(Packet* packet);
 
     static Packet *createModePacket() {
         if(instance()->mCurModeBase) {
