@@ -32,6 +32,7 @@ class StageSceneStateServerConfig : public al::HostStateBase<al::Scene>, public 
             GAMEMODECONFIG,
             GAMEMODESWITCH,
             TOGGLESENSORS,
+            TOGGLETWISTS,
             SETIP,
             SETPORT,
             TOGGLEMUSIC,
@@ -48,11 +49,14 @@ class StageSceneStateServerConfig : public al::HostStateBase<al::Scene>, public 
         void exeOpenKeyboardPort();
         void exeHideServer();
         void exeToggleMusic();
+        void exeToggleTwists();
         void exeToggleSensors();
         void exeGamemodeConfig();
         void exeGamemodeSelect();
         void exeSaveData();
         void updateSensorsOptions();
+        void updateTwistsOptions();
+        
 
         void endSubMenu();
 
@@ -103,11 +107,15 @@ class StageSceneStateServerConfig : public al::HostStateBase<al::Scene>, public 
         sead::SafeArray<GameModeEntry, GameModeConfigMenuFactory::getMenuCount()> mGamemodeConfigMenus;
         GameModeEntry* mGamemodeConfigMenu = nullptr;
 
+        SimpleLayoutMenu* mToggleTwistsMenu;
+CommonVerticalList* mToggleTwistsList;
+sead::SafeArray<sead::WFixedSafeString<0x200>, 2>* mToggleTwistsOptions; // 1 twist option (Cappy)
+
         inline void activateInput();
         inline void deactivateInput();
 
         // Main Menu Options - Updated count
-        static constexpr int mMainMenuOptionsCount = 7;
+        static constexpr int mMainMenuOptionsCount = 8;
         sead::SafeArray<sead::WFixedSafeString<0x200>, mMainMenuOptionsCount>* mMainMenuOptions = nullptr;
         const sead::WFixedSafeString<0x200>* getMainMenuOptions();
 
@@ -123,5 +131,6 @@ namespace {
     NERVE_HEADER(StageSceneStateServerConfig, GamemodeConfig)
     NERVE_HEADER(StageSceneStateServerConfig, GamemodeSelect)
     NERVE_HEADER(StageSceneStateServerConfig, ToggleSensors)
+    NERVE_HEADER(StageSceneStateServerConfig, ToggleTwists)
     NERVE_HEADER(StageSceneStateServerConfig, SaveData)
 }

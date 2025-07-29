@@ -1,3 +1,4 @@
+// Source file changes (FreezeTagConfigMenu.cpp):
 #include "server/freeze/FreezeTagConfigMenu.hpp"
 #include <cmath>
 #include <stdint.h>
@@ -6,8 +7,6 @@
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/Client.hpp"
-
-static constexpr int mItemCount = 4;
 
 FreezeTagConfigMenu::FreezeTagConfigMenu() : GameModeConfigMenu() {
     mScoreKeyboard = new Keyboard(6);
@@ -18,15 +17,33 @@ FreezeTagConfigMenu::FreezeTagConfigMenu() : GameModeConfigMenu() {
     mRoundKeyboard->setHeaderText(u"Set length of rounds in minutes");
     mRoundKeyboard->setSubText(u"This length will be automatically sent to other players (max of 60 minutes)");
 
-    mConfigOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>();
+    mConfigOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, mMaxItemCount>();
     updateOptionsText();
 }
 
 void FreezeTagConfigMenu::initMenu(const al::LayoutInitInfo &initInfo) {}
 
+int FreezeTagConfigMenu::getCurrentMenuSize() {
+    FreezeTagInfo *curMode = GameModeManager::instance()->getInfo<FreezeTagInfo>();
+    bool isHostMode = curMode ? curMode->mIsHostMode : false;
+    
+    // Base items: Set Score, Host Mode toggle
+    int size = 2;
+    
+    // Add Config Round Timer if host mode is enabled
+    if (isHostMode) {
+        size++;
+    }
+    
+    return size;
+}
+
+const int FreezeTagConfigMenu::getMenuSize() {
+    return getCurrentMenuSize();
+}
+
 void FreezeTagConfigMenu::updateOptionsText() {
     FreezeTagInfo *curMode = GameModeManager::instance()->getInfo<FreezeTagInfo>();
-    // bool isDebugEnabled = curMode ? curMode->mIsDebugMode : false;
     bool isHostMode = curMode ? curMode->mIsHostMode : false;
 
     int index = 0;
@@ -36,10 +53,11 @@ void FreezeTagConfigMenu::updateOptionsText() {
     if (isHostMode) {
         mConfigOptions->mBuffer[index++].copy(u"Config Round Timer");
     }
-
-    // mConfigOptions->mBuffer[index++].copy(
-    //     isDebugEnabled ? u"Debug Mode (ON)" : u"Debug Mode (OFF)"
-    // );
+    
+    // Clear any remaining unused buffer entries
+    for (int i = index; i < mMaxItemCount; i++) {
+        mConfigOptions->mBuffer[i].copy(u"");
+    }
 }
 
 const sead::WFixedSafeString<0x200> *FreezeTagConfigMenu::getStringData() {
@@ -54,7 +72,7 @@ bool FreezeTagConfigMenu::updateMenu(int selectIndex) {
 
     if (!curMode) {
         Logger::log("Unable to Load Mode info!\n");
-        return true;
+        return false; // Don't exit menu on error
     }
 
     int index = 0;
@@ -88,17 +106,17 @@ bool FreezeTagConfigMenu::updateMenu(int selectIndex) {
             if (newScore != uint16_t(-1))
                 curMode->mPlayerTagScore.mScore = newScore;
         }
-        return true;
+        return false; // Don't exit menu
     }
 
     // Case 1: Toggle Host Mode
     if (selectIndex == index++) {
         curMode->mIsHostMode = !curMode->mIsHostMode;
         Logger::log("Toggled Host Mode to: %s\n", curMode->mIsHostMode ? "ON" : "OFF");
-        return true;
+        return false; // Don't exit menu
     }
 
-    // Case 2: Config Host Controls (only if Host Mode is enabled)
+    // Case 2: Config Round Timer (only if Host Mode is enabled)
     if (curMode->mIsHostMode && selectIndex == index++) {
         uint8_t oldTime = curMode->mRoundLength;
         uint8_t newTime = -1;
@@ -126,20 +144,9 @@ bool FreezeTagConfigMenu::updateMenu(int selectIndex) {
         if (newTime != uint8_t(-1))
             curMode->mRoundLength = al::clamp(newTime, u8(2), u8(60));
 
-        return true;
+        return false; // Don't exit menu
     }
-
-    // Debug mode toggle (disabled)
-    /*
-    if (selectIndex == index++) {
-        if (GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
-            curMode->mIsDebugMode = !curMode->mIsDebugMode;
-            Logger::log("Toggled Freeze Tag Debug Mode to: %s\n", curMode->mIsDebugMode ? "ON" : "OFF");
-        }
-        return true;
-    }
-    */
 
     Logger::log("Failed to interpret Index!\n");
-    return false;
+    return false; // Don't exit menu on error
 }

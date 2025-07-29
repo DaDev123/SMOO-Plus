@@ -86,6 +86,8 @@ __attribute__((used)) static const char* costumeNames[] = {
     "MarioTuxedo",
     "MarioUnderwear",
     "MarioTanooki",
+    "MarioCloud",
+    "MarioRedStar",
     "MarioWooper"/*,
     
     //Kingdom Expansion
@@ -97,7 +99,7 @@ __attribute__((used)) static const char* costumeNames[] = {
     "MarioShibaDog"
     */
 
-    //More costums in the future
+    //More costumes in the future
 
 };
 
