@@ -7,7 +7,7 @@ class PlayerActorHakoniwa;
 void handleNoclip(PlayerActorHakoniwa* hakoniwa, bool gNoclip, bool isYukimaru);
 void handleInfiniteCapBounce(PlayerActorHakoniwa* playerBase, bool gInfiniteCapBounce);
 void giveLifeUpHeart(PlayerActorHakoniwa* hakoniwa);
-void setOutfit(PlayerActorHakoniwa* hakoniwa, std::string body, std::string cap);
+void setOutfit(PlayerActorHakoniwa* hakoniwa, const char* body, const char* cap);
 
 // External function declarations
 extern void sendCostumeInfPacket(const char* body, const char* cap);

@@ -13,21 +13,23 @@
 #define MAXPACKSIZE      0x100
 
 enum PacketType : short {
-    UNKNOWN,
-    CLIENTINIT,
-    PLAYERINF,
-    HACKCAPINF,
-    GAMEINF,
-    GAMEMODEINF,
-    PLAYERCON,
-    PLAYERDC,
-    COSTUMEINF,
-    SHINECOLL,
-    CAPTUREINF,
-    CHANGESTAGE,
-    CMD,    
-    EXTRA,
-    End // end of enum for bounds checking
+        UNKNOWN,        // = 0
+        CLIENTINIT,     // = 1
+        PLAYERINF,      // = 2
+        HACKCAPINF,     // = 3 
+        GAMEINF,        // = 4
+        GAMEMODEINF,    // = 5 
+        PLAYERCON,      // = 6
+        PLAYERDC,       // = 7 
+        COSTUMEINF,     // = 8
+        SHINECOLL,      // = 9
+        CAPTUREINF,     // = 10
+        CHANGESTAGE,    // = 11
+        CMD,            // = 12
+        EXTRA,          // = 15
+        HEALTH_COINS,   // = 16 
+        COSTUMESEND,    // = 17
+        End             // end of enum for bounds checking
 };
 
 // attribute otherwise the build log is spammed with unused warnings
@@ -44,7 +46,10 @@ USED static const char *packetNames[] = {
     "Moon Collection",
     "Capture Info",
     "Change Stage",
-    "Server Command"
+    "Server Command",
+    "Extras Packets (infCapDives & Noclip)",
+    "Health and Coins",
+    "Send Costume"
 };
 
 enum SenderType {

@@ -41,6 +41,7 @@
 
 #include "packets/Extras.h"
 #include "packets/Extras.hpp"
+#include "packets/CostumeSend.hpp"
 #include "server/ExtrasCode.hpp"
 
 static int pInfSendTimer = 0;
@@ -48,6 +49,9 @@ static int gameInfSendTimer = 0;
 
 bool gInfiniteCapBounce = false;
 bool gNoclip = false;
+
+extern const char* BodyName;
+extern const char* CapName;
 
 //---------------------------freezetag branch-------------------------------------------------
 /*void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru) {
@@ -119,6 +123,7 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
 
         handleNoclip(static_cast<PlayerActorHakoniwa*>(playerBase), gNoclip, isYukimaru);
         handleInfiniteCapBounce(static_cast<PlayerActorHakoniwa*>(playerBase), gInfiniteCapBounce);
+         setOutfit(static_cast<PlayerActorHakoniwa*>(playerBase),BodyName, CapName);
          
 }
 

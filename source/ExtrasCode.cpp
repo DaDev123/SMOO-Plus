@@ -109,7 +109,7 @@ void giveLifeUpHeart(PlayerActorHakoniwa* hakoniwa) {
 }
 
 
-void setOutfit(PlayerActorHakoniwa* hakoniwa, std::string body, std::string cap) {
+void setOutfit(PlayerActorHakoniwa* hakoniwa, const char* body, const char* cap) {
 
     // sets the current worn costume
    // static void wearCostume(GameDataHolderWriter, char const *);
@@ -130,20 +130,20 @@ void setOutfit(PlayerActorHakoniwa* hakoniwa, std::string body, std::string cap)
     PlayerFunction::initMarioModelActor(
         hakoniwa, 
         initInfo, 
-        body.c_str(), 
-        cap.c_str(), 
+        body, 
+        cap, 
         nullptr, 
         false
     );
 
     // Send costume info to other players
     extern void sendCostumeInfPacket(const char* body, const char* cap);
-    sendCostumeInfPacket(body.c_str(), cap.c_str());
+    sendCostumeInfPacket(body, cap);
     GameDataHolder* gameDataHolder = tryGetGameDataHolder();
     if (gameDataHolder) {
         GameDataHolderWriter writer(gameDataHolder);
-        GameDataFunction::wearCostume(writer, body.c_str());
-        GameDataFunction::wearCap(writer, cap.c_str());
+        GameDataFunction::wearCostume(writer, body);
+        GameDataFunction::wearCap(writer, cap);
     }
 }
 

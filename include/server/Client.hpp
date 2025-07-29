@@ -75,6 +75,7 @@
 #include "packets/PlayerInfPacket.h"
 #include "packets/ShineCollect.h"
 #include "packets/Extras.hpp"
+#include "packets/CostumeSend.hpp"
 
 
 #include "puppets/PuppetInfo.h"
@@ -241,6 +242,7 @@ class Client {
         void updateCaptureInfo(CaptureInf* packet);
         void sendToStage(ChangeStagePacket* packet);
         void handleExtrasPacket(ExtrasPacket* curPacket);
+        void handleCostumSend(CoustumeSend* curPacket);
 
         void disconnectPlayer(PlayerDC *packet);
 

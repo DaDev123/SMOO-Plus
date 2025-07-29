@@ -391,7 +391,9 @@ void Client::readFunc() {
             case PacketType::EXTRA:
                 handleExtrasPacket((ExtrasPacket*)curPacket);
                 break;
-
+            case PacketType::COSTUMESEND:
+                handleCostumSend((CoustumeSend*)curPacket);
+                break;
                 // Send relevant info packets when another client is connected
 
                 // Assume game packets are empty from first connection
@@ -957,6 +959,28 @@ void Client::handleExtrasPacket(ExtrasPacket* curPacket) {
     } else {
         Logger::log("Failed to cast packet to ExtrasPacket\n");
     }
+}
+/**
+ * @brief
+ * 
+ * @param Packet
+ */
+void Client::handleCostumSend(CoustumeSend* curPacket) {
+    if (!curPacket) {
+        Logger::log("[ERROR] handleCostumSend: Received null packet\n");
+        return;
+    }
+
+    // Extract costume names from packet
+    extern const char* BodyName;
+    extern const char* CapName;
+    
+    // Set the global costume variables
+    BodyName = curPacket->BodyName;
+    CapName = curPacket->CapName;
+    
+    Logger::log("[DEBUG] handleCostumSend: Received costume - Body: %s, Cap: %s\n", 
+                BodyName ? BodyName : "null", CapName ? CapName : "null");
 }
 
 
