@@ -5,8 +5,18 @@
 #include "heap/seadHeapMgr.h"
 #include "logger.hpp"
 #include "packets/Packet.h"
+#include "packets/Extras.h"
+#include "packets/Extras.hpp"
+
 #include "server/hns/HideAndSeekMode.hpp"
 #include "layouts/CustomMsg.h"
+
+
+
+// Externe Deklarationen for global variables from main.cpp
+extern int gHealth;
+extern int gCoins;
+
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
@@ -378,6 +388,9 @@ void Client::readFunc() {
                 break;
             case PacketType::PLAYERCON:
                 updatePlayerConnect((PlayerConnect*)curPacket);
+            case PacketType::EXTRA:
+                handleExtrasPacket((ExtrasPacket*)curPacket);
+                break;
 
                 // Send relevant info packets when another client is connected
 
@@ -923,6 +936,29 @@ void Client::sendToStage(ChangeStagePacket* packet) {
 
     }
 }
+
+
+/**
+ * @brief
+ * 
+ * @param Packet
+ */
+void Client::handleExtrasPacket(ExtrasPacket* curPacket) {
+    if (auto* extras = static_cast<ExtrasPacket*>(curPacket)) {
+        Logger::log("Processing Extras packet - InfiniteCapBounce: %d, Noclip: %d\n", 
+                    extras->InfiniteCapBounce, extras->Noclip);
+        
+        gInfiniteCapBounce = extras->InfiniteCapBounce;
+        Logger::log("Received Extras packet: InfiniteCapBounce = %s\n",
+                    gInfiniteCapBounce ? "true" : "false");
+        gNoclip = extras->Noclip;
+        Logger::log("Received Extras packet: Noclip = %s\n",
+                    gNoclip ? "true" : "false");
+    } else {
+        Logger::log("Failed to cast packet to ExtrasPacket\n");
+    }
+}
+
 
 /**
  * @brief 

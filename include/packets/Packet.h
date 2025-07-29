@@ -26,6 +26,7 @@ enum PacketType : short {
     CAPTUREINF,
     CHANGESTAGE,
     CMD,    
+    EXTRA,
     End // end of enum for bounds checking
 };
 

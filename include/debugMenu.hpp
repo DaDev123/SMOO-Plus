@@ -24,7 +24,8 @@ static const char* AUTHORIZED_DEBUG_USERS[] = {
     "SrDev",
     "Crafty",
     "Amethyst",
-    "Sanae"
+    "Sanae",
+    "KleinTimmi"
 };
 
 static const int AUTHORIZED_DEBUG_USERS_COUNT = sizeof(AUTHORIZED_DEBUG_USERS) / sizeof(AUTHORIZED_DEBUG_USERS[0]);

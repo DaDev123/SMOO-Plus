@@ -65,6 +65,17 @@
 #include "debugMenu.hpp"
 #include "Keyboard.hpp"
 
+#include "packets/CaptureInf.h"
+#include "packets/ChangeStagePacket.h"
+#include "packets/CostumeInf.h"
+#include "packets/GameInf.h"
+#include "packets/HackCapInf.h"
+#include "packets/PlayerConnect.h"
+#include "packets/PlayerDC.h"
+#include "packets/PlayerInfPacket.h"
+#include "packets/ShineCollect.h"
+#include "packets/Extras.hpp"
+
 
 #include "puppets/PuppetInfo.h"
 
@@ -229,6 +240,8 @@ class Client {
         void updatePlayerConnect(PlayerConnect *packet);
         void updateCaptureInfo(CaptureInf* packet);
         void sendToStage(ChangeStagePacket* packet);
+        void handleExtrasPacket(ExtrasPacket* curPacket);
+
         void disconnectPlayer(PlayerDC *packet);
 
 
