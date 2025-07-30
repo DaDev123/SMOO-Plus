@@ -11,3 +11,4 @@ Custom Stage Builds/**
 compile_commands.json
 
 Ultimate_SMO_Compiler.bat
+Makefile

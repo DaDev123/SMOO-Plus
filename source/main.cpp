@@ -41,7 +41,6 @@
 
 #include "packets/Extras.h"
 #include "packets/Extras.hpp"
-#include "packets/CostumeSend.hpp"
 #include "server/ExtrasCode.hpp"
 
 static int pInfSendTimer = 0;
@@ -120,10 +119,16 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
 
         pInfSendTimer = 0;
     }
+        auto hakoniwaPlayer = static_cast<PlayerActorHakoniwa*>(playerBase);
 
-        handleNoclip(static_cast<PlayerActorHakoniwa*>(playerBase), gNoclip, isYukimaru);
-        handleInfiniteCapBounce(static_cast<PlayerActorHakoniwa*>(playerBase), gInfiniteCapBounce);
-        setOutfit(static_cast<PlayerActorHakoniwa*>(playerBase),BodyName, CapName);
+        handleNoclip(hakoniwaPlayer, gNoclip, isYukimaru);
+        handleInfiniteCapBounce(hakoniwaPlayer, gInfiniteCapBounce);
+        /*
+        if (hakoniwaPlayer && BodyName && CapName) {
+            setOutfit(hakoniwaPlayer, BodyName, CapName);
+        } else {
+            Logger::log("[ERROR] setOutfit: Nullpointer! player=%p, BodyName=%p, CapName=%p\n", hakoniwaPlayer, BodyName, CapName);
+        }*/
          
 }
 

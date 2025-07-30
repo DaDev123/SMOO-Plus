@@ -28,7 +28,6 @@ enum PacketType : short {
         CMD,            // = 12
         EXTRA,          // = 15
         HEALTH_COINS,   // = 16 
-        COSTUMESEND,    // = 17
         End             // end of enum for bounds checking
 };
 
@@ -48,8 +47,7 @@ USED static const char *packetNames[] = {
     "Change Stage",
     "Server Command",
     "Extras Packets (infCapDives & Noclip)",
-    "Health and Coins",
-    "Send Costume"
+    "Health and Coins"
 };
 
 enum SenderType {
