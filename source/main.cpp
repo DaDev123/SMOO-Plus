@@ -123,7 +123,7 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
 
         handleNoclip(static_cast<PlayerActorHakoniwa*>(playerBase), gNoclip, isYukimaru);
         handleInfiniteCapBounce(static_cast<PlayerActorHakoniwa*>(playerBase), gInfiniteCapBounce);
-         setOutfit(static_cast<PlayerActorHakoniwa*>(playerBase),BodyName, CapName);
+        setOutfit(static_cast<PlayerActorHakoniwa*>(playerBase),BodyName, CapName);
          
 }
 
