@@ -18,7 +18,11 @@ namespace {
     NERVE_HEADER(SpeedbootLoad, End)
 }
 
-SpeedbootLoad::SpeedbootLoad(WorldResourceLoader* resourceLoader, const al::LayoutInitInfo& initInfo)
+SpeedbootLoad::SpeedbootLoad(
+        WorldResourceLoader* resourceLoader,
+        const al::LayoutInitInfo& initInfo,
+        float autoCloseAfter
+    )
     : al::LayoutActor("SpeedbootLoad"), worldResourceLoader(resourceLoader) {
     al::initLayoutActor(this, initInfo, "SpeedbootLoad", nullptr);
     initNerve(&nrvSpeedbootLoadAppear, 0);

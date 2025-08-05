@@ -7,7 +7,6 @@
 #include "packets/Packet.h"
 #include "packets/Extras.h"
 #include "packets/Extras.hpp"
-#include "packets/CostumeInf.h"
 
 #include "server/hns/HideAndSeekMode.hpp"
 #include "layouts/CustomMsg.h"
@@ -392,10 +391,7 @@ void Client::readFunc() {
             case PacketType::EXTRA:
                 handleExtrasPacket((ExtrasPacket*)curPacket);
                 break;
-            case PacketType::COSTUMEINF:
-                handleCostumSend((CostumeInf*)curPacket);
-                updateCostumeInfo((CostumeInf*)curPacket);
-                break;
+
                 // Send relevant info packets when another client is connected
 
                 // Assume game packets are empty from first connection
@@ -409,6 +405,9 @@ void Client::readFunc() {
                  if (lastCostumeInfPacket.mUserID == mUserID)
                      mSocket->send(&lastCostumeInfPacket);
 
+                break;
+            case PacketType::COSTUMEINF:
+                updateCostumeInfo((CostumeInf*)curPacket);
                 break;
             case PacketType::SHINECOLL:
                 updateShineInfo((ShineCollect*)curPacket);
@@ -899,9 +898,7 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
  * @param packet 
  */
 void Client::updateGameInfo(GameInf *packet) {
-Logger::log("Received GameInfo packet: size=%zu, type=%d, scenarioNo=%d, stageName=%s, is2D=%d\n",
-    sizeof(GameInf), packet->mType, packet->scenarioNo, packet->stageName, packet->is2D);
-    
+
     PuppetInfo* curInfo = findPuppetInfo(packet->mUserID, false);
 
     if (!curInfo) {
@@ -960,28 +957,6 @@ void Client::handleExtrasPacket(ExtrasPacket* curPacket) {
     } else {
         Logger::log("Failed to cast packet to ExtrasPacket\n");
     }
-}
-/**
- * @brief
- * 
- * @param Packet
- */
-void Client::handleCostumSend(CostumeInf* curPacket) {
-    if (!curPacket) {
-        Logger::log("[ERROR] handleCostumSend: Received null packet\n");
-        return;
-    }
-
-    // Extract costume names from packet
-    extern const char* BodyName;
-    extern const char* CapName;
-    
-    // Set the global costume variables
-    BodyName = curPacket->bodyModel;
-    CapName = curPacket->capModel;
-    
-    Logger::log("[DEBUG] handleCostumSend: Received costume - Body: %s, Cap: %s\n", 
-                BodyName ? BodyName : "null", CapName ? CapName : "null");
 }
 
 
@@ -1297,7 +1272,7 @@ void Client::sendPuppetInfoPacket() {
     }
     
     sendHackCapInfPacket(hackCap);
-    sendGamemodePacket();
+    // sendGamemodePacket();
 }
 
 void Client::update() {

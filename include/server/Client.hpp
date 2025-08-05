@@ -231,6 +231,9 @@ class Client {
         CustomMsg* mCustomMsgLayout;
         CustomMsg* getCustomMsg() const { return mCustomMsgLayout; }
 
+    static std::string BodyName;
+    static std::string CapName;
+
     private:
         void updatePlayerInfo(PlayerInf *packet);
         void updateHackCapInfo(HackCapInf *packet);
@@ -241,7 +244,6 @@ class Client {
         void updateCaptureInfo(CaptureInf* packet);
         void sendToStage(ChangeStagePacket* packet);
         void handleExtrasPacket(ExtrasPacket* curPacket);
-        void handleCostumSend(CostumeInf* curPacket);
 
         void disconnectPlayer(PlayerDC *packet);
 

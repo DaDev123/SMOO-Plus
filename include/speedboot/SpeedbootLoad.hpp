@@ -7,7 +7,11 @@ class WorldResourceLoader;
 
 class SpeedbootLoad : public al::LayoutActor {
 public:
-    SpeedbootLoad(WorldResourceLoader* resourceLoader, const al::LayoutInitInfo& initInfo);
+    SpeedbootLoad(
+                WorldResourceLoader* resourceLoader,
+                const al::LayoutInitInfo& initInfo,
+                float autoCloseAfter
+            );
 
     void exeAppear();
     void exeWait();

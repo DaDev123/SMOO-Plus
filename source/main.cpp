@@ -49,64 +49,6 @@ static int gameInfSendTimer = 0;
 bool gInfiniteCapBounce = false;
 bool gNoclip = false;
 
-extern const char* BodyName;
-extern const char* CapName;
-
-//---------------------------freezetag branch-------------------------------------------------
-/*void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru) {
-    
-    if (pInfSendTimer >= 3) {
-
-        Client::sendPlayerInfPacket(playerBase, isYukimaru);
-
-        if (!isYukimaru) {
-            PlayerActorHakoniwa* hakoniwaPlayer = dynamic_cast<PlayerActorHakoniwa*>(playerBase);
-            if (hakoniwaPlayer) {
-                Client::sendHackCapInfPacket(hakoniwaPlayer->mHackCap);
-                Client::sendCaptureInfPacket(hakoniwaPlayer);
-            }
-        }
-
-        pInfSendTimer = 0;
-    }
-
-    if (playerBase && !isYukimaru) {
-        PlayerActorHakoniwa* hakoniwaPlayer = static_cast<PlayerActorHakoniwa*>(playerBase);
-
-        // Debug-Log: Cast-Check
-        if (!hakoniwaPlayer) {
-            Logger::log("[DEBUG] static_cast<PlayerActorHakoniwa*> ergab nullptr!\n");
-        } else if (!hakoniwaPlayer->mHackCap) {
-            Logger::log("[DEBUG] Warnung: hakoniwaPlayer->mHackCap ist nullptr. Cast evtl. ungültig?\n");
-        } else {
-            Logger::log("[DEBUG] static_cast<PlayerActorHakoniwa*> erfolgreich: %p\n", hakoniwaPlayer);
-        }
-
-        if (hakoniwaPlayer) {
-            handleNoclip(hakoniwaPlayer, gNoclip, isYukimaru);
-            handleInfiniteCapBounce(hakoniwaPlayer, gInfiniteCapBounce);
-        }
-    }
-
-    if (gameInfSendTimer >= 60) {
-        if (isYukimaru) {
-            Client::sendGameInfPacket(holder);
-        } else {
-            PlayerActorHakoniwa* hakoniwaPlayer = dynamic_cast<PlayerActorHakoniwa*>(playerBase);
-            if (hakoniwaPlayer) {
-                Client::sendGameInfPacket(hakoniwaPlayer, holder);
-            }
-        }
-        
-        gameInfSendTimer = 0;
-    }
-
-    pInfSendTimer++;
-    gameInfSendTimer++;
-}*/
-
-//---------------------Dev Branch----------------------------------------------------------
-
 void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru) {
     if (pInfSendTimer >= 3) {
         Client::sendPlayerInfPacket(playerBase, isYukimaru);
@@ -119,16 +61,9 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
 
         pInfSendTimer = 0;
     }
-        auto hakoniwaPlayer = static_cast<PlayerActorHakoniwa*>(playerBase);
 
-        handleNoclip(hakoniwaPlayer, gNoclip, isYukimaru);
-        handleInfiniteCapBounce(hakoniwaPlayer, gInfiniteCapBounce);
-        /*
-        if (hakoniwaPlayer && BodyName && CapName) {
-            setOutfit(hakoniwaPlayer, BodyName, CapName);
-        } else {
-            Logger::log("[ERROR] setOutfit: Nullpointer! player=%p, BodyName=%p, CapName=%p\n", hakoniwaPlayer, BodyName, CapName);
-        }*/
+        handleNoclip(static_cast<PlayerActorHakoniwa*>(playerBase), gNoclip, isYukimaru);
+        handleInfiniteCapBounce(static_cast<PlayerActorHakoniwa*>(playerBase), gInfiniteCapBounce);
          
 }
 
