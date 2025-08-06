@@ -88,22 +88,55 @@ void SardineIcon::exeWait() {
         char playerNameBuf[0x200] = {0};
         sead::BufferedSafeStringBase<char> playerList = sead::BufferedSafeStringBase<char>(playerNameBuf, sizeof(playerNameBuf));
 
+        // Add current player first
         if (mInfo->mIsIt || GameModeManager::instance()->isModeAndActive(GameMode::SARDINE)) {
             playerList.appendWithFormat("%s %s\n", mInfo->mIsIt ? "@" : "©", Client::instance()->getClientName());
         }
 
-        for (int i = 0; i < playerCount; i++) {
-            PuppetInfo* curPuppet = Client::getPuppetInfo(i);
-            if (curPuppet && curPuppet->isConnected && curPuppet->gameMode == curGamemodeID) {
-                // Role icon: "@" for sardine "it", "©" for others
+        // IT players (sardines) then pack
+        for (int i = 0; i <= 1; i++) {
+            bool isIt = i == 0;
+            // Add players to the list that are in the same game mode
+            for (int j = 0; j < playerCount; j++) {
+                PuppetInfo* curPuppet = Client::getPuppetInfo(j);
+                if (!curPuppet || !curPuppet->isConnected)
+                    continue;
+
+                if (curPuppet->gameMode != curGamemodeID)
+                    continue;
+
+                if (curPuppet->isIt != isIt)
+                    continue;
+
                 playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "@" : "©", curPuppet->puppetName);
             }
         }
 
+        // Add some spacing before non-mode players
+        bool hasNonModePlayers = false;
         for (int i = 0; i < playerCount; i++) {
             PuppetInfo* curPuppet = Client::getPuppetInfo(i);
-            if (curPuppet && curPuppet->isConnected && curPuppet->gameMode != curGamemodeID) {
-                playerList.appendWithFormat("   %s\n", curPuppet->puppetName); // No icon, indented
+            if (!curPuppet || !curPuppet->isConnected)
+                continue;
+
+            if (curPuppet->gameMode != curGamemodeID) {
+                hasNonModePlayers = true;
+                break;
+            }
+        }
+
+        if (hasNonModePlayers) {
+            playerList.appendWithFormat("\n"); // Add blank line for spacing
+        }
+
+        // add players not in the mode
+        for (int i = 0; i < playerCount; i++) {
+            PuppetInfo* curPuppet = Client::getPuppetInfo(i);
+            if (!curPuppet || !curPuppet->isConnected)
+                continue;
+
+            if (curPuppet->gameMode != curGamemodeID) {
+                playerList.appendWithFormat("   %s\n", curPuppet->puppetName); // no icon, indented
             }
         }
 

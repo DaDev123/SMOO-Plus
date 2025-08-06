@@ -84,37 +84,63 @@ void HideAndSeekIcon::exeWait() {
 
     int playerCount = Client::getMaxPlayerCount();
 
-if (playerCount > 0) {
-    char playerNameBuf[0x200] = {0};
-    sead::BufferedSafeStringBase<char> playerList =
-        sead::BufferedSafeStringBase<char>(playerNameBuf, sizeof(playerNameBuf));
+    if (playerCount > 0) {
+        char playerNameBuf[0x200] = {0};
+        sead::BufferedSafeStringBase<char> playerList =
+            sead::BufferedSafeStringBase<char>(playerNameBuf, sizeof(playerNameBuf));
 
-    playerList.appendWithFormat("%s %s\n", mInfo->mIsPlayerIt ? "&" : "%%", Client::instance()->getClientName());
+        // Add current player first
+        playerList.appendWithFormat("%s %s\n", mInfo->mIsPlayerIt ? "&" : "%%", Client::instance()->getClientName());
 
-    for (int i = 0; i < playerCount; i++) {
-        PuppetInfo* curPuppet = Client::getPuppetInfo(i);
-        if (!curPuppet || !curPuppet->isConnected)
-            continue;
+        // IT players (seekers) then hiders
+        for (int i = 0; i <= 1; i++) {
+            bool isIt = i == 0;
+            // Add players to the list that are in the same game mode
+            for (int j = 0; j < playerCount; j++) {
+                PuppetInfo* curPuppet = Client::getPuppetInfo(j);
+                if (!curPuppet || !curPuppet->isConnected)
+                    continue;
 
-        if (curPuppet->gameMode == curGamemodeID) {
-            playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "&" : "%%", curPuppet->puppetName);
+                if (curPuppet->gameMode != curGamemodeID)
+                    continue;
+
+                if (curPuppet->isIt != isIt)
+                    continue;
+
+                playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "&" : "%%", curPuppet->puppetName);
+            }
         }
-    }
 
-    for (int i = 0; i < playerCount; i++) {
-        PuppetInfo* curPuppet = Client::getPuppetInfo(i);
-        if (!curPuppet || !curPuppet->isConnected)
-            continue;
+        // Add some spacing before non-mode players
+        bool hasNonModePlayers = false;
+        for (int i = 0; i < playerCount; i++) {
+            PuppetInfo* curPuppet = Client::getPuppetInfo(i);
+            if (!curPuppet || !curPuppet->isConnected)
+                continue;
 
-        if (curPuppet->gameMode != curGamemodeID) {
-            playerList.appendWithFormat("   %s\n", curPuppet->puppetName); // no icon, indented
+            if (curPuppet->gameMode != curGamemodeID) {
+                hasNonModePlayers = true;
+                break;
+            }
         }
+
+        if (hasNonModePlayers) {
+            playerList.appendWithFormat("\n"); // Add blank line for spacing
+        }
+
+        // add players not in the mode
+        for (int i = 0; i < playerCount; i++) {
+            PuppetInfo* curPuppet = Client::getPuppetInfo(i);
+            if (!curPuppet || !curPuppet->isConnected)
+                continue;
+
+            if (curPuppet->gameMode != curGamemodeID) {
+                playerList.appendWithFormat("   %s\n", curPuppet->puppetName); // no icon, indented
+            }
+        }
+
+        al::setPaneStringFormat(this, "TxtPlayerList", playerList.cstr());
     }
-
-    al::setPaneStringFormat(this, "TxtPlayerList", playerList.cstr());
-}
-
-    
 }
 
 void HideAndSeekIcon::exeEnd() {
