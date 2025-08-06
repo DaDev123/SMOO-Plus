@@ -21,6 +21,9 @@ ISEMU ?= 0 # set to 1 to compile for emulators
 
 PROJNAME ?= StarlightBase
 
+# Determine build directory based on EMU flag
+BUILD_DIR := build$(SMOVER)$(if $(filter 1,$(ISEMU)),EMU,SWITCH)
+
 all: starlight
 
 starlight:
@@ -36,15 +39,17 @@ starlight:
 	
 	cp -R romfs starlight_patch_$(SMOVER)/atmosphere/contents/0100000000010000
 
+	@echo "atmosphere folder created successfully inside starlight_patch_$(SMOVER)!"
+
 starlight_patch_$(SMOVER)/*.ips: patches/*.slpatch patches/configs/$(SMOVER).config patches/maps/$(SMOVER)/*.map \
-								build$(SMOVER)/$(shell basename $(CURDIR))$(SMOVER).map scripts/genPatch.py
+								$(BUILD_DIR)/$(shell basename $(CURDIR))$(SMOVER).map scripts/genPatch.py
 	@rm -f starlight_patch_$(SMOVER)/*.ips
-	python3 scripts/genPatch.py $(SMOVER)
+	python3 scripts/genPatch.py $(SMOVER) $(BUILD_DIR)
 
 # builds project with the file structure for SMOO-Emulator
 emu:
-	$(MAKE) all -f MakefileNSO SMOVER=$(SMOVER) BUILDVERSTR=$(BUILDVERSTR) BUILDVER=$(BUILDVER) EMU=1
-	$(MAKE) starlight_patch_$(SMOVER)/*.ips
+	$(MAKE) all -f MakefileNSO SMOVER=$(SMOVER) BUILDVERSTR=$(BUILDVERSTR) BUILDVER=$(BUILDVER) DEBUGLOG=$(DEBUGLOG) SERVERIP=${SERVERIP} EMU=1
+	$(MAKE) starlight_patch_$(SMOVER)/*.ips ISEMU=1
 
 	@echo "Creating SMOO-Emulator folder structure inside starlight_patch_$(SMOVER)..."
 	mkdir -p starlight_patch_$(SMOVER)/SMOO-Emulator/exefs/
@@ -53,8 +58,8 @@ emu:
 	# Move .ips file to exefs folder
 	mv starlight_patch_$(SMOVER)/3CA12DFAAF9C82DA064D1698DF79CDA1.ips starlight_patch_$(SMOVER)/SMOO-Emulator/exefs/3CA12DFAAF9C82DA064D1698DF79CDA1.ips
 	
-	# Move subsdk9 (nso file) to exefs folder
-	mv $(shell basename $(CURDIR))$(SMOVER).nso starlight_patch_$(SMOVER)/SMOO-Emulator/exefs/subsdk9
+	# Move subsdk1 (nso file) to exefs folder
+	mv $(shell basename $(CURDIR))$(SMOVER).nso starlight_patch_$(SMOVER)/SMOO-Emulator/exefs/subsdk1
 	
 	# Copy romfs folder contents
 	cp -R romfs/* starlight_patch_$(SMOVER)/SMOO-Emulator/romfs/ 2>/dev/null || true

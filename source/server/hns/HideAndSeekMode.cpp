@@ -58,6 +58,7 @@ void HideAndSeekMode::init(const GameModeInitInfo& info) {
 
     mModeTimer->disableTimer();
 
+    Client::sendGamemodePacket();
 }
 
 void HideAndSeekMode::processPacket(Packet* _packet) {
@@ -111,6 +112,8 @@ Packet* HideAndSeekMode::createPacket() {
     packet->minutes    = mInfo->mHidingTime.mMinutes + mInfo->mHidingTime.mHours * 60;
     packet->setUpdateType(static_cast<HnSUpdateType>(HnSUpdateType::STATE | HnSUpdateType::TIME));
     return packet;
+
+    Client::sendGamemodePacket();
 }
 
 void HideAndSeekMode::begin() {
@@ -127,6 +130,8 @@ void HideAndSeekMode::begin() {
     mIsSpectating = false; // Initialize spectate state
 
     GameModeBase::begin();
+
+    Client::sendGamemodePacket();
 }
 
 
@@ -135,6 +140,8 @@ void HideAndSeekMode::end() {
     pause();
 
     GameModeBase::end();
+
+    Client::sendGamemodePacket();
 }
 
 void HideAndSeekMode::pause() {
@@ -142,6 +149,7 @@ void HideAndSeekMode::pause() {
 
     mModeLayout->tryEnd();
     mModeTimer->disableTimer();
+    Client::sendGamemodePacket();
 }
 
 void HideAndSeekMode::unpause() {
@@ -156,6 +164,7 @@ void HideAndSeekMode::unpause() {
         mModeTimer->disableTimer();
         mModeLayout->showSeeking();
     }
+    Client::sendGamemodePacket();
 }
 
 void HideAndSeekMode::update() {

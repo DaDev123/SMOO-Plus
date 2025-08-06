@@ -73,6 +73,8 @@ void FreezeTagMode::init(const GameModeInitInfo& info) {
     // Create hint arrow
     mHintArrow = new FreezeHintArrow("ChaserHintArrow");
     mHintArrow->init(*info.mActorInitInfo);
+
+    Client::sendGamemodePacket();
 }
 
 void FreezeTagMode::processPacket(Packet* _packet) {
@@ -153,6 +155,8 @@ Packet* FreezeTagMode::createPacket() {
     packet->setUpdateType(mNextUpdateType);
 
     return packet;
+
+    Client::sendGamemodePacket();
 }
 
 void FreezeTagMode::sendFreezePacket(FreezeUpdateType updateType) {
@@ -183,6 +187,8 @@ void FreezeTagMode::begin() {
     GameModeBase::begin();
 
     mCurScene->mSceneLayout->end();
+
+    Client::sendGamemodePacket();
 }
 
 
@@ -207,18 +213,22 @@ void FreezeTagMode::end() {
     }
 
     GameModeBase::end();
+
+    Client::sendGamemodePacket();
 }
 
 void FreezeTagMode::pause() {
     GameModeBase::pause();
 
     mModeLayout->tryEnd();
+    Client::sendGamemodePacket();
 }
 
 void FreezeTagMode::unpause() {
     GameModeBase::unpause();
 
     mModeLayout->appear();
+    Client::sendGamemodePacket();
 }
 
 void FreezeTagMode::update() {

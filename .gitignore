@@ -1,5 +1,6 @@
 starlight_patch_100/**
-build100/**
+build100SWITCH/**
+build100EMU/**
 romfs stuff/**
 .vscode/**
 Crash Reports/**

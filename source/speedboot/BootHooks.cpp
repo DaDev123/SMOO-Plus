@@ -9,7 +9,11 @@
 
 namespace speedboot {
     CustomBootNerve nrvSpeedboot;
+    #if EMU
     const bool speedbootAutoload = false; // set this to true, to automatically load the game, which skips the main menu (this has issues with empty save files)
+    #else
+    const bool speedbootAutoload = true; // set this to true, to automatically load the game, which skips the main menu (this has issues with empty save files)
+    #endif
 
     al::LayoutInitInfo copiedInitInfo;
 

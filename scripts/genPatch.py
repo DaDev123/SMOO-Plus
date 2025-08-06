@@ -23,6 +23,7 @@ IPS_EOF_MAGIC = bytes("EEOF", 'ASCII')
 
 # globals
 buildVersion = None
+buildDir = None
 patchConfig = {
     "build_id" : {},
     "nso_load_addr" : {},
@@ -237,12 +238,15 @@ def addPatchFromFile(patchFilePath):
             addPatchToPatchlist(patchTarget, patchAddress, patchContent)
 
 if len(sys.argv) < 2:
-    print('Usage: ' + sys.argv[0] + ' [version]')
+    print('Usage: ' + sys.argv[0] + ' [version] [build_dir]')
     sys.exit(-1)
 
 buildVersion = sys.argv[1]
+# Use provided build directory or fall back to old format
+buildDir = sys.argv[2] if len(sys.argv) > 2 else "build" + buildVersion
+
 initConfig()
-SLMapFilePath = os.path.join("build" + buildVersion, os.path.basename(os.getcwd()) + buildVersion + ".map")
+SLMapFilePath = os.path.join(buildDir, os.path.basename(os.getcwd()) + buildVersion + ".map")
 with open(SLMapFilePath, 'r') as f:
     SLMapFile = f.read()
 

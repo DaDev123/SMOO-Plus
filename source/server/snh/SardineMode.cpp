@@ -67,6 +67,8 @@ void SardineMode::init(const GameModeInitInfo& info)
     mModeLayout->showSolo();
 
     // mModeTimer->disableTimer();
+
+    Client::sendGamemodePacket();
 }
 
 void SardineMode::processPacket(Packet* _packet) {
@@ -120,6 +122,7 @@ Packet* SardineMode::createPacket() {
     packet->minutes    = mInfo->mHidingTime.mMinutes + mInfo->mHidingTime.mHours * 60;
     packet->setUpdateType(static_cast<SardineUpdateType>(SardineUpdateType::STATE | SardineUpdateType::TIME));
     return packet;
+    Client::sendGamemodePacket();
 }
 
 
@@ -138,6 +141,8 @@ void SardineMode::begin()
     }
 
     GameModeBase::begin();
+
+    Client::sendGamemodePacket();
 }
 
 void SardineMode::end()
@@ -148,6 +153,8 @@ void SardineMode::end()
     mModeTimer->disableTimer();
 
     GameModeBase::end();
+
+    Client::sendGamemodePacket();
 }
 
 void SardineMode::pause() {
@@ -155,6 +162,7 @@ void SardineMode::pause() {
 
     mModeLayout->tryEnd();
     mModeTimer->disableTimer();
+    Client::sendGamemodePacket();
 }
 
 void SardineMode::unpause() {
@@ -169,6 +177,7 @@ void SardineMode::unpause() {
         mModeTimer->enableTimer();
         mModeLayout->showPack();
     }
+    Client::sendGamemodePacket();
 }
 
 void SardineMode::update()

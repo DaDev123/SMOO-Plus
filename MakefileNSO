@@ -31,7 +31,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 # INCLUDES is a list of directories containing header files
 #---------------------------------------------------------------------------------
 TARGET		?=	$(notdir $(CURDIR))$(SMOVER)
-BUILD		?=	build$(SMOVER)
+BUILD		?=	build$(SMOVER)$(if $(filter 1,$(EMU)),EMU,SWITCH)
 SOURCES		:=  \
 			source/sead/time  \
 			source/sead  \
@@ -154,7 +154,7 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr build* *.nso *.elf
+	@rm -fr build*EMU build*SWITCH *.nso *.elf
 
 
 #---------------------------------------------------------------------------------
