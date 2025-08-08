@@ -28,6 +28,8 @@ enum PacketType : short {
         CMD,            // = 12
         EXTRA,          // = 15
         HEALTH_COINS,   // = 16 
+        MODS,           // = 17 
+        CHANGECOSTUME,  // = 18 
         End             // end of enum for bounds checking
 };
 

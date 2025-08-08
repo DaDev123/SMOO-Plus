@@ -409,6 +409,9 @@ void Client::readFunc() {
             case PacketType::COSTUMEINF:
                 updateCostumeInfo((CostumeInf*)curPacket);
                 break;
+            case PacketType::CHANGECOSTUME:
+                changeCostume((ChangeCostume*)curPacket);
+                break;
             case PacketType::SHINECOLL:
                 updateShineInfo((ShineCollect*)curPacket);
                 break;
@@ -848,6 +851,21 @@ void Client::updateCostumeInfo(CostumeInf *packet) {
 
     strcpy(curInfo->costumeBody, packet->bodyModel);
     strcpy(curInfo->costumeHead, packet->capModel);
+}
+
+/**
+ * @brief
+ *
+ * @param packet
+ */
+void Client::changeCostume(ChangeCostume* packet) {
+    
+    // Set outfit when costume info is received
+    if (sInstance) {
+        GameDataFunction::wearCostume(sInstance->mHolder, packet->bodyModel);
+        GameDataFunction::wearCap(sInstance->mHolder, packet->capModel);
+        Logger::log("Set outfit from costume packet: Body=%s, Cap=%s\n", packet->bodyModel, packet->capModel);
+    }
 }
 
 /**
