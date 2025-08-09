@@ -63,7 +63,7 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
     }
 
         handleNoclip(static_cast<PlayerActorHakoniwa*>(playerBase), gNoclip, isYukimaru);
-        handleInfiniteCapBounce(static_cast<PlayerActorHakoniwa*>(playerBase), gInfiniteCapBounce);
+        // handleInfiniteCapBounce(static_cast<PlayerActorHakoniwa*>(playerBase), gInfiniteCapBounce);
          
 }
 
