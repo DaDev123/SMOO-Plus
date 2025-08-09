@@ -77,20 +77,20 @@ void handleNoclip(PlayerActorHakoniwa* hakoniwa, bool gNoclip, bool isYukimaru) 
 
 void handleInfiniteCapBounce(PlayerActorHakoniwa* playerBase, bool gInfiniteCapBounce) {
 
-    static int capBounceFrameCounter = 0;   //für die frames
-    static int x = 3;                       //für die frames
+    //static int capBounceFrameCounter = 0;   //für die frames
+    //static int x = 3;                       //für die frames
 
-    if (playerBase && gInfiniteCapBounce) {
-        capBounceFrameCounter++;
-        if (capBounceFrameCounter >= x) { // alle 3 Frames
-            PlayerActorHakoniwa* hakoniwa = static_cast<PlayerActorHakoniwa*>(playerBase);
-            if (hakoniwa && hakoniwa->mHackCap && hakoniwa->mHackCap->mCapActionHistory && hakoniwa->mPlayerWallActionHistory) {    //wenn hakoniwa und hackcap und capactionhistory und playerwallactionhistory
-                hakoniwa->mHackCap->mCapActionHistory->clearCapJump();  //cap jump reset
-                hakoniwa->mPlayerWallActionHistory->reset();            //wall jump reset
-            }
-            capBounceFrameCounter = 0; // zurücksetzen
-        }
-    }
+    //if (playerBase && gInfiniteCapBounce) {
+    //    capBounceFrameCounter++;
+    //    if (capBounceFrameCounter >= x) { // alle 3 Frames
+    //        PlayerActorHakoniwa* hakoniwa = static_cast<PlayerActorHakoniwa*>(playerBase);
+    //        if (hakoniwa && hakoniwa->mHackCap && hakoniwa->mHackCap->mCapActionHistory && hakoniwa->mPlayerWallActionHistory) {    //wenn hakoniwa und hackcap und capactionhistory und playerwallactionhistory
+    //            hakoniwa->mHackCap->mCapActionHistory->clearCapJump();  //cap jump reset
+    //            hakoniwa->mPlayerWallActionHistory->reset();            //wall jump reset
+    //        }
+    //        capBounceFrameCounter = 0; // zurücksetzen
+    //    }
+    //}
 }
 
 
