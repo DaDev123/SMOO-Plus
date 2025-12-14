@@ -48,6 +48,8 @@ Client::Client() {
 
     collectedShineCount = 0;
 
+    messages.fill(sead::FixedSafeString<MESSAGESIZE>());
+
     mShineArray.allocBuffer(100, nullptr); // max of 100 shine actors in buffer
 
     nn::account::GetLastOpenedUser(&mUserID);
@@ -405,6 +407,9 @@ void Client::readFunc() {
                 break;
             case PacketType::SHINECOLL:
                 updateShineInfo((ShineCollect*)curPacket);
+                break;
+            case PacketType::MESSAGE:
+                updateMessages((MessagePacket*)curPacket);
                 break;
             case PacketType::PLAYERDC:
                 Logger::log("Received Player Disconnect!\n");
@@ -1017,6 +1022,28 @@ void Client::updateGameInfo(GameInf *packet) {
 }
 
 /**
+ * @brief
+ *
+ * @param packet
+ */
+void Client::updateMessages(MessagePacket* packet)
+{
+    if (!sInstance)
+    {
+        return;
+    }
+    
+    for (int i = 0; i < 3; i++)
+    {
+        if (sInstance->messages[i].isEmpty())
+        {
+            messages[i].append(packet->message);
+        }
+    }
+
+}
+
+/**
  * @brief 
  * 
  * @param packet 
@@ -1432,6 +1459,30 @@ void Client::clearArrays() {
         sInstance->mShineArray.clear();
 
     }
+}
+
+/**
+ * @brief
+ *
+ */
+sead::FixedSafeString<MESSAGESIZE> Client::getMessage(int index) {
+    if (!sInstance) {
+        return sead::FixedSafeString<MESSAGESIZE>();
+    }
+
+    return sInstance->messages[index];
+}
+
+/**
+ * @brief
+ *
+ */
+void Client::setMessage(int index, const char* message) {
+    if (!sInstance) {
+        return;
+    }
+
+    sInstance->messages[index] = message;
 }
 
 /**

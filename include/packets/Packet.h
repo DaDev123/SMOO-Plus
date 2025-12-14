@@ -9,6 +9,7 @@
 
 #define PACKBUFSIZE      0x30
 #define COSTUMEBUFSIZE   0x20
+#define MESSAGESIZE      0x4B
 
 #define MAXPACKSIZE      0x100
 
@@ -27,6 +28,7 @@ enum PacketType : short {
     CAPTUREINF,
     CHANGESTAGE,
     CMD,
+    MESSAGE,
     End // end of enum for bounds checking
 };
 
@@ -45,7 +47,8 @@ USED static const char *packetNames[] = {
     "Moon Collection",
     "Capture Info",
     "Change Stage",
-    "Server Command"
+    "Server Command",
+    "Message"
 };
 
 enum SenderType {
@@ -80,6 +83,7 @@ struct PACKED Packet {
 #include "packets/GameInf.h"
 #include "packets/TagInf.h"
 //#include "packets/FreezeInf.h"
+#include "packets/MessagePacket.h"
 #include "packets/CostumeInf.h"
 #include "packets/ServerCommand.h"
 #include "packets/ShineCollect.h"
