@@ -55,6 +55,7 @@
 // ===== GLOBAL VARIABLES =====
 static int pInfSendTimer = 0;
 static int gameInfSendTimer = 0;
+static int chatUpdateTimer = 0;
 static int debugPuppetIndex = 0;
 static int debugCaptureIndex = 0;
 static int pageIndex = 0;
@@ -90,6 +91,31 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
         gameInfSendTimer = 0;
     }
 
+    if (chatUpdateTimer >= 300)
+    {
+        if (!Client::getMessage(0).isEmpty())
+        {
+            Client::setMessage(0, "");
+        }
+        if (!Client::getMessage(1).isEmpty())
+        {
+            Client::setMessage(0, Client::getMessage(1).cstr());
+            Client::setMessage(1, "");
+        }
+        if (!Client::getMessage(2).isEmpty())
+        {
+            Client::setMessage(1, Client::getMessage(2).cstr());
+            Client::setMessage(2, "");
+        }
+        chatUpdateTimer = 0;
+    }
+    else if (!Client::getMessage(0).isEmpty() || !Client::getMessage(1).isEmpty() ||
+        !Client::getMessage(2).isEmpty())
+    {
+        chatUpdateTimer++;
+    }
+
+    
     pInfSendTimer++;
     gameInfSendTimer++;
 }
@@ -155,32 +181,32 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     gTextWriter->printf("Your TCP status: %s\n", socket->getStateChar());
 
     sead::Heap* clientHeap = Client::getClientHeap();
-if (clientHeap) {
+    if (clientHeap) {
     sead::Heap* gmHeap = GameModeManager::instance()->getHeap();
-    if (gmHeap) {
-        // Validate heaps before using them
-        if (clientHeap->getSize() > 0 && gmHeap->getSize() > 0) {
-            size_t clientUsed = clientHeap->getSize() - clientHeap->getFreeSize();
-            size_t clientTotal = clientHeap->getSize();
-            size_t gmUsed = gmHeap->getSize() - gmHeap->getFreeSize();
-            size_t gmTotal = gmHeap->getSize();
+        if (gmHeap) {
+            // Validate heaps before using them
+            if (clientHeap->getSize() > 0 && gmHeap->getSize() > 0) {
+                size_t clientUsed = clientHeap->getSize() - clientHeap->getFreeSize();
+                size_t clientTotal = clientHeap->getSize();
+                size_t gmUsed = gmHeap->getSize() - gmHeap->getFreeSize();
+                size_t gmTotal = gmHeap->getSize();
             
-            gTextWriter->printf(
-                "Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode)\n",
-                0.0009765625 * clientUsed,
-                0.0009765625 * clientTotal,
-                0.0009765625 * gmUsed,
-                0.0009765625 * gmTotal
-            );
+                gTextWriter->printf(
+                    "Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode)\n",
+                    0.0009765625 * clientUsed,
+                    0.0009765625 * clientTotal,
+                    0.0009765625 * gmUsed,
+                    0.0009765625 * gmTotal
+                );
+            } else {
+                gTextWriter->printf("Heap Use: Invalid heap sizes\n");
+            }
         } else {
-            gTextWriter->printf("Heap Use: Invalid heap sizes\n");
+        gTextWriter->printf("Heap Use: GameMode heap unavailable\n");
         }
     } else {
-        gTextWriter->printf("Heap Use: GameMode heap unavailable\n");
+        gTextWriter->printf("Heap Use: Client heap unavailable\n");
     }
-} else {
-    gTextWriter->printf("Heap Use: Client heap unavailable\n");
-}
 
     gTextWriter->printf(
         "Queue Count: %d/%d (Send) %d/%d (Receive)\n",
@@ -220,6 +246,24 @@ if (clientHeap) {
 
         GameMode      gameMode     = GameModeManager::instance()->getGameMode();
         GameModeBase* gameModeBase = GameModeManager::instance()->getMode<GameModeBase>();
+
+        if (!(Client::getMessage(0) == Client::getMessage(1) &&
+              Client::getMessage(1) == Client::getMessage(2))) {
+            if (Client::getMessage(0) == Client::getMessage(1))
+                drawChatBackground((agl::DrawContext*)drawContext, 3.f);
+            else if (Client::getMessage(1).isEmpty())
+                drawChatBackground((agl::DrawContext*)drawContext, 2.f);
+            else
+                drawChatBackground((agl::DrawContext*)drawContext, 1.f);
+
+            gTextWriter->beginDraw();
+            gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, (dispHeight * 7 / 10) + 60.f));
+            gTextWriter->setScaleFromFontHeight(15.f);
+
+            gTextWriter->printf("%s\n", Client::getMessage(0).cstr());
+            gTextWriter->printf("%s\n", Client::getMessage(1).cstr());
+            gTextWriter->printf("%s\n", Client::getMessage(2).cstr());
+        }
 
         gTextWriter->printf("(ZR ←)------------ Page %d/%d -------------(ZR →)\n", pageIndex + 1, maxPages);
 

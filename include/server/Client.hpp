@@ -158,6 +158,8 @@ public:
     static sead::FixedSafeString<0x20> getUsername() { 
         return sInstance ? sInstance->mUsername : sead::FixedSafeString<0x20>::cEmptyString;
     }
+    static sead::FixedSafeString<MESSAGESIZE> getMessage(int index);
+    static void setMessage(int index, const char* message);
 
     // ===== SERVER CONFIGURATION =====
     static const int getCurrentPort();
@@ -223,6 +225,7 @@ private:
     void updateCaptureInfo(CaptureInf* packet);
     void sendToStage(ChangeStagePacket* packet);
     void disconnectPlayer(PlayerDC *packet);
+    void updateMessages(MessagePacket *packet);
 
     // ===== UTILITY METHODS =====
     PuppetInfo* findPuppetInfo(const nn::account::Uid& id, bool isFindAvailable);
@@ -246,6 +249,9 @@ private:
     sead::SafeArray<int, 128> curCollectedShines;
     int collectedShineCount = 0;
     int lastCollectedShine = -1;
+
+    // ===== MESSAGE MEMBERS =====
+    sead::SafeArray<sead::FixedSafeString<MESSAGESIZE>, 3> messages;
 
     // ===== PACKET BACKUPS =====
     PlayerInf lastPlayerInfPacket = PlayerInf();
