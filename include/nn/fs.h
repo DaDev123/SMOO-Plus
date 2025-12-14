@@ -84,6 +84,7 @@ Result CreateDirectory(char const* path);
 Result DeleteDirectory(const char* path);
 Result DeleteDirectoryRecursively(const char* path);
 Result RenameDirectory(const char* path, const char* newPath);
+Result GetEntryType(DirectoryEntryType*, const char*);
 
 Result MountSdCard(const char* mountPoint);
 void Unmount(const char* mountPoint);

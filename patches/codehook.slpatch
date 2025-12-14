@@ -28,7 +28,7 @@ B59E28 B seadPrintHook // sead::system::print
 41B4E4 BL setPlayerModel
 
 1B3F0C NOP // disables call to open HTML viewer during first time odyssey flight
-1f2998 B checkpointPatch // Patches checkpoint system to always allow warping
+1F2A2C MOV W0, #1 // patches checkpoint system to always allow warping
 216FAC MOV W0, #0 // disables AppearSwitchTimer's camera switch
 
 // Puppet Actor Setup
@@ -68,7 +68,7 @@ B59E28 B seadPrintHook // sead::system::print
     MOV X0, #0
     RET
 
-// Remap Snapshot to !L + Down, disables snapshot mode in freeze tag
+// Remap Snapshot to !L + Down
 577014 B comboBtnHook
 
 // Capture Syncing
@@ -127,29 +127,31 @@ B59E28 B seadPrintHook // sead::system::print
 // 891394 BL drawInitHook
 // 91328 BL updateInitHook
 
+
+// Temporary speedbooter hooks (take out after first stream!)
+50ef28 BL speedboot::hakoniwaSetNerveSetup
+50eb88 ORR w2, wzr, #0x1f // nerve state count
+50eb64 BL speedboot::prepareLayoutInitInfo
+
 // Freeze tag hooks
 4272f0 BL freezeDeathArea // Replaces functionality of death areas in freeze tag
 538a94 B playerHitPointDamage // Reimplements the damage function, disabling it's functionality in Freeze Tag
 51b280 B freezeKidsMode // Forces kids mode to be enabled during Freeze Tag
 1cfba0 BL freezeMoonHitboxDisable // When mode enabled, disable hitboxes with moons to avoid softlocks
 
-// speedbooter hooks
-50ef28 BL speedboot::hakoniwaSetNerveSetup
-50eb88 ORR w2, wzr, #0x1f // nerve state count
-50eb64 BL speedboot::prepareLayoutInitInfo
+
+// Twists
+56a140 bl icePhysicsPatch // Enables Ice Physics
 
 
-//Unlocks costume doors
-262850 MOV W0, #0
-2609b4 MOV W0, #0
-25ff74 MOV X0, #1
-25ffac MOV X0, #0
+// QOL Patches
+4DB934 NOP // LifeUpMaxItem demo skip
+2D250C NOP // Notes Demo Skip
+45c69c NOP // Removes Assist Mode Ledge Grabs
 
-//LifeUpMaxItem demo skip
-4DB934 NOP
+// Costume Door Unlocks
+262850 bl costumeDoorPatch1
+2609b4 bl costumeDoorPatch2
+25ff74 bl costumeDoorPatch3
+//25ffac bl costumeDoorPatch4
 
-// Notes
-2D250C NOP
-
-// Remove Assist Mode Ledge Grabs
-45c69c NOP

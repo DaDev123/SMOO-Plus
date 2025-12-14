@@ -13,24 +13,21 @@
 #define MAXPACKSIZE      0x100
 
 enum PacketType : short {
-        UNKNOWN,        // = 0
-        CLIENTINIT,     // = 1
-        PLAYERINF,      // = 2
-        HACKCAPINF,     // = 3 
-        GAMEINF,        // = 4
-        GAMEMODEINF,    // = 5 
-        PLAYERCON,      // = 6
-        PLAYERDC,       // = 7 
-        COSTUMEINF,     // = 8
-        SHINECOLL,      // = 9
-        CAPTUREINF,     // = 10
-        CHANGESTAGE,    // = 11
-        CMD,            // = 12
-        EXTRA,          // = 15
-        HEALTH_COINS,   // = 16 
-        MODS,           // = 17 
-        CHANGECOSTUME,  // = 18 
-        End             // end of enum for bounds checking
+    UNKNOWN,
+    CLIENTINIT,
+    PLAYERINF,
+    HACKCAPINF,
+    GAMEINF,
+    TAGINF,
+    //FREEZEINF,
+    PLAYERCON,
+    PLAYERDC,
+    COSTUMEINF,
+    SHINECOLL,
+    CAPTUREINF,
+    CHANGESTAGE,
+    CMD,
+    End // end of enum for bounds checking
 };
 
 // attribute otherwise the build log is spammed with unused warnings
@@ -40,16 +37,15 @@ USED static const char *packetNames[] = {
     "Player Info",
     "Player Cap Info",
     "Game Info",
-    "Gamemode Info",
+    "Tag Info",
+    //"Freeze Info",
     "Player Connect",
     "Player Disconnect",
     "Costume Info",
     "Moon Collection",
     "Capture Info",
     "Change Stage",
-    "Server Command",
-    "Extras Packets (infCapDives & Noclip)",
-    "Health and Coins"
+    "Server Command"
 };
 
 enum SenderType {
@@ -82,6 +78,8 @@ struct PACKED Packet {
 #include "packets/PlayerConnect.h"
 #include "packets/PlayerDC.h"
 #include "packets/GameInf.h"
+#include "packets/TagInf.h"
+//#include "packets/FreezeInf.h"
 #include "packets/CostumeInf.h"
 #include "packets/ServerCommand.h"
 #include "packets/ShineCollect.h"

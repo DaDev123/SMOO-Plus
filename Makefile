@@ -27,7 +27,7 @@ BUILD_DIR := build$(SMOVER)$(if $(filter 1,$(ISEMU)),EMU,SWITCH)
 all: starlight
 
 starlight:
-	$(MAKE) all -f MakefileNSO SMOVER=$(SMOVER) BUILDVERSTR=$(BUILDVERSTR) BUILDVER=$(BUILDVER) DEBUGLOG=$(DEBUGLOG) SERVERIP=${SERVERIP} EMU=${ISEMU}
+	$(MAKE) all -f MakefileNSO SMOVER=$(SMOVER) BUILD=$(BUILD_DIR) BUILDVERSTR=$(BUILDVERSTR) BUILDVER=$(BUILDVER) DEBUGLOG=$(DEBUGLOG) SERVERIP=${SERVERIP} EMU=${ISEMU}
 	$(MAKE) starlight_patch_$(SMOVER)/*.ips
 	
 	mkdir -p starlight_patch_$(SMOVER)/atmosphere/exefs_patches/$(PROJNAME)/
@@ -48,7 +48,7 @@ starlight_patch_$(SMOVER)/*.ips: patches/*.slpatch patches/configs/$(SMOVER).con
 
 # builds project with the file structure for SMOO-Emulator
 emu:
-	$(MAKE) all -f MakefileNSO SMOVER=$(SMOVER) BUILDVERSTR=$(BUILDVERSTR) BUILDVER=$(BUILDVER) DEBUGLOG=$(DEBUGLOG) SERVERIP=${SERVERIP} EMU=1
+	$(MAKE) all -f MakefileNSO SMOVER=$(SMOVER) BUILD=build$(SMOVER)EMU BUILDVERSTR=$(BUILDVERSTR) BUILDVER=$(BUILDVER) DEBUGLOG=$(DEBUGLOG) SERVERIP=${SERVERIP} EMU=1
 	$(MAKE) starlight_patch_$(SMOVER)/*.ips ISEMU=1
 
 	@echo "Creating SMOO-Emulator folder structure inside starlight_patch_$(SMOVER)..."

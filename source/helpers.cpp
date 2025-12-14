@@ -6,6 +6,7 @@
 #include "sead/math/seadVector.h"
 #include "sead/time/seadTickSpan.h"
 #include "sead/time/seadTickTime.h"
+#include "game/StageScene/StageSceneStateServerConfig.hpp"
 
 bool isPartOf(const char* w1, const char* w2) {
 
@@ -81,10 +82,6 @@ float vecMagnitude(sead::Vector3f const &input) {
     return (input.x * input.x + input.y * input.y + input.z * input.z);
 }
 
-float vecDistance(sead::Vector3f const& a, sead::Vector3f const& b) {
-    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2) + pow(a.z - b.z, 2));
-}
-
 float quatAngle(sead::Quatf const &q1, sead::Quatf &q2) {
     float dot = (q1.x * q2.x) + (q1.y * q2.y) + (q1.z * q2.z) + (q1.w * q2.w);
     float dotAngle = sead::Mathf::min(abs(dot), 1.0f);
@@ -130,7 +127,21 @@ const char *tryConvertName(const char *className) {
 
 // Unity Classes
 
+
+// Main SmoothMove function - now checks the actual config setting
 float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed)
+{
+    // Check the ACTUAL setting from StageSceneStateServerConfig
+    bool useLowLatency = StageSceneStateServerConfig::isLowLatencyEnabled();
+    
+    if (useLowLatency) {
+        return SmoothMove_LowLatency(moveTransform, targetTransform, timeDelta, closingSpeed, maxAngularSpeed);
+    } else {
+        return SmoothMove_RegularLatency(moveTransform, targetTransform, timeDelta, closingSpeed, maxAngularSpeed);
+    }
+}
+
+float VisualUtils::SmoothMove_RegularLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed)
 {
 
     // Position
@@ -180,6 +191,26 @@ float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform
     }
 
     return closingSpeed;
+}
+
+
+// Ultra-smooth exponential interpolation (Low Latency Mode)
+float VisualUtils::SmoothMove_LowLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed)
+{
+    // Very responsive with minimal smoothing
+    const float positionSmoothTime = 0.02f;
+    const float rotationSmoothTime = 0.02f;
+    
+    float posLerpFactor = 1.0f - sead::Mathf::exp(-timeDelta / positionSmoothTime);
+    al::lerpVec(moveTransform.position, *moveTransform.position, *targetTransform.position, posLerpFactor);
+    
+    if (moveTransform.rotation) {
+        float rotLerpFactor = 1.0f - sead::Mathf::exp(-timeDelta / rotationSmoothTime);
+        al::slerpQuat(moveTransform.rotation, *moveTransform.rotation, *targetTransform.rotation, rotLerpFactor);
+    }
+    
+    sead::Vector3f posDiff = *targetTransform.position - *moveTransform.position;
+    return posDiff.length() / positionSmoothTime;
 }
 
 void killMainPlayer(al::LiveActor* actor) {

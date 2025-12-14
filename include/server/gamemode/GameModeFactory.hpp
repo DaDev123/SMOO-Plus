@@ -3,27 +3,27 @@
 #include "al/factory/Factory.h"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
-#include "server/freeze/FreezeTagMode.hpp"
 #include "server/snh/SardineMode.hpp"
+#include "server/freeze/FreezeTagMode.hpp"
 
 typedef GameModeBase* (*createMode)(const char* name);
 
-template<class T>
-GameModeBase* createGameMode(const char* name) {
+template <class T>
+GameModeBase* createGameMode(const char* name)
+{
     return new T(name);
 };
 
 __attribute((used)) constexpr al::NameToCreator<createMode> modeTable[] = {
     {"HideAndSeek", &createGameMode<HideAndSeekMode>},
-    {"Sardine", &createGameMode<SardineMode>},
+    {"Sardines", &createGameMode<SardineMode>},
     {"FreezeTag", &createGameMode<FreezeTagMode>}
 };
 
 constexpr const char* modeNames[] = {
-    "None",          // Index 0: for NONE (-1)
-    "Hide and Seek", // Index 1: for HIDENSEEK (0)
-    "Sardines",      // Index 2: for SARDINE (1)
-    "Freeze Tag"     // Index 3: for FREEZETAG (2)
+    "Hide and Seek",
+    "Sardines",
+    "Freeze Tag"
 };
 
 class GameModeFactory : public al::Factory<createMode> {
@@ -40,33 +40,23 @@ class GameModeFactory : public al::Factory<createMode> {
         constexpr static int getModeCount();
 };
 
+// TODO: possibly use shadows' crc32 hash algorithm for this
 constexpr const char* GameModeFactory::getModeString(GameMode mode) {
-    if(mode == GameMode::NONE)
-        return "None";  // Special case since NONE isn't in modeTable
-        
     if(mode >= 0 && (size_t)mode < sizeof(modeTable)/sizeof(modeTable[0]))
         return modeTable[mode].creatorName;
-    return "Unknown";
+    return nullptr;
 }
 
 constexpr const char* GameModeFactory::getModeName(GameMode mode) {
-    int index = (int)mode + 1;  // -1 becomes 0, 0 becomes 1, etc.
-        
-    if(index >= 0 && (size_t)index < sizeof(modeNames)/sizeof(modeNames[0]))
-        return modeNames[index];
-    return "Unknown";
+    if(mode >= 0 && (size_t)mode < sizeof(modeNames)/sizeof(modeNames[0]))
+        return modeNames[mode];
+    return nullptr;
 }
 
 constexpr const char* GameModeFactory::getModeName(int idx) {
-    if(idx == -1)
-        return modeNames[0]; // "None"
-    
-    // For gamemode select screen: idx 0,1,2 should map to actual game modes
-    // Skip the "None" entry and map directly to game modes
-    int adjustedIdx = idx + 1; // Skip "None" at index 0
-    if(adjustedIdx >= 1 && (size_t)adjustedIdx < sizeof(modeNames)/sizeof(modeNames[0]))
-        return modeNames[adjustedIdx];
-    return "Unknown";
+    if(idx >= 0 && (size_t)idx < sizeof(modeNames)/sizeof(modeNames[0]))
+        return modeNames[idx];
+    return nullptr;
 }
 
 constexpr int GameModeFactory::getModeCount() {

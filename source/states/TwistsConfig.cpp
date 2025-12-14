@@ -13,11 +13,15 @@
 #include "logger.hpp"
 
 
+
 // Initialize static variables
 bool TwistsConfig::sCappyForceEnabled = true;  // Changed to true so Cappy is enabled by default
 bool TwistsConfig::cappyDisabled = false;      // Changed to false since Cappy starts enabled
 bool TwistsConfig::needsCappyDisable = false;  // Changed to false since we don't need to disable
 float TwistsConfig::cappyThreshold = 500.0f; // Adjust as needed
+
+
+bool TwistsConfig::sIcePhysicsEnabled = false;
 
 // Getters
 bool TwistsConfig::isCappyDisableEnabled() {
@@ -96,4 +100,22 @@ void TwistsConfig::handleStageInit() {
     cappyDisabled = false;      // Changed: Cappy starts enabled
     needsCappyDisable = false;  // Changed: We don't need to disable it
     Logger::log("Stage init: Cappy will be enabled\n");  // Updated log message
+}
+
+namespace al {
+    class Triangle;
+    bool isFloorCode(al::Triangle const&,char const*);
+}
+
+bool icePhysicsPatch(const al::Triangle& triangle, const char* floorCode) {
+    // First, check if this is naturally an ice floor (original game logic)
+    bool isNaturalIce = al::isFloorCode(triangle, floorCode);
+    
+    // If it's naturally ice, always return true (preserves ice blocks)
+    if (isNaturalIce) {
+        return true;
+    }
+    
+    // If not naturally ice, check if our "ice everywhere" toggle is enabled
+    return TwistsConfig::isIcePhysicsEnabled();
 }

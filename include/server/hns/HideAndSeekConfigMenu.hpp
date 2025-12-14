@@ -1,22 +1,18 @@
 #pragma once
 
+#include "sead/container/seadSafeArray.h"
 #include "server/gamemode/GameModeConfigMenu.hpp"
-#include "game/Layouts/CommonVerticalList.h"
-#include "server/gamemode/GameModeBase.hpp"
 
 class HideAndSeekConfigMenu : public GameModeConfigMenu {
-public:
-    HideAndSeekConfigMenu();
-    
-    void initMenu(const al::LayoutInitInfo &initInfo) override;
-    const sead::WFixedSafeString<0x200> *getStringData() override;
-    bool updateMenu(int selectIndex) override;
+    public:
+        HideAndSeekConfigMenu();
 
-    const int getMenuSize() override { return mItemCount; }
+        const sead::WFixedSafeString<0x200>* getStringData() override;
+        GameModeConfigMenu::UpdateAction updateMenu(int selectIndex) override;
 
-private:
-    static constexpr int mItemCount = 1;
-    sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>* mConfigOptions;
-    
-    void updateOptionsText();
+        const int getMenuSize() override { return 1; }
+
+    private:
+        static constexpr int mItemCount = 1;
+        sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount> mItems;  // Changed from pointer
 };

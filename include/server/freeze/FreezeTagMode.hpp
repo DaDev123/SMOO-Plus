@@ -9,11 +9,11 @@
 #include "layouts/FreezeTagIcon.h"
 #include "math/seadVector.h"
 #include "puppets/PuppetInfo.h"
+#include "packets/FreezeInf.h"
 #include "server/freeze/FreezeHintArrow.h"
 #include "server/freeze/FreezePlayerBlock.h"
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/freeze/FreezeTagScore.hpp"
-#include "server/freeze/FreezeTagPacket.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/gamemode/GameModeInfoBase.hpp"
@@ -21,15 +21,6 @@
 #include "server/hns/HideAndSeekConfigMenu.hpp"
 #include <math.h>
 #include <stdint.h>
-
-enum FreezePostProcessingType : u8 { // Snapshot mode post processing state
-    PPDISABLED = 0,
-    PPFROZEN = 1,
-    PPENDGAMELOSE = 2,
-    PPENDGAMEWIN = 3
-};
-
-
 
 class FreezeTagMode : public GameModeBase {
 public:
@@ -46,14 +37,16 @@ public:
 
     bool isUseNormalUI() const override { return false; }
 
-    void processPacket(Packet* packet) override;
-    Packet* createPacket() override;
-    void sendFreezePacket(FreezeUpdateType updateType); // Called instead of Client::sendGamemodePacket(), allows setting packet type
+    //void processPacket(Packet* packet) override;
+    //Packet* createPacket() override;
+    void sendFreezePacket(FreezeUpdateType updateType);
 
     void startRound(int roundMinutes); // Actives round on this specific client
     void endRound(bool isAbort); // Ends round, allows setting for if this was a natural end or abort (used for scoring)
 
     bool isScoreEventsEnabled() const { return mIsScoreEventsValid; };
+    bool isPlayerRunner() const { return mInfo->mIsPlayerRunner; };
+    bool isPlayerFreeze() const { return mInfo->mIsPlayerFreeze; };
     bool isEndgameActive() { return mIsEndgameActive; }  // The endagme is the time during the WIPEOUT message is on screen
     bool isPlayerLastSurvivor(PuppetInfo* changingPuppet); // Only meant to be called on getting a packet
     bool isAllRunnerFrozen(PuppetInfo* changingPuppet); // Only meant to be called on getting a packet, starts the endgame
@@ -65,7 +58,7 @@ public:
     void tryStartEndgameEvent(); // Starts the WIPEOUT message event
     bool tryStartRecoveryEvent(bool isEndgame); // Returns player to a chaser's position or last stood position, unless endgame variant
     bool tryEndRecoveryEvent(); // Called after the fade of the recovery event
-    void tryScoreEvent(FreezeTagPacket* incomingPacket, PuppetInfo* sourcePuppet); // Attempt score gain when getting a packet
+    void tryScoreEvent(FreezeInf* incomingPacket, PuppetInfo* sourcePuppet); // Attempt score gain when getting a packet
     void setWipeHolder(al::WipeHolder* wipe) { mWipeHolder = wipe; }; // Called with HakoniwaSequence hook, wipe used in recovery event
     bool trySetPostProcessingType(FreezePostProcessingType type); // Sets the post processing type, also used for disabling
     
@@ -74,20 +67,13 @@ public:
     void updateSpectateCam(PlayerActorBase* playerBase); // Updates the frozen spectator camera
     void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; } // Called when the camera ticket is constructed to get a pointer
 
-    // implemented here:
-        inline bool     isHost()               const { return mInfo->isHost();           }
-        inline bool     isRound()              const { return mInfo->isRound();          }
-        inline bool     isPlayerRunner()       const { return mInfo->isPlayerRunner();   }
-        inline bool     isPlayerChaser()       const { return mInfo->isPlayerChaser();   }
-        inline bool     isPlayerFrozen()       const { return mInfo->isPlayerFrozen();   }
-        inline bool     isPlayerUnfrozen()     const { return mInfo->isPlayerUnfrozen(); }
-        inline bool     isWipeout()            const { return mIsEndgameActive;          }
-        inline uint16_t getScore()             const { return mInfo->getScore();         }
-        inline int      runners()              const { return mInfo->runners();          }
-        inline int      chasers()              const { return mInfo->chasers();          }
+    FreezeUpdateType mNextUpdateType = FreezeUpdateType::PLAYER; // Set for the sendPacket funtion to know what packet type is sent
+    // In FreezeTagMode.hpp, add to public section:
+FreezeUpdateType getNextUpdateType() const { return mNextUpdateType; }
 
 private:
-    FreezeUpdateType mNextUpdateType = FreezeUpdateType::PLAYER; // Set for the sendPacket funtion to know what packet type is sent
+    
+    
     FreezePostProcessingType mPostProcessingType = FreezePostProcessingType::PPDISABLED; // Current post processing mode (snapshot mode)
     GameModeTimer* mModeTimer = nullptr; // Generic timer from H&S used for round timer
     FreezeTagIcon* mModeLayout = nullptr; // HUD layout (creates sub layout actors for runner and chaser)

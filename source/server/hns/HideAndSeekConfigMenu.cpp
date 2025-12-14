@@ -5,49 +5,38 @@
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/Client.hpp"
 
-HideAndSeekConfigMenu::HideAndSeekConfigMenu() : GameModeConfigMenu() {
-    mConfigOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount>();
-    updateOptionsText();
-}
-
-void HideAndSeekConfigMenu::initMenu(const al::LayoutInitInfo &initInfo) {
-    
-}
-
-void HideAndSeekConfigMenu::updateOptionsText() {
-    // Get current gravity state and display it in the toggle
-    HideAndSeekInfo *curMode = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
-    bool isGravityEnabled = curMode ? curMode->mIsUseGravity : false;
-    
-    mConfigOptions->mBuffer[0].copy(
-        isGravityEnabled ? u"Galaxy Gravity (ON) " : u"Galaxy Gravity (OFF)"
-    );
-}
+HideAndSeekConfigMenu::HideAndSeekConfigMenu() : GameModeConfigMenu() {}
 
 const sead::WFixedSafeString<0x200> *HideAndSeekConfigMenu::getStringData() {
-    // Update the text every time it's requested
-    updateOptionsText();
-    return mConfigOptions->mBuffer;
+    HideAndSeekInfo *curMode = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
+
+    // Update the persistent array instead of creating a new one
+    if (curMode && curMode->mIsUseGravity) {
+        mItems[0].copy(u"H&S Gravity (ON)");
+    } else {
+        mItems[0].copy(u"H&S Gravity (OFF)");
+    }
+
+    return mItems.mBuffer;
 }
 
-bool HideAndSeekConfigMenu::updateMenu(int selectIndex) {
+GameModeConfigMenu::UpdateAction HideAndSeekConfigMenu::updateMenu(int selectIndex) {
     HideAndSeekInfo *curMode = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
+
+    Logger::log("Toggling Gravity Mode.\n");
 
     if (!curMode) {
         Logger::log("Unable to Load Mode info!\n");
-        return true;   
+        return GameModeConfigMenu::UpdateAction::NOOP;
     }
     
-    switch (selectIndex) {
-        case 0: { // Toggle gravity
-            if (GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
-                curMode->mIsUseGravity = !curMode->mIsUseGravity;
-                Logger::log("Toggled H&S Gravity to: %s\n", curMode->mIsUseGravity ? "ON" : "OFF");
-            }
-            return true; // Exit the menu after toggling
+    if (selectIndex == 0) {
+        if (GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
+            curMode->mIsUseGravity = !curMode->mIsUseGravity;
+            Logger::log("Gravity is now: %s\n", curMode->mIsUseGravity ? "ON" : "OFF");
         }
-        default:
-            Logger::log("Failed to interpret Index!\n");
-            return false;
+        return GameModeConfigMenu::UpdateAction::REFRESH;
     }
+    
+    return GameModeConfigMenu::UpdateAction::NOOP;
 }

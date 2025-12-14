@@ -94,7 +94,7 @@ bool FreezeTagMode::trySetPlayerRunnerState(FreezeState newState)
     FUNCTION CALLED FROM client.cpp ON RECEIVING FREEZE TAG PACKETS
 */
 
-void FreezeTagMode::tryScoreEvent(FreezeTagPacket* incomingPacket, PuppetInfo* sourcePuppet)
+void FreezeTagMode::tryScoreEvent(FreezeInf* incomingPacket, PuppetInfo* sourcePuppet)
 {
     if(!mCurScene || !sourcePuppet || !GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
         return;

@@ -1,45 +1,56 @@
-#---------------------------------------------------------------------------------
-# Starlight-specific
-# SMOVER is the target version of Super Mario Odyssey, but without the decimal points
-# This can be changed by compiling for a different version (e.g. make 100)
-# (used for C defines, filenames, etc)
-# (used for user-facing stuff)
-# LINKERSCRIPTS is the directory where the function addresses for Super Mario Odyssey are
-# stored
-# Each script is stored as syms$(SMOVER).ld
-# (used for mapping Super Mario Odyssey functions to the proper address)
-#---------------------------------------------------------------------------------
-
-LINKERSCRIPTS    := linkerscripts
+#=================================================================================
+# Starlight Super Mario Odyssey Multiplayer Makefile
+#=================================================================================
 
 #---------------------------------------------------------------------------------
-#.SUFFIXES:
+# PROJECT CONFIGURATION
+#---------------------------------------------------------------------------------
+# SMOVER: Target version of Super Mario Odyssey (without decimal points)
+# Can be changed by compiling for different version (e.g. make 100)
+# LINKERSCRIPTS: Directory containing function addresses for Super Mario Odyssey
+# Each script stored as syms$(SMOVER).ld for mapping SMO functions to proper addresses
+#---------------------------------------------------------------------------------
+
+LINKERSCRIPTS := linkerscripts
+
+#---------------------------------------------------------------------------------
+# DEVKIT VALIDATION
 #---------------------------------------------------------------------------------
 
 ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
 endif
 
+#---------------------------------------------------------------------------------
+# BASIC SETUP
+#---------------------------------------------------------------------------------
+
 TOPDIR ?= $(CURDIR)
 include $(DEVKITPRO)/libnx/switch_rules
 
 #---------------------------------------------------------------------------------
-# TARGET is the name of the output
-# BUILD is the directory where object files & intermediate files will be placed
-# SOURCES is a list of directories containing source code
-# DATA is a list of directories containing data files
-# INCLUDES is a list of directories containing header files
+# BUILD CONFIGURATION
+# TARGET: Name of the output
+# BUILD: Directory for object files & intermediate files
+# SOURCES: List of directories containing source code
+# DATA: List of directories containing data files
+# INCLUDES: List of directories containing header files
 #---------------------------------------------------------------------------------
-TARGET		?=	$(notdir $(CURDIR))$(SMOVER)
-BUILD		?=	build$(SMOVER)$(if $(filter 1,$(EMU)),EMU,SWITCH)
+
+TARGET   ?= $(notdir $(CURDIR))$(SMOVER)
+BUILD    ?= build$(SMOVER)
+DATA     := data
+INCLUDES := include include/sead
+
+# Source directories organized by functionality
 SOURCES		:=  \
 			source/sead/time  \
 			source/sead  \
 			source/puppets  \
 			source/speedboot  \
 			source/server/hns  \
-			source/server/snh  \
-			source/server/freeze  \
+                        source/server/snh  \
+                        source/server/freeze  \
 			source/server/gamemode  \
 			source/server/gamemode/modifiers  \
 			source/server  \
@@ -49,74 +60,126 @@ SOURCES		:=  \
 			source/nx  \
 			source
 SOURCES     +=  source/al/execute
-DATA		:=	data
-INCLUDES	:=	include include/sead
 
 #---------------------------------------------------------------------------------
-# options for code generation
+# COMPILER CONFIGURATION
 #---------------------------------------------------------------------------------
-ARCH	:=	-march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIC -ftls-model=local-exec
 
-CFLAGS	:=	-g -Wall -ffunction-sections \
-			$(ARCH) $(DEFINES)
+# Architecture settings
+ARCH := -march=armv8-a \
+        -mtune=cortex-a57 \
+        -mtp=soft \
+        -fPIC \
+        -ftls-model=local-exec
 
-CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -DSMOVER=$(SMOVER) -O3 -DNNSDK -DSWITCH -DBUILDVERSTR=$(BUILDVERSTR) -DBUILDVER=$(BUILDVER) -DDEBUGLOG=$(DEBUGLOG) -DSERVERIP=$(SERVERIP) -DEMU=$(EMU)
+# Base C flags
+CFLAGS := -g \
+          -Wall \
+          -ffunction-sections \
+          $(ARCH) \
+          $(DEFINES)
 
-CXXFLAGS	:= $(CFLAGS) -Wno-invalid-offsetof -Wno-volatile -fno-rtti -fomit-frame-pointer -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -std=gnu++20
+# Platform and optimization flags
+CFLAGS += $(INCLUDE) \
+          -D__SWITCH__ \
+          -DSMOVER=$(SMOVER) \
+          -O3 \
+          -DNNSDK \
+          -DSWITCH \
+          -DBUILDVERSTR=$(BUILDVERSTR) \
+          -DBUILDVER=$(BUILDVER) \
+          -DDEBUGLOG=$(DEBUGLOG) \
+          -DSERVERIP=$(SERVERIP) \
+          -DEMU=$(EMU)
 
-ASFLAGS	:=	-g $(ARCH)
-LDFLAGS  =  -specs=../switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map) -Wl,--version-script=$(TOPDIR)/exported.txt -Wl,-init=__custom_init -Wl,-fini=__custom_fini -nostdlib
+# C++ specific flags
+CXXFLAGS := $(CFLAGS) \
+            -Wno-invalid-offsetof \
+            -Wno-volatile \
+            -fno-rtti \
+            -fomit-frame-pointer \
+            -fno-exceptions \
+            -fno-asynchronous-unwind-tables \
+            -fno-unwind-tables \
+            -std=gnu++20
 
-LIBS	:=
+# Assembly flags
+ASFLAGS := -g $(ARCH)
+
+# Linker flags
+LDFLAGS = -specs=../switch.specs \
+          -g \
+          $(ARCH) \
+          -Wl,-Map,$(notdir $*.map) \
+          -Wl,--version-script=$(TOPDIR)/exported.txt \
+          -Wl,-init=__custom_init \
+          -Wl,-fini=__custom_fini \
+          -nostdlib
+
+# Libraries
+LIBS :=
 
 #---------------------------------------------------------------------------------
-# list of directories containing libraries, this must be the top level containing
-# include and lib
+# LIBRARY DIRECTORIES
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(PORTLIBS) $(LIBNX)
+
+LIBDIRS := $(PORTLIBS) $(LIBNX)
+
+#=================================================================================
+# BUILD SYSTEM LOGIC
+#=================================================================================
 
 #---------------------------------------------------------------------------------
-# no real need to edit anything past this point unless you need to add additional
-# rules for different file extensions
+# MAIN BUILD LOGIC
 #---------------------------------------------------------------------------------
+
 ifneq ($(BUILD),$(notdir $(CURDIR)))
+
+# Export variables for sub-make
+export OUTPUT  := $(CURDIR)/$(TARGET)
+export TOPDIR  := $(CURDIR)
+export VPATH   := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
+                  $(foreach dir,$(DATA),$(CURDIR)/$(dir))
+export DEPSDIR ?= $(CURDIR)/$(BUILD)
+
+# File lists
+CFILES   := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+CPPFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
+SFILES   := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
+
+#---------------------------------------------------------------------------------
+# LINKER SELECTION
+# Use CXX for linking C++ projects, CC for standard C
 #---------------------------------------------------------------------------------
 
-export OUTPUT	:=	$(CURDIR)/$(TARGET)
-export TOPDIR	:=	$(CURDIR)
-
-export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
-
-export DEPSDIR	?=	$(CURDIR)/$(BUILD)
-
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-
-#---------------------------------------------------------------------------------
-# use CXX for linking C++ projects, CC for standard C
-#---------------------------------------------------------------------------------
 ifeq ($(strip $(CPPFILES)),)
-#---------------------------------------------------------------------------------
-	export LD	:=	$(CC)
-#---------------------------------------------------------------------------------
+export LD := $(CC)
 else
-#---------------------------------------------------------------------------------
-	export LD	:=	$(CXX)
-#---------------------------------------------------------------------------------
+export LD := $(CXX)
 endif
+
 #---------------------------------------------------------------------------------
-export OFILES_BIN	:=	$(addsuffix .o,$(BINFILES))
-export OFILES_SRC	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
-export OFILES 	:=	$(OFILES_BIN) $(OFILES_SRC)
-export HFILES_BIN	:=	$(addsuffix .h,$(subst .,_,$(BINFILES)))
+# OBJECT FILE CONFIGURATION
+#---------------------------------------------------------------------------------
 
-export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
-			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-			-I$(CURDIR)/$(BUILD)
+export OFILES_BIN := $(addsuffix .o,$(BINFILES))
+export OFILES_SRC := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+export OFILES     := $(OFILES_BIN) $(OFILES_SRC)
+export HFILES_BIN := $(addsuffix .h,$(subst .,_,$(BINFILES)))
 
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+#---------------------------------------------------------------------------------
+# INCLUDE AND LIBRARY PATH CONFIGURATION
+#---------------------------------------------------------------------------------
+
+export INCLUDE  := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+                   $(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+                   -I$(CURDIR)/$(BUILD)
+
+export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+
+#---------------------------------------------------------------------------------
+# ICON CONFIGURATION
+#---------------------------------------------------------------------------------
 
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.jpg)
@@ -131,6 +194,10 @@ else
 	export APP_ICON := $(TOPDIR)/$(ICON)
 endif
 
+#---------------------------------------------------------------------------------
+# NRO FLAGS CONFIGURATION
+#---------------------------------------------------------------------------------
+
 ifeq ($(strip $(NO_ICON)),)
 	export NROFLAGS += --icon=$(APP_ICON)
 endif
@@ -139,54 +206,76 @@ ifeq ($(strip $(NO_NACP)),)
 	export NROFLAGS += --nacp=$(CURDIR)/$(TARGET).nacp
 endif
 
+#---------------------------------------------------------------------------------
+# PHONY TARGETS
+#---------------------------------------------------------------------------------
+
 .PHONY: $(BUILD) clean all
 
+#---------------------------------------------------------------------------------
+# BUILD TARGETS
 #---------------------------------------------------------------------------------
 
 all: $(BUILD)
 
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@cp $(LINKERSCRIPTS)/syms$(SMOVER).ld $(LINKERSCRIPTS)/symstemp.ld # This is required because you can't pass a variable to the .specs
+	@echo "Copying linker script syms$(SMOVER).ld to symstemp.ld"
+	@cp $(LINKERSCRIPTS)/syms$(SMOVER).ld $(LINKERSCRIPTS)/symstemp.ld
+	@echo "Building $(TARGET)..."
 	$(MAKE) -C $(BUILD) -f $(CURDIR)/MakefileNSO
+	@echo "Cleaning up temporary linker script"
 	@rm -f $(LINKERSCRIPTS)/symstemp.ld
 
-#---------------------------------------------------------------------------------
 clean:
-	@echo clean ...
-	@rm -fr build*EMU build*SWITCH *.nso *.elf
+	@echo "Cleaning build files..."
+	@rm -fr build* *.nso *.elf
+	@echo "Clean complete."
 
+#=================================================================================
+# SUB-MAKE TARGETS (when BUILD directory exists)
+#=================================================================================
 
-#---------------------------------------------------------------------------------
 else
-.PHONY:	all
 
-DEPENDS	:=	$(OFILES:.o=.d)
+.PHONY: all
+
+DEPENDS := $(OFILES:.o=.d)
 
 #---------------------------------------------------------------------------------
-# main targets
+# MAIN TARGETS
 #---------------------------------------------------------------------------------
-%.nso: %.elf
+
+all: $(OUTPUT).nso
+
+$(OUTPUT).nso: $(OUTPUT).elf
+	@echo "Converting ELF to NSO..."
 	@elf2nso $< $@
-	@echo built ... $(notdir $@)
-#---------------------------------------------------------------------------------
-all	: $(OUTPUT).nso
+	@echo "Built $(notdir $@) successfully!"
 
-$(OUTPUT).elf   : $(OFILES)
+$(OUTPUT).elf: $(OFILES)
 
-
-$(OFILES_SRC)	: $(HFILES_BIN)
+$(OFILES_SRC): $(HFILES_BIN)
 
 #---------------------------------------------------------------------------------
-# you need a rule like this for each extension you use as binary data
+# BINARY DATA RULES
+# Rule for each extension used as binary data
 #---------------------------------------------------------------------------------
-%.bin.o	%_bin.h :	%.bin
-#---------------------------------------------------------------------------------
-	@echo $(notdir $<)
+
+%.bin.o %_bin.h: %.bin
+	@echo "Processing binary data: $(notdir $<)"
 	@$(bin2o)
+
+#---------------------------------------------------------------------------------
+# DEPENDENCY INCLUSION
+#---------------------------------------------------------------------------------
 
 -include $(DEPENDS)
 
-#---------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------
+
 endif
-#---------------------------------------------------------------------------------------
+
+#=================================================================================
+# END OF MAKEFILE
+#=================================================================================

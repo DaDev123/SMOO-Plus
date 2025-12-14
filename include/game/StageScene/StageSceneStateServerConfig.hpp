@@ -12,125 +12,174 @@
 
 #include "game/GameData/GameDataHolder.h"
 
+#include "TwistsConfig.hpp"
+
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/gamemode/GameModeConfigMenuFactory.hpp"
 
+#include <vector>
+
 class FooterParts;
 
+// Forward declare the PublicServer struct
+struct PublicServer {
+    char* name;
+    char* ip;
+    int port;
+    
+    PublicServer();
+    PublicServer(const char* n, const char* i, int p);
+    ~PublicServer();
+    PublicServer(const PublicServer& other);
+    PublicServer& operator=(const PublicServer& other);
+};
+
 class StageSceneStateServerConfig : public al::HostStateBase<al::Scene>, public al::IUseMessageSystem {
-    public:
-        StageSceneStateServerConfig(
-            const char*,
-            al::Scene*,
-            const al::LayoutInitInfo&,
-            FooterParts*,
-            GameDataHolder*,
-            bool
-        );
+public:
+    StageSceneStateServerConfig(
+        const char*,
+        al::Scene*,
+        const al::LayoutInitInfo&,
+        FooterParts*,
+        GameDataHolder*,
+        bool
+    );
 
-        enum ServerConfigOption {
-            GAMEMODECONFIG,
-            GAMEMODESWITCH,
-            TOGGLESENSORS,
-            TOGGLETWISTS,
-            SETIP,
-            SETPORT,
-            TOGGLEMUSIC,
-            HIDESERVER,
-        };
+    ~StageSceneStateServerConfig();
 
-        virtual al::MessageSystem* getMessageSystem(void) const override;
-        virtual void init(void) override;
-        virtual void appear(void) override;
-        virtual void kill(void) override;
+    enum MainMenuOption {
+        Network_SETTINGS,
+        GAMEPLAY_SETTINGS,
+        GAMEMODE_SETTINGS
+    };
 
-        void exeMainMenu();
-        void exeOpenKeyboardIP();
-        void exeOpenKeyboardPort();
-        void exeHideServer();
-        void exeToggleMusic();
-        void exeToggleTwists();
-        void exeToggleSensors();
-        void exeGamemodeConfig();
-        void exeGamemodeSelect();
-        void exeSaveData();
-        void updateSensorsOptions();
-        void updateTwistsOptions();
-        
+    virtual al::MessageSystem* getMessageSystem(void) const override;
+    virtual void init(void) override;
+    virtual void appear(void) override;
+    virtual void kill(void) override;
 
-        void endSubMenu();
+    // Menu execution methods
+    void exeMainMenu();
+    void exeNetworkSettings();
+    void exePublicServerSelect();
+    void exeOpenKeyboardIP();
+    void exeOpenKeyboardPort();
+    void exeGameplaySettings();
+    void exePlayerCollisionSettings();
+    void exeGameModeSettings();
+    void exeGameModeConfig();
+    void exeGameModeSelect();
+    void exeTwistsSettings();
+    void exeSaveData();
 
-        static bool isCapAttackEnabled();
-        static bool isCapReceiveEnabled();
-        static bool isPuppetAttackEnabled();
-        static bool isPuppetReceiveEnabled();
+    // Static getters for settings
+    static bool isCapAttackEnabled();
+    static bool isCapReceiveEnabled();
+    static bool isPuppetAttackEnabled();
+    static bool isPuppetReceiveEnabled();
+    static bool isCostumeDoorsUnlocked();
+    static bool isLowLatencyEnabled();
 
-    private:
-        inline void subMenuStart();
-        inline void subMenuUpdate();
-        inline void subMenuRefresh();
-        inline void mainMenuRefresh();
+private:
+    // Menu helper methods
+    void subMenuStart();
+    void subMenuUpdate();
+    inline void subMenuRefresh();
+    void endSubMenu();
+    void endSubMenuToParent(SimpleLayoutMenu* parentMenu, CommonVerticalList* parentList);
+    void activateInput();
+    void deactivateInput();
 
-        static bool sCapAttackEnabled;
-        static bool sCapReceiveEnabled;
-        static bool sPuppetAttackEnabled;
-        static bool sPuppetReceiveEnabled;
+    // Update methods for menu options
+    void updateMainMenuOptions();
+    void updateNetworkSettingsOptions();
+    void updateGameplaySettingsOptions();
+    void updatePlayerCollisionOptions();
+    void updateGameModeSettingsOptions();
+    void updateTwistsOptions();
 
-        // Add these menu components
-        SimpleLayoutMenu* mToggleSensorsMenu;
-        CommonVerticalList* mToggleSensorsList;
-        sead::SafeArray<sead::WFixedSafeString<0x200>, 4>* mToggleSensorsOptions; // 4 options
+    // Static settings (shared across instances)
+    static bool sCapAttackEnabled;
+    static bool sCapReceiveEnabled;
+    static bool sPuppetAttackEnabled;
+    static bool sPuppetReceiveEnabled;
+    static bool sCostumeDoorsUnlocked;
+    static bool sLowLatencyEnabled;
 
-        al::MessageSystem* mMsgSystem      = nullptr;
-        FooterParts*       mFooterParts    = nullptr;
-        GameDataHolder*    mGameDataHolder = nullptr;
+    // Core systems
+    al::MessageSystem* mMsgSystem = nullptr;
+    FooterParts* mFooterParts = nullptr;
+    GameDataHolder* mGameDataHolder = nullptr;
+    InputSeparator* mInput = nullptr;
 
-        InputSeparator* mInput = nullptr;
+    // Current menu state
+    SimpleLayoutMenu* mCurrentMenu = nullptr;
+    CommonVerticalList* mCurrentList = nullptr;
+    bool mIsDecideConfig = false;
 
-        SimpleLayoutMenu*   mCurrentMenu = nullptr;
-        CommonVerticalList* mCurrentList = nullptr;
+    // Main Menu
+    SimpleLayoutMenu* mMainOptions = nullptr;
+    CommonVerticalList* mMainOptionsList = nullptr;
+    static constexpr int mMainMenuOptionsCount = 3;
+    sead::SafeArray<sead::WFixedSafeString<0x200>, mMainMenuOptionsCount>* mMainMenuOptions = nullptr;
 
-        // Root Page, contains buttons for gamemode config, and server ip address changing
-        SimpleLayoutMenu*   mMainOptions     = nullptr;
-        CommonVerticalList* mMainOptionsList = nullptr;
+    // Network Settings Menu
+    SimpleLayoutMenu* mNetworkMenu = nullptr;
+    CommonVerticalList* mNetworkList = nullptr;
+    sead::SafeArray<sead::WFixedSafeString<0x200>, 3>* mNetworkOptions = nullptr;
 
-        // Sub-Page of Mode config, used to select a gamemode for the client to use
-        SimpleLayoutMenu*   mModeSelect     = nullptr;
-        CommonVerticalList* mModeSelectList = nullptr;
+    // Public Server Selection Menu (now dynamic!)
+    SimpleLayoutMenu* mPublicServerMenu = nullptr;
+    CommonVerticalList* mPublicServerList = nullptr;
+    std::vector<PublicServer> mPublicServers;  // Dynamic server list
+    int mPublicServerCount = 0;
+    sead::WFixedSafeString<0x200>* mPublicServerOptions = nullptr;  // Dynamic array
 
-        // Sub-Pages for Mode configuration, has buttons for selecting current gamemode and configuring currently selected mode (if no mode is chosen, button will not do anything)
-        struct GameModeEntry {
-            GameModeConfigMenu* mMenu;
-            SimpleLayoutMenu*   mLayout = nullptr;
-            CommonVerticalList* mList   = nullptr;
-        };
-        sead::SafeArray<GameModeEntry, GameModeConfigMenuFactory::getMenuCount()> mGamemodeConfigMenus;
-        GameModeEntry* mGamemodeConfigMenu = nullptr;
+    // Gameplay Settings Menu
+    SimpleLayoutMenu* mGameplayMenu = nullptr;
+    CommonVerticalList* mGameplayList = nullptr;
+    sead::SafeArray<sead::WFixedSafeString<0x200>, 4>* mGameplayOptions = nullptr;
 
-        SimpleLayoutMenu* mToggleTwistsMenu;
-CommonVerticalList* mToggleTwistsList;
-sead::SafeArray<sead::WFixedSafeString<0x200>, 2>* mToggleTwistsOptions; // 1 twist option (Cappy)
+    // Player Collision Settings Menu (submenu of Gameplay)
+    SimpleLayoutMenu* mPlayerCollisionMenu = nullptr;
+    CommonVerticalList* mPlayerCollisionList = nullptr;
+    sead::SafeArray<sead::WFixedSafeString<0x200>, 4>* mPlayerCollisionOptions = nullptr;
 
-        inline void activateInput();
-        inline void deactivateInput();
+    // Game Mode Settings Menu
+    SimpleLayoutMenu* mGameModeSettingsMenu = nullptr;
+    CommonVerticalList* mGameModeSettingsList = nullptr;
+    sead::SafeArray<sead::WFixedSafeString<0x200>, 3>* mGameModeSettingsOptions = nullptr;
 
-        // Main Menu Options - Updated count
-        static constexpr int mMainMenuOptionsCount = 8;
-        sead::SafeArray<sead::WFixedSafeString<0x200>, mMainMenuOptionsCount>* mMainMenuOptions = nullptr;
-        const sead::WFixedSafeString<0x200>* getMainMenuOptions();
+    // Game Mode Selection Menu
+    SimpleLayoutMenu* mModeSelect = nullptr;
+    CommonVerticalList* mModeSelectList = nullptr;
 
-        bool mIsDecideConfig = false;
+    // Game Mode Configuration Menus
+    struct GameModeEntry {
+        GameModeConfigMenu* mMenu;
+        SimpleLayoutMenu* mLayout = nullptr;
+        CommonVerticalList* mList = nullptr;
+    };
+    sead::SafeArray<GameModeEntry, GameModeConfigMenuFactory::getMenuCount()> mGamemodeConfigMenus;
+    GameModeEntry* mGamemodeConfigMenu = nullptr;
+
+    // Twists Settings Menu (now submenu of Game Mode Settings)
+    SimpleLayoutMenu* mTwistsMenu = nullptr;
+    CommonVerticalList* mTwistsList = nullptr;
+    sead::SafeArray<sead::WFixedSafeString<0x200>, 3>* mTwistsOptions = nullptr;
 };
 
 namespace {
     NERVE_HEADER(StageSceneStateServerConfig, MainMenu)
+    NERVE_HEADER(StageSceneStateServerConfig, NetworkSettings)
+    NERVE_HEADER(StageSceneStateServerConfig, PublicServerSelect)
     NERVE_HEADER(StageSceneStateServerConfig, OpenKeyboardIP)
     NERVE_HEADER(StageSceneStateServerConfig, OpenKeyboardPort)
-    NERVE_HEADER(StageSceneStateServerConfig, HideServer)
-    NERVE_HEADER(StageSceneStateServerConfig, ToggleMusic)
-    NERVE_HEADER(StageSceneStateServerConfig, GamemodeConfig)
-    NERVE_HEADER(StageSceneStateServerConfig, GamemodeSelect)
-    NERVE_HEADER(StageSceneStateServerConfig, ToggleSensors)
-    NERVE_HEADER(StageSceneStateServerConfig, ToggleTwists)
+    NERVE_HEADER(StageSceneStateServerConfig, GameplaySettings)
+    NERVE_HEADER(StageSceneStateServerConfig, PlayerCollisionSettings)
+    NERVE_HEADER(StageSceneStateServerConfig, GameModeSettings)
+    NERVE_HEADER(StageSceneStateServerConfig, GameModeConfig)
+    NERVE_HEADER(StageSceneStateServerConfig, GameModeSelect)
+    NERVE_HEADER(StageSceneStateServerConfig, TwistsSettings)
     NERVE_HEADER(StageSceneStateServerConfig, SaveData)
 }

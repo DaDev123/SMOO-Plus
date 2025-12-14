@@ -2,38 +2,50 @@
 
 #include "al/layout/LayoutActor.h"
 #include "al/layout/LayoutInitInfo.h"
+#include "al/wipe/WipeSimple.h"
+
+namespace al {
+    class LayoutInitInfo;
+}
 
 class WorldResourceLoader;
+class HakoniwaSequence;
 
+/**
+ * Custom loading screen for speedboot functionality
+ * Displays kingdom name, loading progress, and animated UI elements
+ */
 class SpeedbootLoad : public al::LayoutActor {
 public:
-    SpeedbootLoad(
-                WorldResourceLoader* resourceLoader,
-                const al::LayoutInitInfo& initInfo,
-                float autoCloseAfter
-            );
+    SpeedbootLoad(WorldResourceLoader* resourceLoader, 
+                  const al::LayoutInitInfo& initInfo, 
+                  HakoniwaSequence* sequence);
 
+    // Nerve execution functions
     void exeAppear();
     void exeWait();
     void exeDecrease();
     void exeEnd();
 
-    float mProgression = 0.f;
-    float mRotTime = 0.f;
-
 private:
+    // Helper functions
+    const char* getStageName() const;
+    const char16_t* getKingdomName(const char* stageName) const;
+    bool isKnownStage(const char* stageName) const;
+    
+    void updateProgressBar();
+    void updateUIElements();
+    void updateTextElements();
+
+    // Resources
     WorldResourceLoader* worldResourceLoader;
+    HakoniwaSequence* mSequence;
+    al::WipeSimple* wipe;
+    al::WipeSimple* wipeSkip;
 
-    // Dot animation (used for loading and connecting)
-    float mDotTimer = 0.0f;
-    int mLoadingDotState = 0;
-    int mConnectingDotState = 0;
-
-    // Connection state
-    bool mHasConnected = false;
-    float mConnectionDisplayTimer = 0.0f;
-
-    // Movement after connection
-    float mMoveTimer = 0.0f;
-    bool mHasStartedMove = false;
+    // State
+    f32 mProgression = 0.0f;
+    f32 mRotTime = 0.0f;
+    f32 mFallbackTimer = 0.0f;
+    bool mUsingFallback = false;
 };

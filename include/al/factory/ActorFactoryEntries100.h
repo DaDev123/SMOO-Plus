@@ -70,9 +70,9 @@ namespace al
 
 __attribute((used)) static al::NameToCreator<al::createActor> actorEntries[] = {
     // CUSTOM ACTOR ENTRIES HERE
-    {"FreezePlayerBlock", &al::createCustomActor<FreezePlayerBlock>},
     {"PuppetActor", &al::createCustomActor<PuppetActor>},
     {"PuppetHackActor", &al::createCustomActor<PuppetHackActor>},
+    {"FreezePlayerBlock", &al::createCustomActor<FreezePlayerBlock>},
     // VANILLA ACTOR ENTRIES
     {"AchievementNpc", &al::createActorFunction<class AchievementNpc>},
     {"AirBubble", &al::createActorFunction<class AirBubble>},

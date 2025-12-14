@@ -12,8 +12,6 @@
 #include <cstdio>
 #include <cstring>
 
-#define curGamemodeID 1
-
 SardineIcon::SardineIcon(const char* name, const al::LayoutInitInfo& initInfo)
     : al::LayoutActor(name)
 {
@@ -69,7 +67,8 @@ void SardineIcon::exeAppear()
     }
 }
 
-void SardineIcon::exeWait() {
+void SardineIcon::exeWait()
+{
     if (al::isFirstStep(this)) {
         al::startAction(this, "Wait", 0);
     }
@@ -77,73 +76,42 @@ void SardineIcon::exeWait() {
     GameTime& curTime = mInfo->mHidingTime;
 
     if (curTime.mHours > 0) {
-        al::setPaneStringFormat(this, "TxtCounter", "%01d:%02d:%02d", curTime.mHours, curTime.mMinutes, curTime.mSeconds);
+        al::setPaneStringFormat(this, "TxtCounter", "%01d:%02d:%02d", curTime.mHours, curTime.mMinutes,
+            curTime.mSeconds);
     } else {
-        al::setPaneStringFormat(this, "TxtCounter", "%02d:%02d", curTime.mMinutes, curTime.mSeconds);
+        al::setPaneStringFormat(this, "TxtCounter", "%02d:%02d", curTime.mMinutes,
+            curTime.mSeconds);
     }
 
     int playerCount = Client::getMaxPlayerCount();
 
     if (playerCount > 0) {
-        char playerNameBuf[0x200] = {0};
-        sead::BufferedSafeStringBase<char> playerList = sead::BufferedSafeStringBase<char>(playerNameBuf, sizeof(playerNameBuf));
 
-        // Add current player first
-        if (mInfo->mIsIt || GameModeManager::instance()->isModeAndActive(GameMode::SARDINE)) {
-            playerList.appendWithFormat("%s %s\n", mInfo->mIsIt ? "@" : "©", Client::instance()->getClientName());
-        }
+        char playerNameBuf[0x100] = {0}; // max of 16 player names if player name size is 0x10
 
-        // IT players (sardines) then pack
-        for (int i = 0; i <= 1; i++) {
-            bool isIt = i == 0;
-            // Add players to the list that are in the same game mode
-            for (int j = 0; j < playerCount; j++) {
-                PuppetInfo* curPuppet = Client::getPuppetInfo(j);
-                if (!curPuppet || !curPuppet->isConnected)
-                    continue;
+        sead::BufferedSafeStringBase<char> playerList =
+            sead::BufferedSafeStringBase<char>(playerNameBuf, 0x200);
+        
+        // Add your own name to the list at the top
+        playerList.appendWithFormat("%s %s\n", mInfo->mIsIt ? "@" : "©", Client::instance()->getClientName());
 
-                if (curPuppet->gameMode != curGamemodeID)
-                    continue;
-
-                if (curPuppet->isIt != isIt)
-                    continue;
-
+        // Add all it players to list
+        for(int i = 0; i < playerCount; i++){
+            PuppetInfo* curPuppet = Client::getPuppetInfo(i);
+            if (curPuppet && curPuppet->isConnected && curPuppet->isIt)
                 playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "@" : "©", curPuppet->puppetName);
-            }
         }
 
-        // Add some spacing before non-mode players
-        bool hasNonModePlayers = false;
-        for (int i = 0; i < playerCount; i++) {
+        // Add not it players to list
+        for(int i = 0; i < playerCount; i++){
             PuppetInfo* curPuppet = Client::getPuppetInfo(i);
-            if (!curPuppet || !curPuppet->isConnected)
-                continue;
-
-            if (curPuppet->gameMode != curGamemodeID) {
-                hasNonModePlayers = true;
-                break;
-            }
+            if (curPuppet && curPuppet->isConnected && !curPuppet->isIt)
+                playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "@" : "©", curPuppet->puppetName);
         }
-
-        if (hasNonModePlayers) {
-            playerList.appendWithFormat("\n"); // Add blank line for spacing
-        }
-
-        // add players not in the mode
-        for (int i = 0; i < playerCount; i++) {
-            PuppetInfo* curPuppet = Client::getPuppetInfo(i);
-            if (!curPuppet || !curPuppet->isConnected)
-                continue;
-
-            if (curPuppet->gameMode != curGamemodeID) {
-                playerList.appendWithFormat("   %s\n", curPuppet->puppetName); // no icon, indented
-            }
-        }
-
+        
         al::setPaneStringFormat(this, "TxtPlayerList", playerList.cstr());
     }
 }
-
 
 void SardineIcon::exeEnd()
 {

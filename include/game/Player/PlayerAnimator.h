@@ -10,7 +10,7 @@ class PlayerAnimator {
         void startSubAnim(const sead::SafeString &animName);
         void startSubAnimOnlyAir(const sead::SafeString &animName);
         void startUpperBodyAnimAndHeadVisKeep(const sead::SafeString &animName);
-        void startAnimDead(void); // chooses one of the 5 death animations and starts that animation
+        void startAnimDead(void);
         void endSubAnim(void);
 
         void updateAnimFrame(void);
@@ -39,12 +39,14 @@ class PlayerAnimator {
         void setPartsAnimRate(float, char const*);
         void setPartsAnimFrame(float, char const*);
 
-
         PlayerModelHolder *mModelHolder; // 0x0
         al::LiveActor *mPlayerDeco; // 0x8
         void *unkPtr; // 0x10
         PlayerAnimFrameCtrl *mAnimFrameCtrl; // 0x18
-        sead::SafeString curAnim;  // 0x20
-        unsigned char padding_78[0x78 - 0x30];
-        sead::SafeString curSubAnim; //0x78
+        sead::FixedSafeString<64> curAnim;  // 0x20 (64 bytes = 0x40)
+        sead::FixedSafeString<64> curSubAnim; // 0x60 (64 bytes = 0x40)
+        sead::FixedSafeString<64> curUpperBodyAnim; // 0xA0 (64 bytes = 0x40)
+        sead::FixedSafeString<64> _E0; // 0xE0 (unknown string)
+        unsigned char padding[0x1A2 - 0x120]; // 0x120 to 0x1A2
+        bool mIsSubAnimPlaying; // 0x1A2
 };

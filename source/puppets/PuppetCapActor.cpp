@@ -1,4 +1,5 @@
 #include "actors/PuppetCapActor.h"
+#include "game/StageScene/StageSceneStateServerConfig.hpp"
 #include "al/sensor/HitSensor.h"
 #include "al/util.hpp"
 #include "al/util/MathUtil.h"
@@ -6,7 +7,6 @@
 #include "math/seadVector.h"
 #include "rs/util/SensorUtil.h"
 #include "al/util/SensorUtil.h"
-#include "game/StageScene/StageSceneStateServerConfig.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 

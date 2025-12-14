@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string_view>
-#include <array>
+#include <string>
+#include <cstring>
 #include "types.h"
 
 #include "sead/math/seadVector.h"
@@ -24,7 +24,7 @@ void logQuat(const char *quatName, sead::Quatf quat);
 
 sead::Vector3f QuatToEuler(sead::Quatf *quat);
 
-float vecMagnitude(sead::Vector3f const& input);
+float vecMagnitude(sead::Vector3f const &input);
 float vecDistance(sead::Vector3f const& a, sead::Vector3f const& b);
 float vecDistanceSq(sead::Vector3f const& a, sead::Vector3f const& b);
 
@@ -35,11 +35,10 @@ bool isInCostumeList(const char *costumeName);
 const char *tryGetPuppetCapName(PuppetInfo *info);
 const char* tryGetPuppetBodyName(PuppetInfo* info);
 
+const char* tryConvertName(const char* className);
+
 void killMainPlayer(al::LiveActor* actor);
 void killMainPlayer(PlayerActorHakoniwa* mainPlayer);
-
-const char* tryConvertName(const char* className);
-const char* convertCaptureHackName(const char* hackName);
 
 __attribute__((used)) static const char* costumeNames[] = {
     "Mario",
@@ -84,23 +83,7 @@ __attribute__((used)) static const char* costumeNames[] = {
     "MarioSwimwear",
     "MarioTailCoat",
     "MarioTuxedo",
-    "MarioUnderwear",
-    "MarioTanooki",
-    "MarioCloud",
-    "MarioRedStar",
-    "MarioWooper"/*,
-    
-    //Kingdom Expansion
-    "MarioHue1",
-    "MarioHue2",
-    "MarioLinkx1",
-    "MarioLinkx2",
-    "MarioDalmatianDog",
-    "MarioShibaDog"
-    */
-
-    //More costumes in the future
-
+    "MarioUnderwear"
 };
 
 struct HackActorName {
@@ -123,7 +106,6 @@ __attribute__((used)) static HackActorName classHackNames[] = {
     {"TRexSleep", "TRex"},
     {"TRexPatrol", "TRex"},
     {"Koopa","KoopaHack"},
-    {"WanwanBig", "Wanwan"},
     {"PukupukuSnow", "Pukupuku"},  // Maps PukupukuSnow to same hack name as Pukupuku for syncing
 };
 
@@ -148,6 +130,12 @@ public:
     */
     static float SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta,
                             float closingSpeed, float maxAngularSpeed);
+
+    // Ultra-smooth exponential version (recommended for best visual quality)
+    static float SmoothMove_LowLatency(Transform moveTransform, Transform targetTransform, float timeDelta,
+                                       float closingSpeed, float maxAngularSpeed);
+    static float SmoothMove_RegularLatency(Transform moveTransform, Transform targetTransform, float timeDelta,
+                                       float closingSpeed, float maxAngularSpeed);
 
     constexpr static const float k_MinSmoothSpeed = 0.1f;
     constexpr static const float k_TargetCatchupTime = 0.2f;

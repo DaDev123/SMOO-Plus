@@ -16,8 +16,6 @@ struct FreezeTagInfo : GameModeInfoBase {
 
     bool mIsRound = false;
     int mFreezeCount = 0;
-    nn::account::Uid mHostUserId;
-
     FreezeTagScore mPlayerTagScore;
     GameTime mRoundTimer;
 
@@ -28,14 +26,4 @@ struct FreezeTagInfo : GameModeInfoBase {
     bool mIsHostMode = false;
 
     bool mIsDebugMode = false;
-
-    inline bool     isHost()           const { return  mIsHostMode;                              }
-    inline bool     isRound()          const { return  mIsRound;                                 }
-    inline bool     isPlayerRunner()   const { return  mIsPlayerRunner;                          }
-    inline bool     isPlayerChaser()   const { return !mIsPlayerRunner;                          }
-    inline bool     isPlayerFrozen()   const { return  mIsPlayerFreeze;                          }
-    inline bool     isPlayerUnfrozen() const { return !mIsPlayerFreeze;                          }
-    inline int      runners()          const { return  mRunnerPlayers.size() + isPlayerRunner(); }
-    inline int      chasers()          const { return  mChaserPlayers.size() + isPlayerChaser(); }
-    inline uint16_t getScore()         const { return  mPlayerTagScore.mScore;                   }
 };

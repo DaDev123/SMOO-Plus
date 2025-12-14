@@ -44,14 +44,3 @@ void drawBackground(agl::DrawContext *context) {
     agl::utl::DevTools::drawTriangleImm(context, p3, p4, p2, c);
 
 }
-
-bool isAuthorizedDebugUser(const char* username) {
-    if (!username) return false;
-    
-    for (int i = 0; i < AUTHORIZED_DEBUG_USERS_COUNT; i++) {
-        if (strcmp(username, AUTHORIZED_DEBUG_USERS[i]) == 0) {
-            return true;
-        }
-    }
-    return false;
-}

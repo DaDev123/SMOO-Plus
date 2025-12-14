@@ -185,8 +185,7 @@ al::PlayerHolder* createTicketHook(StageScene* curScene) {
     }
 }
 
-return al::getScenePlayerHolder(curScene);
-
+    return al::getScenePlayerHolder(curScene);
 }
 
 bool borderPullBackHook(WorldEndBorderKeeper* thisPtr) {

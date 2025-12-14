@@ -1,29 +1,25 @@
 #pragma once
 
+#include "Keyboard.hpp"
+#include "sead/container/seadSafeArray.h"
 #include "server/gamemode/GameModeConfigMenu.hpp"
-#include "game/Layouts/CommonVerticalList.h"
-#include "server/gamemode/GameModeBase.hpp"
-#include "TwistsConfig.hpp"
 
-class Keyboard; // Forward declaration
+// Forward declaration
+struct FreezeTagInfo;
 
-class FreezeTagConfigMenu : public GameModeConfigMenu {
-public:
-    FreezeTagConfigMenu();
-    
-    void initMenu(const al::LayoutInitInfo &initInfo) override;
-    const sead::WFixedSafeString<0x200> *getStringData() override;
-    bool updateMenu(int selectIndex) override;
+class FreezeTagConfigMenu : public GameModeConfigMenu, public sead::IDisposer {
+    public:
+        FreezeTagConfigMenu();
+        ~FreezeTagConfigMenu() override = default;
 
-    const int getMenuSize() override; // Remove inline implementation
+        const sead::WFixedSafeString<0x200>* getStringData() override;
+        GameModeConfigMenu::UpdateAction updateMenu(int selectIndex) override;
 
-private:
-    static constexpr int mMaxItemCount = 3; // Maximum possible items
-    sead::SafeArray<sead::WFixedSafeString<0x200>, mMaxItemCount>* mConfigOptions;
-    
-    Keyboard* mScoreKeyboard;
-    Keyboard* mRoundKeyboard;
-    
-    void updateOptionsText();
-    int getCurrentMenuSize(); // Helper method to get current menu size
+        const int getMenuSize() override { return 2; }  // Fixed size for now
+
+    private:
+        static constexpr int mItemCount = 2;
+        sead::SafeArray<sead::WFixedSafeString<0x200>, mItemCount> mItems;
+        Keyboard* mScoreKeyboard = nullptr;
+        Keyboard* mRoundKeyboard = nullptr;
 };

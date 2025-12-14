@@ -53,10 +53,29 @@ void PuppetHackActor::control() {
 }
 
 void PuppetHackActor::startAction(const char *actName) {
-    if(al::tryStartActionIfNotPlaying(this, actName)) {
-        const char *curActName = al::getActionName(this);
-        if(curActName) {
-            if(al::isSklAnimExist(this, curActName)) {
+    if(!actName || actName[0] == '\0') {
+        return;
+    }
+
+    // Get the currently playing action
+    const char *curActName = al::getActionName(this);
+    
+    // Check if we need to start a new action or restart the current one
+    bool needsStart = false;
+    
+    if(!curActName || !al::isEqualString(curActName, actName)) {
+        // Different action - definitely need to start it
+        needsStart = true;
+    } else if(al::isActionEnd(this)) {
+        // Same action but it's ended - need to restart for looping
+        needsStart = true;
+    }
+    
+    if(needsStart) {
+        // Try to start the action (will restart even if already playing)
+        if(al::tryStartAction(this, actName)) {
+            // Clear interpolation for clean animation start
+            if(al::isSklAnimExist(this, actName)) {
                 al::clearSklAnimInterpole(this);
             }
         }

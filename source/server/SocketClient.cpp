@@ -38,14 +38,14 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
     while (nn::nifm::IsNetworkRequestOnHold()) { }
 
     // emulators (ryujinx) make this return false always, so skip it during init
-    #ifndef EMU
-    if (!nn::nifm::IsNetworkAvailable()) {
-        Logger::log("Network Unavailable.\n");
-        this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
-        this->socket_errno = nn::socket::GetLastErrno();
-        return -1;
-    }
-    #endif
+    //#ifndef EMU
+    //if (!nn::nifm::IsNetworkAvailable()) {
+    //    Logger::log("Network Unavailable.\n");
+    //    this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+    //    this->socket_errno = nn::socket::GetLastErrno();
+    //    return -1;
+    //}
+    //#endif
 
     if ((this->socket_log_socket = nn::socket::Socket(2, 1, 6)) < 0) {
         Logger::log("Socket Unavailable.\n");

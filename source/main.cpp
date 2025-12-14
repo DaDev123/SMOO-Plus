@@ -1,56 +1,73 @@
+/**
+ * @file main.cpp
+ * @brief Core game hooks and main functionality for the multiplayer client
+ */
+
 #include "main.hpp"
+
+// ===== SYSTEM INCLUDES =====
 #include <cmath>
 #include <math.h>
+
+// ===== AL/GAME ENGINE INCLUDES =====
 #include "al/execute/ExecuteOrder.h"
 #include "al/execute/ExecuteTable.h"
 #include "al/execute/ExecuteTableHolderDraw.h"
-#include "al/util/GraphicsUtil.h"
-#include "container/seadSafeArray.h"
-#include "game/GameData/GameDataHolderAccessor.h"
-#include "game/Player/PlayerActorBase.h"
-#include "game/Player/PlayerActorHakoniwa.h"
-#include "game/Player/PlayerHackKeeper.h"
-#include "heap/seadHeap.h"
-#include "math/seadVector.h"
-#include "server/Client.hpp"
-#include "puppets/PuppetInfo.h"
-#include "actors/PuppetActor.h"
 #include "al/LiveActor/LiveActor.h"
 #include "al/util.hpp"
 #include "al/util/AudioUtil.h"
 #include "al/util/CameraUtil.h"
 #include "al/util/ControllerUtil.h"
+#include "al/util/GraphicsUtil.h"
 #include "al/util/LiveActorUtil.h"
 #include "al/util/NerveUtil.h"
-#include "debugMenu.hpp"
+
+// ===== GAME INCLUDES =====
 #include "game/GameData/GameDataFunction.h"
+#include "game/GameData/GameDataHolderAccessor.h"
 #include "game/HakoniwaSequence/HakoniwaSequence.h"
+#include "game/Player/PlayerActorBase.h"
+#include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Player/PlayerFunction.h"
+#include "game/Player/PlayerHackKeeper.h"
 #include "game/StageScene/StageScene.h"
+
+// ===== SEAD INCLUDES =====
+#include "container/seadSafeArray.h"
+#include "heap/seadHeap.h"
+#include "math/seadVector.h"
+
+// ===== PROJECT INCLUDES =====
+#include "actors/PuppetActor.h"
+#include "debugMenu.hpp"
 #include "helpers.hpp"
 #include "layouts/HideAndSeekIcon.h"
 #include "logger.hpp"
+#include "puppets/PuppetInfo.h"
 #include "rs/util.hpp"
+#include "server/Client.hpp"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeBase.hpp"
-#include "server/hns/HideAndSeekMode.hpp"
-#include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
-#include "speedboot/SpeedbootLoad.hpp"
-#include "layouts/CustomMsg.h"
+#include "server/gamemode/GameModeFactory.hpp"
+#include "server/hns/HideAndSeekMode.hpp"
 
-#include "packets/Extras.h"
-#include "packets/Extras.hpp"
-#include "server/ExtrasCode.hpp"
-
+// ===== GLOBAL VARIABLES =====
 static int pInfSendTimer = 0;
 static int gameInfSendTimer = 0;
+static int debugPuppetIndex = 0;
+static int debugCaptureIndex = 0;
+static int pageIndex = 0;
+static const int maxPages = 3;
 
-bool gInfiniteCapBounce = false;
-bool gNoclip = false;
+al::SequenceInitInfo* initInfo;
+
+// ===== PLAYER INFO UPDATE FUNCTION =====
 
 void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru) {
-    if (pInfSendTimer >= 3) {
+    
+    if (pInfSendTimer >= 1) {
+
         Client::sendPlayerInfPacket(playerBase, isYukimaru);
 
         if (!isYukimaru) {
@@ -62,18 +79,22 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
         pInfSendTimer = 0;
     }
 
-        handleNoclip(static_cast<PlayerActorHakoniwa*>(playerBase), gNoclip, isYukimaru);
-        // handleInfiniteCapBounce(static_cast<PlayerActorHakoniwa*>(playerBase), gInfiniteCapBounce);
-         
+    if (gameInfSendTimer >= 60) {
+
+        if (isYukimaru) {
+            Client::sendGameInfPacket(holder);
+        } else {
+            Client::sendGameInfPacket((PlayerActorHakoniwa*)playerBase, holder);
+        }
+        
+        gameInfSendTimer = 0;
+    }
+
+    pInfSendTimer++;
+    gameInfSendTimer++;
 }
 
-// ------------- Hooks -------------
-
-int debugPuppetIndex = 0;
-int debugCaptureIndex = 0;
-static int pageIndex = 0;
-
-static const int maxPages = 3;
+// ===== MAIN DRAW HOOK =====
 
 void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead::DrawContext* drawContext) {
     GameModeManager* gmm  = GameModeManager::instance();
@@ -169,11 +190,7 @@ if (clientHeap) {
         socket->getRecvMaxCount()
     );
 
-#if EMU
-    gTextWriter->printf("Mod version: %s for Emulators\n", TOSTRING(BUILDVERSTR));
-#else
-    gTextWriter->printf("Mod version: %s for Switch\n", TOSTRING(BUILDVERSTR));
-#endif
+    gTextWriter->printf("Mod version: %s\n", TOSTRING(BUILDVERSTR));
 
     // Only show detailed debug info for authorized users
     if (!isAuthorizedUser) {
@@ -246,15 +263,27 @@ if (clientHeap) {
                     if (curModel && curPupInfo) {
                         gTextWriter->printf("Player Name: %s\n",       curPupInfo->puppetName);
                         gTextWriter->printf("Connection Status: %s\n", curPupInfo->isConnected ? "Online" : "Offline");
-                        gTextWriter->printf("Game mode: %i | %s\n",    curPupInfo->gameMode, GameModeFactory::getModeName(curPupInfo->gameMode));
                         gTextWriter->printf("Is in same Stage: %s\n",  curPupInfo->isInSameStage ? "Yes" : "No");
                         gTextWriter->printf("Stage: %s\n",             curPupInfo->stageName);
                         gTextWriter->printf("Scenario: %u\n",          curPupInfo->scenarioNo);
                         gTextWriter->printf("Costume: H: %s B: %s\n",  curPupInfo->costumeHead, curPupInfo->costumeBody);
                         gTextWriter->printf("Capture: %s\n",           curPupInfo->isCaptured ? curPupInfo->curHack : "");
                         gTextWriter->printf("Animation:  %d  %s\n",    curPupInfo->curAnim, curPupInfo->curAnimStr);
-                        if (!curPupInfo->isCaptured) {
-                            gTextWriter->printf("Model Animation: %s\n", al::getActionName(curModel));
+                        
+                        // NEW: Show what's actually playing on the model
+                        const char* modelAnim = al::getActionName(curModel);
+                        gTextWriter->printf("Model Animation: %s\n", modelAnim ? modelAnim : "none");
+                        
+                        // NEW: Show animation state
+                        if (curModel->mActorActionKeeper) {
+                            gTextWriter->printf("Is Action Playing: %s\n", 
+                                al::isActionPlaying(curModel, curPupInfo->curAnimStr) ? "Yes" : "No");
+                            gTextWriter->printf("Is Action End: %s\n", 
+                                al::isActionEnd(curModel) ? "Yes" : "No");
+                            
+                            // Show if it's a capture model
+                            gTextWriter->printf("Is Capture Model: %s\n", 
+                                curPupInfo->isCaptured ? "Yes" : "No");
                         }
                     }
                 }
@@ -266,7 +295,7 @@ if (clientHeap) {
                 PlayerHackKeeper* hackKeeper = playerBase->getPlayerHackKeeper();
 
                 if (hackKeeper) {
-                    PlayerActorHakoniwa* p1 = (PlayerActorHakoniwa*)playerBase; // its safe to assume that we're using a playeractorhakoniwa if the hack keeper isnt null
+                    PlayerActorHakoniwa* p1 = (PlayerActorHakoniwa*)playerBase;
 
                     if (hackKeeper->currentHackActor) {
                         al::LiveActor* curHack = hackKeeper->currentHackActor;
@@ -280,7 +309,18 @@ if (clientHeap) {
                         gTextWriter->printf("Calc Hack Rot: %.3f %.3f %.3f %.3f\n", calcRot.x, calcRot.y, calcRot.z, calcRot.w);
                     } else {
                         gTextWriter->printf("Cur Action: %s\n", p1->mPlayerAnimator->mAnimFrameCtrl->getActionName());
-                        gTextWriter->printf("Cur Sub Action: %s\n", p1->mPlayerAnimator->curSubAnim.cstr());
+                        gTextWriter->printf("Cur Anim: %s\n", p1->mPlayerAnimator->curAnim.cstr());
+                        gTextWriter->printf("Cur Sub Anim: %s\n", p1->mPlayerAnimator->curSubAnim.cstr());
+                        gTextWriter->printf("Anim Frame: %.2f\n", p1->mPlayerAnimator->getAnimFrame());
+                        gTextWriter->printf("Anim Frame Max: %.2f\n", p1->mPlayerAnimator->getAnimFrameMax());
+                        gTextWriter->printf("Anim Frame Rate: %.2f\n", p1->mPlayerAnimator->getAnimFrameRate());
+                        gTextWriter->printf("Sub Anim Frame: %.2f\n", p1->mPlayerAnimator->getSubAnimFrame());
+                        gTextWriter->printf("Sub Anim Frame Max: %.2f\n", p1->mPlayerAnimator->getSubAnimFrameMax());
+                        gTextWriter->printf("Is Sub Anim End: %s\n", BTOC(p1->mPlayerAnimator->isSubAnimEnd()));
+                        gTextWriter->printf("Is Upper Body Anim Attached: %s\n", BTOC(p1->mPlayerAnimator->isUpperBodyAnimAttached()));
+                        gTextWriter->printf("Blend Weight [0]: %.2f\n", p1->mPlayerAnimator->getBlendWeight(0));
+                        gTextWriter->printf("Blend Weight [1]: %.2f\n", p1->mPlayerAnimator->getBlendWeight(1));
+                        gTextWriter->printf("Blend Weight [2]: %.2f\n", p1->mPlayerAnimator->getBlendWeight(2));
                         gTextWriter->printf("Is Cappy Flying? %s\n", BTOC(p1->mHackCap->isFlying()));
                         if (p1->mHackCap->isFlying()) {
                             gTextWriter->printf("Cappy Action: %s\n", al::getActionName(p1->mHackCap));
@@ -308,11 +348,6 @@ if (clientHeap) {
         }
 
         renderer->begin();
-
-        // sead::Matrix34f mat = sead::Matrix34f::ident;
-        // mat.setBase(3, sead::Vector3f::zero); // Sets the position of the matrix.
-        //     For cubes, you need to put this at the location.
-        //     For spheres, you can leave this at 0 0 0 since you set it in its draw function.
         renderer->setModelMatrix(sead::Matrix34f::ident);
 
         if (curPuppet) {
@@ -332,6 +367,9 @@ if (clientHeap) {
     al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
 }
 
+
+// ===== SHINE PACKET FUNCTION =====
+
 void sendShinePacket(GameDataHolderAccessor thisPtr, Shine* curShine) {
 
     if (!curShine->isGot()) {
@@ -344,6 +382,8 @@ void sendShinePacket(GameDataHolderAccessor thisPtr, Shine* curShine) {
 
     GameDataFunction::setGotShine(thisPtr, curShine->curShineInfo);
 }
+
+// ===== STAGE INITIALIZATION HOOK =====
 
 void stageInitHook(al::ActorInitInfo *info, StageScene *curScene, al::PlacementInfo const *placement, al::LayoutInitInfo const *lytInfo, al::ActorFactory const *factory, al::SceneMsgCtrl *sceneMsgCtrl, al::GameDataHolderBase *dataHolder) {
 
@@ -362,17 +402,18 @@ void stageInitHook(al::ActorInitInfo *info, StageScene *curScene, al::PlacementI
     }
 
     Client::sendGameInfPacket(info->mActorSceneInfo.mSceneObjHolder);
-
     TwistsConfig::handleStageInit();
 
 }
+
+// ===== PLAYER MODEL SETUP =====
 
 PlayerCostumeInfo *setPlayerModel(al::LiveActor *player, const al::ActorInitInfo &initInfo, const char *bodyModel, const char *capModel, al::AudioKeeper *keeper, bool isCloset) {
     Client::sendCostumeInfPacket(bodyModel, capModel);
     return PlayerFunction::initMarioModelActor(player, initInfo, bodyModel, capModel, keeper, isCloset);
 }
 
-al::SequenceInitInfo* initInfo;
+// ===== CONSTRUCTION HOOK =====
 
 ulong constructHook() {  // hook for constructing anything we need to globally be accesible
 
@@ -388,6 +429,8 @@ ulong constructHook() {  // hook for constructing anything we need to globally b
     return 0x20;
 }
 
+// ===== THREAD INITIALIZATION =====
+
 bool threadInit(HakoniwaSequence *mainSeq) {  // hook for initializing client class
 
     al::LayoutInitInfo lytInfo = al::LayoutInitInfo();
@@ -398,6 +441,8 @@ bool threadInit(HakoniwaSequence *mainSeq) {  // hook for initializing client cl
 
     return GameDataFunction::isPlayDemoOpening(mainSeq->mGameDataHolder);
 }
+
+// ===== MAIN SEQUENCE HOOK =====
 
 bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
     StageScene* stageScene = (StageScene*)sequence->curScene;
@@ -461,39 +506,6 @@ bool hakoniwaSequenceHook(HakoniwaSequence* sequence) {
             GameModeManager::instance()->toggleActive();
         }
     }
-    //else if (al::isPadHoldR(-1)) {
-    //   if (al::isPadTriggerLeft(-1)) { // R + Left => Set custom text for CustomMsg
-    //       CustomMsg* customMsg = Client::instance()->getCustomMsg();
-    //       if (customMsg) {
-    //           // Set custom text - you can change this to whatever text you want
-    //           customMsg->setCustomText("This is my custom message!");
-    //       }
-    //   }
-    //   if (al::isPadTriggerUp(-1)) { // R + Up => Toggle CustomMsg layout
-    //       CustomMsg* customMsg = Client::instance()->getCustomMsg();
-    //       if (customMsg) {
-    //           if (customMsg->isActive()) {
-    //               customMsg->tryEnd(); // Hide it
-    //           } else {
-    //               customMsg->tryStart(); // Show it
-    //               customMsg->showHiding(); // Show with hiding status
-    //           }
-    //       }
-    //   }
-    //   if (al::isPadTriggerDown(-1)) { // R + Down => Toggle between hiding/seeking
-    //       CustomMsg* customMsg = Client::instance()->getCustomMsg();
-    //       if (customMsg && customMsg->isActive()) {
-    //           static bool showingHiding = true;
-    //           if (showingHiding) {
-    //               customMsg->showSeeking();
-    //           } else {
-    //               customMsg->showHiding();
-    //           }
-    //           showingHiding = !showingHiding;
-    //       }
-    //   }
-    //
-
     if (Client::isMusicDisabled()) {
         if (al::isPlayingBgm(stageScene)) {
             al::stopAllBgm(stageScene, 0);
@@ -508,6 +520,8 @@ return isFirstStep;
     return isFirstStep;
 
 }
+
+// ===== LOGGING HOOK =====
 
 void seadPrintHook(const char *fmt, ...)
 {

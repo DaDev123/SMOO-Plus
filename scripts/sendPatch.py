@@ -58,7 +58,7 @@ otherftp = FTP()
 print(f'Connecting to {consoleIP}... ', end='')
 ftp.connect(consoleIP, consolePort)
 print('logging into server...', end='')
-ftp.login('crafty','boss')
+ftp.login('amethyst','password')
 print('Connected!')
 
 if isNeedOtherSwitch:

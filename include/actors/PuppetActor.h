@@ -51,7 +51,7 @@ class PuppetActor : public al::LiveActor {
         void startAction(const char *actName);
         void hairControl();
 
-        void setBlendWeight(int index, float weight) { al::setSklAnimBlendWeight(getCurrentModel(), weight, index); };
+        void setBlendWeight(int index, float weight);
 
         bool isNeedBlending();
 
@@ -70,8 +70,6 @@ class PuppetActor : public al::LiveActor {
         void debugTeleportCapture(const sead::Vector3f& pos, int index);
 
         void emitJoinEffect();
-
-        void debugThrowCap();
 
         bool mIsDebug = false;
         

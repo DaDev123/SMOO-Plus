@@ -73,95 +73,11 @@ void FreezeTagMode::init(const GameModeInitInfo& info) {
     // Create hint arrow
     mHintArrow = new FreezeHintArrow("ChaserHintArrow");
     mHintArrow->init(*info.mActorInitInfo);
-
-    Client::sendGamemodePacket();
-}
-
-void FreezeTagMode::processPacket(Packet* _packet) {
-    FreezeTagPacket* packet     = (FreezeTagPacket*)_packet;
-    FreezeUpdateType updateType = packet->updateType();
-
-    /**
-     * Ignore legacy game mode packets for other game modes
-     *
-     * Legacy Freeze-Tag packets that we are interested in should have been automatically
-     * transformed from LEGACY to FREEZETAG by the logic in the gameMode() function.
-     */
-    if (packet->gameMode() == GameMode::NONE) {
-        return;
-    }
-
-    PuppetInfo* other = Client::findPuppetInfo(packet->mUserID, false);
-    if (!other) {
-        return;
-    }
-
-    if (updateType == FreezeUpdateType::PLAYER) {
-        tryScoreEvent(packet, other);
-
-        // When puppet transitioning from frozen to unfrozen, disable the fall off flag
-        if (other->ftIsFrozen() && !packet->isFreeze) {
-            other->isFreezeTagFallenOff = false;
-        }
-
-        other->isFreezeTagRunner = packet->isRunner;
-        other->isFreezeTagFreeze = packet->isFreeze;
-        other->freezeTagScore    = packet->score;
-    }
-
-    if (isRound()) {
-
-         if (updateType & FreezeUpdateType::ROUNDCANCEL && mInfo->mIsRound)
-        endRound(true); // Abort round early on receiving cancel packet
-
-        if (updateType == FreezeUpdateType::FALLOFF) {
-            other->isFreezeTagFallenOff = true;
-
-            if (isPlayerChaser()) {
-                mInfo->mPlayerTagScore.eventScoreFallOff();
-            }
-        }
-    } else if (updateType == FreezeUpdateType::ROUNDSTART) {
-        FreezeTagRoundStartPacket* roundStart = (FreezeTagRoundStartPacket*)packet;
-        startRound(al::clamp(roundStart->roundTime, u8(2), u8(60))); // Start round if round not already started
-    }
-}
-
-Packet* FreezeTagMode::createPacket() {
-    if (!isModeActive()) {
-        DisabledGameModeInf* packet = new DisabledGameModeInf(Client::getClientId());
-        packet->setUpdateType(0); // so that legacy freeze-tag clients don't wrongly interpret this as a round start
-        return packet;
-    }
-
-    if (mNextUpdateType == FreezeUpdateType::ROUNDSTART) {
-        FreezeTagRoundStartPacket* packet = new FreezeTagRoundStartPacket();
-        packet->mUserID   = Client::getClientId();
-        packet->roundTime = u8(mInfo->mRoundLength);
-        return packet;
-    }
-
-    if (mNextUpdateType == FreezeUpdateType::ROUNDCANCEL) {
-        FreezeTagRoundCancelPacket* packet = new FreezeTagRoundCancelPacket();
-        packet->mUserID       = Client::getClientId();
-        return packet;
-    }
-
-    FreezeTagPacket* packet = new FreezeTagPacket();
-    packet->mUserID  = Client::getClientId();
-    packet->isRunner = isPlayerRunner();
-    packet->isFreeze = isPlayerFrozen();
-    packet->score    = getScore();
-    packet->setUpdateType(mNextUpdateType);
-
-    return packet;
-
-    Client::sendGamemodePacket();
 }
 
 void FreezeTagMode::sendFreezePacket(FreezeUpdateType updateType) {
     mNextUpdateType = updateType;
-    Client::sendGamemodePacket();
+    Client::sendFreezeInfPacket();
 }
 
 void FreezeTagMode::begin() {
@@ -172,9 +88,8 @@ void FreezeTagMode::begin() {
     mPrevSpectateIndex = -2;
     mIsScoreEventsValid = true;
 
-    // if(mInfo->mIsRound)
-    //     mModeTimer->enableTimer();
-
+    if(mInfo->mIsRound)
+        mModeTimer->enableTimer();
     mModeTimer->disableControl();
     mModeTimer->setTimerDirection(false);
 
@@ -187,8 +102,6 @@ void FreezeTagMode::begin() {
     GameModeBase::begin();
 
     mCurScene->mSceneLayout->end();
-
-    Client::sendGamemodePacket();
 }
 
 
@@ -213,22 +126,18 @@ void FreezeTagMode::end() {
     }
 
     GameModeBase::end();
-
-    Client::sendGamemodePacket();
 }
 
 void FreezeTagMode::pause() {
     GameModeBase::pause();
 
     mModeLayout->tryEnd();
-    Client::sendGamemodePacket();
 }
 
 void FreezeTagMode::unpause() {
     GameModeBase::unpause();
 
     mModeLayout->appear();
-    Client::sendGamemodePacket();
 }
 
 void FreezeTagMode::update() {

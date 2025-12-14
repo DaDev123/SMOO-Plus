@@ -19,14 +19,3 @@ extern sead::TextWriter *gTextWriter;
 bool setupDebugMenu(agl::DrawContext* context, sead::Viewport* viewport);
 
 void drawBackground(agl::DrawContext *context);
-
-static const char* AUTHORIZED_DEBUG_USERS[] = {
-    "SrDev",
-    "Crafty",
-    "Amethyst",
-    "Sanae",
-    "KleinTimmi"
-};
-
-static const int AUTHORIZED_DEBUG_USERS_COUNT = sizeof(AUTHORIZED_DEBUG_USERS) / sizeof(AUTHORIZED_DEBUG_USERS[0]);
-bool isAuthorizedDebugUser(const char* username);

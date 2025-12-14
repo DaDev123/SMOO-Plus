@@ -6,7 +6,6 @@
 #include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
 #include "server/snh/SardineConfigMenu.hpp"
-#include "server/snh/SardinePacket.hpp"
 #include "layouts/SardineIcon.h"
 #include <math.h>
 
@@ -20,10 +19,6 @@ struct SardineInfo : GameModeInfoBase {
     bool mIsTetherSnap = false;
 
     GameTime mHidingTime;
-
-    
-    inline bool isPlayerAlone() const { return !mIsIt; }
-    inline bool isPlayerPack()  const { return  mIsIt; }
 };
 
 class SardineMode : public GameModeBase {
@@ -36,16 +31,9 @@ public:
     virtual void update() override;
     virtual void end() override;
 
-    void pause() override;
-    void unpause() override;
-
     bool isUseNormalUI() const override { return false; }
 
-    void processPacket(Packet* packet) override;
-    Packet* createPacket() override;
-
-            inline bool isPlayerAlone() const { return mInfo->isPlayerAlone(); }
-        inline bool isPlayerPack()  const { return mInfo->isPlayerPack();  }
+    bool isPlayerIt() const { return mInfo->mIsIt; };
 
     void setPlayerTagState(bool state) { mInfo->mIsIt = state; }
 
@@ -64,6 +52,4 @@ private:
     float pullDistanceMax = 2250.f;
     float pullDistanceMin = 1000.f;
     float pullPowerRate = 75.f;
-
-    void updateTagState(bool isIt);
 };
