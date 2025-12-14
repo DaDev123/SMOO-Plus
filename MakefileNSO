@@ -46,11 +46,12 @@ INCLUDES := include include/sead
 SOURCES		:=  \
 			source/sead/time  \
 			source/sead  \
+			source/BloodMoon  \
 			source/puppets  \
 			source/speedboot  \
 			source/server/hns  \
-                        source/server/snh  \
-                        source/server/freeze  \
+            source/server/snh  \
+            source/server/freeze  \
 			source/server/gamemode  \
 			source/server/gamemode/modifiers  \
 			source/server  \
