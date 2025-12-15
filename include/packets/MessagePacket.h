@@ -8,7 +8,7 @@ struct PACKED MessagePacket : Packet {
         mPacketSize = sizeof(MessagePacket) - sizeof(Packet);
     };
 
-    short senderId = 0;
-    short messageType = 0;
+    uint senderId = 0;        // Changed from short to uint (4 bytes)
+    int messageType = 0;      // Changed from short to int (4 bytes)
     char message[MESSAGESIZE] = {};
 };

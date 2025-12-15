@@ -1032,15 +1032,23 @@ void Client::updateMessages(MessagePacket* packet)
     {
         return;
     }
-    
+    bool foundEmpty = false;
     for (int i = 0; i < 3; i++)
     {
         if (sInstance->messages[i].isEmpty())
         {
-            messages[i].append(packet->message);
+            sInstance->messages[i].append(packet->message);
+            foundEmpty = true;
+            break;
         }
     }
-
+    if (!foundEmpty)
+    {
+        sInstance->messages[0] = sInstance->messages[1];
+        sInstance->messages[1] = sInstance->messages[2];
+        sInstance->messages[2].clear();
+        sInstance->messages[2].append(packet->message);
+    }
 }
 
 /**

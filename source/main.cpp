@@ -91,29 +91,24 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
         gameInfSendTimer = 0;
     }
 
-    if (chatUpdateTimer >= 300)
+    // In updatePlayerInfo function, replace the chat timer section:
+
+if (chatUpdateTimer >= 450)  
+{
+    // Shift messages up and clear the oldest
+    if (!Client::getMessage(0).isEmpty())
     {
-        if (!Client::getMessage(0).isEmpty())
-        {
-            Client::setMessage(0, "");
-        }
-        if (!Client::getMessage(1).isEmpty())
-        {
-            Client::setMessage(0, Client::getMessage(1).cstr());
-            Client::setMessage(1, "");
-        }
-        if (!Client::getMessage(2).isEmpty())
-        {
-            Client::setMessage(1, Client::getMessage(2).cstr());
-            Client::setMessage(2, "");
-        }
+        Client::setMessage(0, Client::getMessage(1).cstr());
+        Client::setMessage(1, Client::getMessage(2).cstr());
+        Client::setMessage(2, "");
         chatUpdateTimer = 0;
     }
-    else if (!Client::getMessage(0).isEmpty() || !Client::getMessage(1).isEmpty() ||
-        !Client::getMessage(2).isEmpty())
-    {
-        chatUpdateTimer++;
-    }
+}
+else if (!Client::getMessage(0).isEmpty() || !Client::getMessage(1).isEmpty() ||
+    !Client::getMessage(2).isEmpty())
+{
+    chatUpdateTimer++;
+}
 
     
     pInfSendTimer++;
@@ -149,26 +144,36 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
         renderer->setCamera(*cam);
         renderer->setProjection(*projection);
 
-        if (!(al::isEqualString(Client::getMessage(0), Client::getMessage(1)) &&
-              al::isEqualString(Client::getMessage(1), Client::getMessage(2)))) {
-            if (al::isEqualString(Client::getMessage(0), Client::getMessage(1)))
-                drawChatBackground((agl::DrawContext*)drawContext, 3.f);
-            else if (Client::getMessage(1).isEmpty())
-                drawChatBackground((agl::DrawContext*)drawContext, 2.f);
-            else
-                drawChatBackground((agl::DrawContext*)drawContext, 1.f);
+            int msgCount = 0;
+            for (int i = 0; i < 3; i++) {
+                if (!Client::getMessage(i).isEmpty()) msgCount++;
+            }
 
-            gTextWriter->beginDraw();
-            gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, (dispHeight * 7 / 10) + 60.f));
-            gTextWriter->setScaleFromFontHeight(15.f);
+            if (msgCount > 0) {
+                // Draw background
+                drawChatBackground((agl::DrawContext*)drawContext, (float)(4 - msgCount));
+                
+                gTextWriter->beginDraw();
+                gTextWriter->setScaleFromFontHeight(15.f);
+                
+                float baseY = (dispHeight * 7 / 10) + 95.f;
+                float lineHeight = 18.f;
+                
+                // Draw messages from oldest to newest (bottom to top)
+                for (int i = msgCount - 1; i >= 0; i--) {
+                    if (!Client::getMessage(i).isEmpty()) {
+                        float yPos = baseY - (lineHeight * (msgCount - 1 - i));
+                        gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, yPos));
+                        gTextWriter->printf("%s\n", Client::getMessage(i).cstr());
+                    }
+                }
+                
+                gTextWriter->endDraw();
+            }
 
-            gTextWriter->printf("%s\n", Client::getMessage(0).cstr());
-            gTextWriter->printf("%s\n", Client::getMessage(1).cstr());
-            gTextWriter->printf("%s\n", Client::getMessage(2).cstr());
+            al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
+            return;
         }
-        al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
-        return;
-    }
 
     Client*       client      = Client::instance();
     SocketClient* socket      = client->mSocket;
