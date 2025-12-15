@@ -134,7 +134,38 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
         Time::calcTime();  // this needs to be ran every frame, so running it here works
     }
 
+    al::Scene* curScene = curSequence->curScene;
+    int dispHeight = al::getLayoutDisplayHeight();
+    gTextWriter->mViewport = viewport;
+
+    gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 0.8f);
+
     if (!debugMode) {
+        sead::LookAtCamera* cam = al::getLookAtCamera(curScene, 0);
+        sead::Projection* projection = al::getProjectionSead(curScene, 0);
+
+        sead::PrimitiveRenderer* renderer = sead::PrimitiveRenderer::instance();
+        renderer->setDrawContext(drawContext);
+        renderer->setCamera(*cam);
+        renderer->setProjection(*projection);
+
+        if (!(Client::getMessage(0) == Client::getMessage(1) &&
+              Client::getMessage(1) == Client::getMessage(2))) {
+            if (Client::getMessage(0) == Client::getMessage(1))
+                drawChatBackground((agl::DrawContext*)drawContext, 3.f);
+            else if (Client::getMessage(1).isEmpty())
+                drawChatBackground((agl::DrawContext*)drawContext, 2.f);
+            else
+                drawChatBackground((agl::DrawContext*)drawContext, 1.f);
+
+            gTextWriter->beginDraw();
+            gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, (dispHeight * 7 / 10) + 60.f));
+            gTextWriter->setScaleFromFontHeight(15.f);
+
+            gTextWriter->printf("%s\n", Client::getMessage(0).cstr());
+            gTextWriter->printf("%s\n", Client::getMessage(1).cstr());
+            gTextWriter->printf("%s\n", Client::getMessage(2).cstr());
+        }
         al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
         return;
     }
@@ -146,12 +177,6 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     // Check if current user is authorized for full debug menu
     const char* currentUser = Client::getClientName();
     bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0);
-
-    int dispHeight = al::getLayoutDisplayHeight();
-
-    gTextWriter->mViewport = viewport;
-
-    gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 0.8f);
 
     drawBackground((agl::DrawContext*)drawContext);
 
@@ -225,8 +250,6 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
         return;
     }
 
-    al::Scene* curScene = curSequence->curScene;
-
     if (curScene && isInGame) {
         sead::LookAtCamera* cam        = al::getLookAtCamera(curScene, 0);
         sead::Projection*   projection = al::getProjectionSead(curScene, 0);
@@ -246,24 +269,6 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
 
         GameMode      gameMode     = GameModeManager::instance()->getGameMode();
         GameModeBase* gameModeBase = GameModeManager::instance()->getMode<GameModeBase>();
-
-        if (!(Client::getMessage(0) == Client::getMessage(1) &&
-              Client::getMessage(1) == Client::getMessage(2))) {
-            if (Client::getMessage(0) == Client::getMessage(1))
-                drawChatBackground((agl::DrawContext*)drawContext, 3.f);
-            else if (Client::getMessage(1).isEmpty())
-                drawChatBackground((agl::DrawContext*)drawContext, 2.f);
-            else
-                drawChatBackground((agl::DrawContext*)drawContext, 1.f);
-
-            gTextWriter->beginDraw();
-            gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, (dispHeight * 7 / 10) + 60.f));
-            gTextWriter->setScaleFromFontHeight(15.f);
-
-            gTextWriter->printf("%s\n", Client::getMessage(0).cstr());
-            gTextWriter->printf("%s\n", Client::getMessage(1).cstr());
-            gTextWriter->printf("%s\n", Client::getMessage(2).cstr());
-        }
 
         gTextWriter->printf("(ZR ←)------------ Page %d/%d -------------(ZR →)\n", pageIndex + 1, maxPages);
 
