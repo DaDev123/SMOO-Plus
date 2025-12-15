@@ -140,7 +140,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
 
     gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 0.8f);
 
-    if (!debugMode) {
+    if (!debugMode && curScene && isInGame) {
         sead::LookAtCamera* cam = al::getLookAtCamera(curScene, 0);
         sead::Projection* projection = al::getProjectionSead(curScene, 0);
 
@@ -149,9 +149,9 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
         renderer->setCamera(*cam);
         renderer->setProjection(*projection);
 
-        if (!(Client::getMessage(0) == Client::getMessage(1) &&
-              Client::getMessage(1) == Client::getMessage(2))) {
-            if (Client::getMessage(0) == Client::getMessage(1))
+        if (!(al::isEqualString(Client::getMessage(0), Client::getMessage(1)) &&
+              al::isEqualString(Client::getMessage(1), Client::getMessage(2)))) {
+            if (al::isEqualString(Client::getMessage(0), Client::getMessage(1)))
                 drawChatBackground((agl::DrawContext*)drawContext, 3.f);
             else if (Client::getMessage(1).isEmpty())
                 drawChatBackground((agl::DrawContext*)drawContext, 2.f);
