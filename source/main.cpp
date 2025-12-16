@@ -142,6 +142,7 @@ void drawPauseMenuInfo(sead::DrawContext* drawContext, sead::Viewport* viewport,
     drawBackgroundWithSize(aglDrawContext, boxPos, boxSize, sead::Color4f(0.f, 0.f, 0.f, 0.7f));
     
     // Draw server information
+	gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, (dispHeight / 3) + 30.f));
     gTextWriter->beginDraw();
     gTextWriter->setScaleFromFontHeight(16.f);
     
