@@ -135,6 +135,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
 
     gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 0.8f);
 
+    // If debug mode is OFF and we're in game, show chat only
     if (!debugMode && curScene && isInGame) {
         sead::LookAtCamera* cam = al::getLookAtCamera(curScene, 0);
         sead::Projection* projection = al::getProjectionSead(curScene, 0);
@@ -144,37 +145,44 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
         renderer->setCamera(*cam);
         renderer->setProjection(*projection);
 
-            int msgCount = 0;
-            for (int i = 0; i < 3; i++) {
-                if (!Client::getMessage(i).isEmpty()) msgCount++;
-            }
-
-            if (msgCount > 0) {
-                // Draw background
-                drawChatBackground((agl::DrawContext*)drawContext, (float)(4 - msgCount));
-                
-                gTextWriter->beginDraw();
-                gTextWriter->setScaleFromFontHeight(15.f);
-                
-                float baseY = (dispHeight * 7 / 10) + 95.f;
-                float lineHeight = 18.f;
-                
-                // Draw messages from oldest to newest (bottom to top)
-                for (int i = msgCount - 1; i >= 0; i--) {
-                    if (!Client::getMessage(i).isEmpty()) {
-                        float yPos = baseY - (lineHeight * (msgCount - 1 - i));
-                        gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, yPos));
-                        gTextWriter->printf("%s\n", Client::getMessage(i).cstr());
-                    }
-                }
-                
-                gTextWriter->endDraw();
-            }
-
-            al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
-            return;
+        int msgCount = 0;
+        for (int i = 0; i < 3; i++) {
+            if (!Client::getMessage(i).isEmpty()) msgCount++;
         }
 
+        if (msgCount > 0) {
+            // Draw background
+            drawChatBackground((agl::DrawContext*)drawContext, (float)(4 - msgCount));
+            
+            gTextWriter->beginDraw();
+            gTextWriter->setScaleFromFontHeight(15.f);
+            
+            float baseY = (dispHeight * 7 / 10) + 95.f;
+            float lineHeight = 18.f;
+            
+            // Draw messages from oldest to newest (bottom to top)
+            for (int i = msgCount - 1; i >= 0; i--) {
+                if (!Client::getMessage(i).isEmpty()) {
+                    float yPos = baseY - (lineHeight * (msgCount - 1 - i));
+                    gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, yPos));
+                    gTextWriter->printf("%s\n", Client::getMessage(i).cstr());
+                }
+            }
+            
+            gTextWriter->endDraw();
+        }
+
+        al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
+        return;
+    }
+
+    // If debug mode is OFF and we're NOT in game (paused/menu), draw nothing and return
+    if (!debugMode) {
+        al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
+        return;
+    }
+
+    // From here on, debug mode is ON - draw debug info
     Client*       client      = Client::instance();
     SocketClient* socket      = client->mSocket;
     bool          isConnected = socket->isConnected();
@@ -212,7 +220,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
 
     sead::Heap* clientHeap = Client::getClientHeap();
     if (clientHeap) {
-    sead::Heap* gmHeap = GameModeManager::instance()->getHeap();
+        sead::Heap* gmHeap = GameModeManager::instance()->getHeap();
         if (gmHeap) {
             // Validate heaps before using them
             if (clientHeap->getSize() > 0 && gmHeap->getSize() > 0) {
@@ -232,7 +240,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
                 gTextWriter->printf("Heap Use: Invalid heap sizes\n");
             }
         } else {
-        gTextWriter->printf("Heap Use: GameMode heap unavailable\n");
+            gTextWriter->printf("Heap Use: GameMode heap unavailable\n");
         }
     } else {
         gTextWriter->printf("Heap Use: Client heap unavailable\n");
@@ -420,6 +428,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
 
     al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
 }
+
 
 
 // ===== SHINE PACKET FUNCTION =====
