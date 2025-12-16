@@ -183,6 +183,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
             }
         }
 
+		isInGame = false;
         al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
         return;
     }
@@ -416,6 +417,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
 
             renderer->end();
         }
+		isInGame = false;
     }
 
     gTextWriter->endDraw();
