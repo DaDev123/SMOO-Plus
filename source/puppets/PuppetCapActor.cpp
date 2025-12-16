@@ -63,6 +63,13 @@ void PuppetCapActor::control() {
         al::lerpVec(cPos, *cPos, mInfo->capPos, 0.45);
     }
 
+    // Lerp the cap actor's rotation using quaternion
+    sead::Quatf currentQuat = *al::getQuat(this);
+    sead::Quatf targetQuat = mInfo->capActorQuat;
+    sead::Quatf newQuat;
+    al::slerpQuat(&newQuat, currentQuat, targetQuat, 0.45f);
+    al::setQuat(this, newQuat);
+
     mJointKeeper->mJointRot.x = al::lerpValue(mJointKeeper->mJointRot.x, mInfo->capRot.x, 0.85);
     mJointKeeper->mJointRot.y = al::lerpValue(mJointKeeper->mJointRot.y, mInfo->capRot.y, 0.85);
     mJointKeeper->mJointRot.z = al::lerpValue(mJointKeeper->mJointRot.z, mInfo->capRot.z, 0.85);
