@@ -219,11 +219,11 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0);
 
 // ===== DRAW SERVER INFO =====
-if (curScene && isInGame && !debugMode) {
-    StageScene* stageScene = (StageScene*)curScene;
-    if (stageScene->isPause()) {
-        drawPauseMenuInfo(drawContext, viewport, dispHeight);
-    }
+if (curScene && !debugMode) {
+        StageScene* stageScene = (StageScene*)curScene;
+        if (stageScene->isPause()) {
+            drawPauseMenuInfo(drawContext, viewport, dispHeight);
+        }
 }
 
 	
@@ -266,9 +266,9 @@ if (curScene && isInGame && !debugMode) {
             }
         }
 
-		isInGame = false;
-        al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
-        return;
+		
+        //al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
+        //return;
     }
 
     // ===== NON-DEBUG MODE EXIT =====
