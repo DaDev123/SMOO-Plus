@@ -121,25 +121,33 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     GameModeManager* gmm  = GameModeManager::instance();
     GameModeBase*    mode = gmm->getMode<GameModeBase>();
 
-    // Freeze tag needs the delta time to not update while the game is paused, so if in Freeze Tag mode, override functionality
+    // Freeze tag needs the delta time to not update while the game is paused
     if(GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
         if(!GameModeManager::instance()->isPaused())
             Time::calcTime();
     } else {
-        Time::calcTime();  // this needs to be ran every frame, so running it here works
+        Time::calcTime();
     }
 
     al::Scene* curScene = curSequence->curScene;
     int dispHeight = al::getLayoutDisplayHeight();
     gTextWriter->mViewport = viewport;
-
     gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 0.8f);
 
-    // If debug mode is OFF and we're in game, show chat only
-    if (!debugMode && curScene && isInGame) {
-        sead::LookAtCamera* cam = al::getLookAtCamera(curScene, 0);
-        sead::Projection* projection = al::getProjectionSead(curScene, 0);
+    // ===== SAFETY CHECK: Verify camera is available =====
+    sead::LookAtCamera* cam = nullptr;
+    sead::Projection* projection = nullptr;
+    
+    if (curScene && isInGame) {
+        // Try to get camera safely - may return null if not initialized
+        cam = al::getLookAtCamera(curScene, 0);
+        if (cam) {
+            projection = al::getProjectionSead(curScene, 0);
+        }
+    }
 
+    // If debug mode is OFF and we're in game, show chat only
+    if (!debugMode && curScene && isInGame && cam && projection) {
         sead::PrimitiveRenderer* renderer = sead::PrimitiveRenderer::instance();
         renderer->setDrawContext(drawContext);
         renderer->setCamera(*cam);
@@ -222,7 +230,6 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     if (clientHeap) {
         sead::Heap* gmHeap = GameModeManager::instance()->getHeap();
         if (gmHeap) {
-            // Validate heaps before using them
             if (clientHeap->getSize() > 0 && gmHeap->getSize() > 0) {
                 size_t clientUsed = clientHeap->getSize() - clientHeap->getFreeSize();
                 size_t clientTotal = clientHeap->getSize();
@@ -263,10 +270,8 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
         return;
     }
 
-    if (curScene && isInGame) {
-        sead::LookAtCamera* cam        = al::getLookAtCamera(curScene, 0);
-        sead::Projection*   projection = al::getProjectionSead(curScene, 0);
-
+    // ===== ONLY PROCEED WITH 3D DEBUG RENDERING IF CAMERA IS VALID =====
+    if (curScene && isInGame && cam && projection) {
         PlayerActorBase* playerBase = rs::getPlayerActor(curScene);
 
         PuppetActor* curPuppet   = Client::getPuppet(debugPuppetIndex - 1);
@@ -319,7 +324,6 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
 
                 } else if (curPuppet) {
                     al::LiveActor* curModel = curPuppet->getCurrentModel();
-
                     PuppetInfo* curPupInfo = curPuppet->getInfo();
 
                     if (curModel && curPupInfo) {
@@ -332,18 +336,14 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
                         gTextWriter->printf("Capture: %s\n",           curPupInfo->isCaptured ? curPupInfo->curHack : "");
                         gTextWriter->printf("Animation:  %d  %s\n",    curPupInfo->curAnim, curPupInfo->curAnimStr);
                         
-                        // NEW: Show what's actually playing on the model
                         const char* modelAnim = al::getActionName(curModel);
                         gTextWriter->printf("Model Animation: %s\n", modelAnim ? modelAnim : "none");
                         
-                        // NEW: Show animation state
                         if (curModel->mActorActionKeeper) {
                             gTextWriter->printf("Is Action Playing: %s\n", 
                                 al::isActionPlaying(curModel, curPupInfo->curAnimStr) ? "Yes" : "No");
                             gTextWriter->printf("Is Action End: %s\n", 
                                 al::isActionEnd(curModel) ? "Yes" : "No");
-                            
-                            // Show if it's a capture model
                             gTextWriter->printf("Is Capture Model: %s\n", 
                                 curPupInfo->isCaptured ? "Yes" : "No");
                         }
@@ -428,8 +428,6 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
 
     al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
 }
-
-
 
 // ===== SHINE PACKET FUNCTION =====
 
