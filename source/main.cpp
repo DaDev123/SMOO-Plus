@@ -117,6 +117,80 @@ else if (!Client::getMessage(0).isEmpty() || !Client::getMessage(1).isEmpty() ||
 
 // ===== MAIN DRAW HOOK =====
 
+void drawPauseMenuInfo(sead::DrawContext* drawContext, sead::Viewport* viewport, int dispHeight) {
+    Client* client = Client::instance();
+    SocketClient* socket = client->mSocket;
+    bool isConnected = socket->isConnected();
+    
+    // Setup text writer for pause menu info
+    gTextWriter->mViewport = viewport;
+    gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 0.9f);
+    
+    // Get display width using the same method as height
+    int dispWidth = al::getLayoutDisplayWidth();
+    
+    // Draw background box in top right corner
+    float boxWidth = 320.f;
+    float boxHeight = 100.f;
+    float boxX = dispWidth - boxWidth - 10.f;  // Use dispWidth instead of viewport method
+    float boxY = 10.f;
+    
+    // Draw semi-transparent background
+    agl::DrawContext* aglDrawContext = (agl::DrawContext*)drawContext;
+    sead::Vector3f boxPos(boxX, boxY, 0.f);
+    sead::Vector2f boxSize(boxWidth, boxHeight);
+    drawBackgroundWithSize(aglDrawContext, boxPos, boxSize, sead::Color4f(0.f, 0.f, 0.f, 0.7f));
+    
+    // Draw server information
+    gTextWriter->beginDraw();
+    gTextWriter->setScaleFromFontHeight(16.f);
+    
+    float textX = boxX + 10.f;
+    float textY = boxY + 20.f;
+    float lineSpacing = 20.f;
+    
+    // Title
+    gTextWriter->setCursorFromTopLeft(sead::Vector2f(textX, textY));
+    gTextWriter->printf("═══ Server Info ═══");
+    
+    textY += lineSpacing;
+    
+    // Server IP and Port
+    gTextWriter->setCursorFromTopLeft(sead::Vector2f(textX, textY));
+    if (Client::isServerHidden()) {
+        gTextWriter->printf("Server: <hidden>");
+    } else {
+        gTextWriter->printf("Server: %s:%d", socket->getIP(), socket->getPort());
+    }
+    
+    textY += lineSpacing;
+    
+    // Connection Status with color coding
+    gTextWriter->setCursorFromTopLeft(sead::Vector2f(textX, textY));
+    if (isConnected) {
+        gTextWriter->mColor = sead::Color4f(0.f, 1.f, 0.f, 0.9f); // Green for connected
+        gTextWriter->printf("Status: Connected");
+    } else {
+        gTextWriter->mColor = sead::Color4f(1.f, 0.f, 0.f, 0.9f); // Red for disconnected
+        gTextWriter->printf("Status: Disconnected");
+    }
+    gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 0.9f); // Reset to white
+    
+    textY += lineSpacing;
+    
+    // Player Count
+    gTextWriter->setCursorFromTopLeft(sead::Vector2f(textX, textY));
+    if (isConnected) {
+        gTextWriter->printf("Players: %d/%d", 
+            Client::getConnectCount() + 1, 
+            Client::getMaxPlayerCount());
+    } else {
+        gTextWriter->printf("Players: -/-");
+    }
+    
+    gTextWriter->endDraw();
+}
+
 void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead::DrawContext* drawContext) {
     GameModeManager* gmm = GameModeManager::instance();
     GameModeBase* mode = gmm->getMode<GameModeBase>();
@@ -144,6 +218,14 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     const char* currentUser = Client::getClientName();
     bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0);
 
+if (curScene) {
+        StageScene* stageScene = (StageScene*)curScene;
+        if (stageScene->isPause() && !debugMode) {
+            drawPauseMenuInfo(drawContext, viewport, dispHeight);
+        }
+}
+
+	
     // ===== CHAT RENDERING (Non-debug mode, in-game only) =====
     if (!debugMode && curScene && isInGame) {
         // Try to get camera for chat rendering
