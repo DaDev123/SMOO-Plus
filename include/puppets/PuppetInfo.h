@@ -43,6 +43,7 @@ struct PuppetInfo {
     // Puppet Hack Cap Info
     sead::Vector3f capPos = sead::Vector3f(0.f,0.f,0.f);
     sead::Quatf capRot = sead::Quatf(0.f,0.f,0.f,0.f);
+    sead::Quatf capActorQuat = sead::Quatf(0.f,0.f,0.f,1.f);
     char capAnim[PACKBUFSIZE] = {};
     bool isCapThrow = false;
     bool isHoldThrow = false;
