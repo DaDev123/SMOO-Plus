@@ -219,7 +219,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0);
 
 // ===== DRAW SERVER INFO =====
-if (curScene) {
+if (curScene && !debugMode && isInGame) {
     StageScene* stageScene = (StageScene*)curScene;
     if (stageScene->isPause()) {
         drawPauseMenuInfo(drawContext, viewport, dispHeight);
@@ -500,7 +500,7 @@ if (curScene) {
 
             renderer->end();
         }
-		isInGame = false;
+		//isInGame = false;
     }
 
     gTextWriter->endDraw();
