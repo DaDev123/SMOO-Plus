@@ -218,11 +218,12 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     const char* currentUser = Client::getClientName();
     bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0);
 
-if (curScene) {
-        StageScene* stageScene = (StageScene*)curScene;
-        if (stageScene->isPause() && !debugMode) {
-            drawPauseMenuInfo(drawContext, viewport, dispHeight);
-        }
+// ===== DRAW SERVER INFO =====
+if (curScene && isInGame && !debugMode) {
+    StageScene* stageScene = (StageScene*)curScene;
+    if (stageScene->isPause()) {
+        drawPauseMenuInfo(drawContext, viewport, dispHeight);
+    }
 }
 
 	
