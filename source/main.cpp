@@ -267,8 +267,8 @@ if (curScene && !debugMode) {
         }
 
 		
-        //al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
-        //return;
+        al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
+        return;
     }
 
     // ===== NON-DEBUG MODE EXIT =====
