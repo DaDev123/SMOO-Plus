@@ -64,8 +64,8 @@ void PuppetCapActor::control() {
     }
 
     // Lerp the cap actor's rotation using quaternion
-    sead::Quatf currentQuat = *al::getQuat(this);
-    sead::Quatf targetQuat = mInfo->capActorQuat;
+    sead::Quatf currentQuat = al::getQuat(this);
+    sead::Quatf targetQuat = mInfo->capActorQuat; // New field needed in PuppetInfo
     sead::Quatf newQuat;
     al::slerpQuat(&newQuat, currentQuat, targetQuat, 0.45f);
     al::setQuat(this, newQuat);
