@@ -57,3 +57,23 @@ void drawChatBackground(agl::DrawContext* context, float rows) {
     agl::utl::DevTools::drawTriangleImm(context, p1, p2, p3, c);
     agl::utl::DevTools::drawTriangleImm(context, p3, p4, p2, c);
 }
+
+void drawBackgroundWithSize(agl::DrawContext* context, sead::Vector3f pos, sead::Vector2f size, sead::Color4f color) {
+    // Convert pixel coordinates to NDC
+    int dispWidth = al::getLayoutDisplayWidth();
+    int dispHeight = al::getLayoutDisplayHeight();
+    
+    float ndcX = (pos.x / dispWidth) * 2.0f - 1.0f;
+    float ndcY = 1.0f - (pos.y / dispHeight) * 2.0f;
+    float ndcWidth = (size.x / dispWidth) * 2.0f;
+    float ndcHeight = (size.y / dispHeight) * 2.0f;
+    
+    sead::Vector3<float> p1(ndcX, ndcY, 0);                           // top left
+    sead::Vector3<float> p2(ndcX + ndcWidth, ndcY, 0);                // top right
+    sead::Vector3<float> p3(ndcX, ndcY - ndcHeight, 0);               // bottom left
+    sead::Vector3<float> p4(ndcX + ndcWidth, ndcY - ndcHeight, 0);    // bottom right
+
+    agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident, sead::Matrix44<float>::ident);
+    agl::utl::DevTools::drawTriangleImm(context, p1, p2, p3, color);
+    agl::utl::DevTools::drawTriangleImm(context, p3, p4, p2, color);
+}
