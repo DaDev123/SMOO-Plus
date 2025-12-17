@@ -139,10 +139,29 @@ void PuppetActor::control() {
 
     al::LiveActor* curModel = getCurrentModel();
     
-    // Safety check - if we don't have a valid model, bail out
+    // Safety check
     if(!curModel) {
         Logger::log("[Puppet] Error: getCurrentModel() returned null for %s\n", mInfo->puppetName);
         return;
+    }
+
+    // ============================================================================
+    // POSITION & ROTATION
+    // ============================================================================
+    
+    al::setTrans(this, mInfo->playerPos);
+    al::setQuat(this, mInfo->playerRot);
+
+    // ============================================================================
+    // MODEL UPDATING
+    // ============================================================================
+
+    if (!mIs2DModel && mInfo->is2D) {
+        changeModel("Normal2D");
+        mIs2DModel = true;
+    } else if (mIs2DModel && !mInfo->is2D) {
+        changeModel("Normal");
+        mIs2DModel = false;
     }
 
     // ============================================================================
@@ -153,111 +172,32 @@ void PuppetActor::control() {
     
     // Validate animation name
     if(!targetAnim || targetAnim[0] == '\0') {
-        if(mIsDebug) {
-            Logger::log("[Puppet] Warning: Empty animation name from %s, using Wait\n", mInfo->puppetName);
-        }
         targetAnim = "Wait";
     }
 
     if (!mIsCaptureModel) {
-        // ======== MARIO MODEL ANIMATION HANDLING ========
+        // ======== MARIO MODEL ANIMATION ========
         
-        // Main animation handling
-        if(!al::isActionPlaying(curModel, targetAnim)) {
-            if(mIsDebug) {
-                Logger::log("[Puppet] Starting animation: %s on %s\n", targetAnim, mInfo->puppetName);
-            }
-            startAction(targetAnim);
-        } else if(al::isActionEnd(curModel)) {
+        // Main animation
+        if(!al::isActionPlaying(curModel, targetAnim) || al::isActionEnd(curModel)) {
             startAction(targetAnim);
         }
 
-        // Upper body animation handling - ONLY for normal 3D Mario models
-        // 2D models and captures don't support partial skeletal animations
-        if(!mIs2DModel && !mIsCaptureModel && mInfo->hasUpperBodyAnim && mInfo->curUpperBodyAnimStr[0] != '\0') {
+        // Upper body animation for 3D models only
+        if(!mIs2DModel && mInfo->hasUpperBodyAnim && mInfo->curUpperBodyAnimStr[0] != '\0') {
             const char* upperBodyAnim = mInfo->curUpperBodyAnimStr;
-            
-            // Only try upper body anims if the skeleton animation exists
             if(al::isSklAnimExist(curModel, upperBodyAnim)) {
-                // Use tryStartSklAnimIfExist which safely handles the partial animation
-                // This won't crash if partial anims aren't supported
-                if(al::tryStartSklAnimIfExist(curModel, upperBodyAnim)) {
-                    if(mIsDebug) {
-                        Logger::log("[Puppet] Started upper body anim: %s on %s\n", upperBodyAnim, mInfo->puppetName);
-                    }
-                }
+                al::tryStartSklAnimIfExist(curModel, upperBodyAnim);
             }
         }
 
-        // Apply animation blending weights for locomotion - ONLY for 3D models
+        // Animation blending for locomotion (3D only)
         if(!mIs2DModel && isNeedBlending()) {
             for (size_t i = 0; i < 6; i++) {
                 setBlendWeight(i, mInfo->blendWeights[i]);
             }
         }
         
-    } else {
-        // ======== CAPTURE MODEL ANIMATION HANDLING ========
-        
-        // Only try to play animations if the model has an action keeper
-        if(curModel->mActorActionKeeper) {
-            const char* currentAnim = al::getActionName(curModel);
-            
-            // Check various animation states
-            bool isDifferentAnim = !currentAnim || !al::isEqualString(currentAnim, targetAnim);
-            bool isAnimEnd = al::isActionEnd(curModel);
-            
-            if(isDifferentAnim) {
-                // Different animation - force start it
-                al::startAction(curModel, targetAnim);
-                if(al::isSklAnimExist(curModel, targetAnim)) {
-                    al::clearSklAnimInterpole(curModel);
-                }
-            } else if(isAnimEnd) {
-                // Same animation but ended - FORCE restart using startAction (not tryStartAction)
-                // This will restart even if it thinks it's still "playing"
-                al::startAction(curModel, targetAnim);
-                if(al::isSklAnimExist(curModel, targetAnim)) {
-                    al::clearSklAnimInterpole(curModel);
-                }
-            }
-        }
-    }
-
-    // ============================================================================
-    // POSITION & ROTATION HANDLING
-    // ============================================================================
-
-    sead::Vector3f* pPos = al::getTransPtr(this);
-    sead::Quatf* pQuat = al::getQuatPtr(this);
-
-    if (!mIs2DModel) {
-        // 3D model - use smooth interpolation
-        mClosingSpeed = VisualUtils::SmoothMove(
-            {pPos, pQuat}, 
-            {&mInfo->playerPos, &mInfo->playerRot}, 
-            Time::deltaTime, 
-            mClosingSpeed, 
-            1440.0f
-        );
-    } else {
-        // 2D model - use linear interpolation for position, direct set for rotation
-        if(*pPos != mInfo->playerPos) {
-            al::lerpVec(pPos, *pPos, mInfo->playerPos, 0.25);
-        }
-        al::setQuat(this, mInfo->playerRot);
-    }
-
-    // ============================================================================
-    // MODEL UPDATING (2D/3D switching)
-    // ============================================================================
-
-    if (!mIs2DModel && mInfo->is2D) {
-        changeModel("Normal2D");
-        mIs2DModel = true;
-    } else if (mIs2DModel && !mInfo->is2D) {
-        changeModel("Normal");
-        mIs2DModel = false;
     }
 
     // ============================================================================
@@ -273,14 +213,12 @@ void PuppetActor::control() {
             if(captureModel) {
                 captureModel->makeActorAlive();
             } else {
-                Logger::log("[Puppet] Error: Failed to get capture model after setCapture for %s\n", mInfo->puppetName);
                 // Fallback to normal model
                 mModelHolder->changeModel("Normal");
                 mIsCaptureModel = false;
                 getCurrentModel()->makeActorAlive();
             }
         } else {
-            Logger::log("[Puppet] Warning: setCapture failed for %s with hack %s\n", mInfo->puppetName, mInfo->curHack);
             getCurrentModel()->makeActorAlive();
         }
 
@@ -293,22 +231,20 @@ void PuppetActor::control() {
     }
 
     // ============================================================================
-    // CAP VISIBILITY UPDATING
+    // CAP VISIBILITY & SYNC
     // ============================================================================
 
-    // Only handle cap visibility for Mario models, not captures
     if(!mIsCaptureModel) {
-        if(mInfo->isCapThrow) {
-            if(al::isDead(mPuppetCap)) {
+        // Cap visibility handling
+        bool shouldCapBeVisible = mInfo->isCapThrow;
+        bool isCapCurrentlyAlive = al::isAlive(mPuppetCap);
+        
+        if(shouldCapBeVisible != isCapCurrentlyAlive) {
+            if(shouldCapBeVisible) {
                 mPuppetCap->makeActorAlive();
-                al::setTrans(mPuppetCap, mInfo->capPos);
-            }
-        } else {
-            if(al::isAlive(mPuppetCap)) {
+            } else {
                 mPuppetCap->makeActorDead();
-                startAction(targetAnim);
-
-                // Turn cap back on when cap returns - ONLY for 3D models
+                // Turn cap back on for 3D models
                 if(!mIs2DModel) {
                     al::LiveActor* headModel = al::getSubActor(curModel, "頭");
                     if (headModel) {
@@ -317,21 +253,26 @@ void PuppetActor::control() {
                 }
             }
         }
+        
+        // ======== CAP ANIMATION SYNC ========
+        if(shouldCapBeVisible && mPuppetCap && mInfo->capAnim && mInfo->capAnim[0] != '\0') {
+            if(!al::isActionPlaying(mPuppetCap, mInfo->capAnim) || al::isActionEnd(mPuppetCap)) {
+                mPuppetCap->startAction(mInfo->capAnim);
+            }
+        }
     }
 
     // ============================================================================
-    // NAME TAG VISIBILITY UPDATING
+    // NAME TAG VISIBILITY
     // ============================================================================
 
     if(mNameTag && !GameModeManager::instance()->isActive()) {
-        // Show name tag when no gamemode is active
         if(!mNameTag->mIsAlive) {
             mNameTag->appear();
         }
     }
 
     if (mNameTag && GameModeManager::instance()->isActive()) {
-        // Handle name tag visibility based on active gamemode
         GameMode curMode = GameModeManager::instance()->getGameMode();
         
         switch(curMode) {
@@ -350,7 +291,6 @@ void PuppetActor::control() {
             }
             
             default:
-                Logger::log("Name tag display failed due to unknown active game mode!\n");
                 break;
         }
     }
@@ -358,7 +298,7 @@ void PuppetActor::control() {
     // ============================================================================
     // SUB-ACTOR UPDATING
     // ============================================================================
-
+    
     if(mPuppetCap) {
         mPuppetCap->update();
     }

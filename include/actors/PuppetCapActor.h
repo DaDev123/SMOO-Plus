@@ -26,7 +26,7 @@ class PuppetCapActor : public al::LiveActor {
         void startAction(const char *actName);
         void update();
 
-        // Public access for direct manipulation (like Ghost does)
+        // Public access for direct manipulation
         HackCapJointControlKeeper *mJointKeeper;
     private:
         PuppetInfo *mInfo;
