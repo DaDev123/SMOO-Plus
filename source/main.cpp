@@ -139,10 +139,82 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
     Client* client = Client::instance();
     SocketClient* socket = client->mSocket;
     bool isConnected = socket->isConnected();
+    bool isPaused = gmm->isPaused();
 
     // Check authorization
     const char* currentUser = Client::getClientName();
     bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0);
+
+// ===== PAUSE MENU DEBUG WINDOW =====
+// Check using the GameModeManager's pause state
+if (gmm->isPaused()) {
+    // Draw background on the right side
+    drawConnectionBackground((agl::DrawContext*)drawContext);
+    
+    gTextWriter->beginDraw();
+    
+    // Get display dimensions
+    int dispWidth = al::getLayoutDisplayWidth();
+    
+    // Calculate position for top-right
+    float rightPadding = 10.f;
+    float topPadding = 5.f;
+    float textWidth = 200.f;
+    float xPos = dispWidth - textWidth - rightPadding;
+    float yPos = topPadding;
+    
+    gTextWriter->setScaleFromFontHeight(13.f);
+    
+    // Cyan header
+    gTextWriter->setCursorFromTopLeft(sead::Vector2f(xPos, yPos));
+    gTextWriter->mColor = sead::Color4f(0.f, 1.f, 1.f, 1.f);
+    gTextWriter->printf("======= CONNECTION INFO =======\n\n");
+    
+    // Server IP and Port
+    gTextWriter->setCursorFromTopLeft(sead::Vector2f(xPos, yPos + 30.f));
+    if (Client::isServerHidden()) {
+        gTextWriter->mColor = sead::Color4f(1.f, 1.f, 0.f, 1.f); // Yellow label
+        gTextWriter->printf("Server: ");
+        gTextWriter->mColor = sead::Color4f(0.5f, 0.5f, 0.5f, 1.f); // Gray
+        gTextWriter->printf("<hidden>");
+    } else {
+        gTextWriter->mColor = sead::Color4f(1.f, 1.f, 0.f, 1.f); // Yellow label
+        gTextWriter->printf("Server: ");
+        gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 1.f); // White
+        gTextWriter->printf("%s:%d", socket->getIP(), socket->getPort());
+    }
+    
+    // Connection status
+    gTextWriter->setCursorFromTopLeft(sead::Vector2f(xPos, yPos + 45.f));
+    gTextWriter->mColor = sead::Color4f(1.f, 1.f, 0.f, 1.f); // Yellow label
+    gTextWriter->printf("Status: ");
+    if (isConnected) {
+        gTextWriter->mColor = sead::Color4f(0.f, 1.f, 0.f, 1.f); // Green
+        gTextWriter->printf("Connected");
+    } else {
+        gTextWriter->mColor = sead::Color4f(1.f, 0.f, 0.f, 1.f); // Red
+        gTextWriter->printf("Disconnected");
+    }
+    
+    // Player count
+    gTextWriter->setCursorFromTopLeft(sead::Vector2f(xPos, yPos + 60.f));
+    gTextWriter->mColor = sead::Color4f(1.f, 1.f, 0.f, 1.f); // Yellow label
+    gTextWriter->printf("Players: ");
+    if (isConnected) {
+        gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 1.f); // White
+        gTextWriter->printf("%d/%d", 
+            Client::getConnectCount() + 1, 
+            Client::getMaxPlayerCount());
+    } else {
+        gTextWriter->mColor = sead::Color4f(0.5f, 0.5f, 0.5f, 1.f); // Gray
+        gTextWriter->printf("N/A");
+    }
+    
+    gTextWriter->endDraw();
+    
+    al::executeDraw(curSequence->mLytKit, "２Ｄバック（メイン画面）");
+    return;
+}
 
     // ===== CHAT RENDERING (Non-debug mode, in-game only) =====
     if (!debugMode && curScene && isInGame) {

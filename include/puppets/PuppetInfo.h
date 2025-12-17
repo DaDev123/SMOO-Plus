@@ -32,18 +32,18 @@ struct PuppetInfo {
     // Puppet Model Info
     PlayerAnims::Type curAnim;
     PlayerAnims::Type curSubAnim;
-    PlayerAnims::Type curUpperBodyAnim;  // ADD THIS
+    PlayerAnims::Type curUpperBodyAnim;  
     char curAnimStr[PACKBUFSIZE] = {};
     char curSubAnimStr[PACKBUFSIZE] = {};
-    char curUpperBodyAnimStr[PACKBUFSIZE] = {};  // ADD THIS
-    bool hasUpperBodyAnim = false;  // ADD THIS
+    char curUpperBodyAnimStr[PACKBUFSIZE] = {};  
+    bool hasUpperBodyAnim = false;  
     float blendWeights[6] = {};
     float animRate = 0.f;
     bool is2D = false;
     // Puppet Hack Cap Info
     sead::Vector3f capPos = sead::Vector3f(0.f,0.f,0.f);
     sead::Quatf capRot = sead::Quatf(0.f,0.f,0.f,0.f);
-    sead::Quatf capActorQuat = sead::Quatf(0.f,0.f,0.f,1.f);
+    sead::Quatf capQuat = sead::Quatf(0.f,0.f,0.f,1.f); // Actor quaternion rotation
     char capAnim[PACKBUFSIZE] = {};
     bool isCapThrow = false;
     bool isHoldThrow = false;

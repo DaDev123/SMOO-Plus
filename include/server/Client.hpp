@@ -167,8 +167,8 @@ public:
     static const bool hasServerChanged();
     static void setLastUsedIP(const char* ip);
     static void setLastUsedPort(const int port);
-    static void setServerIP(const char* ip);      // Add this
-    static void setServerPort(int port);          // Add this
+    static void setServerIP(const char* ip);      
+    static void setServerPort(int port);          
     
     // ===== SERVER VISIBILITY =====
     static bool isServerHidden() { return sInstance ? sInstance->mServerHidden : true; }

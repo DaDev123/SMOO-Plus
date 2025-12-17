@@ -11,7 +11,7 @@ struct PACKED PlayerInf : Packet {
     float animBlendWeights[6];
     PlayerAnims::Type actName;
     PlayerAnims::Type subActName;
-    PlayerAnims::Type upperBodyActName;  // ADD THIS
+    PlayerAnims::Type upperBodyActName;
 
     bool operator==(const PlayerInf &rhs) const {
         bool isWeightsEqual = true;
@@ -28,7 +28,7 @@ struct PACKED PlayerInf : Packet {
             isWeightsEqual &&
             actName == rhs.actName &&
             subActName == rhs.subActName &&
-            upperBodyActName == rhs.upperBodyActName  // ADD THIS
+            upperBodyActName == rhs.upperBodyActName
         );
     }
 

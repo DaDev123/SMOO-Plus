@@ -95,6 +95,8 @@ namespace al
     bool isSklAnimExist(al::LiveActor const *, const char *);
     bool clearSklAnimInterpole(al::LiveActor *);
 
+    void invalidateOcclusionQuery(al::LiveActor*);
+
     // setters
 
     void setTransY(al::LiveActor *, float);

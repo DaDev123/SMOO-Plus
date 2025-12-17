@@ -562,10 +562,12 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
 
         packet->isCapVisible = isFlying;
 
+        // Joint rotations, skew & quat
         packet->capQuat.x = hackCap->mJointKeeper->mJointRot.x;
         packet->capQuat.y = hackCap->mJointKeeper->mJointRot.y;
         packet->capQuat.z = hackCap->mJointKeeper->mJointRot.z;
         packet->capQuat.w = hackCap->mJointKeeper->mSkew;
+        packet->capRotQuat = al::getQuat(hackCap);
 
         strcpy(packet->capAnim, al::getActionName(hackCap));
 
@@ -579,6 +581,7 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
         packet->isCapVisible = false;
         packet->capPos = sead::Vector3f::zero;
         packet->capQuat = sead::Quatf::unit;
+        packet->capRotQuat = sead::Quatf::unit;
         sInstance->mSocket->queuePacket(packet);
         sInstance->isSentHackInf = false;
     }
@@ -867,7 +870,6 @@ void Client::updatePlayerInfo(PlayerInf *packet) {
             strcpy(curInfo->curSubAnimStr, "");
         }
 
-    // ADD THIS BLOCK
     if(packet->upperBodyActName != PlayerAnims::Type::Unknown) {
         strcpy(curInfo->curUpperBodyAnimStr, PlayerAnims::FindStr(packet->upperBodyActName));
         curInfo->hasUpperBodyAnim = true;
@@ -880,7 +882,7 @@ void Client::updatePlayerInfo(PlayerInf *packet) {
 
     curInfo->curAnim = packet->actName;
     curInfo->curSubAnim = packet->subActName;
-    curInfo->curUpperBodyAnim = packet->upperBodyActName;  // ADD THIS
+    curInfo->curUpperBodyAnim = packet->upperBodyActName;
 
     for (size_t i = 0; i < 6; i++)
     {
@@ -909,7 +911,8 @@ void Client::updateHackCapInfo(HackCapInf *packet) {
 
     if (curInfo) {
         curInfo->capPos = packet->capPos;
-        curInfo->capRot = packet->capQuat;
+        curInfo->capRot = packet->capQuat;    
+        curInfo->capQuat = packet->capRotQuat;
 
         curInfo->isCapThrow = packet->isCapVisible;
 

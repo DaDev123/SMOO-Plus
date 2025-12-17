@@ -22,4 +22,4 @@ void drawBackground(agl::DrawContext *context);
 
 void drawChatBackground(agl::DrawContext *context, float rows);
 
-void drawBackgroundWithSize(agl::DrawContext* context, sead::Vector3f pos, sead::Vector2f size, sead::Color4f color);
+void drawConnectionBackground(agl::DrawContext *context);
