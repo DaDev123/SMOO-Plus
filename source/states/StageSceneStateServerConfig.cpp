@@ -472,6 +472,7 @@ void StageSceneStateServerConfig::exeGameplaySettings() {
             case 3: Client::toggleMusicDisabled(); break;
         }
 
+        updateGameplaySettingsOptions();
         refreshMenu(mGameplayList, mGameplayOptions->mBuffer, 4);
     }
 }
@@ -493,6 +494,7 @@ void StageSceneStateServerConfig::exePlayerCollisionSettings() {
             case 3: sPuppetReceiveEnabled = !sPuppetReceiveEnabled; break;
         }
 
+        updatePlayerCollisionOptions();
         refreshMenu(mPlayerCollisionList, mPlayerCollisionOptions->mBuffer, 4);
     }
 }
@@ -577,6 +579,7 @@ void StageSceneStateServerConfig::exeTwistsSettings() {
             case 1: TwistsConfig::toggleIcePhysics(); break;
         }
 
+        updateTwistsOptions();
         refreshMenu(mTwistsList, mTwistsOptions->mBuffer, 3);
         mIsDecideConfig = false;
     }
