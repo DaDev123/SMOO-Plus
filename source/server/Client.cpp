@@ -1497,6 +1497,23 @@ void Client::setMessage(int index, const char* message) {
 }
 
 /**
+ * @brief
+ *
+ */
+void Client::setServerVersion(const char* serverVersion) {
+    if (!sInstance || !serverVersion)
+        return;
+
+    sInstance->mServerVersion = serverVersion;
+}
+
+const sead::FixedSafeString<64>& Client::getServerVersion() {
+    static sead::FixedSafeString<64> empty;
+    return sInstance ? sInstance->mServerVersion : empty;
+}
+
+
+/**
  * @brief 
  * 
  * @return PuppetInfo* 

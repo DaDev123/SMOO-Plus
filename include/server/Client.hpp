@@ -160,6 +160,9 @@ public:
     }
     static sead::FixedSafeString<MESSAGESIZE> getMessage(int index);
     static void setMessage(int index, const char* message);
+    static void setServerVersion(const char* serverVersion);
+    static const sead::FixedSafeString<64>& getServerVersion();
+
 
     // ===== SERVER CONFIGURATION =====
     static const int getCurrentPort();
@@ -242,6 +245,7 @@ private:
     // ===== SERVER CONFIGURATION MEMBERS =====
     hostname mServerIP;
     int mServerPort = 0;
+    sead::FixedSafeString<64> mServerVersion;
     bool mServerHidden = true;
     bool mIsDisableMusic = false;
 

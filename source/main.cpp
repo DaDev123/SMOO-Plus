@@ -143,7 +143,7 @@ void drawMainHook(HakoniwaSequence* curSequence, sead::Viewport* viewport, sead:
 
     // Check authorization
     const char* currentUser = Client::getClientName();
-    bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0);
+    bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0) || (strcmp(currentUser, "KleinTimmi") == 0);
 
 // ===== PAUSE MENU DEBUG WINDOW =====
 // Check using the GameModeManager's pause state
@@ -329,6 +329,8 @@ if (gmm->isPaused()) {
     );
 
     gTextWriter->printf("Mod version: %s\n", TOSTRING(BUILDVERSTR));
+    gTextWriter->printf("Server is running version: %s\n", Client::getServerVersion().cstr());
+
 
     // ===== AUTHORIZED USER ONLY CONTENT =====
     if (!isAuthorizedUser) {
