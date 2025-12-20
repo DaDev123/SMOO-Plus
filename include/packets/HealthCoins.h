@@ -3,7 +3,7 @@
 #include "Packet.h"
 
 struct PACKED HealthCoins : Packet {
-    InitPacket() : Packet() {
+    HealthCoins() : Packet() {
         this->mType = PacketType::HEALTHCOINS;
         mPacketSize = sizeof(HealthCoins) - sizeof(Packet);
     };
