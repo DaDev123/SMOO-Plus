@@ -27,10 +27,19 @@ public:
     void exeWait();
     void exeEnd();
 
+void setCurScene(StageScene* scene) { 
+        mCurScene = scene;
+        // Update all player slots with the scene
+        for (int i = 0; i < mMaxPlayers; i++) {
+            mPlayerSlots.at(i)->setScene(scene);
+        }
+    }
+
 private:
     struct HideAndSeekInfo *mInfo;
     sead::PtrArray<GameModePlayerSlot> mPlayerSlots;
     static constexpr int mMaxPlayers = 16;
+    StageScene* mCurScene = nullptr;
 };
 
 namespace {

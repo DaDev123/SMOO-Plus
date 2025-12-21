@@ -47,6 +47,7 @@ void HideAndSeekMode::init(const GameModeInitInfo& info) {
     }
 
     mModeLayout = new HideAndSeekIcon("HideAndSeekIcon", *info.mLayoutInitInfo);
+    mModeLayout->setCurScene(mCurScene);
 
     mModeLayout->showSeeking();
 

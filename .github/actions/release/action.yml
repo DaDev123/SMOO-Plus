@@ -1,36 +1,55 @@
-name: Create release
+name: Release
 
 
-inputs:
-  tag:
-    description : 'Version tag'
-    required    : true
-  GITHUB_TOKEN:
-    description : 'Secret GitHub token required to create the release'
-    required    : true
+on:
+  push:
+    tags:
+    - 'v[0-9]+.[0-9]+.[0-9]+'
 
 
-outputs:
-  id:
-    value: ${{ steps.release.outputs.id }}
-  html_url:
-    value: ${{ steps.release.outputs.html_url }}
-  upload_url:
-    value: ${{ steps.release.outputs.upload_url }}
+jobs:
 
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      filename-switch: ${{ steps.build.outputs.filename-switch }}
+      filename-emulators: ${{ steps.build.outputs.filename-emulators }}
+    steps:
+    -
+      name : Checkout
+      uses : actions/checkout@v4
+    -
+      name : Build artifacts
+      id   : build
+      uses : ./.github/actions/build
+      with:
+        tag : ${{ github.ref_name }}
 
-runs:
-  using: composite
-  steps:
-  -
-    name : Create release
-    id   : release
-    uses : actions/create-release@v1
-    env:
-      GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-    with:
-      tag_name     : ${{ inputs.tag }}
-      release_name : Release ${{ inputs.tag }}
-      body         : ''
-      draft        : true
-      prerelease   : false
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    -
+      name : Checkout
+      uses : actions/checkout@v4
+    -
+      name : Create release
+      id   : release
+      uses : ./.github/actions/release
+      with:
+        tag          : ${{ github.ref_name }}
+        GITHUB_TOKEN : ${{ secrets.GITHUB_TOKEN }}
+    -
+      name : Attach build artifacts to release (Switch)
+      uses : ./.github/actions/attach
+      with:
+        filename     : ${{ needs.build.outputs.filename-switch }}
+        upload_url   : ${{ steps.release.outputs.upload_url }}
+        GITHUB_TOKEN : ${{ secrets.GITHUB_TOKEN }}
+    -
+      name : Attach build artifacts to release (Emulators)
+      uses : ./.github/actions/attach
+      with:
+        filename     : ${{ needs.build.outputs.filename-emulators }}
+        upload_url   : ${{ steps.release.outputs.upload_url }}
+        GITHUB_TOKEN : ${{ secrets.GITHUB_TOKEN }}

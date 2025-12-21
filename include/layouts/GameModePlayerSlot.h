@@ -5,6 +5,7 @@
 
 struct HideAndSeekInfo;
 struct SardineInfo;
+class StageScene;
 
 enum class GameModePlayerSlotMode {
     HideAndSeek,
@@ -16,6 +17,7 @@ public:
     GameModePlayerSlot(const char* name, const al::LayoutInitInfo& initInfo, GameModePlayerSlotMode mode);
     
     void init(int index);
+    void setScene(StageScene* scene) { mScene = scene; }
     void appear();
     bool tryEnd();
     bool tryStart();
@@ -35,6 +37,7 @@ private:
         SardineInfo* mSardineInfo;
     };
     GameModePlayerSlotMode mMode;
+    StageScene* mScene = nullptr;
     int mPlayerIndex = 0;
     bool mIsVisible = false;
     bool mIsPlayer = false;

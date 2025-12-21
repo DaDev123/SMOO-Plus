@@ -63,6 +63,7 @@ void SardineMode::init(const GameModeInitInfo& info)
     sead::ScopedCurrentHeapSetter heapSetterr(GameModeManager::getSceneHeap());
 
     mModeLayout = new SardineIcon("SardineIcon", *info.mLayoutInitInfo);
+    mModeLayout->setCurScene(mCurScene);
 
     mModeLayout->showSolo();
 

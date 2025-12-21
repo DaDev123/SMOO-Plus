@@ -11,6 +11,7 @@
 #include "server/Client.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/snh/SardineMode.hpp"
+#include "game/Player/PlayerFunction.h"
 #include <cstdio>
 #include <cstring>
 #include <math/seadMathCalcCommon.h>
@@ -92,6 +93,16 @@ void GameModePlayerSlot::exeWait()
 {
     if (al::isFirstStep(this)) {
         al::startAction(this, "Wait", 0);
+    }
+
+    // Hide slot if player is dead (applies to both Hide and Seek and Sardine modes)
+    if (mScene) {
+        PlayerActorBase* playerBase = rs::getPlayerActor(mScene);
+        if (playerBase && PlayerFunction::isPlayerDeadStatus(playerBase)) {
+            if (mIsVisible)
+                hideSlot();
+            return;
+        }
     }
 
     int maxPlayerCount = Client::getMaxPlayerCount();
