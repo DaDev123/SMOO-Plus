@@ -33,7 +33,7 @@ runs:
         echo "version=${VERS:1}" >> $GITHUB_OUTPUT
         
         # Set both filenames
-        echo "filename-switch=${PREFIX}SMOO-Plus-Switch${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}" >> $GITHUB_OUTPUT
+        echo "filename-switch=${PREFIX}atmosphere${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}" >> $GITHUB_OUTPUT
         echo "filename-emulators=${PREFIX}SMOO-Plus${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}-Emulators" >> $GITHUB_OUTPUT
     -
       name: Set up Docker Buildx
