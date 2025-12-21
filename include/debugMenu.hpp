@@ -23,3 +23,5 @@ void drawBackground(agl::DrawContext *context);
 void drawChatBackground(agl::DrawContext *context, float rows);
 
 void drawConnectionBackground(agl::DrawContext *context);
+
+sead::Color4f loadColorFromFile(const char* file);
