@@ -246,7 +246,7 @@ if (gmm->isPaused()) {
                 gTextWriter->beginDraw();
                 gTextWriter->setScaleFromFontHeight(15.f);
                 
-                float baseY = (dispHeight * 7 / 10) + 95.f + 1.f;
+                float baseY = (dispHeight * 7 / 10) + 95.f - 5.f;
                 float lineHeight = 18.f;
                 
                 // Draw messages from oldest to newest (bottom to top)
