@@ -45,7 +45,7 @@ if '.' not in altSwitchIP:
 consolePort = 5000
 
 if len(sys.argv) < 4:
-    projName = 'StarlightBase'
+    projName = 'SMOO-Plus'
 else:
     projName = sys.argv[3]
 
