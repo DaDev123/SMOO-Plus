@@ -7,7 +7,7 @@ namespace BloodMoon {
 
 /**
  * Load a file from the filesystem
- * @param filePath Path to the file (e.g., "NetworkData/config.txt")
+ * @param filePath Path to the file (e.g., "OnlineData/config.txt")
  * @param outSize Pointer to store the size of the loaded file
  * @return Pointer to null-terminated buffer containing file contents, or nullptr if failed
  * @note Caller is responsible for freeing the returned buffer with delete[]

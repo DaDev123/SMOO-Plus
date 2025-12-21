@@ -449,16 +449,6 @@ if (gmm->isPaused()) {
                         gTextWriter->printf("Cur Action: %s\n", p1->mPlayerAnimator->mAnimFrameCtrl->getActionName());
                         gTextWriter->printf("Cur Anim: %s\n", p1->mPlayerAnimator->curAnim.cstr());
                         gTextWriter->printf("Cur Sub Anim: %s\n", p1->mPlayerAnimator->curSubAnim.cstr());
-                        gTextWriter->printf("Anim Frame: %.2f\n", p1->mPlayerAnimator->getAnimFrame());
-                        gTextWriter->printf("Anim Frame Max: %.2f\n", p1->mPlayerAnimator->getAnimFrameMax());
-                        gTextWriter->printf("Anim Frame Rate: %.2f\n", p1->mPlayerAnimator->getAnimFrameRate());
-                        gTextWriter->printf("Sub Anim Frame: %.2f\n", p1->mPlayerAnimator->getSubAnimFrame());
-                        gTextWriter->printf("Sub Anim Frame Max: %.2f\n", p1->mPlayerAnimator->getSubAnimFrameMax());
-                        gTextWriter->printf("Is Sub Anim End: %s\n", BTOC(p1->mPlayerAnimator->isSubAnimEnd()));
-                        gTextWriter->printf("Is Upper Body Anim Attached: %s\n", BTOC(p1->mPlayerAnimator->isUpperBodyAnimAttached()));
-                        gTextWriter->printf("Blend Weight [0]: %.2f\n", p1->mPlayerAnimator->getBlendWeight(0));
-                        gTextWriter->printf("Blend Weight [1]: %.2f\n", p1->mPlayerAnimator->getBlendWeight(1));
-                        gTextWriter->printf("Blend Weight [2]: %.2f\n", p1->mPlayerAnimator->getBlendWeight(2));
                         gTextWriter->printf("Is Cappy Flying? %s\n", BTOC(p1->mHackCap->isFlying()));
                         
                         if (p1->mHackCap->isFlying()) {

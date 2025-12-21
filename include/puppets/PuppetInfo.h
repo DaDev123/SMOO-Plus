@@ -32,11 +32,8 @@ struct PuppetInfo {
     // Puppet Model Info
     PlayerAnims::Type curAnim;
     PlayerAnims::Type curSubAnim;
-    PlayerAnims::Type curUpperBodyAnim;  
     char curAnimStr[PACKBUFSIZE] = {};
     char curSubAnimStr[PACKBUFSIZE] = {};
-    char curUpperBodyAnimStr[PACKBUFSIZE] = {};  
-    bool hasUpperBodyAnim = false;  
     float blendWeights[6] = {};
     float animRate = 0.f;
     bool is2D = false;

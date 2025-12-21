@@ -71,10 +71,10 @@ ServerBrowser& ServerBrowser::operator=(const ServerBrowser& other) {
 static std::vector<ServerBrowser> loadServersFromFile() {
     std::vector<ServerBrowser> servers;
     size_t fileSize = 0;
-    u8* fileData = BloodMoon::loadFile("NetworkData/list.txt", &fileSize);
+    u8* fileData = BloodMoon::loadFile("OnlineData/ServerList.txt", &fileSize);
     
     if (!fileData) {
-        servers.push_back(ServerBrowser("ERROR: list.txt not found", "", 0));
+        servers.push_back(ServerBrowser("ERROR: OnlineData/serverlist.txt not found", "", 0));
         return servers;
     }
     
@@ -179,7 +179,7 @@ void StageSceneStateServerConfig::initNetworkMenu(const al::LayoutInitInfo& init
 void StageSceneStateServerConfig::initServerBrowserMenu(const al::LayoutInitInfo& initInfo) {
     mServerBrowserMenu = new SimpleLayoutMenu("ServerBrowserMenu", "OptionSelect", initInfo, 0, false);
     mServerBrowserList = new CommonVerticalList(mServerBrowserMenu, initInfo, true);
-    al::setPaneString(mServerBrowserMenu, "TxtOption", u"Server List (romfs/NetworkData/list.txt)", 0);
+    al::setPaneString(mServerBrowserMenu, "TxtOption", u"Server List (OnlineData/ServerList.txt)", 0);
     mServerBrowserList->unkInt1 = 1;
     mServerBrowserList->initDataNoResetSelected(mServerBrowserCount);
     
@@ -309,7 +309,7 @@ void StageSceneStateServerConfig::updateGameplaySettingsOptions() {
     mGameplayOptions->mBuffer[1].copy(sCostumeDoorsUnlocked ? 
         u"Unlock Costume Doors (ON)" : u"Unlock Costume Doors (OFF)");
     mGameplayOptions->mBuffer[2].copy(sLowLatencyEnabled ? 
-        u"Low Latency Mode (ON)" : u"Low Latency Mode (OFF)");
+        u"Reduce Player Latency (OFF)" : u"Reduce Player Latency (ON)");
     mGameplayOptions->mBuffer[3].copy(Client::isMusicDisabled() ? 
         u"In-Game Music (OFF)" : u"In-Game Music (ON)");
 }

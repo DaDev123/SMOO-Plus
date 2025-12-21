@@ -43,12 +43,12 @@ void setupDebugMenu(GameSystem* gSys) {
     __asm("MOV W23, #0x3F800000");
     __asm("MOV W8, #0xFFFFFFFF");
 
-    if (al::isExistFile("SMOOsettings/DebugMenuColor.txt")) {
-        DMBgColor = loadColorFromFile("SMOOsettings/DebugMenuColor.txt");
+    if (al::isExistFile("OnlineData/DebugMenuColor.txt")) {
+        DMBgColor = loadColorFromFile("OnlineData/DebugMenuColor.txt");
     }
 
-    if (al::isExistFile("SMOOsettings/ChatBGColor.txt")) {
-        ChatBgColor = loadColorFromFile("SMOOsettings/ChatBGColor.txt");
+    if (al::isExistFile("OnlineData/ChatBGColor.txt")) {
+        ChatBgColor = loadColorFromFile("OnlineData/ChatBGColor.txt");
     }
 
 }
@@ -122,7 +122,7 @@ sead::Color4f loadColorFromFile(const char* file) {
         }
 
         color = sead::Color4f(values[0], values[1], values[2], values[3]);
-        break;  // nur erste gültige Zeile
+        break;  // nur erste gï¿½ltige Zeile
     }
 
     delete[] fileData;

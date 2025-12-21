@@ -485,31 +485,14 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
             if (actName) {
                 packet->actName = PlayerAnims::FindType(actName);
                 packet->subActName = PlayerAnims::Type::Unknown;
-                packet->upperBodyActName = PlayerAnims::Type::Unknown;
             } else {
                 packet->actName = PlayerAnims::Type::Unknown;
                 packet->subActName = PlayerAnims::Type::Unknown;
-                packet->upperBodyActName = PlayerAnims::Type::Unknown;
             }
         } else {
             packet->actName =
                 PlayerAnims::FindType(player->mPlayerAnimator->mAnimFrameCtrl->getActionName());
             packet->subActName = PlayerAnims::FindType(player->mPlayerAnimator->curSubAnim.cstr());
-
-            // Check if player is in 2D mode before checking upper body animations
-            // 2D models don't support upper body partial animations
-            bool is2D = player->mDimKeeper && player->mDimKeeper->is2DModel;
-
-            if (!is2D && player->mPlayerAnimator->isUpperBodyAnimAttached()) {
-                const char* upperBodyAnim = player->mPlayerAnimator->curUpperBodyAnim.cstr();
-                if (upperBodyAnim && upperBodyAnim[0] != '\0') {
-                    packet->upperBodyActName = PlayerAnims::FindType(upperBodyAnim);
-                } else {
-                    packet->upperBodyActName = PlayerAnims::Type::Unknown;
-                }
-            } else {
-                packet->upperBodyActName = PlayerAnims::Type::Unknown;
-            }
 
             sInstance->isClientCaptured = false;
         }
@@ -525,7 +508,6 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
 
         packet->actName = PlayerAnims::Type::Unknown;
         packet->subActName = PlayerAnims::Type::Unknown;
-        packet->upperBodyActName = PlayerAnims::Type::Unknown;
     }
 
     if (sInstance->lastPlayerInfPacket != *packet) {
@@ -862,20 +844,8 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
         strcpy(curInfo->curSubAnimStr, "");
     }
 
-    if (packet->upperBodyActName != PlayerAnims::Type::Unknown) {
-        strcpy(curInfo->curUpperBodyAnimStr, PlayerAnims::FindStr(packet->upperBodyActName));
-        curInfo->hasUpperBodyAnim = true;
-        if (curInfo->curUpperBodyAnimStr[0] == '\0')
-            Logger::log("[ERROR] %s: upperBodyActName was out of bounds: %d\n", __func__,
-                        packet->upperBodyActName);
-    } else {
-        strcpy(curInfo->curUpperBodyAnimStr, "");
-        curInfo->hasUpperBodyAnim = false;
-    }
-
     curInfo->curAnim = packet->actName;
     curInfo->curSubAnim = packet->subActName;
-    curInfo->curUpperBodyAnim = packet->upperBodyActName;
 
     for (size_t i = 0; i < 6; i++) {
         // weights can only be between 0 and 1

@@ -132,7 +132,8 @@ void SpeedbootLoad::updateProgressBar() {
         mFallbackTimer += 1.0f / FPS;
         mProgression = sead::Mathf::clamp(mFallbackTimer / FALLBACK_DURATION, 0.0f, 1.0f);
     } else {
-        mProgression = worldResourceLoader->calcLoadPercent() / 100.0f;
+        f32 loadPercent = worldResourceLoader->calcLoadPercent();
+        mProgression = sead::Mathf::clamp(loadPercent / 100.0f, 0.0f, 1.0f);
     }
 }
 
@@ -180,12 +181,13 @@ void SpeedbootLoad::updateTextElements() {
     al::setPaneString(this, "TxtLoading", loadingString.cstr(), 0);
 
     // Display loading percentage
+    f32 displayPercent = sead::Mathf::clamp(mProgression * 100.0f, 0.0f, 100.0f);
     sead::WFormatFixedSafeString<0x20> percentString(u"");
-    percentString.appendWithFormat(u"%.0f%%", mProgression * 100.0f);
+    percentString.appendWithFormat(u"%.0f%%", displayPercent);
     al::setPaneString(this, "TxtLoadingPercent", percentString.cstr(), 0);
 
     // Debug info
-    sead::WFormatFixedSafeString<0x100> debugString(u"Progress: %.1f%%", mProgression * 100.0f);
+    sead::WFormatFixedSafeString<0x100> debugString(u"Progress: %.1f%%", displayPercent);
     al::setPaneString(this, "TxtDebug", debugString.cstr(), 0);
     al::setPaneString(this, "TxtCurModName", u"Super Mario Odyssey Online - Plus", 0);
 }

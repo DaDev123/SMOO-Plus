@@ -132,6 +132,7 @@ void PuppetActor::calcAnim() {
     al::LiveActor::calcAnim();
 }
 
+
 void PuppetActor::control() { 
     if(!mInfo) {
         return;
@@ -139,9 +140,17 @@ void PuppetActor::control() {
 
     al::LiveActor* curModel = getCurrentModel();
     
-    // Safety check
+    // Enhanced safety checks
     if(!curModel) {
         Logger::log("[Puppet] Error: getCurrentModel() returned null for %s\n", mInfo->puppetName);
+        return;
+    }
+    
+    // CRITICAL: Check if action keeper exists before trying to play animations
+    if(!curModel->mActorActionKeeper) {
+        Logger::log("[Puppet] Warning: Model has no ActionKeeper for %s (model: %s)\n", 
+                    mInfo->puppetName, 
+                    mIsCaptureModel ? mInfo->curHack : "Normal");
         return;
     }
 
@@ -149,8 +158,22 @@ void PuppetActor::control() {
     // POSITION & ROTATION
     // ============================================================================
     
-    al::setTrans(this, mInfo->playerPos);
-    al::setQuat(this, mInfo->playerRot);
+    // Use smooth movement if low latency is enabled, otherwise snap directly
+    if (StageSceneStateServerConfig::isLowLatencyEnabled()) {
+        sead::Vector3f* pPos = al::getTransPtr(this);
+        sead::Quatf* pQuat = al::getQuatPtr(this);
+        
+        mClosingSpeed = VisualUtils::SmoothMove_RegularLatency(
+            {pPos, pQuat}, 
+            {&mInfo->playerPos, &mInfo->playerRot}, 
+            Time::deltaTime, 
+            mClosingSpeed, 
+            1440.0f
+        );
+    } else {
+        al::setTrans(this, mInfo->playerPos);
+        al::setQuat(this, mInfo->playerRot);
+    }
 
     // ============================================================================
     // MODEL UPDATING
@@ -178,26 +201,28 @@ void PuppetActor::control() {
     if (!mIsCaptureModel) {
         // ======== MARIO MODEL ANIMATION ========
         
-        // Main animation
-        if(!al::isActionPlaying(curModel, targetAnim) || al::isActionEnd(curModel)) {
+        // Fixed: Check the SAME animation we're about to start
+        if(!al::isActionPlaying(curModel, targetAnim)) {
+            startAction(targetAnim);
+        } else if(al::isActionEnd(curModel)) {
             startAction(targetAnim);
         }
 
-        // Upper body animation for 3D models only
-        if(!mIs2DModel && mInfo->hasUpperBodyAnim && mInfo->curUpperBodyAnimStr[0] != '\0') {
-            const char* upperBodyAnim = mInfo->curUpperBodyAnimStr;
-            if(al::isSklAnimExist(curModel, upperBodyAnim)) {
-                al::tryStartSklAnimIfExist(curModel, upperBodyAnim);
-            }
-        }
-
-        // Animation blending for locomotion (3D only)
-        if(!mIs2DModel && isNeedBlending()) {
-            for (size_t i = 0; i < 6; i++) {
+        if(isNeedBlending()) {
+            for (size_t i = 0; i < 6; i++)
+            {
                 setBlendWeight(i, mInfo->blendWeights[i]);
             }
         }
+    } else {
+        // ======== CAPTURE MODEL ANIMATION ========
         
+        // Check if we need to start or restart the animation
+        if(!al::isActionPlaying(curModel, targetAnim)) {
+            startAction(targetAnim);
+        } else if(al::isActionEnd(curModel)) {
+            startAction(targetAnim);
+        }
     }
 
     // ============================================================================
@@ -205,29 +230,36 @@ void PuppetActor::control() {
     // ============================================================================
 
     if (mInfo->isCaptured && !mIsCaptureModel) {
-        // Switching to capture model
-        getCurrentModel()->makeActorDead();
-        if(setCapture(mInfo->curHack)) {
-            mIsCaptureModel = true;
-            al::LiveActor* captureModel = getCurrentModel();
-            if(captureModel) {
-                captureModel->makeActorAlive();
-            } else {
-                // Fallback to normal model
-                mModelHolder->changeModel("Normal");
-                mIsCaptureModel = false;
-                getCurrentModel()->makeActorAlive();
-            }
+
+        getCurrentModel()->makeActorDead();  // sets previous model to dead so we can try to
+                                             // switch to capture model
+        setCapture(mInfo->curHack);
+        mIsCaptureModel = true;
+        
+        al::LiveActor* newModel = getCurrentModel();
+        if(newModel) {
+            newModel->makeActorAlive(); // make new model alive
         } else {
+            // Fallback if capture model doesn't exist
+            Logger::log("[Puppet] Warning: Capture model '%s' not found, reverting to normal\n", mInfo->curHack);
+            mModelHolder->changeModel("Normal");
+            mIsCaptureModel = false;
             getCurrentModel()->makeActorAlive();
         }
 
     } else if (!mInfo->isCaptured && mIsCaptureModel) {
-        // Switching back to normal model
-        getCurrentModel()->makeActorDead();
-        mModelHolder->changeModel("Normal");
+
+        getCurrentModel()->makeActorDead(); // make capture model dead
+        mModelHolder->changeModel("Normal"); // set player model to normal
         mIsCaptureModel = false;
-        getCurrentModel()->makeActorAlive();
+        getCurrentModel()->makeActorAlive(); // make player model alive
+
+    }
+
+    // Re-fetch current model after potential capture state change
+    curModel = getCurrentModel();
+    if(!curModel || !curModel->mActorActionKeeper) {
+        return; // Exit early if model state is invalid
     }
 
     // ============================================================================
@@ -246,7 +278,7 @@ void PuppetActor::control() {
                 mPuppetCap->makeActorDead();
                 // Turn cap back on for 3D models
                 if(!mIs2DModel) {
-                    al::LiveActor* headModel = al::getSubActor(curModel, "頭");
+                    al::LiveActor* headModel = al::tryGetSubActor(curModel, "頭");
                     if (headModel) {
                         al::startVisAnimForAction(headModel, "CapOn");
                     }
@@ -309,6 +341,7 @@ void PuppetActor::control() {
 
     syncPose();
 }
+
 
 void PuppetActor::setBlendWeight(int index, float weight) {
     al::LiveActor* curModel = getCurrentModel();
@@ -377,17 +410,12 @@ bool PuppetActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* source,
     return false;
 }
 
-// this is more or less how nintendo does it with marios demo puppet
 void PuppetActor::startAction(const char *actName) {
 
     al::LiveActor* curModel = getCurrentModel();
 
-    if(!actName || actName[0] == '\0') {
-        Logger::log("[Puppet] Warning: Attempted to start null/empty action!\n");
-        return;
-    }
+    if(!actName) return;
 
-    // Try to start the action on the main model
     if(al::tryStartActionIfNotPlaying(curModel, actName)) {
         const char *curActName = al::getActionName(curModel);
         if(curActName) {
@@ -395,30 +423,23 @@ void PuppetActor::startAction(const char *actName) {
                 al::clearSklAnimInterpole(curModel);
             }
         }
-    } else {
-        // Animation doesn't exist or failed to start
-        if(mIsDebug) {
-            Logger::log("[Puppet] Warning: Failed to start action '%s' on model\n", actName);
-        }
     }
 
-    // Try to start action on sub-actors
     for (size_t i = 0; i < 5; i++)
     {
-        al::LiveActor* subActor = al::tryGetSubActor(curModel, subActorNames[i]);
-        if(subActor) {
-            // Try to start the same action on sub-actor
-            if (al::tryStartActionIfNotPlaying(subActor, actName)) {
-                if(al::isSklAnimExist(subActor, actName)) {
-                    al::clearSklAnimInterpole(subActor);
+        al::LiveActor* subActor = al::getSubActor(curModel, subActorNames[i]);
+        const char *curActName = al::getActionName(curModel);
+        if(subActor && curActName) {
+            if (al::tryStartActionIfNotPlaying(subActor, curActName)) {
+                if(al::isSklAnimExist(curModel, curActName)) {
+                    al::clearSklAnimInterpole(curModel);
                 }
             }
-            // Sub-actors might not have all animations - this is normal, don't log
         }
     }
 
-    // Handle face animations with "FullFace" suffix
     al::LiveActor* faceActor = al::tryGetSubActor(curModel, "顔");
+
     if (faceActor) {
         al::StringTmp<0x80> faceAnim("%sFullFace", actName);
         if (al::tryStartActionIfNotPlaying(faceActor, faceAnim.cstr())) {
@@ -428,6 +449,7 @@ void PuppetActor::startAction(const char *actName) {
         }
     }
 }
+
 
 void PuppetActor::hairControl() {
 

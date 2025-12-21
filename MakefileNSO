@@ -90,8 +90,7 @@ CFLAGS += $(INCLUDE) \
           -DBUILDVERSTR=$(BUILDVERSTR) \
           -DBUILDVER=$(BUILDVER) \
           -DDEBUGLOG=$(DEBUGLOG) \
-          -DSERVERIP=$(SERVERIP) \
-          -DEMU=$(EMU)
+          -DSERVERIP=$(SERVERIP)
 
 # C++ specific flags
 CXXFLAGS := $(CFLAGS) \
