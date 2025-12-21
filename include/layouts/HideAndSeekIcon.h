@@ -3,30 +3,34 @@
 #include "al/layout/LayoutActor.h"
 #include "al/layout/LayoutInitInfo.h"
 #include "al/util/NerveUtil.h"
+#include "container/seadPtrArray.h"
 
 #include "logger.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
+#include "layouts/GameModePlayerSlot.h"
 
 // TODO: kill layout if going through loading zone or paused
 
 class HideAndSeekIcon : public al::LayoutActor {
-    public:
-        HideAndSeekIcon(const char* name, const al::LayoutInitInfo& initInfo);
+public:
+    HideAndSeekIcon(const char* name, const al::LayoutInitInfo& initInfo);
 
-        void appear() override;
+    void appear() override;
 
-        bool tryStart();
-        bool tryEnd();
+    bool tryStart();
+    bool tryEnd();
 
-        void showHiding();
-        void showSeeking();
-        
-        void exeAppear();
-        void exeWait();
-        void exeEnd();
+    void showHiding();
+    void showSeeking();
+    
+    void exeAppear();
+    void exeWait();
+    void exeEnd();
 
-    private:
-        struct HideAndSeekInfo *mInfo;
+private:
+    struct HideAndSeekInfo *mInfo;
+    sead::PtrArray<GameModePlayerSlot> mPlayerSlots;
+    static constexpr int mMaxPlayers = 16;
 };
 
 namespace {

@@ -3,9 +3,11 @@
 #include "al/layout/LayoutActor.h"
 #include "al/layout/LayoutInitInfo.h"
 #include "al/util/NerveUtil.h"
+#include "container/seadPtrArray.h"
 
 #include "logger.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
+#include "layouts/GameModePlayerSlot.h"
 
 // TODO: kill layout if going through loading zone or paused
 
@@ -27,10 +29,12 @@ public:
 
 private:
     struct SardineInfo* mInfo;
+    sead::PtrArray<GameModePlayerSlot> mPlayerSlots;
+    static constexpr int mMaxPlayers = 16;
 };
 
 namespace {
-NERVE_HEADER(SardineIcon, Appear)
-NERVE_HEADER(SardineIcon, Wait)
-NERVE_HEADER(SardineIcon, End)
+    NERVE_HEADER(SardineIcon, Appear)
+    NERVE_HEADER(SardineIcon, Wait)
+    NERVE_HEADER(SardineIcon, End)
 }

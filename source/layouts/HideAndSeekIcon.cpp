@@ -12,27 +12,37 @@
 #include "rs/util.hpp"
 #include "main.hpp"
 
-HideAndSeekIcon::HideAndSeekIcon(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
-
+HideAndSeekIcon::HideAndSeekIcon(const char* name, const al::LayoutInitInfo& initInfo) 
+    : al::LayoutActor(name) 
+{
     al::initLayoutActor(this, initInfo, "HideAndSeekIcon", 0);
 
     mInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
+
+    // Initialize player slots
+    mPlayerSlots.tryAllocBuffer(mMaxPlayers, al::getSceneHeap());
+    for (int i = 0; i < mMaxPlayers; i++) {
+        GameModePlayerSlot* newSlot = new (al::getSceneHeap()) 
+            GameModePlayerSlot("PlayerSlot", initInfo, GameModePlayerSlotMode::HideAndSeek);
+        newSlot->init(i);
+        mPlayerSlots.pushBack(newSlot);
+    }
 
     initNerve(&nrvHideAndSeekIconEnd, 0);
 
     al::hidePane(this, "SeekingIcon");
     al::hidePane(this, "HidingIcon");
 
-    
     kill();
-
 }
 
 void HideAndSeekIcon::appear() {
-
     al::startAction(this, "Appear", 0);
-
     al::setNerve(this, &nrvHideAndSeekIconAppear);
+
+    // Start all player slots
+    for (int i = 0; i < mMaxPlayers; i++)
+        mPlayerSlots.at(i)->tryStart();
 
     al::LayoutActor::appear();
 }
@@ -40,20 +50,21 @@ void HideAndSeekIcon::appear() {
 bool HideAndSeekIcon::tryEnd() {
     if (!al::isNerve(this, &nrvHideAndSeekIconEnd)) {
         al::setNerve(this, &nrvHideAndSeekIconEnd);
+        
+        // End all player slots
+        for (int i = 0; i < mMaxPlayers; i++)
+            mPlayerSlots.at(i)->tryEnd();
+        
         return true;
     }
     return false;
 }
 
 bool HideAndSeekIcon::tryStart() {
-
     if (!al::isNerve(this, &nrvHideAndSeekIconWait) && !al::isNerve(this, &nrvHideAndSeekIconAppear)) {
-
         appear();
-
         return true;
     }
-
     return false;
 }
 
@@ -68,51 +79,19 @@ void HideAndSeekIcon::exeWait() {
         al::startAction(this, "Wait", 0);
     }
 
+    // Update timer display
     GameTime &curTime = mInfo->mHidingTime;
 
     if (curTime.mHours > 0) {
-        al::setPaneStringFormat(this, "TxtCounter", "%01d:%02d:%02d", curTime.mHours, curTime.mMinutes,
-                            curTime.mSeconds);
+        al::setPaneStringFormat(this, "TxtCounter", "%01d:%02d:%02d", 
+            curTime.mHours, curTime.mMinutes, curTime.mSeconds);
     } else {
-        al::setPaneStringFormat(this, "TxtCounter", "%02d:%02d", curTime.mMinutes,
-                            curTime.mSeconds);
+        al::setPaneStringFormat(this, "TxtCounter", "%02d:%02d", 
+            curTime.mMinutes, curTime.mSeconds);
     }
-
-    
-
-    int playerCount = Client::getMaxPlayerCount();
-
-    if (playerCount > 0) {
-
-        char playerNameBuf[0x100] = {0}; // max of 16 player names if player name size is 0x10
-
-        sead::BufferedSafeStringBase<char> playerList =
-            sead::BufferedSafeStringBase<char>(playerNameBuf, 0x200);
-        
-        // Add your own name to the list at the top
-        playerList.appendWithFormat("%s %s\n", mInfo->mIsPlayerIt ? "&" : "%%", Client::instance()->getClientName());
-
-        // Add all it players to list
-        for(int i = 0; i < playerCount; i++){
-            PuppetInfo* curPuppet = Client::getPuppetInfo(i);
-            if (curPuppet && curPuppet->isConnected && curPuppet->isIt)
-                playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "&" : "%%", curPuppet->puppetName);
-        }
-
-        // Add not it players to list
-        for(int i = 0; i < playerCount; i++){
-            PuppetInfo* curPuppet = Client::getPuppetInfo(i);
-            if (curPuppet && curPuppet->isConnected && !curPuppet->isIt)
-                playerList.appendWithFormat("%s %s\n", curPuppet->isIt ? "&" : "%%", curPuppet->puppetName);
-        }
-        
-        al::setPaneStringFormat(this, "TxtPlayerList", playerList.cstr());
-    }
-    
 }
 
 void HideAndSeekIcon::exeEnd() {
-
     if (al::isFirstStep(this)) {
         al::startAction(this, "End", 0);
     }

@@ -243,3 +243,9 @@ void updateDrawHook(al::ExecuteDirector* thisPtr, const char* listName, const ch
     Logger::log("Updating Draw List for: %s %s\n", listName, kit);
     thisPtr->drawList(listName, kit);
 }
+
+void exeWaitHook(StageSceneStatePauseMenu* thisPtr) {
+    if (al::isFirstStep(thisPtr)) {
+        thisPtr->mSelectParts->setSelectMessage(2, u"Server Config");
+    }
+}
