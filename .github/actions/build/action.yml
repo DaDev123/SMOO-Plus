@@ -61,30 +61,16 @@ runs:
           ${{ (steps.env.outputs.version != '' && format('-e BUILDVER={0}', steps.env.outputs.version)) || '' }} \
           smoo-build-env
     -
-      name: Create Switch zip with atmosphere folder
-      shell: bash
-      run: |
-        cd ./starlight_patch_100
-        zip -r ../${{ steps.env.outputs.filename-switch }}.zip atmosphere/
-        cd ..
-    -
       name: Upload artifacts (Switch)
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.env.outputs.filename-switch }}
-        path: ./${{ steps.env.outputs.filename-switch }}.zip
+        path: ./starlight_patch_100/atmosphere/
         if-no-files-found: error
-    -
-      name: Create Emulators zip with SMOO-Plus folder
-      shell: bash
-      run: |
-        cd ./starlight_patch_100
-        zip -r ../${{ steps.env.outputs.filename-emulators }}.zip SMOO-Plus/
-        cd ..
     -
       name: Upload artifacts (Emulators)
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.env.outputs.filename-emulators }}
-        path: ./${{ steps.env.outputs.filename-emulators }}.zip
+        path: ./starlight_patch_100/SMOO-Plus/
         if-no-files-found: error
