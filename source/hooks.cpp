@@ -246,6 +246,6 @@ void updateDrawHook(al::ExecuteDirector* thisPtr, const char* listName, const ch
 
 void exeWaitHook(StageSceneStatePauseMenu* thisPtr) {
     if (al::isFirstStep(thisPtr)) {
-        thisPtr->mSelectParts->setSelectMessage(2, u"Server Config");
+        thisPtr->mSelectParts->setSelectMessage(2, u"Mod Config");
     }
 }

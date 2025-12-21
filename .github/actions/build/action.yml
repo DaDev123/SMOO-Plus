@@ -1,61 +1,103 @@
 name: Build artifacts
 
-
 inputs:
   tag:
-    description : 'version tag'
-    required    : false
-    default     : ''
-
+    description: 'version tag'
+    required: false
+    default: ''
+  prefix:
+    description: 'filename prefix'
+    required: false
+    default: ''
+  emu:
+    description: 'build target (Switch or Emulators)'
+    required: false
+    default: 'Switch'
 
 outputs:
   filename:
-    description : 'Filename for the build artifacts'
-    value       : ${{ steps.env.outputs.filename }}
-
+    description: 'Filename for the build artifacts'
+    value: ${{ steps.env.outputs.filename }}
 
 runs:
   using: composite
   steps:
-  -
-    name  : Environment
-    id    : env
-    shell : bash
-    run: |
-      VERS=${{ inputs.tag }}
-      echo "::set-output name=version::${VERS:1}"
-      echo "::set-output name=filename::SMOManHunt${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}"
-  -
-    name : Set up Docker Buildx
-    uses : docker/setup-buildx-action@v2
-  -
-    name : Build environment
-    uses : docker/build-push-action@v4
-    with:
-      pull       : true
-      push       : false
-      load       : true
-      context    : .
-      file       : ./Dockerfile
-      tags       : smoo-build-env
-      platforms  : linux/amd64
-      cache-from : type=gha,scope=smoo-build-env
-      cache-to   : type=gha,scope=smoo-build-env,mode=max
-  -
-    name  : Build mod
-    shell : bash
-    run: |
-      docker  run  --rm     \
-        -u `id -u`:`id -g`  \
-        -v "/$PWD/":/app/   \
-        ${{ (steps.env.outputs.version != '' && format('-e BUILDVER={0}', steps.env.outputs.version)) || '' }}  \
-        smoo-build-env      \
-      ;
-      cp  -r  ./romfs/  ./starlight_patch_100/atmosphere/contents/0100000000010000/.
-  -
-    name : Upload artifacts
-    uses : actions/upload-artifact@v4
-    with:
-      name              : ${{ steps.env.outputs.filename }}
-      path              : ./starlight_patch_100/
-      if-no-files-found : error
+    -
+      name: Environment
+      id: env
+      shell: bash
+      run: |
+        VERS=${{ inputs.tag }}
+        PREFIX=${{ inputs.prefix }}
+        EMU=${{ inputs.emu }}
+        
+        # Set version output
+        echo "version=${VERS:1}" >> $GITHUB_OUTPUT
+        
+        # Set filename based on emu type
+        if [ "$EMU" = "Emulators" ]; then
+          echo "filename=${PREFIX}SMOManHunt${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}_Emulators" >> $GITHUB_OUTPUT
+        else
+          echo "filename=${PREFIX}SMOManHunt${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}" >> $GITHUB_OUTPUT
+        fi
+    -
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    -
+      name: Build environment
+      uses: docker/build-push-action@v4
+      with:
+        pull: true
+        push: false
+        load: true
+        context: .
+        file: ./Dockerfile
+        tags: smoo-build-env
+        platforms: linux/amd64
+        cache-from: type=gha,scope=smoo-build-env
+        cache-to: type=gha,scope=smoo-build-env,mode=max
+    -
+      name: Build mod
+      shell: bash
+      run: |
+        docker run --rm \
+          -u `id -u`:`id -g` \
+          -v "/$PWD/":/app/ \
+          ${{ (steps.env.outputs.version != '' && format('-e BUILDVER={0}', steps.env.outputs.version)) || '' }} \
+          smoo-build-env
+    -
+      name: Prepare artifacts (Switch)
+      if: inputs.emu == 'Switch' || inputs.emu == ''
+      shell: bash
+      run: |
+        # The Makefile already creates the full atmosphere structure
+        # starlight_patch_100/atmosphere/contents/0100000000010000/exefs/subsdk1
+        # starlight_patch_100/atmosphere/contents/0100000000010000/romfs/
+        # starlight_patch_100/atmosphere/exefs_patches/SuperMarioOdysseyOnline/
+        echo "Switch artifacts ready at ./starlight_patch_100/atmosphere/"
+    -
+      name: Prepare artifacts (Emulators)
+      if: inputs.emu == 'Emulators'
+      shell: bash
+      run: |
+        # The Makefile already creates the SMOO-Plus structure
+        # starlight_patch_100/SMOO-Plus/exefs/subsdk1
+        # starlight_patch_100/SMOO-Plus/exefs/3CA12DFAAF9C82DA064D1698DF79CDA1.ips
+        # starlight_patch_100/SMOO-Plus/romfs/
+        echo "Emulator artifacts ready at ./starlight_patch_100/SMOO-Plus/"
+    -
+      name: Upload artifacts (Switch)
+      if: inputs.emu == 'Switch' || inputs.emu == ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.env.outputs.filename }}
+        path: ./starlight_patch_100/atmosphere/
+        if-no-files-found: error
+    -
+      name: Upload artifacts (Emulators)
+      if: inputs.emu == 'Emulators'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.env.outputs.filename }}
+        path: ./starlight_patch_100/SMOO-Plus/
+        if-no-files-found: error
