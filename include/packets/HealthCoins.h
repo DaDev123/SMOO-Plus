@@ -9,4 +9,5 @@ struct PACKED HealthCoins : Packet {
     };
     u8 health = 0;
     int coins = 0;
+    bool isKids = false;
 };

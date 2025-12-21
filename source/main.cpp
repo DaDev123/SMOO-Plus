@@ -88,6 +88,13 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
             Client::sendGameInfPacket((PlayerActorHakoniwa*)playerBase, holder);
         }
         
+        if (Client::isNeedUpdateHealthCoins()) {
+            PlayerHitPointData* data = holder.mData->mGameDataFile->getPlayerHitPointData();
+            data->mIsKidsMode = Client::shouldKids();
+            data->mCurrentHit = Client::getHealth();
+            Client::setNeedUpdateHealthCoins(false);
+        }
+
         gameInfSendTimer = 0;
     }
 
@@ -239,7 +246,7 @@ if (gmm->isPaused()) {
                 gTextWriter->beginDraw();
                 gTextWriter->setScaleFromFontHeight(15.f);
                 
-                float baseY = (dispHeight * 7 / 10) + 95.f;
+                float baseY = (dispHeight * 7 / 10) + 95.f + 1.f;
                 float lineHeight = 18.f;
                 
                 // Draw messages from oldest to newest (bottom to top)
@@ -329,7 +336,7 @@ if (gmm->isPaused()) {
     );
 
     gTextWriter->printf("Mod version: %s\n", TOSTRING(BUILDVERSTR));
-    gTextWriter->printf("Server is running version: %s\n", Client::getServerVersion().cstr());
+    gTextWriter->printf("Server is running version: %s\n", Client::getServerVersion());
 
 
     // ===== AUTHORIZED USER ONLY CONTENT =====

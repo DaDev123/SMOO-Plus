@@ -10,7 +10,7 @@
 #define PACKBUFSIZE      0x30
 #define COSTUMEBUFSIZE   0x20
 #define MESSAGESIZE      0x4B
-#define VERSIONSIZE      0x4B
+#define VERSIONSIZE      0x40
 
 #define MAXPACKSIZE      0x100
 

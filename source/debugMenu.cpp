@@ -13,16 +13,7 @@ static sead::Color4f ChatBgColor(0.1f, 0.1f, 0.9f, 0.9f); //Chat
 
 void setupDebugMenu(GameSystem* gSys) {
     sead::Heap* curHeap = al::getCurrentHeap();
-    if (!curHeap)
-        return;
 
-    if (al::isExistFile("SMOOsettings/DebugMenuColor.txt")) {
-        DMBgColor = loadColorFromFile("SMOOsettings/DebugMenuColor.txt");
-    }
-
-    if (al::isExistFile("SMOOsettings/ChatBGColor.txt")) {
-        ChatBgColor = loadColorFromFile("SMOOsettings/ChatBGColor.txt");
-    }
 
 
 
@@ -51,6 +42,15 @@ void setupDebugMenu(GameSystem* gSys) {
 
     __asm("MOV W23, #0x3F800000");
     __asm("MOV W8, #0xFFFFFFFF");
+
+    if (al::isExistFile("SMOOsettings/DebugMenuColor.txt")) {
+        DMBgColor = loadColorFromFile("SMOOsettings/DebugMenuColor.txt");
+    }
+
+    if (al::isExistFile("SMOOsettings/ChatBGColor.txt")) {
+        ChatBgColor = loadColorFromFile("SMOOsettings/ChatBGColor.txt");
+    }
+
 }
 void drawBackground(agl::DrawContext* context) {
     sead::Vector3<float> p1(-1, .3, 0);

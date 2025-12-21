@@ -1,7 +1,8 @@
 /**
  * @file server/Client.hpp
  * @author CraftyBoss (https://github.com/CraftyBoss)
- * @brief main class responsible for handing all client-server related communications, as well as any gamemodes.
+ * @brief main class responsible for handing all client-server related communications, as well as
+ * any gamemodes.
  *
  * @copyright Copyright (c) 2022
  *
@@ -13,6 +14,7 @@
 #include <stdlib.h>
 
 // ===== AL/GAME ENGINE INCLUDES =====
+#include "al/LiveActor/LiveActor.h"
 #include "al/actor/ActorInitInfo.h"
 #include "al/actor/ActorSceneInfo.h"
 #include "al/async/AsyncFunctorThread.h"
@@ -24,7 +26,6 @@
 #include "al/layout/LayoutInitInfo.h"
 #include "al/layout/SimpleLayoutAppearWaitEnd.h"
 #include "al/layout/WindowConfirmWait.h"
-#include "al/LiveActor/LiveActor.h"
 #include "al/util.hpp"
 
 // ===== GAME INCLUDES =====
@@ -54,9 +55,9 @@
 #include "sead/thread/seadMutex.h"
 
 // ===== PROJECT INCLUDES =====
+#include "Keyboard.hpp"
 #include "debugMenu.hpp"
 #include "helpers.hpp"
-#include "Keyboard.hpp"
 #include "layouts/HideAndSeekIcon.h"
 #include "logger.hpp"
 #include "packets/FreezeInf.h"
@@ -64,11 +65,11 @@
 #include "puppets/PuppetHolder.hpp"
 #include "puppets/PuppetInfo.h"
 #include "rs/util.hpp"
+#include "server/SocketClient.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
-#include "server/SocketClient.hpp"
 #include "syssocket/sockdefines.h"
 #include "types.h"
 
@@ -77,6 +78,7 @@
 
 // ===== FORWARD DECLARATIONS =====
 class HideAndSeekIcon;
+struct HealthCoins;
 
 // ===== STRUCTURES =====
 struct UIDIndexNode {
@@ -95,7 +97,7 @@ public:
     // ===== INITIALIZATION =====
     static Client* get();
     GameDataHolderAccessor& getHolder() { return mHolder; }
-    void init(al::LayoutInitInfo const &initInfo, GameDataHolderAccessor holder);
+    void init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor holder);
     bool startThread();
 
     // ===== STATIC CONNECTION METHODS =====
@@ -106,7 +108,8 @@ public:
     // ===== PLAYER CONNECTION METHODS =====
     bool isPlayerConnected(int index) { return mPuppetInfoArr[index]->isConnected; }
     static int getConnectCount() {
-        if (sInstance) return sInstance->mConnectCount;
+        if (sInstance)
+            return sInstance->mConnectCount;
         return 0;
     }
     static int getMaxPlayerCount() { return sInstance ? sInstance->maxPuppets + 1 : 10; }
@@ -115,11 +118,11 @@ public:
     static bool isNeedUpdateShines();
     bool isShineCollected(int shineId);
     int getCollectedShinesCount() { return curCollectedShines.size(); }
-    int getShineID(int index) { 
-        if (index < curCollectedShines.size()) { 
-            return curCollectedShines[index]; 
-        } 
-        return -1; 
+    int getShineID(int index) {
+        if (index < curCollectedShines.size()) {
+            return curCollectedShines[index];
+        }
+        return -1;
     }
     void resetCollectedShines();
     void removeShine(int shineId);
@@ -128,41 +131,52 @@ public:
     static void updateShines();
 
     // ===== PACKET SENDING METHODS =====
-    static void sendHackCapInfPacket(const HackCap *hackCap);
-    static void sendPlayerInfPacket(const PlayerActorBase *player, bool isYukimaru);
-    static void sendGameInfPacket(const PlayerActorHakoniwa *player, GameDataHolderAccessor holder);
+    static void sendHackCapInfPacket(const HackCap* hackCap);
+    static void sendPlayerInfPacket(const PlayerActorBase* player, bool isYukimaru);
+    static void sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolderAccessor holder);
     static void sendGameInfPacket(GameDataHolderAccessor holder);
-    static void sendCaptureInfPacket(const PlayerActorHakoniwa *player);
-    static void sendCostumeInfPacket(const char *body, const char *cap);
+    static void sendCaptureInfPacket(const PlayerActorHakoniwa* player);
+    static void sendCostumeInfPacket(const char* body, const char* cap);
     static void sendShineCollectPacket(int shineId);
     static void sendTagInfPacket();
     static void sendFreezeInfPacket();
     static void sendPuppetPosInfoPacket();
 
     // ===== PUPPET MANAGEMENT =====
-    static bool tryAddPuppet(PuppetActor *puppet);
+    static bool tryAddPuppet(PuppetActor* puppet);
     static bool tryAddDebugPuppet(PuppetActor* puppet);
-    static PuppetActor *getPuppet(int idx);
-    static PuppetInfo *getPuppetInfo(int idx);
-    static PuppetInfo *getLatestInfo();
-    static PuppetInfo *getDebugPuppetInfo();
+    static PuppetActor* getPuppet(int idx);
+    static PuppetInfo* getPuppetInfo(int idx);
+    static PuppetInfo* getLatestInfo();
+    static PuppetInfo* getDebugPuppetInfo();
     static PuppetActor* getDebugPuppet();
     static PuppetHolder* getPuppetHolder() {
-        if (sInstance) return sInstance->mPuppetHolder;
+        if (sInstance)
+            return sInstance->mPuppetHolder;
         return nullptr;
     }
 
     // ===== CLIENT INFO GETTERS =====
-    static const char *getClientName() { return sInstance ? sInstance->mUsername.cstr() : "Player"; }
-    static nn::account::Uid getClientId() { return sInstance ? sInstance->mUserID : nn::account::Uid::EmptyId; }
-    static sead::FixedSafeString<0x20> getUsername() { 
+    static const char* getClientName() {
+        return sInstance ? sInstance->mUsername.cstr() : "Player";
+    }
+    static nn::account::Uid getClientId() {
+        return sInstance ? sInstance->mUserID : nn::account::Uid::EmptyId;
+    }
+    static sead::FixedSafeString<0x20> getUsername() {
         return sInstance ? sInstance->mUsername : sead::FixedSafeString<0x20>::cEmptyString;
     }
     static sead::FixedSafeString<MESSAGESIZE> getMessage(int index);
     static void setMessage(int index, const char* message);
+    static bool shouldKids() { return sInstance ? sInstance->isKids : false; }
+    static u8 getHealth() { return sInstance ? sInstance->mHealth : 3; }
+    static int getCoins() { return sInstance ? sInstance->mCoins : 0; }
+    static bool isNeedUpdateHealthCoins() {
+        return sInstance ? sInstance->mNeedsUpdateHealthCoins : false;
+    }
+    static void setNeedUpdateHealthCoins(bool value);
     static void setServerVersion(const char* serverVersion);
-    static const sead::FixedSafeString<64>& getServerVersion();
-
+    static const char* getServerVersion();
 
     // ===== SERVER CONFIGURATION =====
     static const int getCurrentPort();
@@ -170,27 +184,39 @@ public:
     static const bool hasServerChanged();
     static void setLastUsedIP(const char* ip);
     static void setLastUsedPort(const int port);
-    static void setServerIP(const char* ip);      
-    static void setServerPort(int port);          
-    
+    static void setServerIP(const char* ip);
+    static void setServerPort(int port);
+
     // ===== SERVER VISIBILITY =====
     static bool isServerHidden() { return sInstance ? sInstance->mServerHidden : true; }
-    static void setServerHidden(bool hide) { if (sInstance) { sInstance->mServerHidden = hide; } }
-    static void toggleServerHidden() { if (sInstance) { sInstance->mServerHidden = !sInstance->mServerHidden; } }
+    static void setServerHidden(bool hide) {
+        if (sInstance) {
+            sInstance->mServerHidden = hide;
+        }
+    }
+    static void toggleServerHidden() {
+        if (sInstance) {
+            sInstance->mServerHidden = !sInstance->mServerHidden;
+        }
+    }
 
     // ===== MUSIC SETTINGS =====
     static bool isMusicDisabled() { return sInstance->mIsDisableMusic; }
-    static void toggleMusicDisabled() { if (sInstance) { sInstance->mIsDisableMusic = !sInstance->mIsDisableMusic; } }
+    static void toggleMusicDisabled() {
+        if (sInstance) {
+            sInstance->mIsDisableMusic = !sInstance->mIsDisableMusic;
+        }
+    }
 
     // ===== UTILITY METHODS =====
     static void update();
     static void clearArrays();
-    static sead::Heap *getClientHeap() { return sInstance ? sInstance->mHeap : nullptr; }
+    static sead::Heap* getClientHeap() { return sInstance ? sInstance->mHeap : nullptr; }
     static Keyboard* getKeyboard();
 
     // ===== STAGE MANAGEMENT =====
     static void setStageInfo(GameDataHolderAccessor holder);
-    static void setSceneInfo(const al::ActorInitInfo& initInfo, const StageScene *stageScene);
+    static void setSceneInfo(const al::ActorInitInfo& initInfo, const StageScene* stageScene);
     static void setTagState(bool state);
 
     // ===== UI METHODS =====
@@ -203,10 +229,10 @@ public:
     static void hideConnect();
 
     // ===== PUBLIC MEMBERS (for debug purposes) =====
-    SocketClient *mSocket;
+    SocketClient* mSocket;
 
-    PlayerInf*  getLastPlayerInfPacket()  { return &this->lastPlayerInfPacket;  }
-    GameInf*    getLastGameInfPacket()    { return &this->lastGameInfPacket;    }
+    PlayerInf* getLastPlayerInfPacket() { return &this->lastPlayerInfPacket; }
+    GameInf* getLastGameInfPacket() { return &this->lastGameInfPacket; }
     CostumeInf* getLastCostumeInfPacket() { return &this->lastCostumeInfPacket; }
     CaptureInf* getLastCaptureInfPacket() { return &this->lastCaptureInfPacket; }
 
@@ -216,25 +242,26 @@ private:
     bool startConnection();
 
     // ===== PACKET HANDLERS =====
-    void updatePlayerInfo(PlayerInf *packet);
-    void updateHackCapInfo(HackCapInf *packet);
-    void updateGameInfo(GameInf *packet);
-    void updateCostumeInfo(CostumeInf *packet);
-    void updateShineInfo(ShineCollect *packet);
-    void updatePlayerConnect(PlayerConnect *packet);
-    void updateTagInfo(TagInf *packet);
-    void updateFreezeInfo(FreezeInf *packet);
+    void updatePlayerInfo(PlayerInf* packet);
+    void updateHackCapInfo(HackCapInf* packet);
+    void updateGameInfo(GameInf* packet);
+    void updateCostumeInfo(CostumeInf* packet);
+    void updateShineInfo(ShineCollect* packet);
+    void updatePlayerConnect(PlayerConnect* packet);
+    void updateTagInfo(TagInf* packet);
+    void updateFreezeInfo(FreezeInf* packet);
     void handleFreezeInfRoundPacket(FreezeInfRoundPacket* packet);
     void updateCaptureInfo(CaptureInf* packet);
     void sendToStage(ChangeStagePacket* packet);
-    void disconnectPlayer(PlayerDC *packet);
-    void updateMessages(MessagePacket *packet);
+    void disconnectPlayer(PlayerDC* packet);
+    void updateMessages(MessagePacket* packet);
+    void updateHealthCoins(HealthCoins* packet);
 
     // ===== UTILITY METHODS =====
     PuppetInfo* findPuppetInfo(const nn::account::Uid& id, bool isFindAvailable);
 
     // ===== CONNECTION MEMBERS =====
-    al::AsyncFunctorThread *mReadThread = nullptr;
+    al::AsyncFunctorThread* mReadThread = nullptr;
     int mConnectCount = 0;
     nn::account::Uid mUserID;
     sead::FixedSafeString<0x20> mUsername;
@@ -248,6 +275,12 @@ private:
     sead::FixedSafeString<64> mServerVersion;
     bool mServerHidden = true;
     bool mIsDisableMusic = false;
+
+    // ===== HEALTH AND COINS =====
+    bool isKids = false;
+    u8 mHealth = 3;
+    int mCoins = 0;
+    bool mNeedsUpdateHealthCoins = false;
 
     // ===== SHINE SYNCHRONIZATION MEMBERS =====
     sead::SafeArray<int, 128> curCollectedShines;
@@ -267,7 +300,7 @@ private:
     // ===== UI COMPONENTS =====
     Keyboard* mKeyboard = nullptr;
     al::WindowConfirmWait* mUIMessage;
-    al::SimpleLayoutAppearWaitEnd *mConnectStatus;
+    al::SimpleLayoutAppearWaitEnd* mConnectStatus;
 
     // ===== GAME STATE MEMBERS =====
     bool isClientCaptured = false;
@@ -276,18 +309,18 @@ private:
 
     // ===== SCENE AND STAGE MEMBERS =====
     al::ActorSceneInfo* mSceneInfo = nullptr;
-    const StageScene *mCurStageScene = nullptr;
+    const StageScene* mCurStageScene = nullptr;
     sead::PtrArray<Shine> mShineArray;
     sead::FixedSafeString<0x40> mStageName;
     GameDataHolderAccessor mHolder;
     u8 mScenario = 0;
 
     // ===== MEMORY MANAGEMENT =====
-    sead::ExpHeap *mHeap = nullptr;
+    sead::ExpHeap* mHeap = nullptr;
 
     // ===== PUPPET MANAGEMENT MEMBERS =====
     int maxPuppets = 9;
-    PuppetInfo *mPuppetInfoArr[MAXPUPINDEX] = {};
-    PuppetHolder *mPuppetHolder = nullptr;
+    PuppetInfo* mPuppetInfoArr[MAXPUPINDEX] = {};
+    PuppetHolder* mPuppetHolder = nullptr;
     PuppetInfo mDebugPuppetInfo;
 };
