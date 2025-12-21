@@ -176,6 +176,9 @@ bool Client::startConnection() {
 
                     maxPuppets = initPacket->maxPlayers - 1;
 
+                    setServerVersion(initPacket->ServerVersion);
+                    Logger::log("Server version: %s\n", initPacket->ServerVersion);
+
                     waitingForInitPacket = false;
                 }
 
