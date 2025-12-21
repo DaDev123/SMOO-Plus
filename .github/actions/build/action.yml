@@ -33,7 +33,7 @@ runs:
         echo "version=${VERS:1}" >> $GITHUB_OUTPUT
         
         # Set both filenames
-        echo "filename-switch=${PREFIX}atmosphere${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}" >> $GITHUB_OUTPUT
+        echo "filename-switch=${PREFIX}SMOO-Plus-Switch${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}" >> $GITHUB_OUTPUT
         echo "filename-emulators=${PREFIX}SMOO-Plus${{ (inputs.tag != '' && format('_{0}', inputs.tag)) || '' }}-Emulators" >> $GITHUB_OUTPUT
     -
       name: Set up Docker Buildx
@@ -61,16 +61,28 @@ runs:
           ${{ (steps.env.outputs.version != '' && format('-e BUILDVER={0}', steps.env.outputs.version)) || '' }} \
           smoo-build-env
     -
+      name: Prepare Switch artifacts
+      shell: bash
+      run: |
+        mkdir -p ./artifacts-switch
+        cp -r ./starlight_patch_100/atmosphere ./artifacts-switch/
+    -
       name: Upload artifacts (Switch)
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.env.outputs.filename-switch }}
-        path: ./starlight_patch_100/atmosphere/
+        path: ./artifacts-switch/
         if-no-files-found: error
+    -
+      name: Prepare Emulator artifacts
+      shell: bash
+      run: |
+        mkdir -p ./artifacts-emulators
+        cp -r ./starlight_patch_100/SMOO-Plus ./artifacts-emulators/
     -
       name: Upload artifacts (Emulators)
       uses: actions/upload-artifact@v4
       with:
         name: ${{ steps.env.outputs.filename-emulators }}
-        path: ./starlight_patch_100/SMOO-Plus/
+        path: ./artifacts-emulators/
         if-no-files-found: error
