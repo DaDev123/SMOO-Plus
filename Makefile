@@ -28,7 +28,7 @@ IP ?= 10.0.0.221 # ftp server ip (usually is switch's local IP)
 DEBUGLOG ?= 0 # defaults to disable debug logger 
 SERVERIP ?= 0.0.0.0 # put debug logger server IP here
 
-PROJNAME ?= SuperMarioOdysseyOnline
+PROJNAME ?= SMOO-Plus
 
 # Single build directory
 BUILD_DIR := build$(SMOVER)
