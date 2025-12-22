@@ -1,9 +1,0 @@
-[version=100, target=main]
-
-
-// hooks to start logger
-5359D8 BL tryInitSocket // GameSystem::init 
-
-
-
-

@@ -1,4 +1,4 @@
-.PHONY: debug clean release
+.PHONY: debug clean release file_structure
 
 # Color definitions
 RESET := \033[0m
@@ -62,11 +62,11 @@ file_structure:
 	@cp build/main.npdm $(ECONTENTPATH)/exefs/main.npdm 
 
 	@echo "$(BLUE)  → Moving NSS debug symbols...$(RESET)"
-	@mv build/$(PROJNAME).nss package/$(PROJNAME).nss 
+	@mv build/$(PROJNAME).nss package/$(PROJNAME).nss || true
 	
 	@echo "$(BLUE)  → Copying romfs data...$(RESET)"
-	@cp -R romfs $(SCONTENTPATH)
-	@cp -R romfs $(ECONTENTPATH) 2>/dev/null || true
+	@cp -R romfs/ $(SCONTENTPATH)
+	@cp -R romfs/ $(ECONTENTPATH) 2>/dev/null || true
 
 	@echo ""
 	@echo "$(GREEN)════════════════════════════════════════════════════════════════$(RESET)"
