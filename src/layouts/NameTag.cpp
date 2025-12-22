@@ -1,5 +1,5 @@
 #include "layouts/NameTag.h"
-#include "actors/PuppetActor.h"
+
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Layout/LayoutActor.h"
 #include "al/Library/Layout/LayoutActorUtil.h"
@@ -11,10 +11,11 @@
 #include "al/Library/Nerve/NerveUtil.h"
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Screen/ScreenFunction.h"
+
+#include "actors/PuppetActor.h"
 #include "server/gamemode/GameModeManager.hpp"
 
-NameTag::NameTag(PuppetActor* pupActor, const al::LayoutInitInfo& initInfo, float startDist,
-                 float endDist, const char* playerName)
+NameTag::NameTag(PuppetActor* pupActor, const al::LayoutInitInfo& initInfo, float startDist, float endDist, const char* playerName)
     : al::LayoutActor("PNameTag"), mPuppet(pupActor), mStartDist(startDist), mEndDist(endDist) {
     al::initLayoutActor(this, initInfo, "BalloonSpeak", 0);
 
@@ -55,8 +56,7 @@ void NameTag::control() {
 
     al::LiveActor* puppetModel = mPuppet->getCurrentModel();
 
-    if (!al::isNerve(this, &NrvNameTag.End) && !al::isNerve(this, &NrvNameTag.Hide) &&
-        (al::isClipped(puppetModel) || al::isDead(puppetModel))) {
+    if (!al::isNerve(this, &NrvNameTag.End) && !al::isNerve(this, &NrvNameTag.Hide) && (al::isClipped(puppetModel) || al::isDead(puppetModel))) {
         al::setNerve(this, &NrvNameTag.End);
     } else {
         updateTrans();
@@ -74,9 +74,7 @@ void NameTag::updateTrans() {
 
     al::setLocalTrans(this, newTrans);
 
-    mNormalizedDist =
-        1 - al::normalize(al::calcDistance(puppetModel, al::getPlayerActor(puppetModel, 0)), 200.0f,
-                          mEndDist);
+    mNormalizedDist = 1 - al::normalize(al::calcDistance(puppetModel, al::getPlayerActor(puppetModel, 0)), 200.0f, mEndDist);
 
     // Freeze tag exclusive name tag distance changes
     if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {

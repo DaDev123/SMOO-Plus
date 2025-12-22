@@ -1,12 +1,15 @@
 #include "server/gamemode/modifiers/GravityModifier.hpp"
-#include "Player/PlayerActorBase.h"
+
 #include "al/Library/Camera/CameraUtil.h"
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/Math/MathUtil.h"
+
 #include "game/Player/HackCap.h"
+
 #include "helpers.hpp"
 #include "math/seadVector.h"
+#include "Player/PlayerActorBase.h"
 #include "rs/util.hpp"
 
 GravityModifier::GravityModifier(GameModeBase* mode) : ModeModifierBase(mode) {}
@@ -27,8 +30,7 @@ void GravityModifier::update() {
     sead::Vector3f gravity;
     PlayerActorBase* playerBase = (PlayerActorBase*)rs::getPlayerActor(mScene);
 
-    if (rs::calcOnGroundNormalOrGravityDir(&gravity, playerBase,
-                                           playerBase->getPlayerCollision())) {
+    if (rs::calcOnGroundNormalOrGravityDir(&gravity, playerBase, playerBase->getPlayerCollision())) {
         gravity = -gravity;
         al::normalize(&gravity);
         al::setGravity(playerBase, gravity);

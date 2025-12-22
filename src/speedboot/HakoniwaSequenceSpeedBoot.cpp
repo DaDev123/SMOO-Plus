@@ -1,27 +1,17 @@
-#include "al/Library/Layout/LayoutInitInfo.h"
-#include "al/Library/Nerve/Nerve.h"
-#include "al/Library/Nerve/NerveStateBase.h"
-#include "al/Library/Thread/AsyncFunctorThread.h"
-#include "game/Sequence/WorldResourceLoader.h"
+#include "speedboot/HakoniwaSequenceSpeedboot.hpp"
 
 #include "al/Library/Nerve/NerveUtil.h"
-#include "game/Sequence/HakoniwaSequence.h"
-#include "game/System/GameDataFunction.h"
-
 #include "al/Library/Play/Layout/WipeHolder.h"
+#include "al/Library/Thread/AsyncFunctorThread.h"
+
+#include "game/Sequence/HakoniwaSequence.h"
+#include "game/Sequence/WorldResourceLoader.h"
+#include "game/System/GameDataFunction.h"
 #include "game/System/WorldList.h"
-#include "speedboot/CustomBootNerve.hpp"
-#include "speedboot/HakoniwaSequenceSpeedboot.hpp"
-#include "speedboot/SpeedbootLoad.hpp"
 
 namespace speedboot {
-CustomBootNerve nrvSpeedboot;
-
-HakoniwaSequenceSpeedboot* speedbootState = nullptr;
-
 // Constructor
-HakoniwaSequenceSpeedboot::HakoniwaSequenceSpeedboot(HakoniwaSequence* sequence)
-    : al::NerveStateBase("Speedboot"), mSequence(sequence) {
+HakoniwaSequenceSpeedboot::HakoniwaSequenceSpeedboot(HakoniwaSequence* sequence) : al::NerveStateBase("Speedboot"), mSequence(sequence) {
     initNerve(&NrvHakoniwaSequenceSpeedboot.LoadStage, 0);
 }
 
@@ -42,8 +32,7 @@ void HakoniwaSequenceSpeedboot::exeLoadStage() {
         mSequence->mInitThread->start();
 
         // Get stage name from game data - mGameDataHolder is an accessor (not a pointer)
-        const char* stageName =
-            GameDataFunction::getNextStageName(mSequence->mGameDataHolderAccessor);
+        const char* stageName = GameDataFunction::getNextStageName(mSequence->mGameDataHolderAccessor);
         if (!stageName) {
             stageName = GameDataFunction::getMainStageName(mSequence->mGameDataHolderAccessor, 0);
         }
@@ -55,9 +44,7 @@ void HakoniwaSequenceSpeedboot::exeLoadStage() {
         }
 
         // Request world resources - use dot notation since mGameDataHolder is not a pointer
-        s32 worldIndex =
-            mSequence->mGameDataHolderAccessor.mData->mWorldList->tryFindWorldIndexByStageName(
-                stageName);
+        s32 worldIndex = mSequence->mGameDataHolderAccessor.mData->mWorldList->tryFindWorldIndexByStageName(stageName);
         if (worldIndex > -1) {
             mSequence->mResourceLoader->requestLoadWorldHomeStageResource(worldIndex, scenario);
         }
@@ -84,22 +71,4 @@ bool HakoniwaSequenceSpeedboot::isDoneLoading() const {
     return mSequence->mResourceLoader->isEndLoadWorldResource() && mSequence->mInitThread->isDone();
 }
 
-extern "C" void _ZN10BootLayoutC1ERKN2al14LayoutInitInfoE(BootLayout* layout,
-                                                          const al::LayoutInitInfo& layoutInitInfo);
-
-void prepareLayoutInitInfo(BootLayout* layout, const al::LayoutInitInfo& layoutInitInfo) {
-    register HakoniwaSequence* sequence asm("x19");
-
-    // SpeedbootLoad constructor takes (resourceLoader, layoutInitInfo, sequence)
-    new SpeedbootLoad(sequence->mResourceLoader, layoutInitInfo, sequence);
-
-    _ZN10BootLayoutC1ERKN2al14LayoutInitInfoE(layout, layoutInitInfo);
-}
-
-void hakoniwaSetNerveSetup(al::IUseNerve* useNerve, al::Nerve* nerve) {
-    al::setNerve(useNerve, &nrvSpeedboot);
-    auto* sequence = static_cast<HakoniwaSequence*>(useNerve);
-    speedbootState = new HakoniwaSequenceSpeedboot(sequence);
-    al::initNerveState(useNerve, speedbootState, &nrvSpeedboot, "Speedboot");
-}
 }  // namespace speedboot

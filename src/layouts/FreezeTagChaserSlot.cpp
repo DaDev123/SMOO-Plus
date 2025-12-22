@@ -1,13 +1,15 @@
 #include "layouts/FreezeTagChaserSlot.h"
-#include <cstring>
+
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Nerve/NerveUtil.h"
+
+#include <cstring>
+
 #include "server/Client.hpp"
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/gamemode/GameModeManager.hpp"
 
-FreezeTagChaserSlot::FreezeTagChaserSlot(const char* name, const al::LayoutInitInfo& initInfo)
-    : al::LayoutActor(name) {
+FreezeTagChaserSlot::FreezeTagChaserSlot(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
     al::initLayoutActor(this, initInfo, "FreezeTagChaserSlot", 0);
     mInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
 
@@ -42,8 +44,7 @@ bool FreezeTagChaserSlot::tryEnd() {
 }
 
 bool FreezeTagChaserSlot::tryStart() {
-    if (!al::isNerve(this, &NrvFreezeTagChaserSlot.Wait) &&
-        !al::isNerve(this, &NrvFreezeTagChaserSlot.Appear)) {
+    if (!al::isNerve(this, &NrvFreezeTagChaserSlot.Wait) && !al::isNerve(this, &NrvFreezeTagChaserSlot.Appear)) {
         appear();
         return true;
     }
@@ -83,8 +84,7 @@ void FreezeTagChaserSlot::exeWait() {
             return;
 
         setSlotName(mInfo->mChaserPlayers.at(mChaserIndex - !mInfo->mIsPlayerRunner)->puppetName);
-        setSlotScore(
-            mInfo->mChaserPlayers.at(mChaserIndex - !mInfo->mIsPlayerRunner)->freezeTagScore);
+        setSlotScore(mInfo->mChaserPlayers.at(mChaserIndex - !mInfo->mIsPlayerRunner)->freezeTagScore);
     }
 }
 

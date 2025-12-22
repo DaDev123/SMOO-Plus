@@ -1,13 +1,12 @@
 #include "server/Client.hpp"
-#include "Library/LiveActor/LiveActor.h"
-#include "System/GameDataHolder.h"
-#include "al/Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
 
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorFlagFunction.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
+#include "al/Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
+
 #include "game/Player/HackCap.h"
 #include "game/Player/PlayerAnimator.h"
 #include "game/Player/PlayerHackKeeper.h"
@@ -17,14 +16,17 @@
 #include "game/System/GameDataFunction.h"
 #include "game/System/SaveDataAccessFunction.h"
 #include "game/Util/ActorDimensionKeeper.h"
+
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
+#include "Library/LiveActor/LiveActor.h"
 #include "logger.hpp"
 #include "packets/Packet.h"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/snh/SardineMode.hpp"
+#include "System/GameDataHolder.h"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
@@ -36,16 +38,11 @@ typedef void (Client::*ClientThreadFunc)(void);
  * @param bufferSize defines the maximum amount of puppets the client can handle
  */
 Client::Client() {
-    mHeap =
-        sead::ExpHeap::create(0x50000, "ClientHeap", sead::HeapMgr::instance()->getCurrentHeap(), 8,
-                              sead::Heap::cHeapDirection_Forward, false);
+    mHeap = sead::ExpHeap::create(0x50000, "ClientHeap", sead::HeapMgr::instance()->getCurrentHeap(), 8, sead::Heap::cHeapDirection_Forward, false);
 
-    sead::ScopedCurrentHeapSetter heapSetter(
-        mHeap);  // every new call after this will use ClientHeap instead of SequenceHeap
+    sead::ScopedCurrentHeapSetter heapSetter(mHeap);  // every new call after this will use ClientHeap instead of SequenceHeap
 
-    mReadThread = new al::AsyncFunctorThread(
-        "ClientReadThread", al::FunctorV0M<Client*, ClientThreadFunc>(this, &Client::readFunc), 0,
-        0x1000, {0});
+    mReadThread = new al::AsyncFunctorThread("ClientReadThread", al::FunctorV0M<Client*, ClientThreadFunc>(this, &Client::readFunc), 0, 0x1000, {0});
 
     mKeyboard = new Keyboard(nn::swkbd::GetRequiredStringBufferSize());
 
@@ -92,11 +89,9 @@ Client::Client() {
  * @param initInfo init info used to create layouts used by client
  */
 void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor holder) {
-    mUIMessage =
-        new (mHeap) al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
+    mUIMessage = new (mHeap) al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
 
-    mConnectStatus =
-        new (mHeap) al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
+    mConnectStatus = new (mHeap) al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
 
     mUIMessage->setTxtMessage(u"Connecting to Server.");
     mUIMessage->setTxtMessageConfirm(u"Failed to Connect!");
@@ -108,8 +103,7 @@ void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor hol
 
     startThread();
 
-    Logger::log("Heap Free Size: %f/%f\n", mHeap->getFreeSize() * 0.001f,
-                mHeap->getSize() * 0.001f);
+    Logger::log("Heap Free Size: %f/%f\n", mHeap->getFreeSize() * 0.001f, mHeap->getSize() * 0.001f);
 }
 
 Client* Client::get() {
@@ -139,8 +133,7 @@ void Client::restartConnection() {
     }
 
     sInstance->mConnectCount = 0;
-    sInstance->mIsConnectionActive =
-        sInstance->mSocket->init(sInstance->mServerIP.cstr(), sInstance->mServerPort).IsSuccess();
+    sInstance->mIsConnectionActive = sInstance->mSocket->init(sInstance->mServerIP.cstr(), sInstance->mServerPort).IsSuccess();
 }
 /**
  * @brief starts a connection using client's TCP socket class, pulling up the software keyboard for
@@ -182,7 +175,7 @@ bool Client::startConnection() {
         bool waitingForInitPacket = true;
         // wait for client init packet
 
-        while (waitingForInitPacket) {
+        while (waitingForInitPacket == true) {
             Packet* curPacket = mSocket->tryGetPacket();
 
             if (curPacket) {
@@ -192,6 +185,7 @@ bool Client::startConnection() {
                     Logger::log("Server Max Player Size: %d\n", initPacket->maxPlayers);
 
                     maxPuppets = initPacket->maxPlayers - 1;
+                    mPuppetHolder->resizeHolder(maxPuppets);
 
                     setServerVersion(initPacket->ServerVersion);
                     Logger::log("Server version: %s\n", initPacket->ServerVersion);
@@ -200,7 +194,6 @@ bool Client::startConnection() {
                 }
 
                 free(curPacket);
-
             } else {
                 Logger::log("Recieve failed! Stopping Connection.\n");
                 mIsConnectionActive = false;
@@ -223,14 +216,13 @@ bool Client::openKeyboardIP() {
     }
 
     // opens swkbd with the initial text set to the last saved IP
-    sInstance->mKeyboard->openKeyboard(sInstance->mServerIP.cstr(),
-                                       [](nn::swkbd::KeyboardConfig& config) {
-                                           config.keyboardMode = nn::swkbd::KeyboardMode::ModeASCII;
-                                           config.textMaxLength = MAX_HOSTNAME_LENGTH;
-                                           config.textMinLength = 1;
-                                           config.isUseUtf8 = true;
-                                           config.inputFormMode = nn::swkbd::InputFormMode::OneLine;
-                                       });
+    sInstance->mKeyboard->openKeyboard(sInstance->mServerIP.cstr(), [](nn::swkbd::KeyboardConfig& config) {
+        config.keyboardMode = nn::swkbd::KeyboardMode::ModeASCII;
+        config.textMaxLength = MAX_HOSTNAME_LENGTH;
+        config.textMinLength = 1;
+        config.isUseUtf8 = true;
+        config.inputFormMode = nn::swkbd::InputFormMode::OneLine;
+    });
 
     hostname prevIp = sInstance->mServerIP;
 
@@ -369,17 +361,15 @@ void Client::readFunc() {
     if (!startConnection()) {
         Logger::log("Failed to Connect to Server.\n");
 
-        nn::os::SleepThread(
-            nn::TimeSpan::FromNanoSeconds(250000000));  // sleep active thread for 0.25 seconds
+        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(250000000));  // sleep active thread for 0.25 seconds
 
         mConnectStatus->end();
 
         return;
     }
 
-    nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(
-        500000000));  // sleep for 0.5 seconds to let connection layout fully show (probably should
-                      // find a better way to do this)
+    nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500000000));  // sleep for 0.5 seconds to let connection layout fully show
+                                                                    // (probably should find a better way to do this)
 
     mConnectStatus->end();
 
@@ -445,6 +435,7 @@ void Client::readFunc() {
                 InitPacket* initPacket = (InitPacket*)curPacket;
                 Logger::log("Server Max Player Size: %d\n", initPacket->maxPlayers);
                 maxPuppets = initPacket->maxPlayers - 1;
+                mPuppetHolder->resizeHolder(maxPuppets);
                 setServerVersion(initPacket->ServerVersion);
                 Logger::log("Server version: ", initPacket->ServerVersion);
                 break;
@@ -507,8 +498,7 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
                 packet->subActName = PlayerAnims::Type::Unknown;
             }
         } else {
-            packet->actName =
-                PlayerAnims::FindType(player->mAnimator->mAnimFrameCtrl->getActionName());
+            packet->actName = PlayerAnims::FindType(player->mAnimator->mAnimFrameCtrl->getActionName());
             packet->subActName = PlayerAnims::FindType(player->mAnimator->mCurSubAnim.cstr());
 
             sInstance->isClientCaptured = false;
@@ -725,8 +715,7 @@ void Client::sendFreezeInfPacket() {
         packet->updateType = updateType;
 
         if (updateType == FreezeUpdateType::ROUNDSTART) {
-            packet->roundTime =
-                frInfo->mRoundLength;  // Make sure this field exists in FreezeTagInfo
+            packet->roundTime = frInfo->mRoundLength;  // Make sure this field exists in FreezeTagInfo
         }
 
         sInstance->mSocket->queuePacket(packet);
@@ -836,10 +825,8 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
     curInfo->playerPos = packet->playerPos;
 
     // check if rotation is larger than zero and less than or equal to 1
-    if (abs(packet->playerRot.x) > 0.f || abs(packet->playerRot.y) > 0.f ||
-        abs(packet->playerRot.z) > 0.f || abs(packet->playerRot.w) > 0.f) {
-        if (abs(packet->playerRot.x) <= 1.f || abs(packet->playerRot.y) <= 1.f ||
-            abs(packet->playerRot.z) <= 1.f || abs(packet->playerRot.w) <= 1.f) {
+    if (abs(packet->playerRot.x) > 0.f || abs(packet->playerRot.y) > 0.f || abs(packet->playerRot.z) > 0.f || abs(packet->playerRot.w) > 0.f) {
+        if (abs(packet->playerRot.x) <= 1.f || abs(packet->playerRot.y) <= 1.f || abs(packet->playerRot.z) <= 1.f || abs(packet->playerRot.w) <= 1.f) {
             curInfo->playerRot = packet->playerRot;
         }
     }
@@ -855,8 +842,7 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
     if (packet->subActName != PlayerAnims::Type::Unknown) {
         strcpy(curInfo->curSubAnimStr, PlayerAnims::FindStr(packet->subActName));
         if (curInfo->curSubAnimStr[0] == '\0')
-            Logger::log("[ERROR] %s: subActName was out of bounds: %d\n", __func__,
-                        packet->subActName);
+            Logger::log("[ERROR] %s: subActName was out of bounds: %d\n", __func__, packet->subActName);
     } else {
         strcpy(curInfo->curSubAnimStr, "");
     }
@@ -1029,8 +1015,7 @@ void Client::updateTagInfo(TagInf* packet) {
 
     if (mode == GameMode::HIDEANDSEEK || mode == GameMode::SARDINE) {
         // if the packet is for our player, edit info for our player
-        if (packet->mUserID == mUserID &&
-            GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
+        if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
             HideAndSeekMode* mMode = GameModeManager::instance()->getMode<HideAndSeekMode>();
             HideAndSeekInfo* curInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
 
@@ -1077,8 +1062,7 @@ void Client::updateTagInfo(TagInf* packet) {
         FreezeInf* freezePak = (FreezeInf*)packet;
 
         // Handle round packets first
-        if (freezePak->updateType == FreezeUpdateType::ROUNDSTART ||
-            freezePak->updateType == FreezeUpdateType::ROUNDCANCEL) {
+        if (freezePak->updateType == FreezeUpdateType::ROUNDSTART || freezePak->updateType == FreezeUpdateType::ROUNDCANCEL) {
             FreezeInfRoundPacket* roundPak = (FreezeInfRoundPacket*)packet;
             FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
 
@@ -1095,8 +1079,7 @@ void Client::updateTagInfo(TagInf* packet) {
         }
 
         // Handle regular freeze packets (your existing code)
-        if (packet->mUserID == mUserID &&
-            GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
+        if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
             FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
             FreezeTagInfo* curInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
 
@@ -1142,12 +1125,10 @@ void Client::sendToStage(ChangeStagePacket* packet) {
     if (mSceneInfo && mSceneInfo->sceneObjHolder) {
         GameDataHolderWriter accessor(mSceneInfo->sceneObjHolder);
 
-        Logger::log("Sending Player to %s at Entrance %s in Scenario %d\n", packet->changeStage,
-                    packet->changeID, packet->scenarioNo);
+        Logger::log("Sending Player to %s at Entrance %s in Scenario %d\n", packet->changeStage, packet->changeID, packet->scenarioNo);
 
-        ChangeStageInfo info(
-            accessor.mData, packet->changeID, packet->changeStage, false, packet->scenarioNo,
-            static_cast<ChangeStageInfo::SubScenarioType>(packet->subScenarioType));
+        ChangeStageInfo info(accessor.mData, packet->changeID, packet->changeStage, false, packet->scenarioNo,
+                             static_cast<ChangeStageInfo::SubScenarioType>(packet->subScenarioType));
         info.setWipeType("FadeBlack");
         GameDataFunction::tryChangeNextStage(accessor, &info);
     }
@@ -1228,9 +1209,7 @@ PuppetInfo* Client::findPuppetInfo(const nn::account::Uid& id, bool isFindAvaila
 void Client::setStageInfo(GameDataHolderAccessor holder) {
     if (sInstance) {
         sInstance->mStageName = GameDataFunction::getCurrentStageName(holder);
-        sInstance->mScenario =
-            holder.mData->getGameDataFile()
-                ->getScenarioNo();  // holder.mData->mGameDataFile->getMainScenarioNoCurrent();
+        sInstance->mScenario = holder.mData->getGameDataFile()->getScenarioNo();  // holder.mData->mGameDataFile->getMainScenarioNoCurrent();
 
         sInstance->mPuppetHolder->setStageInfo(sInstance->mStageName.cstr(), sInstance->mScenario);
     }
@@ -1359,8 +1338,7 @@ void Client::updateShines() {
     }
 
     // skip shine sync if player is in cap kingdom scenario zero (very start of the game)
-    if (sInstance->mStageName == "CapWorldHomeStage" &&
-        (sInstance->mScenario == 0 || sInstance->mScenario == 1)) {
+    if (sInstance->mStageName == "CapWorldHomeStage" && (sInstance->mScenario == 0 || sInstance->mScenario == 1)) {
         return;
     }
 
@@ -1374,12 +1352,10 @@ void Client::updateShines() {
 
         Logger::log("Shine UID: %d\n", shineID);
 
-        GameDataFile::HintInfo* shineInfo =
-            CustomGameDataFunction::getHintInfoByUniqueID(accessor, shineID);
+        GameDataFile::HintInfo* shineInfo = CustomGameDataFunction::getHintInfoByUniqueID(accessor, shineID);
 
         if (shineInfo) {
-            if (!GameDataFunction::isGotShine(accessor, shineInfo->mStageName.cstr(),
-                                              shineInfo->mObjId.cstr())) {
+            if (!GameDataFunction::isGotShine(accessor, shineInfo->mStageName.cstr(), shineInfo->mObjId.cstr())) {
                 Shine* stageShine = findStageShine(shineID);
 
                 if (stageShine) {
@@ -1398,8 +1374,7 @@ void Client::updateShines() {
 
     sInstance->resetCollectedShines();
     sInstance->mCurStageScene->stageSceneLayout->startShineCountAnim(false);
-    sInstance->mCurStageScene->stageSceneLayout
-        ->updateCounterParts();  // updates shine chip layout to (maybe) prevent softlocks
+    sInstance->mCurStageScene->stageSceneLayout->updateCounterParts();  // updates shine chip layout to (maybe) prevent softlocks
 }
 
 /**
@@ -1567,8 +1542,7 @@ const bool Client::hasServerChanged() {
     if (!sInstance) {
         return false;
     }
-    return (getCurrentPort() != sInstance->mSocket->getPort() ||
-            strcmp(getCurrentIP(), sInstance->mSocket->getIP()) != 0);
+    return (getCurrentPort() != sInstance->mSocket->getPort() || strcmp(getCurrentIP(), sInstance->mSocket->getIP()) != 0);
 }
 
 /**
@@ -1646,8 +1620,7 @@ Shine* Client::findStageShine(int shineID) {
             Shine* curShine = sInstance->mShineArray[i];
 
             if (curShine) {
-                auto hintInfo =
-                    CustomGameDataFunction::getHintInfoByIndex(curShine, curShine->mShineIdx);
+                auto hintInfo = CustomGameDataFunction::getHintInfoByIndex(curShine, curShine->mShineIdx);
 
                 if (hintInfo->mUniqueID == shineID) {
                     return curShine;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+
 #include "nn/diag.h"
 #include "types.h"
 
@@ -10,8 +11,8 @@ public:
 
     virtual nn::Result init(const char* ip, u16 port) = 0;
     virtual bool closeSocket();
-    virtual bool tryReconnect();
-    virtual struct Packet* tryGetPacket();
+    virtual bool tryReconnect() { return true; };
+    virtual struct Packet* tryGetPacket() { return nullptr; };
 
     const char* getStateChar();
     u8 getLogState();

@@ -1,5 +1,7 @@
 #include "SocketBase.hpp"
+
 #include <cstring>
+
 #include "nn/socket.h"
 #include "types.h"
 
@@ -62,8 +64,7 @@ s32 SocketBase::getFd() {
 }
 
 bool SocketBase::closeSocket() {
-    this->socket_log_state =
-        SOCKET_LOG_DISCONNECTED;  // probably not safe to assume socket will be closed
+    this->socket_log_state = SOCKET_LOG_DISCONNECTED;  // probably not safe to assume socket will be closed
 
     nn::Result result = nn::socket::Close(this->socket_log_socket);
 

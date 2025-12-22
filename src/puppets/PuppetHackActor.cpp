@@ -1,4 +1,5 @@
 #include "actors/PuppetHackActor.h"
+
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorAnimFunction.h"
 #include "al/Library/LiveActor/ActorClippingFunction.h"
@@ -35,8 +36,7 @@ void PuppetHackActor::init(al::ActorInitInfo const& initInfo) {
 
     makeActorDead();
 
-    startHackAnim(
-        true);  // this hack puppet will always be captured so its Hack visibility should be true
+    startHackAnim(true);  // this hack puppet will always be captured so its Hack visibility should be true
 
     startAction("Wait");
 }

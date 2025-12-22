@@ -1,10 +1,13 @@
 #pragma once
 
-#include <container/seadSafeArray.h>
+#include "al/Library/Memory/HeapUtil.h"
+
+#include "sead/heap/seadHeapMgr.h"
 #include <sead/heap/seadDisposer.h>
 #include <sead/heap/seadHeap.h>
-#include "al/Library/Memory/HeapUtil.h"
-#include "sead/heap/seadHeapMgr.h"
+
+#include <container/seadSafeArray.h>
+
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/gamemode/modifiers/ModeModifierBase.hpp"
@@ -12,7 +15,6 @@
 class GameModeManager {
     SEAD_SINGLETON_DISPOSER(GameModeManager)
     GameModeManager();
-    ~GameModeManager();
 
 public:
     void setMode(GameMode mode);

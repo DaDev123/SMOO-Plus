@@ -1,4 +1,5 @@
 #include "server/freeze/FreezeHintArrow.h"
+
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorClippingFunction.h"
 #include "al/Library/LiveActor/ActorInitUtil.h"
@@ -8,7 +9,9 @@
 #include "al/Library/Math/MathUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
 #include "al/Library/Player/PlayerUtil.h"
+
 #include "game/Player/PlayerHackKeeper.h"
+
 #include "math/seadQuat.h"
 #include "math/seadVector.h"
 #include "server/gamemode/GameModeManager.hpp"
@@ -38,8 +41,7 @@ void FreezeHintArrow::initAfterPlacement(void) {
     return;
 }
 
-bool FreezeHintArrow::receiveMsg(const al::SensorMsg* message, al::HitSensor* source,
-                                 al::HitSensor* target) {
+bool FreezeHintArrow::receiveMsg(const al::SensorMsg* message, al::HitSensor* source, al::HitSensor* target) {
     return false;
 }
 
@@ -65,8 +67,7 @@ void FreezeHintArrow::exeWait() {
         al::startAction(this, "Wait");
 
     bool isInFreezeMode = GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG);
-    if (!isInFreezeMode || mInfo->mIsPlayerRunner || !mInfo->mIsRound || !mTargetTrans ||
-        mPlayer->getPlayerHackKeeper()->mCurrentHackActor) {
+    if (!isInFreezeMode || mInfo->mIsPlayerRunner || !mInfo->mIsRound || !mTargetTrans || mPlayer->getPlayerHackKeeper()->mCurrentHackActor) {
         mSize = al::lerpValue(mSize, 0.f, 0.3f);
         al::setScaleAll(this, mSize);
         return;
@@ -84,8 +85,7 @@ void FreezeHintArrow::exeWait() {
         return;
 
     // Check distance and set the visiblity based on that
-    mVisibilityCooldown =
-        al::clamp(mVisibilityCooldown - 1, 0, 255);  // Decrease visiblity cooldown, capped at zero
+    mVisibilityCooldown = al::clamp(mVisibilityCooldown - 1, 0, 255);  // Decrease visiblity cooldown, capped at zero
 
     if (mVisibilityCooldown == 0) {
         mDistance = al::calcDistance(this, *mTargetTrans);

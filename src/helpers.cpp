@@ -1,16 +1,20 @@
 #include "helpers.hpp"
-#include "Scene/StageSceneStateServerConfig.hpp"
-#include "System/GameDataHolderWriter.h"
+
 #include "al/Library/LiveActor/ActorMovementFunction.h"
 #include "al/Library/LiveActor/LiveActor.h"
 #include "al/Library/Math/MathUtil.h"
 #include "al/Library/Player/PlayerUtil.h"
-#include "game/Player/PlayerAnimator.h"
-#include "game/System/GameDataFunction.h"
-#include "logger.hpp"
+
 #include "sead/math/seadMathCalcCommon.h"
 #include "sead/math/seadQuat.h"
 #include "sead/math/seadVector.h"
+
+#include "game/Player/PlayerAnimator.h"
+#include "game/System/GameDataFunction.h"
+
+#include "logger.hpp"
+#include "Scene/StageSceneStateServerConfig.hpp"
+#include "System/GameDataHolderWriter.h"
 
 bool isPartOf(const char* w1, const char* w2) {
     int i = 0;
@@ -124,23 +128,18 @@ const char* tryConvertName(const char* className) {
 // Unity Classes
 
 // Main SmoothMove function - now checks the actual config setting
-float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta,
-                              float closingSpeed, float maxAngularSpeed) {
+float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
     // Check the ACTUAL setting from StageSceneStateServerConfig
     bool useLowLatency = StageSceneStateServerConfig::isLowLatencyEnabled();
 
     if (useLowLatency) {
-        return SmoothMove_LowLatency(moveTransform, targetTransform, timeDelta, closingSpeed,
-                                     maxAngularSpeed);
+        return SmoothMove_LowLatency(moveTransform, targetTransform, timeDelta, closingSpeed, maxAngularSpeed);
     } else {
-        return SmoothMove_RegularLatency(moveTransform, targetTransform, timeDelta, closingSpeed,
-                                         maxAngularSpeed);
+        return SmoothMove_RegularLatency(moveTransform, targetTransform, timeDelta, closingSpeed, maxAngularSpeed);
     }
 }
 
-float VisualUtils::SmoothMove_RegularLatency(Transform moveTransform, Transform targetTransform,
-                                             float timeDelta, float closingSpeed,
-                                             float maxAngularSpeed) {
+float VisualUtils::SmoothMove_RegularLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
     // Position
 
     sead::Vector3f posDiff = *targetTransform.position - *moveTransform.position;
@@ -179,8 +178,7 @@ float VisualUtils::SmoothMove_RegularLatency(Transform moveTransform, Transform 
             float maxAngleMove = timeDelta * maxAngularSpeed;
             float angleMove = sead::Mathf::min(maxAngleMove, angleDiff);
             float t = angleMove / angleDiff;
-            sead::QuatCalcCommon<float>::slerpTo(*moveTransform.rotation, *moveTransform.rotation,
-                                                 *targetTransform.rotation, t);
+            sead::QuatCalcCommon<float>::slerpTo(*moveTransform.rotation, *moveTransform.rotation, *targetTransform.rotation, t);
         }
     }
 
@@ -188,21 +186,17 @@ float VisualUtils::SmoothMove_RegularLatency(Transform moveTransform, Transform 
 }
 
 // Ultra-smooth exponential interpolation (Low Latency Mode)
-float VisualUtils::SmoothMove_LowLatency(Transform moveTransform, Transform targetTransform,
-                                         float timeDelta, float closingSpeed,
-                                         float maxAngularSpeed) {
+float VisualUtils::SmoothMove_LowLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
     // Very responsive with minimal smoothing
     const float positionSmoothTime = 0.02f;
     const float rotationSmoothTime = 0.02f;
 
     float posLerpFactor = 1.0f - sead::Mathf::exp(-timeDelta / positionSmoothTime);
-    al::lerpVec(moveTransform.position, *moveTransform.position, *targetTransform.position,
-                posLerpFactor);
+    al::lerpVec(moveTransform.position, *moveTransform.position, *targetTransform.position, posLerpFactor);
 
     if (moveTransform.rotation) {
         float rotLerpFactor = 1.0f - sead::Mathf::exp(-timeDelta / rotationSmoothTime);
-        al::slerpQuat(moveTransform.rotation, *moveTransform.rotation, *targetTransform.rotation,
-                      rotLerpFactor);
+        al::slerpQuat(moveTransform.rotation, *moveTransform.rotation, *targetTransform.rotation, rotLerpFactor);
     }
 
     sead::Vector3f posDiff = *targetTransform.position - *moveTransform.position;

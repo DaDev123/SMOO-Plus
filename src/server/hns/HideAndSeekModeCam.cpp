@@ -2,6 +2,7 @@
 #include "al/Library/Camera/CameraPoserUpdater.h"
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
+
 #include "cameras/CameraPoserActorSpectate.h"
 #include "server/Client.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
@@ -86,8 +87,7 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase) {
         }
     }
 
-    Logger::log("DEBUG: Valid player count: %d, current spectate index: %d\n", validPlayerCount,
-                mSpectateIndex);
+    Logger::log("DEBUG: Valid player count: %d, current spectate index: %d\n", validPlayerCount, mSpectateIndex);
 
     // Handle input for changing spectate target
     int indexDirection = 0;
@@ -166,8 +166,7 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase) {
         // Safety fallback
         if (attempts >= maxAttempts) {
             mSpectateIndex = -1;
-            Logger::log(
-                "WARNING: Spectate index search exceeded max attempts, falling back to self\n");
+            Logger::log("WARNING: Spectate index search exceeded max attempts, falling back to self\n");
         }
     }
 
@@ -208,9 +207,7 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase) {
             // Create a local copy or ensure the pointer remains valid
             spectatePoser->setTargetActor(&targetInfo->playerPos);
 
-            Logger::log("Now spectating player: %s at index %d\n",
-                        targetInfo->puppetName ? targetInfo->puppetName : "Unknown",
-                        mSpectateIndex);
+            Logger::log("Now spectating player: %s at index %d\n", targetInfo->puppetName ? targetInfo->puppetName : "Unknown", mSpectateIndex);
         } else {
             // Fallback to self if target not found
             Logger::log("WARNING: Could not find spectate target, falling back to self\n");

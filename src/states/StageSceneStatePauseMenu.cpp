@@ -1,9 +1,12 @@
 #include "game/Scene/StageSceneStatePauseMenu.h"
+
 #include "al/Library/Message/MessageHolder.h"
 #include "al/Library/Nerve/NerveUtil.h"
 #include "al/Library/Scene/SceneUtil.h"
+
 #include "game/Layout/FooterParts.h"
 #include "game/Scene/StageScene.h"
+
 #include "logger.hpp"
 
 void StageSceneStatePauseMenu::exeServerConfig(void) {
@@ -21,8 +24,7 @@ void StageSceneStatePauseMenu::exeServerConfig(void) {
             kill();
         } else {
             mSelectParts->appearWait();
-            mFooterParts->tryChangeTextFade(
-                al::getSystemMessageString(mMenuGuide, "Footer", "MenuMessage_Footer"));
+            mFooterParts->tryChangeTextFade(al::getSystemMessageString(mMenuGuide, "Footer", "MenuMessage_Footer"));
 
             al::setNerve(this, &NrvStageSceneStatePauseMenu.Wait);
         }

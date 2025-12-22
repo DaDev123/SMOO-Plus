@@ -1,12 +1,15 @@
 #include "cameras/CameraPoserCustom.h"
-#include <math.h>
+
 #include "al/Library/Camera/CameraPoser.h"
 #include "al/Library/Camera/CameraPoserFunction.h"
 #include "al/Library/Math/MathUtil.h"
 #include "al/Library/Yaml/ByamlUtil.h"
+
 #include "sead/gfx/seadCamera.h"
 #include "sead/math/seadVector.h"
 #include "sead/math/seadVectorCalcCommon.h"
+
+#include <math.h>
 
 namespace cc {
 
@@ -15,9 +18,8 @@ CameraPoserCustom::CameraPoserCustom(const char* poserName) : CameraPoser(poserN
 }
 
 void CameraPoserCustom::init(void) {
-    alCameraPoserFunction::initSnapShotCameraCtrlZoomRollMove(
-        this);  // this makes the snapshot camera have the abilities of the normal snapshot cam, but
-                // is locked rotationally
+    alCameraPoserFunction::initSnapShotCameraCtrlZoomRollMove(this);  // this makes the snapshot camera have the abilities of the
+                                                                      // normal snapshot cam, but is locked rotationally
     alCameraPoserFunction::initCameraVerticalAbsorber(this);
     alCameraPoserFunction::initCameraAngleCtrl(this);
 }
@@ -100,8 +102,7 @@ void CameraPoserCustom::update(void) {
     sead::Vector3f rightAxis;
     rightAxis.setCross(targetDir, mCameraUp);
 
-    float stickSpeed = alCameraPoserFunction::getStickSensitivityScale(this) *
-                       alCameraPoserFunction::getStickSensitivityLevel(this);
+    float stickSpeed = alCameraPoserFunction::getStickSensitivityScale(this) * alCameraPoserFunction::getStickSensitivityLevel(this);
 
     sead::Vector3f preLook;
     alCameraPoserFunction::calcPreLookDir(&preLook, this);

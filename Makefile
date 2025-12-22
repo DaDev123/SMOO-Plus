@@ -14,9 +14,8 @@ WHITE := \033[37m
 SMOVER ?= 100
 BUILDVER ?= 101
 BUILDVERSTR ?= 1.4.0
-IP ?= 10.0.0.221 # ftp server ip (usually is switch's local IP)
-DEBUGLOG ?= 0 # defaults to disable debug logger 
-SERVERIP ?= 0.0.0.0 # put debug logger server IP here
+DEBUGLOG ?= 1 # defaults to disable debug logger 
+SERVERIP ?= 192.168.178.41 # put debug logger server IP here
 
 PROJNAME ?= SMOO-Plus
 

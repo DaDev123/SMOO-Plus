@@ -4,9 +4,11 @@
 #include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Layout/LayoutInitInfo.h"
 #include "al/Library/Nerve/NerveUtil.h"
+
 #include "game/Sequence/HakoniwaSequence.h"
 #include "game/Sequence/WorldResourceLoader.h"
 #include "game/System/GameDataFunction.h"
+
 #include "math/seadMathCalcCommon.h"
 
 // Forward declare the nerve classes
@@ -19,22 +21,18 @@ struct KingdomMapping {
 };
 
 constexpr KingdomMapping KINGDOM_NAMES[] = {
-    {"CapWorldHomeStage", u"Cap Kingdom"},        {"WaterfallWorldHomeStage", u"Cascade Kingdom"},
-    {"SandWorldHomeStage", u"Sand Kingdom"},      {"ForestWorldHomeStage", u"Wooded Kingdom"},
-    {"LakeWorldHomeStage", u"Lake Kingdom"},      {"CloudWorldHomeStage", u"Cloud Kingdom"},
-    {"ClashWorldHomeStage", u"Lost Kingdom"},     {"CityWorldHomeStage", u"Metro Kingdom"},
-    {"SnowWorldHomeStage", u"Snow Kingdom"},      {"SeaWorldHomeStage", u"Seaside Kingdom"},
-    {"LavaWorldHomeStage", u"Luncheon Kingdom"},  {"BossRaidWorldHomeStage", u"Ruined Kingdom"},
-    {"SkyWorldHomeStage", u"Bowser's Kingdom"},   {"MoonWorldHomeStage", u"Moon Kingdom"},
-    {"PeachWorldHomeStage", u"Mushroom Kingdom"}, {"Special1WorldHomeStage", u"Dark Side"},
-    {"Special2WorldHomeStage", u"Darker Side"}};
+    {"CapWorldHomeStage", u"Cap Kingdom"},       {"WaterfallWorldHomeStage", u"Cascade Kingdom"}, {"SandWorldHomeStage", u"Sand Kingdom"},
+    {"ForestWorldHomeStage", u"Wooded Kingdom"}, {"LakeWorldHomeStage", u"Lake Kingdom"},         {"CloudWorldHomeStage", u"Cloud Kingdom"},
+    {"ClashWorldHomeStage", u"Lost Kingdom"},    {"CityWorldHomeStage", u"Metro Kingdom"},        {"SnowWorldHomeStage", u"Snow Kingdom"},
+    {"SeaWorldHomeStage", u"Seaside Kingdom"},   {"LavaWorldHomeStage", u"Luncheon Kingdom"},     {"BossRaidWorldHomeStage", u"Ruined Kingdom"},
+    {"SkyWorldHomeStage", u"Bowser's Kingdom"},  {"MoonWorldHomeStage", u"Moon Kingdom"},         {"PeachWorldHomeStage", u"Mushroom Kingdom"},
+    {"Special1WorldHomeStage", u"Dark Side"},    {"Special2WorldHomeStage", u"Darker Side"}};
 
 constexpr f32 FALLBACK_DURATION = 15.0f;  // 15 seconds for unknown stages
 constexpr f32 FPS = 60.0f;
 }  // namespace
 
-SpeedbootLoad::SpeedbootLoad(WorldResourceLoader* resourceLoader,
-                             const al::LayoutInitInfo& initInfo, HakoniwaSequence* sequence)
+SpeedbootLoad::SpeedbootLoad(WorldResourceLoader* resourceLoader, const al::LayoutInitInfo& initInfo, HakoniwaSequence* sequence)
     : al::LayoutActor("SpeedbootLoad"), worldResourceLoader(resourceLoader), mSequence(sequence) {
     al::initLayoutActor(this, initInfo, "SpeedbootLoad", nullptr);
     initNerve(&NrvSpeedbootLoad.Appear, 0);
@@ -134,8 +132,7 @@ void SpeedbootLoad::updateUIElements() {
         // Animated loading bars
         f32 barOffset = mRotTime * 30.0f;
         al::setPaneLocalTrans(this, "BloodMoonLoadingBar", {-352.0f + barOffset, -342.0f, 0.0f});
-        al::setPaneLocalTrans(this, "BloodMoonLoadingBar2",
-                              {-352.0f + barOffset - 1920.0f, -342.0f, 0.0f});
+        al::setPaneLocalTrans(this, "BloodMoonLoadingBar2", {-352.0f + barOffset - 1920.0f, -342.0f, 0.0f});
     }
 }
 

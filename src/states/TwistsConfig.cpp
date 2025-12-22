@@ -1,7 +1,8 @@
 #include "TwistsConfig.hpp"
-#include "al/Library/LiveActor/LiveActor.h"
 
 #include "al/Library/LiveActor/ActorMovementFunction.h"
+#include "al/Library/LiveActor/LiveActor.h"
+
 #include "game/MapObj/ShineTowerRocket.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Scene/StageScene.h"
@@ -10,6 +11,7 @@
 #include "game/System/GameDataHolderAccessor.h"
 #include "game/System/GameDataHolderWriter.h"
 #include "game/Util/DemoUtil.h"
+
 #include "logger.hpp"
 
 // Initialize static variables
@@ -46,8 +48,7 @@ void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene*
     GameDataHolderAccessor accessor(stageScene);
     bool isCappyCurrentlyEnabled = GameDataFunction::isEnableCap(accessor);
 
-    ShineTowerRocket* odyssey =
-        rs::tryGetShineTowerRocketFromDemoDirector((al::LiveActor*)playerBase);
+    ShineTowerRocket* odyssey = rs::tryGetShineTowerRocketFromDemoDirector((al::LiveActor*)playerBase);
 
     if (!sCappyForceEnabled) {
         // Toggle is OFF - use normal proximity logic
@@ -100,22 +101,4 @@ void TwistsConfig::handleStageInit() {
     cappyDisabled = false;                               // Changed: Cappy starts enabled
     needsCappyDisable = false;                           // Changed: We don't need to disable it
     Logger::log("Stage init: Cappy will be enabled\n");  // Updated log message
-}
-
-namespace al {
-class Triangle;
-bool isFloorCode(al::Triangle const&, char const*);
-}  // namespace al
-
-bool icePhysicsPatch(const al::Triangle& triangle, const char* floorCode) {
-    // First, check if this is naturally an ice floor (original game logic)
-    bool isNaturalIce = al::isFloorCode(triangle, floorCode);
-
-    // If it's naturally ice, always return true (preserves ice blocks)
-    if (isNaturalIce) {
-        return true;
-    }
-
-    // If not naturally ice, check if our "ice everywhere" toggle is enabled
-    return TwistsConfig::isIcePhysicsEnabled();
 }

@@ -1,4 +1,5 @@
 #include "server/hns/HideAndSeekConfigMenu.hpp"
+
 #include "logger.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"

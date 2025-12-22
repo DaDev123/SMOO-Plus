@@ -1,6 +1,5 @@
 #include "actors/PuppetCapActor.h"
-#include "Project/HitSensor/HitSensor.h"
-#include "Scene/StageSceneStateServerConfig.hpp"
+
 #include "al/Library/HitSensor/HitSensorKeeper.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorAnimFunction.h"
@@ -8,9 +7,13 @@
 #include "al/Library/LiveActor/ActorModelFunction.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/LiveActor/ActorSensorUtil.h"
+
 #include "game/Player/PlayerFunction.h"
 #include "game/Util/SensorMsgFunction.h"
+
 #include "helpers.hpp"
+#include "Project/HitSensor/HitSensor.h"
+#include "Scene/StageSceneStateServerConfig.hpp"
 
 PuppetCapActor::PuppetCapActor(const char* name) : al::LiveActor(name) {}
 
@@ -21,10 +24,8 @@ void PuppetCapActor::init(al::ActorInitInfo const& initInfo) {
     PlayerFunction::initCapModelActorDemo(this, initInfo, capModelName.cstr());
 
     initHitSensor(2);
-    al::addHitSensor(this, initInfo, "Push", (u32)al::HitSensorType::MapObjSimple, 60.0f, 8,
-                     sead::Vector3f::zero);
-    al::addHitSensor(this, initInfo, "Attack", (u32)al::HitSensorType::EnemyAttack, 300.0f, 8,
-                     sead::Vector3f::zero);
+    al::addHitSensor(this, initInfo, "Push", (u32)al::HitSensorType::MapObjSimple, 60.0f, 8, sead::Vector3f::zero);
+    al::addHitSensor(this, initInfo, "Attack", (u32)al::HitSensorType::EnemyAttack, 300.0f, 8, sead::Vector3f::zero);
 
     al::hideSilhouetteModelIfShow(this);
     al::initExecutorModelUpdate(this, initInfo);
@@ -76,8 +77,7 @@ void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver
     }
 }
 
-bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender,
-                                al::HitSensor* receiver) {
+bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender, al::HitSensor* receiver) {
     if (!StageSceneStateServerConfig::isCapReceiveEnabled()) {
         return false;
     }

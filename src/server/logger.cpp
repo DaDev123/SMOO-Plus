@@ -1,5 +1,9 @@
 #include "logger.hpp"
+
+#include <cstdlib>
 #include <netinet/in.h>
+#include <sys/socket.h>
+
 #include "nn/nifm.h"
 #include "nn/socket.h"
 #include "vapours/results/results_common.hpp"
@@ -35,32 +39,31 @@ nn::Result Logger::init(const char* ip, u16 port) {
     while (nn::nifm::IsNetworkRequestOnHold()) {
     }
 
-    // emulators make this return false always, so skip it during init
-    // #ifndef EMU
-    //
-    // if (!nn::nifm::IsNetworkAvailable()) {
-    //    this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
-    //    return -1;
-    //}
-    //
-    // #endif
+// emulators make this return false always, so skip it during init
+#ifndef EMU
 
-    if ((this->socket_log_socket = nn::socket::Socket(2, 1, 0)) < 0) {
+    if (!nn::nifm::IsNetworkAvailable()) {
         this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
         return nn::Result(-1);
+    }
+
+#endif
+
+    if ((this->socket_log_socket = nn::socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0) {
+        this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+        return nn::Result(nn::socket::GetLastErrno());
     }
 
     nn::socket::InetAton(this->sock_ip, &hostAddress);
 
     serverAddress.sin_addr = hostAddress;
     serverAddress.sin_port = nn::socket::InetHtons(this->port);
-    serverAddress.sin_family = 2;
+    serverAddress.sin_family = nn::socket::InetHtons(AF_INET);
 
     nn::Result result;
     bool connected = false;
     for (u32 i = 0; i < ADDITIONAL_LOG_PORT_COUNT + 1; ++i) {
-        result = nn::socket::Connect(this->socket_log_socket, (sockaddr*)&serverAddress,
-                                     sizeof(serverAddress));
+        result = nn::socket::Connect(this->socket_log_socket, (sockaddr*)&serverAddress, sizeof(serverAddress));
         if (result.IsSuccess()) {
             connected = true;
             break;
@@ -82,8 +85,8 @@ nn::Result Logger::init(const char* ip, u16 port) {
 void Logger::log(const char* fmt, va_list args) {  // impl for replacing seads system::print
     if (!sInstance)
         return;
-    char buf[0x500];
-    if (nn::util::VSNPrintf(buf, sizeof(buf), fmt, args) > 0) {
+    char* buf = (char*)malloc(0x500);
+    if (nn::util::VSNPrintf(buf, 0x500, fmt, args) > 0) {
         sInstance->socket_log(buf);
     }
 }
@@ -93,24 +96,30 @@ s32 Logger::read(char* out) {
 }
 
 void Logger::log(const char* fmt, ...) {
-    if (!sInstance)
+    if (!sInstance || sInstance->socket_log_state != SOCKET_LOG_CONNECTED)
         return;
     va_list args;
     va_start(args, fmt);
 
-    char buf[0x500];
+    size_t buf_size = 0x500;
+    size_t prefix_size = buf_size + 0x10;
 
-    if (nn::util::VSNPrintf(buf, sizeof(buf), fmt, args) > 0) {
+    char* buf = (char*)malloc(buf_size);
+
+    if (nn::util::VSNPrintf(buf, buf_size, fmt, args) > 0) {
         if (!sInstance->isDisableName) {
-            char prefix[0x510];
-            nn::util::SNPrintf(prefix, sizeof(prefix), "[%s] %s", sInstance->sockName, buf);
+            char* prefix = (char*)malloc(prefix_size);
+            nn::util::SNPrintf(prefix, prefix_size, "[%s] %s", sInstance->sockName, buf);
             sInstance->socket_log(prefix);
+            free(prefix);
         } else {
             sInstance->socket_log(buf);
         }
     }
 
     va_end(args);
+
+    free(buf);
 }
 
 bool Logger::pingSocket() {

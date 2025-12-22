@@ -3,10 +3,12 @@
 #include "al/Library/Nerve/NerveSetupUtil.h"
 #include "al/Library/Nerve/NerveStateBase.h"
 
+#include "game/Sequence/HakoniwaSequence.h"
+
 namespace speedboot {
 class HakoniwaSequenceSpeedboot : public al::NerveStateBase {
 public:
-    explicit HakoniwaSequenceSpeedboot(class HakoniwaSequence* sequence);
+    explicit HakoniwaSequenceSpeedboot(HakoniwaSequence* sequence);
 
     // Nerve execution functions
     void exeInitThread();

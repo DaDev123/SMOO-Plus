@@ -1,9 +1,12 @@
 #include "BloodMoon/BloodMoonUtils.hpp"
-#include <cstring>
+
 #include "al/Library/File/FileUtil.h"
 #include "al/Project/Memory/Util.h"
+
 #include "sead/filedevice/seadFileDevice.h"
 #include "sead/filedevice/seadFileDeviceMgr.h"
+
+#include <cstring>
 
 namespace BloodMoon {
 

@@ -1,22 +1,25 @@
 #include "server/freeze/FreezeTagMode.hpp"
-#include "System/PlayerHitPointData.h"
+
 #include "al/Library/Camera/CameraUtil.h"
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/LiveActor/ActorFlagFunction.h"
 #include "al/Library/LiveActor/ActorMovementFunction.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
-#include "basis/seadNew.h"
+
+#include "sead/heap/seadHeap.h"
+
 #include "game/Player/HackCap.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Player/PlayerFunction.h"
 #include "game/System/GameDataFile.h"
 #include "game/System/GameDataFunction.h"
 #include "game/Util/ActorDimensionKeeper.h"
+
+#include "basis/seadNew.h"
 #include "layouts/FreezeTagIcon.h"
 #include "logger.hpp"
 #include "puppets/PuppetInfo.h"
-#include "sead/heap/seadHeap.h"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "server/freeze/FreezeHintArrow.h"
@@ -26,6 +29,7 @@
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
+#include "System/PlayerHitPointData.h"
 
 FreezeTagMode::FreezeTagMode(const char* name) : GameModeBase(name) {}
 
@@ -38,9 +42,7 @@ void FreezeTagMode::init(const GameModeInitInfo& info) {
     GameModeInfoBase* curGameInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
 
     if (curGameInfo)
-        Logger::log("Gamemode info found: %s %s\n",
-                    GameModeFactory::getModeString(curGameInfo->mMode),
-                    GameModeFactory::getModeString(info.mMode));
+        Logger::log("Gamemode info found: %s %s\n", GameModeFactory::getModeString(curGameInfo->mMode), GameModeFactory::getModeString(info.mMode));
     else
         Logger::log("No gamemode info found\n");
     if (curGameInfo && curGameInfo->mMode == mMode) {
@@ -56,14 +58,12 @@ void FreezeTagMode::init(const GameModeInitInfo& info) {
     mInfo->mRunnerPlayers.allocBuffer(0x10, al::getSceneHeap());
     mInfo->mChaserPlayers.allocBuffer(0x10, al::getSceneHeap());
 
-    Logger::log("Scene Heap Free Size: %f/%f\n", al::getSceneHeap()->getFreeSize() * 0.001f,
-                al::getSceneHeap()->getSize() * 0.001f);
+    Logger::log("Scene Heap Free Size: %f/%f\n", al::getSceneHeap()->getFreeSize() * 0.001f, al::getSceneHeap()->getSize() * 0.001f);
 
     mModeLayout = new FreezeTagIcon("FreezeTagIcon", *info.mLayoutInitInfo);
     mInfo->mPlayerTagScore.setTargetLayout(mModeLayout);
 
-    Logger::log("Scene Heap Free Size: %f/%f\n", al::getSceneHeap()->getFreeSize() * 0.001f,
-                al::getSceneHeap()->getSize() * 0.001f);
+    Logger::log("Scene Heap Free Size: %f/%f\n", al::getSceneHeap()->getFreeSize() * 0.001f, al::getSceneHeap()->getSize() * 0.001f);
 
     // Create main player's ice block
     mMainPlayerIceBlock = new FreezePlayerBlock("MainPlayerBlock");
@@ -117,8 +117,7 @@ void FreezeTagMode::end() {
         if (mTicket->mIsActiveCamera)
             al::endCamera(mCurScene, mTicket, 0, false);
 
-        if (al::isAlive(mMainPlayerIceBlock) &&
-            !al::isNerve(mMainPlayerIceBlock, &NrvFreezePlayerBlock.Disappear)) {
+        if (al::isAlive(mMainPlayerIceBlock) && !al::isNerve(mMainPlayerIceBlock, &NrvFreezePlayerBlock.Disappear)) {
             mMainPlayerIceBlock->end();
             trySetPostProcessingType(FreezePostProcessingType::PPDISABLED);
         }
@@ -196,8 +195,7 @@ void FreezeTagMode::update() {
                     continue;
 
                 // If this puppet is the new closest, set the closest info to the current puppet
-                if (pupDist < closePupDistance && curInfo->isFreezeTagRunner &&
-                    !curInfo->isFreezeTagFreeze) {
+                if (pupDist < closePupDistance && curInfo->isFreezeTagRunner && !curInfo->isFreezeTagFreeze) {
                     closePupDistance = pupDist;
                     closePup = curInfo;
                 }
@@ -206,15 +204,13 @@ void FreezeTagMode::update() {
                     continue;
 
                 // Check for freeze
-                if (!mInfo->mIsPlayerFreeze && pupDist < 250.f && isP2D == curInfo->is2D &&
-                    !isPDead && !curInfo->isFreezeTagRunner)
+                if (!mInfo->mIsPlayerFreeze && pupDist < 250.f && isP2D == curInfo->is2D && !isPDead && !curInfo->isFreezeTagRunner)
                     trySetPlayerRunnerState(FreezeState::FREEZE);
 
                 // Check for unfreeze
                 float freezeMinTime = al::clamp(3.f + (mInfo->mFreezeCount * 0.5f), 3.f, 7.f);
-                if (mInvulnTime >= freezeMinTime && mInfo->mIsPlayerFreeze && pupDist < 200.f &&
-                    isP2D == curInfo->is2D && !isPDead && curInfo->isFreezeTagRunner &&
-                    !curInfo->isFreezeTagFreeze) {
+                if (mInvulnTime >= freezeMinTime && mInfo->mIsPlayerFreeze && pupDist < 200.f && isP2D == curInfo->is2D && !isPDead &&
+                    curInfo->isFreezeTagRunner && !curInfo->isFreezeTagFreeze) {
                     trySetPlayerRunnerState(FreezeState::ALIVE);
                 }
             }
@@ -273,8 +269,7 @@ void FreezeTagMode::update() {
     }
 
     // D-Pad functions
-    if (al::isPadTriggerUp(-1) && !al::isPadHoldL(-1) && !al::isPadHoldZR(-1) &&
-        !al::isPadHoldR(-1) && !mInfo->mIsPlayerFreeze && mRecoveryEventFrames == 0 &&
+    if (al::isPadTriggerUp(-1) && !al::isPadHoldL(-1) && !al::isPadHoldZR(-1) && !al::isPadHoldR(-1) && !mInfo->mIsPlayerFreeze && mRecoveryEventFrames == 0 &&
         !mIsEndgameActive && !mInfo->mIsRound) {
         mInfo->mIsPlayerRunner = !mInfo->mIsPlayerRunner;
         mInvulnTime = 0.f;
@@ -282,8 +277,7 @@ void FreezeTagMode::update() {
         sendFreezePacket(FreezeUpdateType::PLAYER);
     }
 
-    if (al::isPadTriggerDown(-1) && al::isPadHoldL(-1) && !mInfo->mIsPlayerFreeze &&
-        mRecoveryEventFrames == 0 && !mIsEndgameActive)
+    if (al::isPadTriggerDown(-1) && al::isPadHoldL(-1) && !mInfo->mIsPlayerFreeze && mRecoveryEventFrames == 0 && !mIsEndgameActive)
         mInfo->mPlayerTagScore.resetScore();
 
     if (al::isPadTriggerUp(-1) && al::isPadHoldR(-1) && mInfo->mIsHostMode && !mInfo->mIsRound) {

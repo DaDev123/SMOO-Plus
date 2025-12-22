@@ -1,9 +1,10 @@
 #include "server/hns/HideAndSeekMode.hpp"
-#include <heap/seadHeap.h>
+
 #include "al/Library/Camera/CameraUtil.h"
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/LiveActor/ActorMovementFunction.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
+
 #include "game/Layout/CoinCounter.h"
 #include "game/Layout/MapMini.h"
 #include "game/Player/HackCap.h"
@@ -14,6 +15,9 @@
 #include "game/System/GameDataFunction.h"
 #include "game/Util/ActorDimensionKeeper.h"
 #include "game/Util/ObjUtil.h"
+
+#include <heap/seadHeap.h>
+
 #include "helpers.hpp"
 #include "layouts/HideAndSeekIcon.h"
 #include "logger.hpp"
@@ -36,16 +40,13 @@ void HideAndSeekMode::init(const GameModeInitInfo& info) {
     GameModeInfoBase* curGameInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
 
     if (curGameInfo)
-        Logger::log("Gamemode info found: %s %s\n",
-                    GameModeFactory::getModeString(curGameInfo->mMode),
-                    GameModeFactory::getModeString(info.mMode));
+        Logger::log("Gamemode info found: %s %s\n", GameModeFactory::getModeString(curGameInfo->mMode), GameModeFactory::getModeString(info.mMode));
     else
         Logger::log("No gamemode info found\n");
     if (curGameInfo && curGameInfo->mMode == mMode) {
         mInfo = (HideAndSeekInfo*)curGameInfo;
         mModeTimer = new GameModeTimer(mInfo->mHidingTime);
-        Logger::log("Reinitialized timer with time %d:%.2d\n", mInfo->mHidingTime.mMinutes,
-                    mInfo->mHidingTime.mSeconds);
+        Logger::log("Reinitialized timer with time %d:%.2d\n", mInfo->mHidingTime.mMinutes, mInfo->mHidingTime.mSeconds);
     } else {
         if (curGameInfo)
             delete curGameInfo;  // attempt to destory previous info before creating new one
@@ -183,21 +184,17 @@ void HideAndSeekMode::update() {
                     PuppetInfo* curInfo = Client::getPuppetInfo(i);
 
                     if (!curInfo) {
-                        Logger::log("Checking %d, hit bounds %d-%d\n", i, mPuppetHolder->getSize(),
-                                    Client::getMaxPlayerCount());
+                        Logger::log("Checking %d, hit bounds %d-%d\n", i, mPuppetHolder->getSize(), Client::getMaxPlayerCount());
                         break;
                     }
 
                     if (curInfo->isConnected && curInfo->isInSameStage && curInfo->isIt) {
-                        float pupDist = al::calcDistance(
-                            playerBase,
-                            curInfo->playerPos);  // TODO: remove distance calculations and use hit
-                                                  // sensors to determine this
+                        float pupDist = al::calcDistance(playerBase,
+                                                         curInfo->playerPos);  // TODO: remove distance calculations and use hit
+                                                                               // sensors to determine this
 
                         if (!isYukimaru) {
-                            if (pupDist < 200.f &&
-                                ((PlayerActorHakoniwa*)playerBase)->mDimensionKeeper->mIs2D ==
-                                    curInfo->is2D) {
+                            if (pupDist < 200.f && ((PlayerActorHakoniwa*)playerBase)->mDimensionKeeper->mIs2D == curInfo->is2D) {
                                 if (!PlayerFunction::isPlayerDeadStatus(playerBase)) {
                                     GameDataFunction::killPlayer(GameDataHolderWriter(this));
                                     playerBase->startDemoPuppetable();
@@ -255,8 +252,7 @@ void HideAndSeekMode::update() {
 
     if (mInfo->mIsUseGravity && !isYukimaru) {
         sead::Vector3f gravity;
-        if (rs::calcOnGroundNormalOrGravityDir(&gravity, playerBase,
-                                               playerBase->getPlayerCollision())) {
+        if (rs::calcOnGroundNormalOrGravityDir(&gravity, playerBase, playerBase->getPlayerCollision())) {
             gravity = -gravity;
             al::normalize(&gravity);
             al::setGravity(playerBase, gravity);

@@ -1,5 +1,5 @@
-#include "Scene/StageSceneStateServerConfig.hpp"
 #include "logger.hpp"
+#include "Scene/StageSceneStateServerConfig.hpp"
 
 // Patch for DoorWarpStageChange::init - Address 0x262850
 // Returns false (0) when costume doors should be unlocked

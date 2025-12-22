@@ -1,14 +1,16 @@
 #include "layouts/SardineIcon.h"
-#include <cstring>
+
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
+
+#include <cstring>
+
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
 #include "server/snh/SardineMode.hpp"
 
-SardineIcon::SardineIcon(const char* name, const al::LayoutInitInfo& initInfo)
-    : al::LayoutActor(name) {
+SardineIcon::SardineIcon(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
     al::initLayoutActor(this, initInfo, "SardineIcon", 0);
 
     mInfo = GameModeManager::instance()->getInfo<SardineInfo>();
@@ -16,8 +18,7 @@ SardineIcon::SardineIcon(const char* name, const al::LayoutInitInfo& initInfo)
     // Initialize player slots
     mPlayerSlots.tryAllocBuffer(mMaxPlayers, al::getSceneHeap());
     for (int i = 0; i < mMaxPlayers; i++) {
-        GameModePlayerSlot* newSlot = new (al::getSceneHeap())
-            GameModePlayerSlot("PlayerSlot", initInfo, GameModePlayerSlotMode::Sardine);
+        GameModePlayerSlot* newSlot = new (al::getSceneHeap()) GameModePlayerSlot("PlayerSlot", initInfo, GameModePlayerSlotMode::Sardine);
         newSlot->init(i);
         mPlayerSlots.pushBack(newSlot);
     }
@@ -78,11 +79,9 @@ void SardineIcon::exeWait() {
     GameTime& curTime = mInfo->mHidingTime;
 
     if (curTime.mHours > 0) {
-        al::setPaneStringFormat(this, "TxtCounter", "%01d:%02d:%02d", curTime.mHours,
-                                curTime.mMinutes, curTime.mSeconds);
+        al::setPaneStringFormat(this, "TxtCounter", "%01d:%02d:%02d", curTime.mHours, curTime.mMinutes, curTime.mSeconds);
     } else {
-        al::setPaneStringFormat(this, "TxtCounter", "%02d:%02d", curTime.mMinutes,
-                                curTime.mSeconds);
+        al::setPaneStringFormat(this, "TxtCounter", "%02d:%02d", curTime.mMinutes, curTime.mSeconds);
     }
 }
 

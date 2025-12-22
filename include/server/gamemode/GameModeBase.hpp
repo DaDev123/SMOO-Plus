@@ -1,13 +1,15 @@
 #pragma once
 
-#include <math.h>
-#include "Library/Layout/LayoutInitInfo.h"
 #include "al/Library/HostIO/IUseName.h"
 #include "al/Library/LiveActor/ActorInitInfo.h"
 #include "al/Library/Scene/Scene.h"
 #include "al/Library/Scene/SceneObjHolder.h"
+
 #include "game/Scene/StageScene.h"
 
+#include <math.h>
+
+#include "Library/Layout/LayoutInitInfo.h"
 #include "prim/seadSafeString.h"
 #include "puppets/PuppetHolder.hpp"
 #include "server/gamemode/GameMode.h"
@@ -52,7 +54,7 @@ public:
     virtual void init(GameModeInitInfo const& info);
 
     virtual void begin();
-    virtual void update();
+    virtual void update() { return; };
     virtual void end();
 
     virtual void pause() { mIsActive = false; };

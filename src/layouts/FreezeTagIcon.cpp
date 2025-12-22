@@ -1,15 +1,17 @@
 #include "layouts/FreezeTagIcon.h"
-#include <cstring>
+
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Math/MathUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
+
+#include <cstring>
+
 #include "layouts/FreezeTagRunnerSlot.h"
 #include "server/DeltaTime.hpp"
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/gamemode/GameModeManager.hpp"
 
-FreezeTagIcon::FreezeTagIcon(const char* name, const al::LayoutInitInfo& initInfo)
-    : al::LayoutActor(name) {
+FreezeTagIcon::FreezeTagIcon(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
     al::initLayoutActor(this, initInfo, "FreezeTagIcon", 0);
     al::hidePane(this, "Endgame");
 
@@ -18,16 +20,14 @@ FreezeTagIcon::FreezeTagIcon(const char* name, const al::LayoutInitInfo& initInf
 
     mRunnerSlots.tryAllocBuffer(mMaxRunners, al::getSceneHeap());
     for (int i = 0; i < mMaxRunners; i++) {
-        FreezeTagRunnerSlot* newSlot =
-            new (al::getSceneHeap()) FreezeTagRunnerSlot("RunnerSlot", initInfo);
+        FreezeTagRunnerSlot* newSlot = new (al::getSceneHeap()) FreezeTagRunnerSlot("RunnerSlot", initInfo);
         newSlot->init(i);
         mRunnerSlots.pushBack(newSlot);
     }
 
     mChaserSlots.tryAllocBuffer(mMaxChasers, al::getSceneHeap());
     for (int i = 0; i < mMaxChasers; i++) {
-        FreezeTagChaserSlot* newSlot =
-            new (al::getSceneHeap()) FreezeTagChaserSlot("ChaserSlot", initInfo);
+        FreezeTagChaserSlot* newSlot = new (al::getSceneHeap()) FreezeTagChaserSlot("ChaserSlot", initInfo);
         newSlot->init(i);
         mChaserSlots.pushBack(newSlot);
     }
@@ -66,8 +66,7 @@ bool FreezeTagIcon::tryEnd() {
 }
 
 bool FreezeTagIcon::tryStart() {
-    if (!al::isNerve(this, &NrvFreezeTagIcon.Wait) &&
-        !al::isNerve(this, &NrvFreezeTagIcon.Appear)) {
+    if (!al::isNerve(this, &NrvFreezeTagIcon.Wait) && !al::isNerve(this, &NrvFreezeTagIcon.Appear)) {
         appear();
         return true;
     }
@@ -105,8 +104,7 @@ void FreezeTagIcon::exeWait() {
             mScoreEventValue = 0;
 
         // Calculate score event pane's position
-        sead::Vector3f targetPos = mScoreEventTime < 3.f ? sead::Vector3f(0.f, 235.f, 0.f) :
-                                                           sead::Vector3f(-650.f, 420.f, 0.f);
+        sead::Vector3f targetPos = mScoreEventTime < 3.f ? sead::Vector3f(0.f, 235.f, 0.f) : sead::Vector3f(-650.f, 420.f, 0.f);
         if (!mInfo->mIsPlayerRunner)
             targetPos.x *= -1.f;
 
@@ -160,9 +158,7 @@ void FreezeTagIcon::setFreezeOverlayHeight() {
 
 void FreezeTagIcon::setSpectateOverlayHeight() {
     // Show or hide the spectator UI
-    float targetHeight =
-        mInfo->mIsPlayerFreeze && mInfo->mRunnerPlayers.size() > 0 && !mEndgameIsDisplay ? -250.f :
-                                                                                           -400.f;
+    float targetHeight = mInfo->mIsPlayerFreeze && mInfo->mRunnerPlayers.size() > 0 && !mEndgameIsDisplay ? -250.f : -400.f;
     mSpectateOverlayHeight = al::lerpValue(mSpectateOverlayHeight, targetHeight, 0.04f);
     al::setPaneLocalTrans(this, "Spectate", {0.f, mSpectateOverlayHeight, 0.f});
 }
@@ -174,8 +170,7 @@ void FreezeTagIcon::setRoundTimerOverlay() {
     al::setPaneLocalTrans(this, "RoundTimer", {0.f, mRoundTimerHeight, 0.f});
 
     // If time remaining is less than one minute, scale up larget
-    float targetScale =
-        mInfo->mIsRound && !mEndgameIsDisplay && mInfo->mRoundTimer.mMinutes <= 0 ? 1.66f : 1.f;
+    float targetScale = mInfo->mIsRound && !mEndgameIsDisplay && mInfo->mRoundTimer.mMinutes <= 0 ? 1.66f : 1.f;
     mRoundTimerScale = al::lerpValue(mRoundTimerScale, targetScale, 0.02f);
     al::setPaneLocalScale(this, "RoundTimer", {mRoundTimerScale, mRoundTimerScale});
 
@@ -188,8 +183,7 @@ void FreezeTagIcon::setRoundTimerOverlay() {
         al::setPaneLocalRotate(this, "PicRoundTimerSpin", {0.f, 0.f, mRoundTimerClockInsideSpin});
     }
 
-    al::setPaneStringFormat(this, "TxtRoundTimer", "%02i:%02i", mInfo->mRoundTimer.mMinutes,
-                            mInfo->mRoundTimer.mSeconds);
+    al::setPaneStringFormat(this, "TxtRoundTimer", "%02i:%02i", mInfo->mRoundTimer.mMinutes, mInfo->mRoundTimer.mSeconds);
 }
 
 void FreezeTagIcon::exeEnd() {

@@ -1,5 +1,7 @@
 #include "server/gamemode/GameModeBase.hpp"
+
 #include "al/Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
+
 #include "game/Layout/CoinCounter.h"
 #include "game/Layout/MapMini.h"
 
@@ -17,8 +19,7 @@ void GameModeBase::begin() {
         CoinCounter* coinCollect = mCurScene->stageSceneLayout->mCoinCollectLyt;
         CoinCounter* coinCounter = mCurScene->stageSceneLayout->mCoinCountLyt;
         MapMini* compass = mCurScene->stageSceneLayout->mMapMiniLyt;
-        al::SimpleLayoutAppearWaitEnd* playGuideLyt =
-            mCurScene->stageSceneLayout->mPlayGuideMenuLyt;
+        al::SimpleLayoutAppearWaitEnd* playGuideLyt = mCurScene->stageSceneLayout->mPlayGuideMenuLyt;
 
         if (coinCounter->mIsAlive)
             coinCounter->tryEnd();
@@ -38,8 +39,7 @@ void GameModeBase::end() {
         CoinCounter* coinCollect = mCurScene->stageSceneLayout->mCoinCollectLyt;
         CoinCounter* coinCounter = mCurScene->stageSceneLayout->mCoinCountLyt;
         MapMini* compass = mCurScene->stageSceneLayout->mMapMiniLyt;
-        al::SimpleLayoutAppearWaitEnd* playGuideLyt =
-            mCurScene->stageSceneLayout->mPlayGuideMenuLyt;
+        al::SimpleLayoutAppearWaitEnd* playGuideLyt = mCurScene->stageSceneLayout->mPlayGuideMenuLyt;
 
         if (!coinCounter->mIsAlive)
             coinCounter->tryStart();

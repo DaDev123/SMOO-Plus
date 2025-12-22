@@ -1,6 +1,9 @@
 #include "server/gamemode/GameModeTimer.hpp"
-#include <math.h>
+
 #include "al/Library/Controller/InputFunction.h"
+
+#include <math.h>
+
 #include "server/DeltaTime.hpp"
 
 GameModeTimer::GameModeTimer(bool isCountUp, float milli, int seconds, int minutes, int hours) {

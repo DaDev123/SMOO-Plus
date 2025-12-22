@@ -21,40 +21,34 @@
 #include "al/Library/LiveActor/ActorSceneInfo.h"
 #include "al/Library/LiveActor/LiveActor.h"
 #include "al/Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
+#include "al/Library/Sequence/Sequence.h"
 #include "al/Library/Thread/AsyncFunctorThread.h"
 
 // ===== GAME INCLUDES =====
 #include "game/Item/Shine.h"
-
+#include "game/Player/PlayerActorHakoniwa.h"
+#include "game/Scene/StageScene.h"
 #include "game/System/GameDataHolderAccessor.h"
 
-#include "game/Player/PlayerActorHakoniwa.h"
-
-#include "game/Scene/StageScene.h"
-
 // ===== NINTENDO SDK INCLUDES =====
+#include "logger.hpp"
 #include "nn/account.h"
 
 // ===== SEAD INCLUDES =====
-#include "container/seadPtrArray.h"
 #include "sead/basis/seadNew.h"
 #include "sead/container/seadSafeArray.h"
-
 #include "sead/heap/seadDisposer.h"
 #include "sead/heap/seadExpHeap.h"
-
 #include "sead/prim/seadSafeString.h"
+
+#include "container/seadPtrArray.h"
 
 // ===== PROJECT INCLUDES =====
 #include "Keyboard.hpp"
-
 #include "packets/FreezeInf.h"
-
 #include "puppets/PuppetHolder.hpp"
 #include "puppets/PuppetInfo.h"
-
 #include "server/SocketClient.hpp"
-
 #include "syssocket/sockdefines.h"
 #include "types.h"
 
@@ -97,7 +91,7 @@ public:
             return sInstance->mConnectCount;
         return 0;
     }
-    static int getMaxPlayerCount() { return sInstance ? sInstance->maxPuppets + 1 : 10; }
+    static int getMaxPlayerCount() { return sInstance ? sInstance->maxPuppets + 1 : 8; }
 
     // ===== SHINE MANAGEMENT =====
     static bool isNeedUpdateShines();
@@ -142,23 +136,15 @@ public:
     }
 
     // ===== CLIENT INFO GETTERS =====
-    static const char* getClientName() {
-        return sInstance ? sInstance->mUsername.cstr() : "Player";
-    }
-    static nn::account::Uid getClientId() {
-        return sInstance ? sInstance->mUserID : nn::account::Uid::EmptyId;
-    }
-    static sead::FixedSafeString<0x20> getUsername() {
-        return sInstance ? sInstance->mUsername : sead::FixedSafeString<0x20>::cEmptyString;
-    }
+    static const char* getClientName() { return sInstance ? sInstance->mUsername.cstr() : "Player"; }
+    static nn::account::Uid getClientId() { return sInstance ? sInstance->mUserID : nn::account::Uid(); }
+    static sead::FixedSafeString<0x20> getUsername() { return sInstance ? sInstance->mUsername : sead::FixedSafeString<0x20>::cEmptyString; }
     static sead::FixedSafeString<MESSAGESIZE> getMessage(int index);
     static void setMessage(int index, const char* message);
     static bool shouldKids() { return sInstance ? sInstance->isKids : false; }
     static u8 getHealth() { return sInstance ? sInstance->mHealth : 3; }
     static int getCoins() { return sInstance ? sInstance->mCoins : 0; }
-    static bool isNeedUpdateHealthCoins() {
-        return sInstance ? sInstance->mNeedsUpdateHealthCoins : false;
-    }
+    static bool isNeedUpdateHealthCoins() { return sInstance ? sInstance->mNeedsUpdateHealthCoins : false; }
     static void setNeedUpdateHealthCoins(bool value);
     static void setServerVersion(const char* serverVersion);
     static const char* getServerVersion();
@@ -220,6 +206,14 @@ public:
     GameInf* getLastGameInfPacket() { return &this->lastGameInfPacket; }
     CostumeInf* getLastCostumeInfPacket() { return &this->lastCostumeInfPacket; }
     CaptureInf* getLastCaptureInfPacket() { return &this->lastCaptureInfPacket; }
+
+    static al::Sequence* getSequence() { return sInstance ? sInstance->mSequence : nullptr; }
+
+    static void setSequence(al::Sequence* sequence) {
+        if (sInstance) {
+            sInstance->mSequence = sequence;
+        }
+    }
 
 private:
     // ===== CORE FUNCTIONALITY =====
@@ -308,4 +302,8 @@ private:
     PuppetInfo* mPuppetInfoArr[MAXPUPINDEX] = {};
     PuppetHolder* mPuppetHolder = nullptr;
     PuppetInfo mDebugPuppetInfo;
+
+    // --- Capture Sync Stuff ---
+
+    al::Sequence* mSequence = nullptr;  // current sequence, used for debug menu
 };

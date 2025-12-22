@@ -1,20 +1,22 @@
 #include "layouts/GameModePlayerSlot.h"
-#include <cstring>
-#include <math/seadMathCalcCommon.h>
+
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
+
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerFunction.h"
+
+#include <cstring>
+#include <math/seadMathCalcCommon.h>
+
 #include "puppets/PuppetInfo.h"
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/snh/SardineMode.hpp"
 
-GameModePlayerSlot::GameModePlayerSlot(const char* name, const al::LayoutInitInfo& initInfo,
-                                       GameModePlayerSlotMode mode)
-    : al::LayoutActor(name), mMode(mode) {
+GameModePlayerSlot::GameModePlayerSlot(const char* name, const al::LayoutInitInfo& initInfo, GameModePlayerSlotMode mode) : al::LayoutActor(name), mMode(mode) {
     // Use the same layout file for both modes
     al::initLayoutActor(this, initInfo, "GameModePlayerSlot", 0);
 
@@ -66,8 +68,7 @@ bool GameModePlayerSlot::tryEnd() {
 }
 
 bool GameModePlayerSlot::tryStart() {
-    if (!al::isNerve(this, &NrvGameModePlayerSlot.Wait) &&
-        !al::isNerve(this, &NrvGameModePlayerSlot.Appear)) {
+    if (!al::isNerve(this, &NrvGameModePlayerSlot.Wait) && !al::isNerve(this, &NrvGameModePlayerSlot.Appear)) {
         appear();
         return true;
     }
@@ -99,8 +100,7 @@ void GameModePlayerSlot::exeWait() {
     int maxPlayerCount = Client::getMaxPlayerCount();
 
     // Get the correct "isIt" state based on game mode
-    bool localPlayerIsIt = (mMode == GameModePlayerSlotMode::HideAndSeek) ? mHnSInfo->mIsPlayerIt :
-                                                                            mSardineInfo->mIsIt;
+    bool localPlayerIsIt = (mMode == GameModePlayerSlotMode::HideAndSeek) ? mHnSInfo->mIsPlayerIt : mSardineInfo->mIsIt;
 
     struct PlayerEntry {
         const char* name;
@@ -179,10 +179,8 @@ void GameModePlayerSlot::exeWait() {
     }
 
     // Determine icon pane names based on game mode
-    const char* itIconName =
-        (mMode == GameModePlayerSlotMode::HideAndSeek) ? "PicSeekerIcon" : "PicPackIcon";
-    const char* notItIconName =
-        (mMode == GameModePlayerSlotMode::HideAndSeek) ? "PicHiderIcon" : "PicSoloIcon";
+    const char* itIconName = (mMode == GameModePlayerSlotMode::HideAndSeek) ? "PicSeekerIcon" : "PicPackIcon";
+    const char* notItIconName = (mMode == GameModePlayerSlotMode::HideAndSeek) ? "PicHiderIcon" : "PicSoloIcon";
 
     // Show/hide appropriate icon based on current role
     if (isIt) {

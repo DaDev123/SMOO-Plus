@@ -1,11 +1,9 @@
 #include "Keyboard.hpp"
+
 #include "nn/swkbd/swkbd.h"
 
 Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
-    this->mThread = new al::AsyncFunctorThread(
-        "Swkbd",
-        al::FunctorV0M<Keyboard*, void (Keyboard::*)(void)>(this, &Keyboard::keyboardThread), 0,
-        0x2000, {0});
+    this->mThread = new al::AsyncFunctorThread("Swkbd", al::FunctorV0M<Keyboard*, void (Keyboard::*)(void)>(this, &Keyboard::keyboardThread), 0, 0x2000, {0});
 
     mWorkBufSize = nn::swkbd::GetRequiredWorkBufferSize(false);
     mWorkBuf = (char*)malloc(mWorkBufSize);
@@ -15,6 +13,8 @@ Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
 
     mCustomizeDicSize = 0x400;
     mCustomizeDicBuf = (char*)malloc(mCustomizeDicSize);
+
+    mResultString.allocate();
 }
 
 void Keyboard::keyboardThread() {
@@ -38,8 +38,7 @@ void Keyboard::keyboardThread() {
         nn::swkbd::SetInitialTextUtf8(&keyboardArg, mInitialText.cstr());
     }
 
-    mIsCancelled =
-        nn::swkbd::ShowKeyboard(&mResultString, keyboardArg) == 671;  // no idea what 671 could be
+    mIsCancelled = nn::swkbd::ShowKeyboard(&mResultString, keyboardArg) == 671;  // no idea what 671 could be
 }
 
 void Keyboard::openKeyboard(const char* initialText, KeyboardSetup setupFunc) {

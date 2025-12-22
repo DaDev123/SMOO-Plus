@@ -1,4 +1,5 @@
 #include "server/snh/SardineConfigMenu.hpp"
+
 #include "logger.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/snh/SardineMode.hpp"

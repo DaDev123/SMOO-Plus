@@ -1,14 +1,19 @@
-#include <cstdlib>
+#include "debugMenu.hpp"
 
-#include "BloodMoon/BloodMoonUtils.hpp"
-#include "agl/utility/aglDevTools.h"
 #include "al/Library/File/FileUtil.h"
 #include "al/Library/System/GameSystemInfo.h"
 #include "al/Project/Memory/Util.h"
-#include "debugMenu.hpp"
-#include "game/System/GameSystem.h"
+
+#include "agl/utility/aglDevTools.h"
+
 #include "sead/gfx/nvn/seadDebugFontMgrNvn.h"
 #include "sead/gfx/seadPrimitiveRenderer.h"
+
+#include "game/System/GameSystem.h"
+
+#include <cstdlib>
+
+#include "BloodMoon/BloodMoonUtils.hpp"
 
 static const char* DBG_FONT_PATH = "DebugData/Font/nvn_font_jis1.ntx";
 static const char* DBG_SHADER_PATH = "DebugData/Font/nvn_font_shader_jis1.bin";
@@ -25,13 +30,10 @@ void setupDebugMenu(GameSystem* gSys) {
 
     if (curHeap) {
         if (context) {
-            sead::DebugFontMgrJis1Nvn::sInstance =
-                sead::DebugFontMgrJis1Nvn::createInstance(curHeap);
+            sead::DebugFontMgrJis1Nvn::sInstance = sead::DebugFontMgrJis1Nvn::createInstance(curHeap);
 
-            if (al::isExistFile(DBG_FONT_PATH) && al::isExistFile(DBG_SHADER_PATH) &&
-                al::isExistFile(DBG_TBL_PATH)) {
-                sead::DebugFontMgrJis1Nvn::sInstance->initialize(
-                    curHeap, DBG_SHADER_PATH, DBG_FONT_PATH, DBG_TBL_PATH, 0x100000);
+            if (al::isExistFile(DBG_FONT_PATH) && al::isExistFile(DBG_SHADER_PATH) && al::isExistFile(DBG_TBL_PATH)) {
+                sead::DebugFontMgrJis1Nvn::sInstance->initialize(curHeap, DBG_SHADER_PATH, DBG_FONT_PATH, DBG_TBL_PATH, 0x100000);
                 sead::TextWriter::setDefaultFont(sead::DebugFontMgrJis1Nvn::sInstance);
                 gTextWriter = new sead::TextWriter(context);
 
@@ -61,8 +63,7 @@ void drawBackground(agl::DrawContext* context) {
     sead::Vector3<float> p3(-1, -1, 0);
     sead::Vector3<float> p4(-.2, -1, 0);
 
-    agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident,
-                                     sead::Matrix44<float>::ident);
+    agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident, sead::Matrix44<float>::ident);
     agl::utl::DevTools::drawTriangleImm(context, p1, p2, p3, DMBgColor);
     agl::utl::DevTools::drawTriangleImm(context, p3, p4, p2, DMBgColor);
 }
@@ -73,8 +74,7 @@ void drawChatBackground(agl::DrawContext* context, float rows) {
     sead::Vector3<float> p3(-1, -.7, 0);                  // bottom left
     sead::Vector3<float> p4(-.2, -.7, 0);                 // bottom right
 
-    agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident,
-                                     sead::Matrix44<float>::ident);
+    agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident, sead::Matrix44<float>::ident);
     agl::utl::DevTools::drawTriangleImm(context, p1, p2, p3, ChatBgColor);
     agl::utl::DevTools::drawTriangleImm(context, p3, p4, p2, ChatBgColor);
 }
@@ -87,8 +87,7 @@ void drawConnectionBackground(agl::DrawContext* context) {
     sead::Vector3<float> p4(1, .76, 0);    // bottom right (smaller box)
     sead::Color4f c(.1, .1, .1, .9);
 
-    agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident,
-                                     sead::Matrix44<float>::ident);
+    agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident, sead::Matrix44<float>::ident);
     agl::utl::DevTools::drawTriangleImm(context, p1, p2, p3, c);
     agl::utl::DevTools::drawTriangleImm(context, p3, p4, p2, c);
 }

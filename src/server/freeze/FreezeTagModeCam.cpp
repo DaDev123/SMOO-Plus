@@ -2,6 +2,7 @@
 #include "al/Library/Camera/CameraPoseUpdater.h"
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
+
 #include "cameras/CameraPoserActorSpectate.h"
 #include "server/freeze/FreezeTagMode.hpp"
 
@@ -31,8 +32,7 @@ void FreezeTagMode::updateSpectateCam(PlayerActorBase* playerBase) {
 
         // Force index to decrease if your current index is higher than runner player count
         // Force index towards -1 during endgame if spectate index is not already -1
-        if (mSpectateIndex >= mInfo->mRunnerPlayers.size() ||
-            (mIsEndgameActive && mSpectateIndex != -1))
+        if (mSpectateIndex >= mInfo->mRunnerPlayers.size() || (mIsEndgameActive && mSpectateIndex != -1))
             indexDirection = -1;
 
         // Force index to decrease if your current target changes stages

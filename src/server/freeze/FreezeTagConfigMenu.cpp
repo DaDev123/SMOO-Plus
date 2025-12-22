@@ -1,5 +1,7 @@
 #include "server/freeze/FreezeTagConfigMenu.hpp"
+
 #include <stdint.h>
+
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/gamemode/GameModeManager.hpp"
 

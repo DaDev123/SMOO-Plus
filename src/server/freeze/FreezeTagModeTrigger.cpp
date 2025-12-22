@@ -2,12 +2,14 @@
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/Play/Layout/WipeHolder.h"
 #include "al/Library/Scene/SceneUtil.h"
+
 #include "game/Player/HackCap.h"
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerAnimator.h"
 #include "game/Player/PlayerHackKeeper.h"
 #include "game/Player/PlayerRecoverySafetyPoint.h"
 #include "game/Util/ObjUtil.h"
+
 #include "puppets/PuppetInfo.h"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
@@ -100,8 +102,7 @@ bool FreezeTagMode::trySetPlayerRunnerState(FreezeState newState) {
 */
 
 void FreezeTagMode::tryScoreEvent(FreezeInf* incomingPacket, PuppetInfo* sourcePuppet) {
-    if (!mCurScene || !sourcePuppet ||
-        !GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+    if (!mCurScene || !sourcePuppet || !GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
         return;
 
     if (!mCurScene->mIsAlive)
@@ -113,29 +114,24 @@ void FreezeTagMode::tryScoreEvent(FreezeInf* incomingPacket, PuppetInfo* sourceP
         return;
 
     float puppetDistance = al::calcDistance(playerBase, sourcePuppet->playerPos);
-    bool isInRange =
-        puppetDistance <
-        600.f;  // Only apply this score event if player is less than this many units away
+    bool isInRange = puppetDistance < 600.f;  // Only apply this score event if player is less than this many units away
 
     if (isInRange) {
         // Check for unfreeze score event
-        if ((mInfo->mIsPlayerRunner && !mInfo->mIsPlayerFreeze) &&
-            (sourcePuppet->isFreezeTagFreeze && !incomingPacket->isFreeze)) {
+        if ((mInfo->mIsPlayerRunner && !mInfo->mIsPlayerFreeze) && (sourcePuppet->isFreezeTagFreeze && !incomingPacket->isFreeze)) {
             // Verify that the target puppet wasn't frozen via falling off the map
             if (!sourcePuppet->isFreezeTagFallenOff)
                 mInfo->mPlayerTagScore.eventScoreUnfreeze();
         }
 
         // Check for freeze score event
-        if ((!mInfo->mIsPlayerRunner) &&
-            (!sourcePuppet->isFreezeTagFreeze && incomingPacket->isFreeze)) {
+        if ((!mInfo->mIsPlayerRunner) && (!sourcePuppet->isFreezeTagFreeze && incomingPacket->isFreeze)) {
             mInfo->mPlayerTagScore.eventScoreFreeze();
         }
     }
 
     // Checks if every runner is frozen, starts endgame sequence if so
-    if (!sourcePuppet->isFreezeTagFreeze && incomingPacket->isFreeze &&
-        isAllRunnerFrozen(sourcePuppet)) {
+    if (!sourcePuppet->isFreezeTagFreeze && incomingPacket->isFreeze && isAllRunnerFrozen(sourcePuppet)) {
         tryStartEndgameEvent();
     }
 }
@@ -164,8 +160,7 @@ bool FreezeTagMode::tryStartRecoveryEvent(bool isEndgame) {
         mRecoverySafetyPoint = sead::Vector3f::zero;
     }
 
-    Logger::log("Recovery event %.00fx %.00fy %.00fz\n", mRecoverySafetyPoint.x,
-                mRecoverySafetyPoint.y, mRecoverySafetyPoint.z);
+    Logger::log("Recovery event %.00fx %.00fy %.00fz\n", mRecoverySafetyPoint.x, mRecoverySafetyPoint.y, mRecoverySafetyPoint.z);
 
     return true;
 }

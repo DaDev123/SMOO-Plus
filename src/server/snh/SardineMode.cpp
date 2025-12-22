@@ -1,10 +1,11 @@
 #include "server/snh/SardineMode.hpp"
-#include <heap/seadHeap.h>
+
 #include "al/Library/Camera/CameraUtil.h"
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/LiveActor/ActorMovementFunction.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/Math/MathUtil.h"
+
 #include "game/Layout/CoinCounter.h"
 #include "game/Layout/MapMini.h"
 #include "game/Player/HackCap.h"
@@ -13,6 +14,9 @@
 #include "game/Player/PlayerFunction.h"
 #include "game/System/GameDataFunction.h"
 #include "game/Util/ActorDimensionKeeper.h"
+
+#include <heap/seadHeap.h>
+
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "logger.hpp"
@@ -37,17 +41,14 @@ void SardineMode::init(const GameModeInitInfo& info) {
     sead::ScopedCurrentHeapSetter heapSetter(GameModeManager::instance()->getHeap());
 
     if (curGameInfo)
-        Logger::log("Gamemode info found: %s %s\n",
-                    GameModeFactory::getModeString(curGameInfo->mMode),
-                    GameModeFactory::getModeString(info.mMode));
+        Logger::log("Gamemode info found: %s %s\n", GameModeFactory::getModeString(curGameInfo->mMode), GameModeFactory::getModeString(info.mMode));
     else
         Logger::log("No gamemode info found\n");
     if (curGameInfo && curGameInfo->mMode == mMode) {
         sead::ScopedCurrentHeapSetter heapSetter(GameModeManager::getSceneHeap());
         mInfo = (SardineInfo*)curGameInfo;
         mModeTimer = new GameModeTimer(mInfo->mHidingTime);
-        Logger::log("Reinitialized timer with time %d:%.2d\n", mInfo->mHidingTime.mMinutes,
-                    mInfo->mHidingTime.mSeconds);
+        Logger::log("Reinitialized timer with time %d:%.2d\n", mInfo->mHidingTime.mMinutes, mInfo->mHidingTime.mSeconds);
     } else {
         if (curGameInfo)
             delete curGameInfo;  // attempt to destory previous info before creating new one
@@ -138,18 +139,14 @@ void SardineMode::update() {
             PuppetInfo* curInfo = Client::getPuppetInfo(i);
 
             if (!curInfo) {
-                Logger::log("Checking %d, hit bounds %d-%d\n", i, mPuppetHolder->getSize(),
-                            Client::getMaxPlayerCount());
+                Logger::log("Checking %d, hit bounds %d-%d\n", i, mPuppetHolder->getSize(), Client::getMaxPlayerCount());
                 break;
             }
 
             float pupDist = al::calcDistance(playerBase, curInfo->playerPos);
-            bool isPupInStage =
-                al::isEqualString(curInfo->stageName,
-                                  GameDataFunction::getCurrentStageName(mCurScene->mHolder->mData));
+            bool isPupInStage = al::isEqualString(curInfo->stageName, GameDataFunction::getCurrentStageName(mCurScene->mHolder->mData));
 
-            if ((pupDist > highPuppetDistance || highPuppetDistance == -1) && isPupInStage &&
-                curInfo->isIt) {
+            if ((pupDist > highPuppetDistance || highPuppetDistance == -1) && isPupInStage && curInfo->isIt) {
                 highPuppetDistance = pupDist;
                 farPuppetID = i;
             }
@@ -157,10 +154,8 @@ void SardineMode::update() {
             if (curInfo->isIt)
                 isAnyIt = true;
 
-            if (curInfo->isConnected && curInfo->isInSameStage && curInfo->isIt && !mInfo->mIsIt &&
-                !isYukimaru && pupDist < 300.f) {
-                if (((PlayerActorHakoniwa*)playerBase)->mDimensionKeeper->mIs2D == curInfo->is2D &&
-                    !PlayerFunction::isPlayerDeadStatus(playerBase)) {
+            if (curInfo->isConnected && curInfo->isInSameStage && curInfo->isIt && !mInfo->mIsIt && !isYukimaru && pupDist < 300.f) {
+                if (((PlayerActorHakoniwa*)playerBase)->mDimensionKeeper->mIs2D == curInfo->is2D && !PlayerFunction::isPlayerDeadStatus(playerBase)) {
                     mInfo->mIsIt = true;
                     mModeTimer->enableTimer();
                     mModeLayout->showPack();
@@ -174,8 +169,7 @@ void SardineMode::update() {
     mModeTimer->updateTimer();
 
     // Tin detaching
-    if ((PlayerFunction::isPlayerDeadStatus(playerBase) ||
-         (highPuppetDistance > pullDistanceMax && mInfo->mIsTetherSnap && mInfo->mIsTether)) &&
+    if ((PlayerFunction::isPlayerDeadStatus(playerBase) || (highPuppetDistance > pullDistanceMax && mInfo->mIsTetherSnap && mInfo->mIsTether)) &&
         mInfo->mIsIt) {
         mInfo->mIsIt = false;
         mModeTimer->disableTimer();
@@ -185,22 +179,19 @@ void SardineMode::update() {
     }
 
     // Player pulling
-    if (highPuppetDistance >= pullDistanceMin && mInfo->mIsIt && farPuppetID != -1 &&
-        mInfo->mIsTether) {
+    if (highPuppetDistance >= pullDistanceMin && mInfo->mIsIt && farPuppetID != -1 && mInfo->mIsTether) {
         sead::Vector3f target = Client::getPuppetInfo(farPuppetID)->playerPos;
         sead::Vector3f* playerPos = al::getTransPtr(playerBase);
         sead::Vector3f direction = target - *playerPos;
 
         al::normalize(&direction);
 
-        playerPos->add(direction *
-                       ((al::calcDistance(playerBase, target) - pullDistanceMin) / pullPowerRate));
+        playerPos->add(direction * ((al::calcDistance(playerBase, target) - pullDistanceMin) / pullPowerRate));
     }
 
     if (mInfo->mIsUseGravity && !isYukimaru) {
         sead::Vector3f gravity;
-        if (rs::calcOnGroundNormalOrGravityDir(&gravity, playerBase,
-                                               playerBase->getPlayerCollision())) {
+        if (rs::calcOnGroundNormalOrGravityDir(&gravity, playerBase, playerBase->getPlayerCollision())) {
             gravity = -gravity;
             al::normalize(&gravity);
             al::setGravity(playerBase, gravity);

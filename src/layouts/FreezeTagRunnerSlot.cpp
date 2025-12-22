@@ -1,15 +1,17 @@
 #include "layouts/FreezeTagRunnerSlot.h"
-#include <cstring>
+
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Math/MathUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
+
+#include <cstring>
+
 #include "puppets/PuppetInfo.h"
 #include "server/Client.hpp"
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/gamemode/GameModeManager.hpp"
 
-FreezeTagRunnerSlot::FreezeTagRunnerSlot(const char* name, const al::LayoutInitInfo& initInfo)
-    : al::LayoutActor(name) {
+FreezeTagRunnerSlot::FreezeTagRunnerSlot(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
     al::initLayoutActor(this, initInfo, "FreezeTagRunnerSlot", 0);
     mInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
 
@@ -44,8 +46,7 @@ bool FreezeTagRunnerSlot::tryEnd() {
 }
 
 bool FreezeTagRunnerSlot::tryStart() {
-    if (!al::isNerve(this, &NrvFreezeTagRunnerSlot.Wait) &&
-        !al::isNerve(this, &NrvFreezeTagRunnerSlot.Appear)) {
+    if (!al::isNerve(this, &NrvFreezeTagRunnerSlot.Wait) && !al::isNerve(this, &NrvFreezeTagRunnerSlot.Appear)) {
         appear();
         return true;
     }
@@ -91,8 +92,7 @@ void FreezeTagRunnerSlot::exeWait() {
             return;
 
         setSlotName(mInfo->mRunnerPlayers.at(mRunnerIndex - mInfo->mIsPlayerRunner)->puppetName);
-        setSlotScore(
-            mInfo->mRunnerPlayers.at(mRunnerIndex - mInfo->mIsPlayerRunner)->freezeTagScore);
+        setSlotScore(mInfo->mRunnerPlayers.at(mRunnerIndex - mInfo->mIsPlayerRunner)->freezeTagScore);
     }
 }
 
@@ -117,14 +117,12 @@ void FreezeTagRunnerSlot::hideSlot() {
 }
 
 void FreezeTagRunnerSlot::setFreezeAngle() {
-    al::setPaneLocalRotate(this, "PicRunnerFreeze",
-                           {0.f, 0.f, mFreezeIconSpin + (mRunnerIndex * 7.5f)});
+    al::setPaneLocalRotate(this, "PicRunnerFreeze", {0.f, 0.f, mFreezeIconSpin + (mRunnerIndex * 7.5f)});
 
     if (mIsPlayer) {
         float targetSize = mInfo->mIsPlayerFreeze ? 1.f : 0.f;
         mInfo->mFreezeIconSize = al::lerpValue(mInfo->mFreezeIconSize, targetSize, 0.05f);
-        al::setPaneLocalScale(this, "PicRunnerFreeze",
-                              {mInfo->mFreezeIconSize, mInfo->mFreezeIconSize});
+        al::setPaneLocalScale(this, "PicRunnerFreeze", {mInfo->mFreezeIconSize, mInfo->mFreezeIconSize});
     } else {
         if (mRunnerIndex >= mInfo->mRunnerPlayers.size() + mInfo->mIsPlayerRunner)
             return;
@@ -133,7 +131,6 @@ void FreezeTagRunnerSlot::setFreezeAngle() {
 
         float targetSize = curInfo->isFreezeTagFreeze ? 1.f : 0.f;
         curInfo->freezeIconSize = al::lerpValue(curInfo->freezeIconSize, targetSize, 0.05f);
-        al::setPaneLocalScale(this, "PicRunnerFreeze",
-                              {curInfo->freezeIconSize, curInfo->freezeIconSize});
+        al::setPaneLocalScale(this, "PicRunnerFreeze", {curInfo->freezeIconSize, curInfo->freezeIconSize});
     }
 }

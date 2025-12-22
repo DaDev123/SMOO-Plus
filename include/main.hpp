@@ -1,6 +1,13 @@
+#include "al/Library/Sequence/Sequence.h"
+
+#include "game/Player/PlayerActorBase.h"
+#include "game/System/GameDataHolderAccessor.h"
 static bool isInGame = false;
 
 static bool debugMode = false;
+
+void drawMain(al::Sequence* seq);
+void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru);
 
 constexpr const char* captureNames[] = {"AnagramAlphabetCharacter",
                                         "Byugo",

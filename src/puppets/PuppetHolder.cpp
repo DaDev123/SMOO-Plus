@@ -1,10 +1,14 @@
 #include "puppets/PuppetHolder.hpp"
-#include <math.h>
-#include "actors/PuppetActor.h"
+
 #include "al/Library/LiveActor/ActorFlagFunction.h"
+
+#include <math.h>
+
+#include "actors/PuppetActor.h"
 #include "container/seadPtrArray.h"
 #include "heap/seadHeap.h"
 #include "heap/seadHeapMgr.h"
+#include "Library/Memory/HeapUtil.h"
 #include "logger.hpp"
 
 PuppetHolder::PuppetHolder(int size) {
@@ -28,12 +32,11 @@ bool PuppetHolder::resizeHolder(int size) {
         return true;  // no need to resize if we're already at the same capacity
     }
 
-    sead::Heap* seqHeap = sead::HeapMgr::instance()->findHeapByName("SequenceHeap", 0);
+    sead::Heap* seqHeap = al::getSequenceHeap();
 
     if (!mPuppetArr.isBufferReady()) {
         bool result = mPuppetArr.tryAllocBuffer(size, seqHeap);
-        Logger::log("[PuppetHolder] Initial buffer allocation %s for size %d\n",
-                    result ? "succeeded" : "FAILED", size);
+        Logger::log("[PuppetHolder] Initial buffer allocation %s for size %d\n", result ? "succeeded" : "FAILED", size);
         return result;
     }
 
@@ -43,8 +46,7 @@ bool PuppetHolder::resizeHolder(int size) {
         int curPupCount = mPuppetArr.size();
         int copyCount = (curPupCount > size) ? size : curPupCount;
 
-        Logger::log("[PuppetHolder] Resizing from %d to %d, copying %d puppets\n",
-                    mPuppetArr.capacity(), size, copyCount);
+        Logger::log("[PuppetHolder] Resizing from %d to %d, copying %d puppets\n", mPuppetArr.capacity(), size, copyCount);
 
         for (int i = 0; i < copyCount; i++) {
             newPuppets.pushBack(mPuppetArr[i]);
@@ -64,19 +66,17 @@ bool PuppetHolder::resizeHolder(int size) {
 bool PuppetHolder::tryRegisterPuppet(PuppetActor* puppet) {
     if (!mPuppetArr.isFull()) {
         mPuppetArr.pushBack(puppet);
-        Logger::log("[PuppetHolder] Registered puppet %d/%d\n", mPuppetArr.size(),
-                    mPuppetArr.capacity());
+        // Logger::log("[PuppetHolder] Registered puppet %d/%d\n", mPuppetArr.size(), mPuppetArr.capacity());
         return true;
     } else {
-        Logger::log("[PuppetHolder] ERROR: Cannot register puppet, holder is full (%d/%d)\n",
-                    mPuppetArr.size(), mPuppetArr.capacity());
+        // Logger::log("[PuppetHolder] ERROR: Cannot register puppet, holder is full (%d/%d)\n", mPuppetArr.size(), mPuppetArr.capacity());
         return false;
     }
 }
 
 bool PuppetHolder::tryRegisterDebugPuppet(PuppetActor* puppet) {
     mDebugPuppet = puppet;
-    Logger::log("[PuppetHolder] Debug puppet registered\n");
+    // Logger::log("[PuppetHolder] Debug puppet registered\n");
     return true;
 }
 
@@ -92,14 +92,14 @@ void PuppetHolder::update() {
         PuppetActor* curPuppet = mPuppetArr[i];
 
         if (!curPuppet) {
-            Logger::log("[PuppetHolder] WARNING: Null puppet at index %zu\n", i);
+            // Logger::log("[PuppetHolder] WARNING: Null puppet at index %zu\n", i);
             continue;
         }
 
         PuppetInfo* curInfo = curPuppet->getInfo();
 
         if (!curInfo) {
-            Logger::log("[PuppetHolder] WARNING: Null info for puppet at index %zu\n", i);
+            // Logger::log("[PuppetHolder] WARNING: Null info for puppet at index %zu\n", i);
             continue;
         }
 
@@ -108,17 +108,15 @@ void PuppetHolder::update() {
 
         // Log stage transitions for debugging
         if (wasInStage != curInfo->isInSameStage && curPuppet->mIsDebug) {
-            Logger::log("[PuppetHolder] Puppet '%s' stage status changed: %s -> %s\n",
-                        curInfo->puppetName, wasInStage ? "in stage" : "out of stage",
-                        curInfo->isInSameStage ? "in stage" : "out of stage");
+            // Logger::log("[PuppetHolder] Puppet '%s' stage status changed: %s -> %s\n", curInfo->puppetName, wasInStage ? "in stage" : "out of stage",
+            // curInfo->isInSameStage ? "in stage" : "out of stage");
         }
 
         if (curInfo->isInSameStage && al::isDead(curPuppet)) {
             curPuppet->makeActorAlive();
 
             if (curPuppet->mIsDebug) {
-                Logger::log("[PuppetHolder] Puppet '%s' made alive (entered stage)\n",
-                            curInfo->puppetName);
+                // Logger::log("[PuppetHolder] Puppet '%s' made alive (entered stage)\n", curInfo->puppetName);
             }
 
             // curPuppet->emitJoinEffect();  //Poof Particles
@@ -126,8 +124,7 @@ void PuppetHolder::update() {
             curPuppet->makeActorDead();
 
             if (curPuppet->mIsDebug) {
-                Logger::log("[PuppetHolder] Puppet '%s' made dead (left stage)\n",
-                            curInfo->puppetName);
+                // Logger::log("[PuppetHolder] Puppet '%s' made dead (left stage)\n", curInfo->puppetName);
             }
 
             // curPuppet->emitJoinEffect(); //Poof Particles
@@ -146,8 +143,7 @@ bool PuppetHolder::checkInfoIsInStage(PuppetInfo* info) {
             return al::isEqualString(mStageName.cstr(), info->stageName);
         } else {
             // For scenario 15+ (likely bonus/special stages), check both stage name and scenario
-            return al::isEqualString(mStageName.cstr(), info->stageName) &&
-                   info->scenarioNo == mScenarioNo;
+            return al::isEqualString(mStageName.cstr(), info->stageName) && info->scenarioNo == mScenarioNo;
         }
     }
 
@@ -158,8 +154,8 @@ void PuppetHolder::setStageInfo(const char* stageName, u8 scenarioNo) {
     if (stageName) {
         mStageName = stageName;
         mScenarioNo = scenarioNo;
-        Logger::log("[PuppetHolder] Stage info updated: %s, Scenario %d\n", stageName, scenarioNo);
+        // Logger::log("[PuppetHolder] Stage info updated: %s, Scenario %d\n", stageName, scenarioNo);
     } else {
-        Logger::log("[PuppetHolder] WARNING: Attempted to set null stage name\n");
+        // Logger::log("[PuppetHolder] WARNING: Attempted to set null stage name\n");
     }
 }
