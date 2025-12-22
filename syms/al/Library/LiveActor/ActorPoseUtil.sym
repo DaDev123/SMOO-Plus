@@ -1,0 +1,4 @@
+@smo:100,101,110,120
+
+_ZN2al11getTransPtrEPNS_9LiveActorE
+_ZN2al8getTransEPKNS_9LiveActorE

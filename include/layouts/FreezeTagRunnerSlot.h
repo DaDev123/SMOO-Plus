@@ -1,11 +1,10 @@
 #pragma once
 
-#include "al/layout/LayoutActor.h"
-#include "al/layout/LayoutInitInfo.h"
-#include "al/util/LayoutUtil.h"
-#include "al/util/NerveUtil.h"
-
-#include "logger.hpp"
+#include "Library/Layout/LayoutActorUtil.h"
+#include "al/Library/Layout/LayoutActor.h"
+#include "al/Library/Layout/LayoutInitInfo.h"
+#include "al/Library/Layout/LayoutUtil.h"
+#include "al/Library/Nerve/NerveSetupUtil.h"
 
 // TODO: kill layout if going through loading zone or paused
 
@@ -23,8 +22,12 @@ public:
     void hideSlot();
 
     void setFreezeAngle();
-    void setSlotName(const char* name) { al::setPaneStringFormat(this, "TxtRunnerName", "%s", name); };
-    void setSlotScore(int score) { al::setPaneStringFormat(this, "TxtRunnerScore", "%04u", score); };
+    void setSlotName(const char* name) {
+        al::setPaneStringFormat(this, "TxtRunnerName", "%s", name);
+    };
+    void setSlotScore(int score) {
+        al::setPaneStringFormat(this, "TxtRunnerScore", "%04u", score);
+    };
 
     void exeAppear();
     void exeWait();
@@ -42,7 +45,9 @@ private:
 };
 
 namespace {
-NERVE_HEADER(FreezeTagRunnerSlot, Appear)
-NERVE_HEADER(FreezeTagRunnerSlot, Wait)
-NERVE_HEADER(FreezeTagRunnerSlot, End)
-}
+NERVE_IMPL(FreezeTagRunnerSlot, Appear)
+NERVE_IMPL(FreezeTagRunnerSlot, Wait)
+NERVE_IMPL(FreezeTagRunnerSlot, End)
+
+NERVES_MAKE_STRUCT(FreezeTagRunnerSlot, Appear, Wait, End)
+}  // namespace

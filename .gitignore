@@ -8,9 +8,12 @@ Custom Stage Builds/**
 *.lst
 *.disabled
 
+lib/std
+build/
+package/
+
 compile_commands.json
 
 Ultimate_SMO_Compiler.bat
-Makefile
 /.vs
 build.ps1

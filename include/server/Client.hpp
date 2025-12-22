@@ -14,62 +14,47 @@
 #include <stdlib.h>
 
 // ===== AL/GAME ENGINE INCLUDES =====
-#include "al/LiveActor/LiveActor.h"
-#include "al/actor/ActorInitInfo.h"
-#include "al/actor/ActorSceneInfo.h"
-#include "al/async/AsyncFunctorThread.h"
-#include "al/async/FunctorV0M.hpp"
-#include "al/camera/CameraPoser.h"
-#include "al/camera/alCameraPoserFunction.h"
-#include "al/gamepad/util.h"
-#include "al/layout/LayoutActor.h"
-#include "al/layout/LayoutInitInfo.h"
-#include "al/layout/SimpleLayoutAppearWaitEnd.h"
-#include "al/layout/WindowConfirmWait.h"
-#include "al/util.hpp"
+
+#include "al/Library/Layout/LayoutInitInfo.h"
+#include "al/Library/Layout/WindowConfirmWait.h"
+#include "al/Library/LiveActor/ActorInitInfo.h"
+#include "al/Library/LiveActor/ActorSceneInfo.h"
+#include "al/Library/LiveActor/LiveActor.h"
+#include "al/Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
+#include "al/Library/Thread/AsyncFunctorThread.h"
 
 // ===== GAME INCLUDES =====
-#include "game/Actors/Shine.h"
-#include "game/GameData/GameDataFunction.h"
-#include "game/GameData/GameDataHolderAccessor.h"
-#include "game/GameData/GameDataHolderWriter.h"
-#include "game/Layouts/CoinCounter.h"
+#include "game/Item/Shine.h"
+
+#include "game/System/GameDataHolderAccessor.h"
+
 #include "game/Player/PlayerActorHakoniwa.h"
-#include "game/Player/PlayerFunction.h"
-#include "game/StageScene/StageScene.h"
+
+#include "game/Scene/StageScene.h"
 
 // ===== NINTENDO SDK INCLUDES =====
 #include "nn/account.h"
 
 // ===== SEAD INCLUDES =====
 #include "container/seadPtrArray.h"
-#include "heap/seadExpHeap.h"
 #include "sead/basis/seadNew.h"
 #include "sead/container/seadSafeArray.h"
-#include "sead/gfx/seadCamera.h"
+
 #include "sead/heap/seadDisposer.h"
-#include "sead/math/seadMatrix.h"
-#include "sead/math/seadVector.h"
+#include "sead/heap/seadExpHeap.h"
+
 #include "sead/prim/seadSafeString.h"
-#include "sead/prim/seadSafeString.hpp"
-#include "sead/thread/seadMutex.h"
 
 // ===== PROJECT INCLUDES =====
 #include "Keyboard.hpp"
-#include "debugMenu.hpp"
-#include "helpers.hpp"
-#include "layouts/HideAndSeekIcon.h"
-#include "logger.hpp"
+
 #include "packets/FreezeInf.h"
-#include "puppets/HackModelHolder.hpp"
+
 #include "puppets/PuppetHolder.hpp"
 #include "puppets/PuppetInfo.h"
-#include "rs/util.hpp"
+
 #include "server/SocketClient.hpp"
-#include "server/gamemode/GameModeBase.hpp"
-#include "server/gamemode/GameModeConfigMenu.hpp"
-#include "server/gamemode/GameModeInfoBase.hpp"
-#include "server/gamemode/GameModeTimer.hpp"
+
 #include "syssocket/sockdefines.h"
 #include "types.h"
 

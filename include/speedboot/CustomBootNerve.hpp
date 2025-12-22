@@ -1,22 +1,24 @@
 #pragma once
 
-#include "al/nerve/Nerve.h"
-#include "al/nerve/NerveKeeper.h"
-#include "al/util/NerveUtil.h"
-#include "game/HakoniwaSequence/HakoniwaSequence.h"
+#include "al/Library/Nerve/Nerve.h"
+#include "al/Library/Nerve/NerveKeeper.h"
+#include "al/Library/Nerve/NerveSetupUtil.h"
+#include "al/Library/Nerve/NerveUtil.h"
+#include "game/Sequence/HakoniwaSequence.h"
 
-NERVE_HEADER(HakoniwaSequence, LoadStage);
-NERVE_HEADER(HakoniwaSequence, LoadWorldResourceWithBoot);
+namespace {
 NERVE_IMPL(HakoniwaSequence, LoadStage);
 NERVE_IMPL(HakoniwaSequence, LoadWorldResourceWithBoot);
 
+NERVES_MAKE_STRUCT(HakoniwaSequence, LoadStage, LoadWorldResourceWithBoot);
+}  // namespace
 namespace speedboot {
-    class CustomBootNerve : public al::Nerve {
-        public:
-            void execute(al::NerveKeeper* keeper) override {
-                if (al::updateNerveState(keeper->mParent)) {
-                    al::setNerve(keeper->mParent, &nrvHakoniwaSequenceLoadStage);
-                }
-            }
-    };
-}
+class CustomBootNerve : public al::Nerve {
+public:
+    void execute(al::NerveKeeper* keeper) const {
+        if (al::updateNerveState(keeper->mParent)) {
+            al::setNerve(keeper->mParent, &NrvHakoniwaSequence.LoadStage);
+        }
+    }
+};
+}  // namespace speedboot

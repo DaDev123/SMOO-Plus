@@ -1,0 +1,7 @@
+@sdk
+
+_ZN2nn2fs12GetEntryTypeEPNS0_18DirectoryEntryTypeEPKc
+_ZN2nn2fs8OpenFileEPNS0_10FileHandleEPKci
+_ZN2nn2fs11GetFileSizeEPlNS0_10FileHandleE
+_ZN2nn2fs8ReadFileENS0_10FileHandleElPvm
+_ZN2nn2fs9CloseFileENS0_10FileHandleE

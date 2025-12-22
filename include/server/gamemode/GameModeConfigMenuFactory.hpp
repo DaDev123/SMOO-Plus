@@ -1,10 +1,10 @@
 #pragma once
 
-#include "al/factory/Factory.h"
+#include "al/Library/Factory/Factory.h"
+#include "server/freeze/FreezeTagConfigMenu.hpp"
+#include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/hns/HideAndSeekConfigMenu.hpp"
 #include "server/snh/SardineConfigMenu.hpp"
-#include "server/gamemode/GameModeConfigMenu.hpp"
-#include "server/freeze/FreezeTagConfigMenu.hpp"
 
 typedef GameModeConfigMenu* (*createMenu)(const char* name);
 
@@ -21,10 +21,10 @@ __attribute((used)) constexpr al::NameToCreator<createMenu> menuTable[] = {
 
 class GameModeConfigMenuFactory : public al::Factory<createMenu> {
 public:
-    GameModeConfigMenuFactory(const char* fName) {
-        this->factoryName = fName;
-        this->actorTable = menuTable;
-        this->factoryCount = sizeof(menuTable) / sizeof(menuTable[0]);
+    GameModeConfigMenuFactory(const char* fName) : al::Factory<createMenu>(fName, menuTable) {
+        this->mFactoryName = fName;
+        this->mFactoryEntries = menuTable;
+        this->mNumFactoryEntries = sizeof(menuTable) / sizeof(menuTable[0]);
     };
 
     constexpr static const char* getMenuName(int idx);
@@ -33,7 +33,7 @@ public:
 
 constexpr const char* GameModeConfigMenuFactory::getMenuName(int idx) {
     if (idx >= 0 && idx < sizeof(menuTable) / sizeof(menuTable[0]))
-        return menuTable[idx].creatorName;
+        return menuTable[idx].name;
     return nullptr;
 }
 

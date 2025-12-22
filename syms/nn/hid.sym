@@ -1,0 +1,4 @@
+@sdk
+
+_ZN2nn3hid15InitializeMouseEv
+_ZN2nn3hid13GetMouseStateEPNS0_10MouseStateE

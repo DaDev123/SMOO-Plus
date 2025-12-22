@@ -1,16 +1,13 @@
 #pragma once
 
 #include <stdint.h>
-#include "al/LiveActor/LiveActor.h"
-#include "al/scene/Scene.h"
-#include "al/sensor/SensorMsg.h"
-#include "al/util.hpp"
-#include "al/util/NerveUtil.h"
+#include "al/Library/HitSensor/HitSensorKeeper.h"
+#include "al/Library/LiveActor/LiveActor.h"
+#include "al/Library/Nerve/NerveSetupUtil.h"
+
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
-#include "logger.hpp"
-#include "math/seadVector.h"
-#include "rs/util/SensorUtil.h"
+
 #include "server/freeze/FreezeTagInfo.h"
 
 class FreezeHintArrow : public al::LiveActor {
@@ -18,7 +15,8 @@ public:
     FreezeHintArrow(const char* name);
     void init(al::ActorInitInfo const&) override;
     void initAfterPlacement(void) override;
-    bool receiveMsg(const al::SensorMsg* message, al::HitSensor* source, al::HitSensor* target) override;
+    bool receiveMsg(const al::SensorMsg* message, al::HitSensor* source,
+                    al::HitSensor* target) override;
     void attackSensor(al::HitSensor* source, al::HitSensor* target) override;
     void control(void) override;
     void appear() override;
@@ -46,5 +44,7 @@ public:
 };
 
 namespace {
-NERVE_HEADER(FreezeHintArrow, Wait)
-}
+NERVE_IMPL(FreezeHintArrow, Wait)
+
+NERVES_MAKE_STRUCT(FreezeHintArrow, Wait)
+}  // namespace

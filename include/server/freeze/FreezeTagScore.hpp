@@ -1,8 +1,8 @@
 #pragma once
 
-#include "layouts/FreezeTagIcon.h"
-#include "server/Client.hpp"
 #include <stdint.h>
+#include "al/Library/Math/MathUtil.h"
+#include "layouts/FreezeTagIcon.h"
 
 class FreezeTagScore {
 public:
@@ -11,8 +11,7 @@ public:
 
     void setTargetLayout(FreezeTagIcon* icon) { mIcon = icon; };
 
-    void addScore(int add, const char* description)
-    {
+    void addScore(int add, const char* description) {
         mScore += add;
         mScore = al::clamp(mScore, uint16_t(0), uint16_t(9999));
         mIcon->queueScoreEvent(add, description);

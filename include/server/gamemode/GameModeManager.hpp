@@ -1,9 +1,10 @@
 #pragma once
 
-#include <heap/seadDisposer.h>
-#include <heap/seadHeap.h>
 #include <container/seadSafeArray.h>
-#include "al/util.hpp"
+#include <sead/heap/seadDisposer.h>
+#include <sead/heap/seadHeap.h>
+#include "al/Library/Memory/HeapUtil.h"
+#include "sead/heap/seadHeapMgr.h"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/gamemode/modifiers/ModeModifierBase.hpp"
@@ -23,13 +24,17 @@ public:
     void unpause();
 
     GameMode getGameMode() const { return mCurMode; }
-    template<class T> T* getMode() const { return static_cast<T*>(mCurModeBase); }
-    template<class T> T* getInfo() const { return static_cast<T*>(mModeInfo); }
-    void setInfo(GameModeInfoBase* info) {
-        mModeInfo = info;
+    template <class T>
+    T* getMode() const {
+        return static_cast<T*>(mCurModeBase);
     }
+    template <class T>
+    T* getInfo() const {
+        return static_cast<T*>(mModeInfo);
+    }
+    void setInfo(GameModeInfoBase* info) { mModeInfo = info; }
 
-    template<class T>
+    template <class T>
     T* createModeInfo();
 
     sead::Heap* getHeap() { return mHeap; }
@@ -42,6 +47,7 @@ public:
     bool isModeAndActive(GameMode mode) const { return isMode(mode) && isActive(); }
     bool isModeRequireUI() { return isActive() && !mCurModeBase->isUseNormalUI(); }
     bool isPaused() const { return mPaused; }
+
 private:
     sead::Heap* mHeap = nullptr;
 
@@ -51,12 +57,12 @@ private:
     bool mWasSetMode = false;
     GameMode mCurMode = GameMode::NONE;
     GameModeBase* mCurModeBase = nullptr;
-    GameModeInfoBase *mModeInfo = nullptr;
-    GameModeInitInfo *mLastInitInfo = nullptr;
-    ModeModifierBase *mCurModifier = nullptr;
+    GameModeInfoBase* mModeInfo = nullptr;
+    GameModeInitInfo* mLastInitInfo = nullptr;
+    ModeModifierBase* mCurModifier = nullptr;
 };
 
-template<class T>
+template <class T>
 T* GameModeManager::createModeInfo() {
     sead::ScopedCurrentHeapSetter heapSetter(mHeap);
 

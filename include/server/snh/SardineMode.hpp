@@ -1,13 +1,12 @@
 #pragma once
 
-#include "al/camera/CameraTicket.h"
+#include <math.h>
+#include "al/Library/Camera/CameraTicket.h"
+#include "layouts/SardineIcon.h"
 #include "server/gamemode/GameModeBase.hpp"
-#include "server/gamemode/GameModeConfigMenu.hpp"
+
 #include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
-#include "server/snh/SardineConfigMenu.hpp"
-#include "layouts/SardineIcon.h"
-#include <math.h>
 
 struct SardineInfo : GameModeInfoBase {
     SardineInfo() { mMode = GameMode::SARDINE; }

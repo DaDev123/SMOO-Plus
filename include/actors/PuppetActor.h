@@ -1,104 +1,99 @@
 #pragma once
 
-#include "al/LiveActor/LiveActor.h"
-#include "al/async/FunctorV0M.hpp"
-#include "al/async/FunctorBase.h"
-#include "al/util.hpp"
-#include "al/string/StringTmp.h"
-#include "al/layout/BalloonMessage.h"
+#include "al/Library/LiveActor/LiveActor.h"
+#include "game/Player/PlayerCostumeInfo.h"
 
-#include "game/Player/PlayerFunction.h"
-#include "game/Player/PlayerJointControlPartsDynamics.h"
-#include "game/Player/PlayerConst.h"
+#include "al/Library/Play/Layout/BalloonMessage.h"
+
 #include "game/Player/PlayerModelHolder.h"
 
 #include "actors/PuppetCapActor.h"
 #include "actors/PuppetHackActor.h"
 #include "layouts/NameTag.h"
-#include "sead/math/seadVector.h"
-#include "server/DeltaTime.hpp"
 
-#include "logger.hpp"
-#include "puppets/PuppetInfo.h"
-#include "puppets/HackModelHolder.hpp"
-#include "helpers.hpp"
 #include "algorithms/CaptureTypes.h"
+
+#include "puppets/HackModelHolder.hpp"
+#include "puppets/PuppetInfo.h"
 
 #include "server/freeze/FreezePlayerBlock.h"
 
 class PuppetActor : public al::LiveActor {
-    public:
-        PuppetActor(const char *name);
-        virtual void init(al::ActorInitInfo const &) override;
-        virtual void initAfterPlacement(void) override;
-        virtual void control(void) override;
-        virtual void movement(void) override;
-        virtual void makeActorAlive(void) override;
-        virtual void makeActorDead(void) override;
-        virtual void calcAnim(void) override;
-        
-        virtual void attackSensor(al::HitSensor *, al::HitSensor *) override;
-        virtual bool receiveMsg(const al::SensorMsg*, al::HitSensor*, al::HitSensor*) override;
+public:
+    PuppetActor(const char* name);
+    virtual void init(al::ActorInitInfo const&) override;
+    virtual void initAfterPlacement(void) override;
+    virtual void control(void) override;
+    virtual void movement(void) override;
+    virtual void makeActorAlive(void) override;
+    virtual void makeActorDead(void) override;
+    virtual void calcAnim(void) override;
 
-        virtual const char* getName() const override {
-            if (mInfo)
-                return mInfo->puppetName;
-            return mActorName;
-        }
+    virtual void attackSensor(al::HitSensor*, al::HitSensor*) override;
+    virtual bool receiveMsg(const al::SensorMsg*, al::HitSensor*, al::HitSensor*) override;
 
-        void initOnline(PuppetInfo *pupInfo);
+    virtual const char* getName() const override {
+        if (mInfo)
+            return mInfo->puppetName;
+        return "";
+    }
 
-        void startAction(const char *actName);
-        void hairControl();
+    void initOnline(PuppetInfo* pupInfo);
 
-        void setBlendWeight(int index, float weight);
+    void startAction(const char* actName);
+    void hairControl();
 
-        bool isNeedBlending();
+    void setBlendWeight(int index, float weight);
 
-        bool isInCaptureList(const char *hackName);
+    bool isNeedBlending();
 
-        PuppetInfo* getInfo() { return mInfo; }
+    bool isInCaptureList(const char* hackName);
 
-        bool addCapture(PuppetHackActor *capture, const char *hackType);
+    PuppetInfo* getInfo() { return mInfo; }
 
-        al::LiveActor* getCurrentModel();
+    bool addCapture(PuppetHackActor* capture, const char* hackType);
 
-        int getMaxCaptures() {return mCaptures->getEntryCount(); };
+    al::LiveActor* getCurrentModel();
 
-        void debugTeleportCaptures(const sead::Vector3f& pos);
+    int getMaxCaptures() { return mCaptures->getEntryCount(); };
 
-        void debugTeleportCapture(const sead::Vector3f& pos, int index);
+    void debugTeleportCaptures(const sead::Vector3f& pos);
 
-        void emitJoinEffect();
+    void debugTeleportCapture(const sead::Vector3f& pos, int index);
 
-        bool mIsDebug = false;
-        
-    private:
-        void changeModel(const char* newModel);
+    void emitJoinEffect();
 
-        bool setCapture(const char* captureName);
+    bool mIsDebug = false;
 
-        void syncPose();
+private:
+    void changeModel(const char* newModel);
 
-        PlayerCostumeInfo *mCostumeInfo = nullptr;
-        PuppetInfo *mInfo = nullptr;
-        PuppetCapActor *mPuppetCap = nullptr;
-        PlayerModelHolder *mModelHolder = nullptr;
-        HackModelHolder* mCaptures = nullptr;
-        NameTag *mNameTag = nullptr;
+    bool setCapture(const char* captureName);
 
-        CaptureTypes::Type mCurCapture = CaptureTypes::Type::Unknown;
+    void syncPose();
 
-        bool mIs2DModel = false;
+    PlayerCostumeInfo* mCostumeInfo = nullptr;
+    PuppetInfo* mInfo = nullptr;
+    PuppetCapActor* mPuppetCap = nullptr;
+    PlayerModelHolder* mModelHolder = nullptr;
+    HackModelHolder* mCaptures = nullptr;
+    NameTag* mNameTag = nullptr;
 
-        bool mIsCaptureModel = false;
+    CaptureTypes::Type mCurCapture = CaptureTypes::Type::Unknown;
 
-        float mClosingSpeed = 0;
+    bool mIs2DModel = false;
 
-        FreezePlayerBlock* mFreezeTagIceBlock = nullptr;
+    bool mIsCaptureModel = false;
+
+    float mClosingSpeed = 0;
+
+    FreezePlayerBlock* mFreezeTagIceBlock = nullptr;
 };
 
 PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo,
                                         char const* bodyName, char const* capName, int subActorNum,
                                         al::AudioKeeper* audioKeeper);
-PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player, const al::ActorInitInfo &initInfo, const char* headModelName, const char* capModelName, const char* headType, const char* headSuffix);
+PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player,
+                                                const al::ActorInitInfo& initInfo,
+                                                const char* headModelName, const char* capModelName,
+                                                const char* headType, const char* headSuffix);

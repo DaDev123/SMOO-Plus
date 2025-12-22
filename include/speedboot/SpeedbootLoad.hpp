@@ -1,11 +1,11 @@
 #pragma once
 
-#include "al/layout/LayoutActor.h"
-#include "al/layout/LayoutInitInfo.h"
-#include "al/wipe/WipeSimple.h"
+#include "Library/Nerve/NerveSetupUtil.h"
+#include "al/Library/Layout/LayoutActor.h"
+#include "al/Library/Play/Layout/WipeSimple.h"
 
 namespace al {
-    class LayoutInitInfo;
+class LayoutInitInfo;
 }
 
 class WorldResourceLoader;
@@ -17,8 +17,7 @@ class HakoniwaSequence;
  */
 class SpeedbootLoad : public al::LayoutActor {
 public:
-    SpeedbootLoad(WorldResourceLoader* resourceLoader, 
-                  const al::LayoutInitInfo& initInfo, 
+    SpeedbootLoad(WorldResourceLoader* resourceLoader, const al::LayoutInitInfo& initInfo,
                   HakoniwaSequence* sequence);
 
     // Nerve execution functions
@@ -32,7 +31,7 @@ private:
     const char* getStageName() const;
     const char16_t* getKingdomName(const char* stageName) const;
     bool isKnownStage(const char* stageName) const;
-    
+
     void updateProgressBar();
     void updateUIElements();
     void updateTextElements();
@@ -49,3 +48,12 @@ private:
     f32 mFallbackTimer = 0.0f;
     bool mUsingFallback = false;
 };
+
+namespace {
+NERVE_IMPL(SpeedbootLoad, Appear)
+NERVE_IMPL(SpeedbootLoad, Wait)
+NERVE_IMPL(SpeedbootLoad, Decrease)
+NERVE_IMPL(SpeedbootLoad, End)
+
+NERVES_MAKE_STRUCT(SpeedbootLoad, Appear, Wait, Decrease, End)
+}  // namespace

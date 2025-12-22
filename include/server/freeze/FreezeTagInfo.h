@@ -1,9 +1,10 @@
 #pragma once
 
-#include "server/gamemode/GameModeInfoBase.hpp"
 #include "server/freeze/FreezeTagScore.hpp"
+#include "server/gamemode/GameModeInfoBase.hpp"
+#include "server/gamemode/GameModeTimer.hpp"
 
-enum FreezeState { // Runner team player's state
+enum FreezeState {  // Runner team player's state
     ALIVE = 0,
     FREEZE = 1
 };
@@ -22,7 +23,7 @@ struct FreezeTagInfo : GameModeInfoBase {
     sead::PtrArray<PuppetInfo> mRunnerPlayers;
     sead::PtrArray<PuppetInfo> mChaserPlayers;
 
-    int mRoundLength = 10; // Length of rounds in minutes
+    int mRoundLength = 10;  // Length of rounds in minutes
     bool mIsHostMode = false;
 
     bool mIsDebugMode = false;

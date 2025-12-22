@@ -1,16 +1,11 @@
 #pragma once
 
+#include <netinet/in.h>
 #include "SocketBase.hpp"
-#include "al/async/AsyncFunctorThread.h"
+#include "al/Library/Thread/AsyncFunctorThread.h"
 #include "heap/seadHeap.h"
-#include "nn/result.h"
-#include "sead/math/seadVector.h"
-#include "sead/math/seadQuat.h"
+
 #include "sead/container/seadPtrArray.h"
-
-#include "al/util.hpp"
-
-#include "nn/account.h"
 
 #include "syssocket/sockdefines.h"
 
@@ -21,54 +16,54 @@
 #include "packets/Packet.h"
 
 class SocketClient : public SocketBase {
-    public:
-        SocketClient(const char *name, sead::Heap *heap);
-        nn::Result init(const char* ip, u16 port) override;
-        bool tryReconnect() override;
-        bool closeSocket() override;
-        Packet *tryGetPacket() override;
+public:
+    SocketClient(const char* name, sead::Heap* heap);
+    nn::Result init(const char* ip, u16 port) override;
+    bool tryReconnect() override;
+    bool closeSocket() override;
+    Packet* tryGetPacket() override;
 
-        bool startThreads();
-        void endThreads();
+    bool startThreads();
+    void endThreads();
 
-        bool send(Packet* packet);
-        bool recv();
+    bool send(Packet* packet);
+    bool recv();
 
-        bool queuePacket(Packet *packet);
-        void trySendQueue();
+    bool queuePacket(Packet* packet);
+    void trySendQueue();
 
-        void sendFunc();
-        void recvFunc();
+    void sendFunc();
+    void recvFunc();
 
-        void printPacket(Packet* packet);
-        bool isConnected() { return socket_log_state == SOCKET_LOG_CONNECTED; }
+    void printPacket(Packet* packet);
+    bool isConnected() { return socket_log_state == SOCKET_LOG_CONNECTED; }
 
-        u32 getSendCount() { return mSendQueue.getCount(); }
-        u32 getSendMaxCount() { return mSendQueue.getMaxCount(); }
+    u32 getSendCount() { return mSendQueue.mMessageQueueInner._count; }
+    u32 getSendMaxCount() { return mSendQueue.mMessageQueueInner._maxCount; }
 
-        u32 getRecvCount() { return mRecvQueue.getCount(); }
-        u32 getRecvMaxCount() { return mRecvQueue.getMaxCount(); }
+    u32 getRecvCount() { return mRecvQueue.mMessageQueueInner._count; }
+    u32 getRecvMaxCount() { return mRecvQueue.mMessageQueueInner._maxCount; }
 
-        void setIsFirstConn(bool value) { mIsFirstConnect = value; }
+    void setIsFirstConn(bool value) { mIsFirstConnect = value; }
 
-    private:
-        sead::Heap* mHeap = nullptr;
-        
-        al::AsyncFunctorThread* mRecvThread = nullptr;
-        al::AsyncFunctorThread* mSendThread = nullptr;
-        
-        sead::MessageQueue mRecvQueue;
-        sead::MessageQueue mSendQueue;
+private:
+    sead::Heap* mHeap = nullptr;
 
-        int maxBufSize = 100;
-        bool mIsFirstConnect = true;
+    al::AsyncFunctorThread* mRecvThread = nullptr;
+    al::AsyncFunctorThread* mSendThread = nullptr;
 
-        /**
-         * @param str a string containing an IPv4 address or a hostname that can be resolved via DNS
-         * @param out IPv4 address
-         * @return if this function was successfull and out contains a valid IP address
-         */
-        bool stringToIPAddress(const char* str, in_addr* out);
+    sead::MessageQueue mRecvQueue;
+    sead::MessageQueue mSendQueue;
+
+    int maxBufSize = 100;
+    bool mIsFirstConnect = true;
+
+    /**
+     * @param str a string containing an IPv4 address or a hostname that can be resolved via DNS
+     * @param out IPv4 address
+     * @return if this function was successfull and out contains a valid IP address
+     */
+    bool stringToIPAddress(const char* str, in_addr* out);
 };
 
 typedef void (SocketClient::*SocketThreadFunc)(void);

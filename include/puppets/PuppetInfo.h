@@ -3,21 +3,19 @@
 #include "algorithms/PlayerAnims.h"
 #include "packets/Packet.h"
 
-#include "al/LiveActor/LiveActor.h"
-
 #include "nn/account.h"
 
-#include "sead/math/seadVector.h"
 #include "sead/math/seadQuat.h"
 
 struct PuppetInfo {
     // General Puppet Info
-    char puppetName[0x10] = {}; // max user account name size is 10 chars, so this could go down to 0xB
+    char puppetName[0x10] =
+        {};  // max user account name size is 10 chars, so this could go down to 0xB
     bool isConnected = false;
     nn::account::Uid playerID;
     // Puppet Translation Info
-    sead::Vector3f playerPos = sead::Vector3f(0.f,0.f,0.f);
-    sead::Quatf playerRot = sead::Quatf(0.f,0.f,0.f,0.f);
+    sead::Vector3f playerPos = sead::Vector3f(0.f, 0.f, 0.f);
+    sead::Quatf playerRot = sead::Quatf(0.f, 0.f, 0.f, 0.f);
     // Puppet Stage Info
     u8 scenarioNo = -1;
     char stageName[0x40] = {};
@@ -38,9 +36,9 @@ struct PuppetInfo {
     float animRate = 0.f;
     bool is2D = false;
     // Puppet Hack Cap Info
-    sead::Vector3f capPos = sead::Vector3f(0.f,0.f,0.f);
-    sead::Quatf capRot = sead::Quatf(0.f,0.f,0.f,0.f);
-    sead::Quatf capQuat = sead::Quatf(0.f,0.f,0.f,1.f); // Actor quaternion rotation
+    sead::Vector3f capPos = sead::Vector3f(0.f, 0.f, 0.f);
+    sead::Quatf capRot = sead::Quatf(0.f, 0.f, 0.f, 0.f);
+    sead::Quatf capQuat = sead::Quatf(0.f, 0.f, 0.f, 1.f);  // Actor quaternion rotation
     char capAnim[PACKBUFSIZE] = {};
     bool isCapThrow = false;
     bool isHoldThrow = false;
@@ -52,6 +50,7 @@ struct PuppetInfo {
     uint16_t freezeTagScore = 0;
     bool isFreezeTagRunner = true;
     bool isFreezeTagFreeze = false;
-    bool isFreezeTagFallenOff = false; // When runenr falls off and is automatically frozen, this flag is set
+    bool isFreezeTagFallenOff =
+        false;  // When runenr falls off and is automatically frozen, this flag is set
     float freezeIconSize = 0.f;
 };

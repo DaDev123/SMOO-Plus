@@ -1,23 +1,19 @@
 #pragma once
 
-#include "al/LiveActor/LiveActor.h"
-#include "al/scene/Scene.h"
-#include "al/util.hpp"
-#include "al/sensor/SensorMsg.h"
-#include "al/util/NerveUtil.h"
+#include "al/Library/HitSensor/SensorMsgSetupUtil.h"
+#include "al/Library/LiveActor/LiveActor.h"
+#include "al/Library/Nerve/NerveSetupUtil.h"
+
 #include "game/Player/PlayerActorHakoniwa.h"
-#include "rs/util/SensorUtil.h"
-#include "logger.hpp"
 
-
-class FreezePlayerBlock : public al::LiveActor
-{
+class FreezePlayerBlock : public al::LiveActor {
 public:
-    FreezePlayerBlock(const char *name);
-    void init(al::ActorInitInfo const &) override;
+    FreezePlayerBlock(const char* name);
+    void init(al::ActorInitInfo const&) override;
     void initAfterPlacement(void) override;
-    bool receiveMsg(const al::SensorMsg *message, al::HitSensor *source, al::HitSensor *target) override;
-    void attackSensor(al::HitSensor *source, al::HitSensor *target) override;
+    bool receiveMsg(const al::SensorMsg* message, al::HitSensor* source,
+                    al::HitSensor* target) override;
+    void attackSensor(al::HitSensor* source, al::HitSensor* target) override;
     void control(void) override;
     void appear() override;
 
@@ -29,13 +25,15 @@ public:
     void exeDead();
 
     bool mIsLocked = false;
-    float mDitheringOffset = -150.f; // -150 is fully opaque, 0 is fully dithered, -80 is good looking
+    float mDitheringOffset =
+        -150.f;  // -150 is fully opaque, 0 is fully dithered, -80 is good looking
 };
 
-namespace
-{
-    NERVE_HEADER(FreezePlayerBlock, Appear)
-    NERVE_HEADER(FreezePlayerBlock, Wait)
-    NERVE_HEADER(FreezePlayerBlock, Disappear)
-    NERVE_HEADER(FreezePlayerBlock, Dead)
-}
+namespace {
+NERVE_IMPL(FreezePlayerBlock, Appear)
+NERVE_IMPL(FreezePlayerBlock, Wait)
+NERVE_IMPL(FreezePlayerBlock, Disappear)
+NERVE_IMPL(FreezePlayerBlock, Dead)
+
+NERVES_MAKE_STRUCT(FreezePlayerBlock, Appear, Wait, Disappear, Dead)
+}  // namespace

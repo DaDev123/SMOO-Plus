@@ -1,18 +1,18 @@
 #pragma once
 
 #include "ModeModifierBase.hpp"
-#include "game/StageScene/StageScene.h"
+#include "al/Library/Camera/CameraTicket.h"
 
 class GravityModifier : public ModeModifierBase {
 public:
     GravityModifier(GameModeBase* modeInfo);
-    
+
     void enable() override;
     void disable() override;
     void update() override;
 
-    void setCamTicket(al::CameraTicket *ticket) {mTicket = ticket;};
+    void setCamTicket(al::CameraTicket* ticket) { mTicket = ticket; };
 
 private:
-    al::CameraTicket *mTicket = nullptr;
+    al::CameraTicket* mTicket = nullptr;
 };

@@ -1,12 +1,10 @@
 #pragma once
 
-#include "al/layout/LayoutActor.h"
-#include "al/layout/LayoutInitInfo.h"
-#include "al/util/NerveUtil.h"
+#include "al/Library/Layout/LayoutActor.h"
+#include "al/Library/Layout/LayoutInitInfo.h"
+#include "al/Library/Nerve/NerveSetupUtil.h"
 #include "container/seadPtrArray.h"
 
-#include "logger.hpp"
-#include "server/gamemode/GameModeTimer.hpp"
 #include "layouts/GameModePlayerSlot.h"
 
 // TODO: kill layout if going through loading zone or paused
@@ -27,7 +25,7 @@ public:
     void exeWait();
     void exeEnd();
 
-    void setCurScene(StageScene* scene) { 
+    void setCurScene(StageScene* scene) {
         mCurScene = scene;
         // Update all player slots with the scene
         for (int i = 0; i < mMaxPlayers; i++) {
@@ -43,7 +41,9 @@ private:
 };
 
 namespace {
-    NERVE_HEADER(SardineIcon, Appear)
-    NERVE_HEADER(SardineIcon, Wait)
-    NERVE_HEADER(SardineIcon, End)
-}
+NERVE_IMPL(SardineIcon, Appear)
+NERVE_IMPL(SardineIcon, Wait)
+NERVE_IMPL(SardineIcon, End)
+
+NERVES_MAKE_STRUCT(SardineIcon, Appear, Wait, End)
+}  // namespace

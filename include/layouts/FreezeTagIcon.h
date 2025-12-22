@@ -1,15 +1,13 @@
 #pragma once
 
-#include "al/layout/LayoutActor.h"
-#include "al/layout/LayoutInitInfo.h"
-#include "al/util/NerveUtil.h"
+#include "al/Library/Layout/LayoutActor.h"
+#include "al/Library/Layout/LayoutInitInfo.h"
+#include "al/Library/Nerve/NerveSetupUtil.h"
 
 #include "layouts/FreezeTagChaserSlot.h"
 #include "layouts/FreezeTagRunnerSlot.h"
 
 #include "container/seadPtrArray.h"
-#include "logger.hpp"
-#include "math/seadVector.h"
 
 // TODO: kill layout if going through loading zone or paused
 
@@ -24,8 +22,7 @@ public:
     void setSpectateOverlayHeight();
     void setRoundTimerOverlay();
 
-    void showEndgameScreen()
-    {
+    void showEndgameScreen() {
         mEndgameIsDisplay = true;
         mEndgameTextAngle = 0.f;
         mEndgameTextSize = 0.f;
@@ -61,7 +58,8 @@ private:
     int mScoreEventValue = 0;
     const char* mScoreEventDesc = nullptr;
 
-    float mScoreEventTime = -1.f; // Every time a score event starts, this timer is set to zero, increase over time to control anim
+    float mScoreEventTime = -1.f;  // Every time a score event starts, this timer is set to zero,
+                                   // increase over time to control anim
     sead::Vector3f mScoreEventPos = sead::Vector3f::zero;
     float mScoreEventScale = 0.f;
 
@@ -83,7 +81,9 @@ private:
 };
 
 namespace {
-NERVE_HEADER(FreezeTagIcon, Appear)
-NERVE_HEADER(FreezeTagIcon, Wait)
-NERVE_HEADER(FreezeTagIcon, End)
-}
+NERVE_IMPL(FreezeTagIcon, Appear)
+NERVE_IMPL(FreezeTagIcon, Wait)
+NERVE_IMPL(FreezeTagIcon, End)
+
+NERVES_MAKE_STRUCT(FreezeTagIcon, Appear, Wait, End)
+}  // namespace

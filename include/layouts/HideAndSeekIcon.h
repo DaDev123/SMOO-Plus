@@ -1,12 +1,10 @@
 #pragma once
 
-#include "al/layout/LayoutActor.h"
-#include "al/layout/LayoutInitInfo.h"
-#include "al/util/NerveUtil.h"
+#include "al/Library/Layout/LayoutActor.h"
+#include "al/Library/Layout/LayoutInitInfo.h"
+#include "al/Library/Nerve/NerveSetupUtil.h"
 #include "container/seadPtrArray.h"
 
-#include "logger.hpp"
-#include "server/gamemode/GameModeTimer.hpp"
 #include "layouts/GameModePlayerSlot.h"
 
 // TODO: kill layout if going through loading zone or paused
@@ -22,12 +20,12 @@ public:
 
     void showHiding();
     void showSeeking();
-    
+
     void exeAppear();
     void exeWait();
     void exeEnd();
 
-void setCurScene(StageScene* scene) { 
+    void setCurScene(StageScene* scene) {
         mCurScene = scene;
         // Update all player slots with the scene
         for (int i = 0; i < mMaxPlayers; i++) {
@@ -36,14 +34,16 @@ void setCurScene(StageScene* scene) {
     }
 
 private:
-    struct HideAndSeekInfo *mInfo;
+    struct HideAndSeekInfo* mInfo;
     sead::PtrArray<GameModePlayerSlot> mPlayerSlots;
     static constexpr int mMaxPlayers = 16;
     StageScene* mCurScene = nullptr;
 };
 
 namespace {
-    NERVE_HEADER(HideAndSeekIcon, Appear)
-    NERVE_HEADER(HideAndSeekIcon, Wait)
-    NERVE_HEADER(HideAndSeekIcon, End)
-}
+NERVE_IMPL(HideAndSeekIcon, Appear)
+NERVE_IMPL(HideAndSeekIcon, Wait)
+NERVE_IMPL(HideAndSeekIcon, End)
+
+NERVES_MAKE_STRUCT(HideAndSeekIcon, Appear, Wait, End)
+}  // namespace

@@ -1,39 +1,34 @@
 #pragma once
 
-#include "al/actor/ActorInitInfo.h"
-#include "al/actor/IUseName.h"
-#include "al/scene/Scene.h"
-#include "al/scene/SceneObjHolder.h"
-#include "game/GameData/GameDataHolder.h"
-#include "game/StageScene/StageScene.h"
-#include "layouts/HideAndSeekIcon.h"
+#include <math.h>
+#include "Library/Layout/LayoutInitInfo.h"
+#include "al/Library/HostIO/IUseName.h"
+#include "al/Library/LiveActor/ActorInitInfo.h"
+#include "al/Library/Scene/Scene.h"
+#include "al/Library/Scene/SceneObjHolder.h"
+#include "game/Scene/StageScene.h"
+
 #include "prim/seadSafeString.h"
 #include "puppets/PuppetHolder.hpp"
-#include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/gamemode/GameMode.h"
-#include <cmath>
-#include <math.h>
-
 
 // struct containing info about the games state for use in gamemodes
 struct GameModeInitInfo {
-    GameModeInitInfo(al::ActorInitInfo* info, al::Scene* scene)
-    {
-        mLayoutInitInfo = info->mLayoutInitInfo;
+    GameModeInitInfo(al::ActorInitInfo* info, al::Scene* scene) {
+        mLayoutInitInfo = const_cast<al::LayoutInitInfo*>(info->layoutInitInfo);
         mActorInitInfo = info;
-        mPlayerHolder = info->mActorSceneInfo.mPlayerHolder;
-        mSceneObjHolder = info->mActorSceneInfo.mSceneObjHolder;
+        mPlayerHolder = info->actorSceneInfo.playerHolder;
+        mSceneObjHolder = info->actorSceneInfo.sceneObjHolder;
         mScene = scene;
     };
 
-    void initServerInfo(GameMode mode, PuppetHolder* pupHolder)
-    {
+    void initServerInfo(GameMode mode, PuppetHolder* pupHolder) {
         mMode = mode;
         mPuppetHolder = pupHolder;
     }
 
     al::LayoutInitInfo* mLayoutInitInfo;
-    al::ActorInitInfo *mActorInitInfo;
+    al::ActorInitInfo* mActorInitInfo;
     al::PlayerHolder* mPlayerHolder;
     al::SceneObjHolder* mSceneObjHolder;
     al::Scene* mScene;
@@ -62,7 +57,6 @@ public:
 
     virtual void pause() { mIsActive = false; };
     virtual void unpause() { mIsActive = true; };
-    
 
 protected:
     sead::FixedSafeString<0x10> mName;
