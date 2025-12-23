@@ -33,12 +33,15 @@ RUN apt-get update && apt-get install -y \
 
 # Install devkitPro
 RUN ln -s /proc/self/mounts /etc/mtab \
-    && mkdir /devkitpro/ \
-    && echo "deb [signed-by=/devkitpro/pub.gpg] https://apt.devkitpro.org stable main" >/etc/apt/sources.list.d/devkitpro.list \
-    && curl --fail -o /devkitpro/pub.gpg https://apt.devkitpro.org/devkitpro-pub.gpg \
+    && mkdir -p /devkitpro/ \
+    && wget https://apt.devkitpro.org/devkitpro-pub.gpg -O /tmp/devkitpro-pub.gpg \
+    && gpg --dearmor < /tmp/devkitpro-pub.gpg > /devkitpro/pub.gpg \
+    && echo "deb [signed-by=/devkitpro/pub.gpg] https://apt.devkitpro.org stable main" > /etc/apt/sources.list.d/devkitpro.list \
     && apt-get update \
     && apt-get install -y devkitpro-pacman \
-    && dkp-pacman --noconfirm -S switch-dev
+    && yes | dkp-pacman -Syu \
+    && yes | dkp-pacman -S switch-dev \
+    && rm /tmp/devkitpro-pub.gpg
 
 # Set environment variables
 ENV DEVKITPRO=/opt/devkitpro
