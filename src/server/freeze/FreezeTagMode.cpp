@@ -92,9 +92,9 @@ void FreezeTagMode::begin() {
     mModeTimer->disableControl();
     mModeTimer->setTimerDirection(false);
 
-    PlayerHitPointData* hit = mCurScene->mHolder->mData->getGameDataFile()->getPlayerHitPointData();
+    PlayerHitPointData* hit = GameDataHolderAccessor(mCurScene)->getGameDataFile()->getPlayerHitPointData();
     hit->mCurrentHealth = hit->getMaxCurrent();
-    hit->mIsKidsMode = true;
+    hit->setKidsModeFlag(true);
 
     sendFreezePacket(FreezeUpdateType::PLAYER);
 
