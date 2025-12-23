@@ -42,8 +42,7 @@ void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene*
     if (!playerBase)
         return;
 
-    GameDataHolderWriter writer(playerBase);
-    writer.mData = stageScene->mHolder->mData;
+    GameDataHolderWriter writer(stageScene);
 
     GameDataHolderAccessor accessor(stageScene);
     bool isCappyCurrentlyEnabled = GameDataFunction::isEnableCap(accessor);
@@ -54,7 +53,7 @@ void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene*
         // Toggle is OFF - use normal proximity logic
         if (!odyssey) {
             if (isCappyCurrentlyEnabled) {
-                GameDataHolderWriter(writer)->getGameDataFile()->mIsEnableCap = false;
+                writer.mData->getGameDataFile()->mIsEnableCap = false;
                 cappyDisabled = true;
                 weDisabledCappy = true;
                 Logger::log("Cappy disabled - no Odyssey\n");
@@ -66,12 +65,12 @@ void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene*
         bool shouldEnable = (distance <= cappyThreshold);
 
         if (shouldEnable && !isCappyCurrentlyEnabled) {
-            GameDataHolderWriter(writer)->getGameDataFile()->mIsEnableCap = true;
+            writer.mData->getGameDataFile()->mIsEnableCap = true;
             cappyDisabled = false;
             weDisabledCappy = false;
             Logger::log("Cappy enabled - near Odyssey (%.1f)\n", distance);
         } else if (!shouldEnable && isCappyCurrentlyEnabled) {
-            GameDataHolderWriter(writer)->getGameDataFile()->mIsEnableCap = false;
+            writer.mData->getGameDataFile()->mIsEnableCap = false;
             cappyDisabled = true;
             weDisabledCappy = true;
             Logger::log("Cappy disabled - far from Odyssey (%.1f)\n", distance);
@@ -85,7 +84,7 @@ void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene*
         // Cappy is disabled. Was it us who disabled it, or the game naturally?
         if (weDisabledCappy || cappyDisabled) {
             // We disabled it due to proximity, safe to re-enable
-            GameDataHolderWriter(writer)->getGameDataFile()->mIsEnableCap = true;
+            writer.mData->getGameDataFile()->mIsEnableCap = true;
             cappyDisabled = false;
             weDisabledCappy = false;
             Logger::log("Cappy forced enabled by toggle\n");

@@ -1,5 +1,7 @@
 #include "server/Client.hpp"
 
+#include "hk/types.h"
+
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
@@ -39,7 +41,7 @@ typedef void (Client::*ClientThreadFunc)(void);
  * @param bufferSize defines the maximum amount of puppets the client can handle
  */
 Client::Client() {
-    mHeap = sead::ExpHeap::create(0x50000, "ClientHeap", sead::HeapMgr::instance()->getCurrentHeap(), 8, sead::Heap::cHeapDirection_Forward, false);
+    mHeap = sead::ExpHeap::create(500_KB, "ClientHeap", sead::HeapMgr::instance()->getCurrentHeap(), 8, sead::Heap::cHeapDirection_Forward, false);
 
     sead::ScopedCurrentHeapSetter heapSetter(mHeap);  // every new call after this will use ClientHeap instead of SequenceHeap
 
@@ -599,7 +601,7 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
         packet->is2D = false;
     }
 
-    packet->scenarioNo = GameDataHolderAccessor(holder)->getGameDataFile()->getScenarioNo();
+    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -628,7 +630,7 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
 
     packet->is2D = false;
 
-    packet->scenarioNo = GameDataHolderAccessor(holder)->getGameDataFile()->getScenarioNo();
+    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -1210,7 +1212,7 @@ PuppetInfo* Client::findPuppetInfo(const nn::account::Uid& id, bool isFindAvaila
 void Client::setStageInfo(GameDataHolderAccessor holder) {
     if (sInstance) {
         sInstance->mStageName = GameDataFunction::getCurrentStageName(holder);
-        sInstance->mScenario = GameDataHolderAccessor(holder)->getGameDataFile()->getScenarioNo();  // holder.mData->mGameDataFile->getMainScenarioNoCurrent();
+        sInstance->mScenario = holder.mData->getGameDataFile()->getScenarioNo();  // holder.mData->mGameDataFile->getMainScenarioNoCurrent();
 
         sInstance->mPuppetHolder->setStageInfo(sInstance->mStageName.cstr(), sInstance->mScenario);
     }
