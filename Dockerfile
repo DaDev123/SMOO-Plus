@@ -1,27 +1,35 @@
-FROM ubuntu:20.04 AS base
+FROM ubuntu:24.04
 
-# Prevent interactive prompts
+# Prevent interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install base dependencies
+# Install base dependencies and add LLVM repository
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
     apt-transport-https \
+    ca-certificates \
+    gnupg \
+    software-properties-common \
     python3 \
     python3-pip \
     git \
     build-essential \
     cmake \
     ninja-build \
-    clang-19 \
-    llvm-19 \
-    lld-19 \
     clang-format \
+    lsb-release \
+    && wget https://apt.llvm.org/llvm.sh \
+    && chmod +x llvm.sh \
+    && ./llvm.sh 19 \
+    && apt-get install -y lld-19 \
     && ln -s /usr/bin/clang-19 /usr/bin/clang \
     && ln -s /usr/bin/clang++-19 /usr/bin/clang++ \
     && ln -s /usr/bin/lld-19 /usr/bin/lld \
-    && pip3 install keystone-engine pyelftools mmh3 lz4
+    && pip3 install --break-system-packages keystone-engine pyelftools mmh3 lz4 \
+    && rm llvm.sh \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install devkitPro
 RUN ln -s /proc/self/mounts /etc/mtab \
