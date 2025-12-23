@@ -109,7 +109,7 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
 }
 
 bool SocketClient::send(Packet* packet) {
-    if (this->socket_log_state != SOCKET_LOG_CONNECTED)
+    if (this->socket_log_state != SOCKET_LOG_CONNECTED || packet == nullptr)
         return false;
 
     char* buffer = reinterpret_cast<char*>(packet);
@@ -308,10 +308,10 @@ void SocketClient::endThreads() {
 void SocketClient::sendFunc() {
     Logger::log("Starting Send Thread.\n");
 
-    while (true) {
-        trySendQueue();
+    while (trySendQueue() || socket_log_state != SOCKET_LOG_DISCONNECTED) {
     }
 
+    Logger::log("Sending packet failed!\n");
     Logger::log("Ending Send Thread.\n");
 }
 
@@ -320,34 +320,36 @@ void SocketClient::recvFunc() {
 
     Logger::log("Starting Recv Thread.\n");
 
-    while (true) {
-        if (!recv()) {
-            Logger::log("Receiving Packet Failed!\n");
-        }
+    while (recv() || socket_log_state != SOCKET_LOG_DISCONNECTED) {
     }
 
+    // Free up all blocked threads
+    mSendQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
+    mRecvQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
+
+    Logger::log("Receiving Packet Failed!\n");
     Logger::log("Ending Recv Thread.\n");
 }
 
 bool SocketClient::queuePacket(Packet* packet) {
-    if (socket_log_state == SOCKET_LOG_CONNECTED) {
-        if (!(mSendQueue.mMessageQueueInner._count == mSendQueue.mMessageQueueInner._maxCount)) {
-            mSendQueue.push((s64)packet,
-                            sead::MessageQueue::BlockType::NonBlocking);  // as this is non-blocking, it
-                                                                          // will always return true.
-            return true;
-        }
+    if (socket_log_state == SOCKET_LOG_CONNECTED && !(mSendQueue.mMessageQueueInner._count == mSendQueue.mMessageQueueInner._maxCount)) {
+        // as this is non-blocking, it will always return true.
+        mSendQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking);
+        return true;
+    } else {
+        mHeap->free(packet);
+        return false;
     }
-    mHeap->free(packet);
-    return false;
 }
 
-void SocketClient::trySendQueue() {
+bool SocketClient::trySendQueue() {
     Packet* curPacket = (Packet*)mSendQueue.pop(sead::MessageQueue::BlockType::Blocking);
 
-    send(curPacket);
+    bool successful = send(curPacket);
 
     mHeap->free(curPacket);
+
+    return successful;
 }
 
 Packet* SocketClient::tryGetPacket() {

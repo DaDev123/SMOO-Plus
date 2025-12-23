@@ -1,19 +1,18 @@
 #pragma once
 
-#include <netinet/in.h>
-#include "SocketBase.hpp"
 #include "al/Library/Thread/AsyncFunctorThread.h"
-#include "heap/seadHeap.h"
 
 #include "sead/container/seadPtrArray.h"
 
-#include "syssocket/sockdefines.h"
+#include <netinet/in.h>
 
+#include "heap/seadHeap.h"
+#include "packets/Packet.h"
+#include "SocketBase.hpp"
+#include "syssocket/sockdefines.h"
 #include "thread/seadMessageQueue.h"
 #include "thread/seadMutex.h"
 #include "types.h"
-
-#include "packets/Packet.h"
 
 class SocketClient : public SocketBase {
 public:
@@ -30,7 +29,7 @@ public:
     bool recv();
 
     bool queuePacket(Packet* packet);
-    void trySendQueue();
+    bool trySendQueue();
 
     void sendFunc();
     void recvFunc();

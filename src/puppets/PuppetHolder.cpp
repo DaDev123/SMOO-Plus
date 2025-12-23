@@ -10,9 +10,10 @@
 #include "heap/seadHeapMgr.h"
 #include "Library/Memory/HeapUtil.h"
 #include "logger.hpp"
+#include "server/Client.hpp"
 
 PuppetHolder::PuppetHolder(int size) {
-    if (!mPuppetArr.tryAllocBuffer(size, nullptr)) {
+    if (!mPuppetArr.tryAllocBuffer(size, Client::getClientHeap())) {
         Logger::log("[PuppetHolder] ERROR: Buffer Alloc Failed on Puppet Holder!\n");
     } else {
         Logger::log("[PuppetHolder] Successfully allocated buffer for %d puppets\n", size);
@@ -32,7 +33,7 @@ bool PuppetHolder::resizeHolder(int size) {
         return true;  // no need to resize if we're already at the same capacity
     }
 
-    sead::Heap* seqHeap = al::getSequenceHeap();
+    sead::Heap* seqHeap = Client::getClientHeap();
 
     if (!mPuppetArr.isBufferReady()) {
         bool result = mPuppetArr.tryAllocBuffer(size, seqHeap);
