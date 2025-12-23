@@ -494,12 +494,7 @@ void drawMain(al::Sequence* curSequence) {
 
                         const char* modelAnim = al::getActionName(curModel);
                         ImGui::Text("Model Animation: %s\n", modelAnim ? modelAnim : "none");
-
-                        if (curModel->mActionKeeper) {
-                            ImGui::Text("Is Action Playing: %s\n", al::isActionPlaying(curModel, curPupInfo->curAnimStr) ? "Yes" : "No");
-                            ImGui::Text("Is Action End: %s\n", al::isActionEnd(curModel) ? "Yes" : "No");
-                            ImGui::Text("Is Capture Model: %s\n", curPupInfo->isCaptured ? "Yes" : "No");
-                        }
+                        ImGui::Text("Is Capture Model: %s\n", curPupInfo->isCaptured ? "Yes" : "No");
                     }
                 }
                 break;
