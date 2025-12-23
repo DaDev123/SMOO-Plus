@@ -1,15 +1,15 @@
 #pragma once
 
-#include <math.h>
-#include <stdint.h>
 #include "al/Library/Camera/CameraTicket.h"
 
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Sequence/HakoniwaSequence.h"
 
-#include "layouts/FreezeTagIcon.h"
+#include <math.h>
+#include <stdint.h>
 
+#include "layouts/FreezeTagIcon.h"
 #include "packets/FreezeInf.h"
 #include "puppets/PuppetInfo.h"
 #include "server/freeze/FreezeHintArrow.h"
@@ -17,7 +17,6 @@
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/freeze/FreezeTagScore.hpp"
 #include "server/gamemode/GameModeBase.hpp"
-
 #include "server/gamemode/GameModeTimer.hpp"
 
 class FreezeTagMode : public GameModeBase {
@@ -32,6 +31,7 @@ public:
 
     void pause() override;
     void unpause() override;
+    void debugMenuControls() override;
 
     bool isUseNormalUI() const override { return false; }
 
@@ -40,65 +40,50 @@ public:
     void sendFreezePacket(FreezeUpdateType updateType);
 
     void startRound(int roundMinutes);  // Actives round on this specific client
-    void endRound(bool isAbort);  // Ends round, allows setting for if this was a natural end or
-                                  // abort (used for scoring)
+    void endRound(bool isAbort);        // Ends round, allows setting for if this was a natural end or
+                                        // abort (used for scoring)
 
     bool isScoreEventsEnabled() const { return mIsScoreEventsValid; };
     bool isPlayerRunner() const { return mInfo->mIsPlayerRunner; };
     bool isPlayerFreeze() const { return mInfo->mIsPlayerFreeze; };
-    bool isEndgameActive() {
-        return mIsEndgameActive;
-    }  // The endagme is the time during the WIPEOUT message is on screen
-    bool isPlayerLastSurvivor(
-        PuppetInfo* changingPuppet);  // Only meant to be called on getting a packet
-    bool isAllRunnerFrozen(PuppetInfo* changingPuppet);  // Only meant to be called on getting a
-                                                         // packet, starts the endgame
+    bool isEndgameActive() { return mIsEndgameActive; }  // The endagme is the time during the WIPEOUT message is on screen
+    bool isPlayerLastSurvivor(PuppetInfo* changingPuppet);  // Only meant to be called on getting a packet
+    bool isAllRunnerFrozen(PuppetInfo* changingPuppet);     // Only meant to be called on getting a
+                                                            // packet, starts the endgame
 
-    PlayerActorHakoniwa*
-    getPlayerActorHakoniwa();  // Returns nullptr if the player is not a PlayerActorHakoniwa
+    PlayerActorHakoniwa* getPlayerActorHakoniwa();  // Returns nullptr if the player is not a PlayerActorHakoniwa
     uint16_t getScore() { return mInfo->mPlayerTagScore.mScore; }
 
-    bool trySetPlayerRunnerState(
-        FreezeState state);       // Sets runner to alive or frozen, many safety checks
-    void tryStartEndgameEvent();  // Starts the WIPEOUT message event
-    bool tryStartRecoveryEvent(bool isEndgame);  // Returns player to a chaser's position or last
-                                                 // stood position, unless endgame variant
-    bool tryEndRecoveryEvent();                  // Called after the fade of the recovery event
+    bool trySetPlayerRunnerState(FreezeState state);  // Sets runner to alive or frozen, many safety checks
+    void tryStartEndgameEvent();                      // Starts the WIPEOUT message event
+    bool tryStartRecoveryEvent(bool isEndgame);       // Returns player to a chaser's position or last
+                                                      // stood position, unless endgame variant
+    bool tryEndRecoveryEvent();                       // Called after the fade of the recovery event
     void tryScoreEvent(FreezeInf* incomingPacket,
                        PuppetInfo* sourcePuppet);  // Attempt score gain when getting a packet
-    void setWipeHolder(al::WipeHolder* wipe) {
-        mWipeHolder = wipe;
-    };  // Called with HakoniwaSequence hook, wipe used in recovery event
-    bool trySetPostProcessingType(
-        FreezePostProcessingType type);  // Sets the post processing type, also used for disabling
+    void setWipeHolder(al::WipeHolder* wipe) { mWipeHolder = wipe; };  // Called with HakoniwaSequence hook, wipe used in recovery event
+    bool trySetPostProcessingType(FreezePostProcessingType type);  // Sets the post processing type, also used for disabling
 
-    void warpToRecoveryPoint(
-        al::LiveActor* actor);  // Warps runner to chaser OR if impossible, last standing position
+    void warpToRecoveryPoint(al::LiveActor* actor);  // Warps runner to chaser OR if impossible, last standing position
 
     void updateSpectateCam(PlayerActorBase* playerBase);  // Updates the frozen spectator camera
-    void setCameraTicket(al::CameraTicket* ticket) {
-        mTicket = ticket;
-    }  // Called when the camera ticket is constructed to get a pointer
+    void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; }  // Called when the camera ticket is constructed to get a pointer
 
-    FreezeUpdateType mNextUpdateType =
-        FreezeUpdateType::PLAYER;  // Set for the sendPacket funtion to know what packet type is
-                                   // sent
+    FreezeUpdateType mNextUpdateType = FreezeUpdateType::PLAYER;  // Set for the sendPacket funtion to know what packet type is
+                                                                  // sent
     // In FreezeTagMode.hpp, add to public section:
     FreezeUpdateType getNextUpdateType() const { return mNextUpdateType; }
 
 private:
-    FreezePostProcessingType mPostProcessingType =
-        FreezePostProcessingType::PPDISABLED;  // Current post processing mode (snapshot mode)
-    GameModeTimer* mModeTimer = nullptr;       // Generic timer from H&S used for round timer
-    FreezeTagIcon* mModeLayout =
-        nullptr;  // HUD layout (creates sub layout actors for runner and chaser)
+    FreezePostProcessingType mPostProcessingType = FreezePostProcessingType::PPDISABLED;  // Current post processing mode (snapshot mode)
+    GameModeTimer* mModeTimer = nullptr;                                                  // Generic timer from H&S used for round timer
+    FreezeTagIcon* mModeLayout = nullptr;                                                 // HUD layout (creates sub layout actors for runner and chaser)
     FreezeTagInfo* mInfo = nullptr;
-    al::WipeHolder* mWipeHolder =
-        nullptr;  // Pointer set by setWipeHolder on first step of hakoniwaSequence hook
+    al::WipeHolder* mWipeHolder = nullptr;  // Pointer set by setWipeHolder on first step of hakoniwaSequence hook
 
     // Scene actors
     FreezePlayerBlock* mMainPlayerIceBlock = nullptr;  // Visual block around player's when frozen
-    FreezeHintArrow* mHintArrow = nullptr;  // Arrow that points to nearest runner while in chaser
+    FreezeHintArrow* mHintArrow = nullptr;             // Arrow that points to nearest runner while in chaser
 
     // Recovery event info
     int mRecoveryEventFrames = 0;

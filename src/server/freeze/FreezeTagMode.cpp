@@ -17,6 +17,7 @@
 #include "game/Util/ActorDimensionKeeper.h"
 
 #include "basis/seadNew.h"
+#include "imgui.h"
 #include "layouts/FreezeTagIcon.h"
 #include "logger.hpp"
 #include "puppets/PuppetInfo.h"
@@ -320,4 +321,30 @@ void FreezeTagMode::update() {
 
     if (mTicket->mIsActiveCamera && mInfo->mIsPlayerFreeze)
         updateSpectateCam(player);
+}
+
+void FreezeTagMode::debugMenuControls() {
+    ImGui::Text("- L + ← | Enable/disable Freeze Tag [FT]\n");
+    ImGui::Text("- [FT] ↑ | Switch between runners and chasers\n");
+    ImGui::Text("- [FT] L + ↓ | Reset score\n");
+
+    if (mInfo->mIsHostMode) {
+        ImGui::Text("- [FT][Host] R + ↑ | Start round\n");
+        ImGui::Text("- [FT][Host] R + ↓ | End round\n");
+    }
+
+    if (mInfo->mIsDebugMode) {
+        ImGui::Text("- [FT][Debug] A + → | Increment score\n");
+        ImGui::Text("- [FT][Debug] A + ← | Set time to 01:05\n");
+        ImGui::Text("- [FT][Debug] B + → | Wipeout\n");
+        if (isPlayerRunner()) {
+            ImGui::Text("- [FT][Debug][Runner] X + → | Unfreeze\n");
+            ImGui::Text("- [FT][Debug][Runner] Y + → | Freeze\n");
+        }
+    }
+
+    if (mTicket && mTicket->mIsActiveCamera && mInfo->mIsPlayerFreeze) {
+        ImGui::Text("- [FT][Frozen] ← | Spectate previous player\n");
+        ImGui::Text("- [FT][Frozen] → | Spectate next player\n");
+    }
 }

@@ -60,6 +60,8 @@ public:
     virtual void pause() { mIsActive = false; };
     virtual void unpause() { mIsActive = true; };
 
+    virtual void debugMenuControls() {}
+
 protected:
     sead::FixedSafeString<0x10> mName;
     al::SceneObjHolder* mSceneObjHolder = nullptr;

@@ -1,7 +1,9 @@
 #pragma once
 
-#include <math.h>
 #include "al/Library/Camera/CameraTicket.h"
+
+#include <math.h>
+
 #include "layouts/HideAndSeekIcon.h"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeInfoBase.hpp"
@@ -24,6 +26,8 @@ public:
     virtual void begin() override;
     virtual void update() override;
     virtual void end() override;
+
+    void debugMenuControls() override;
 
     bool isUseNormalUI() const override { return false; }
 

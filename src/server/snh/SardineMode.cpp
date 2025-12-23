@@ -19,6 +19,7 @@
 
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
+#include "imgui.h"
 #include "logger.hpp"
 #include "math/seadVector.h"
 #include "rs/util.hpp"
@@ -27,6 +28,7 @@
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
+#include "System/GameDataHolderAccessor.h"
 
 SardineMode::SardineMode(const char* name) : GameModeBase(name) {}
 
@@ -144,7 +146,7 @@ void SardineMode::update() {
             }
 
             float pupDist = al::calcDistance(playerBase, curInfo->playerPos);
-            bool isPupInStage = al::isEqualString(curInfo->stageName, GameDataFunction::getCurrentStageName(mCurScene->mHolder->mData));
+            bool isPupInStage = al::isEqualString(curInfo->stageName, GameDataFunction::getCurrentStageName(GameDataHolderAccessor(mCurScene)));
 
             if ((pupDist > highPuppetDistance || highPuppetDistance == -1) && isPupInStage && curInfo->isIt) {
                 highPuppetDistance = pupDist;
@@ -229,4 +231,13 @@ void SardineMode::update() {
     }
 
     mInfo->mHidingTime = mModeTimer->getTime();
+}
+
+void SardineMode::debugMenuControls() {
+    ImGui::Text("- L + ← | Enable/disable Sardines [S]\n");
+    ImGui::Text("- [S] ↑ | Switch between sardine and pack\n");
+    ImGui::Text("- [S] ← | Decrease pack time\n");
+    ImGui::Text("- [S] → | Increase pack time\n");
+    ImGui::Text("- [S] L + ↓ | Reset pack time\n");
+    ImGui::Text("- [S][Gravity] L + → | Toggle gravity camera\n");
 }

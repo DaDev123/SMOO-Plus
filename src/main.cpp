@@ -427,6 +427,9 @@ void drawMain(al::Sequence* curSequence) {
 
     // ===== AUTHORIZED USER ONLY CONTENT =====
     if (!isAuthorizedUser) {
+        if (gmm->getMode<GameModeBase>()) {
+            gmm->getMode<GameModeBase>()->debugMenuControls();
+        }
         ImGui::End();
         return;
     }
@@ -451,6 +454,7 @@ void drawMain(al::Sequence* curSequence) {
             renderer->setProjection(*projection);
 
             GameMode gameMode = gmm->getGameMode();
+            GameModeBase* gameModeBase = gmm->getMode<GameModeBase>();
 
             ImGui::Text("(ZR ←)------------ Page %d/%d -------------(ZR →)\n", pageIndex + 1, maxPages);
 
@@ -538,6 +542,10 @@ void drawMain(al::Sequence* curSequence) {
             }
             case 2: {
                 ImGui::Text("------------------- Controls --------------------\n\n");
+
+                if (gameModeBase) {
+                    gameModeBase->debugMenuControls();
+                }
                 ImGui::Text("\n- ZR + ↑ | Open/close this debug menu\n");
                 break;
             }

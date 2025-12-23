@@ -19,6 +19,7 @@
 #include <heap/seadHeap.h>
 
 #include "helpers.hpp"
+#include "imgui.h"
 #include "layouts/HideAndSeekIcon.h"
 #include "logger.hpp"
 #include "rs/util.hpp"
@@ -292,4 +293,15 @@ void HideAndSeekMode::update() {
     }
 
     mInfo->mHidingTime = mModeTimer->getTime();
+}
+
+void HideAndSeekMode::debugMenuControls() {
+    ImGui::Text("- L + ← | Enable/disable Hide & Seek [H&S]\n");
+    ImGui::Text("- [H&S] ↑ | Switch between hider and seeker\n");
+    ImGui::Text("- [H&S] R + ↑ | Toggle Spectator Mode [Spectator]\n");
+    ImGui::Text("- [H&S][Hider] ← | Decrease hiding time\n");
+    ImGui::Text("- [H&S][Hider] → | Increase hiding time\n");
+    ImGui::Text("- [H&S][Hider] L + ↓ | Reset hiding time\n");
+    ImGui::Text("- [H&S][Spectator] ← / → | Switch target\n");
+    ImGui::Text("- [H&S][Gravity] L + → | Toggle gravity camera\n");
 }
