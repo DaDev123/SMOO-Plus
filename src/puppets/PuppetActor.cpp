@@ -382,7 +382,7 @@ void PuppetActor::makeActorDead() {
 }
 
 void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
-    if (!StageSceneStateServerConfig::isPuppetAttackEnabled()) {
+    if (!StageSceneStateServerConfig::isPuppetCollisionEnabled()) {
         return;
     }
 
@@ -392,7 +392,7 @@ void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
 }
 
 bool PuppetActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* source, al::HitSensor* target) {
-    if (!StageSceneStateServerConfig::isPuppetReceiveEnabled()) {
+    if (!StageSceneStateServerConfig::isPuppetBounceEnabled()) {
         return false;
     }
 

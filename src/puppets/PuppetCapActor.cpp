@@ -68,7 +68,7 @@ void PuppetCapActor::update() {
 }
 
 void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver) {
-    if (!StageSceneStateServerConfig::isCapAttackEnabled()) {
+    if (!StageSceneStateServerConfig::isCapCollisionEnabled()) {
         return;
     }
 
@@ -78,7 +78,7 @@ void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver
 }
 
 bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender, al::HitSensor* receiver) {
-    if (!StageSceneStateServerConfig::isCapReceiveEnabled()) {
+    if (!StageSceneStateServerConfig::isCapBounceEnabled()) {
         return false;
     }
 

@@ -241,6 +241,7 @@ bool SocketClient::tryReconnect() {
             return true;
         }
     }
+    Logger::log("Reconnect Failed.\n");
 
     return false;
 }

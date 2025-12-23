@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "BloodMoon/BloodMoonUtils.hpp"
+#include "logger.hpp"
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
@@ -23,10 +24,10 @@
 // Static Configuration Variables
 // ============================================================================
 
-bool StageSceneStateServerConfig::sCapAttackEnabled = false;
-bool StageSceneStateServerConfig::sCapReceiveEnabled = false;
-bool StageSceneStateServerConfig::sPuppetAttackEnabled = true;
-bool StageSceneStateServerConfig::sPuppetReceiveEnabled = true;
+bool StageSceneStateServerConfig::sCapCollisionEnabled = false;
+bool StageSceneStateServerConfig::sCapBounceEnabled = false;
+bool StageSceneStateServerConfig::sPuppetCollisionEnabled = true;
+bool StageSceneStateServerConfig::sPuppetBounceEnabled = true;
 bool StageSceneStateServerConfig::sCostumeDoorsUnlocked = true;
 bool StageSceneStateServerConfig::sLowLatencyEnabled = true;
 
@@ -132,6 +133,10 @@ StageSceneStateServerConfig::StageSceneStateServerConfig(const char* name, al::S
     mServerBrowserServers = loadServersFromFile();
     mServerBrowserCount = mServerBrowserServers.size();
 
+    for (int i = 0; i < menuCount; i++) {
+        msgList[i] = new sead::SafeArray<sead::WFixedSafeString<0x200>, maxMsgCount>();
+    }
+
     // Initialize all menus
     initMainMenu(initInfo);
     initNetworkMenu(initInfo);
@@ -141,201 +146,36 @@ StageSceneStateServerConfig::StageSceneStateServerConfig(const char* name, al::S
     initGameModeMenus(initInfo);
     initTwistsMenu(initInfo);
 
-    mCurrentList = mMainOptionsList;
-    mCurrentMenu = mMainOptions;
+    mCurrentList = optionsList[MENU_MAIN];
+    mCurrentMenu = menuList[MENU_MAIN];
 }
 
 StageSceneStateServerConfig::~StageSceneStateServerConfig() {
     delete[] mServerBrowserOptions;
+    free(menuList);
+    free(optionsList);
+    free(msgList);
 }
 
 // ============================================================================
-// Menu Initialization Methods
+// Main Menu
 // ============================================================================
 
 void StageSceneStateServerConfig::initMainMenu(const al::LayoutInitInfo& initInfo) {
-    mMainOptions = new SimpleLayoutMenu("ServerConfigMenu", "OptionSelect", initInfo, 0, false);
-    mMainOptionsList = new CommonVerticalList(mMainOptions, initInfo, true);
-    al::setPaneString(mMainOptions, "TxtOption", u"Mod Configuration", 0);
-    mMainOptionsList->unkInt1 = 1;
-    mMainOptionsList->initDataNoResetSelected(mMainMenuOptionsCount);
-    mMainMenuOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, mMainMenuOptionsCount>();
+    menuList[MENU_MAIN] = new SimpleLayoutMenu("ServerConfigMenu", "OptionSelect", initInfo, 0, false);
+    optionsList[MENU_MAIN] = new CommonVerticalList(menuList[MENU_MAIN], initInfo, true);
+    al::setPaneString(menuList[MENU_MAIN], "TxtOption", u"Mod Configuration", 0);
+    optionsList[MENU_MAIN]->unkInt1 = 1;
+    optionsList[MENU_MAIN]->initDataNoResetSelected(mMainMenuOptionsCount);
     updateMainMenuOptions();
-    mMainOptionsList->addStringData(mMainMenuOptions->mBuffer, "TxtContent");
+    optionsList[MENU_MAIN]->addStringData(msgList[MENU_MAIN]->mBuffer, "TxtContent");
 }
-
-void StageSceneStateServerConfig::initNetworkMenu(const al::LayoutInitInfo& initInfo) {
-    mNetworkMenu = new SimpleLayoutMenu("NetworkMenu", "OptionSelect", initInfo, 0, false);
-    mNetworkList = new CommonVerticalList(mNetworkMenu, initInfo, true);
-    al::setPaneString(mNetworkMenu, "TxtOption", u"Network Settings", 0);
-    mNetworkList->unkInt1 = 1;
-    mNetworkList->initDataNoResetSelected(3);
-    mNetworkOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, 3>();
-    updateNetworkSettingsOptions();
-    mNetworkList->addStringData(mNetworkOptions->mBuffer, "TxtContent");
-}
-
-void StageSceneStateServerConfig::initServerBrowserMenu(const al::LayoutInitInfo& initInfo) {
-    mServerBrowserMenu = new SimpleLayoutMenu("ServerBrowserMenu", "OptionSelect", initInfo, 0, false);
-    mServerBrowserList = new CommonVerticalList(mServerBrowserMenu, initInfo, true);
-    al::setPaneString(mServerBrowserMenu, "TxtOption", u"Server List (OnlineData/ServerList.txt)", 0);
-    mServerBrowserList->unkInt1 = 1;
-    mServerBrowserList->initDataNoResetSelected(mServerBrowserCount);
-
-    mServerBrowserOptions = new sead::WFixedSafeString<0x200>[mServerBrowserCount];
-    for (int i = 0; i < mServerBrowserCount; i++) {
-        mServerBrowserOptions[i].convertFromMultiByteString(mServerBrowserServers[i].name, strlen(mServerBrowserServers[i].name));
-    }
-    mServerBrowserList->addStringData(mServerBrowserOptions, "TxtContent");
-}
-
-void StageSceneStateServerConfig::initGameplayMenu(const al::LayoutInitInfo& initInfo) {
-    mGameplayMenu = new SimpleLayoutMenu("GameplayMenu", "OptionSelect", initInfo, 0, false);
-    mGameplayList = new CommonVerticalList(mGameplayMenu, initInfo, true);
-    al::setPaneString(mGameplayMenu, "TxtOption", u"Gameplay Settings", 0);
-    mGameplayList->unkInt1 = 1;
-    mGameplayList->initDataNoResetSelected(4);
-    mGameplayOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, 4>();
-    updateGameplaySettingsOptions();
-    mGameplayList->addStringData(mGameplayOptions->mBuffer, "TxtContent");
-}
-
-void StageSceneStateServerConfig::initPlayerCollisionMenu(const al::LayoutInitInfo& initInfo) {
-    mPlayerCollisionMenu = new SimpleLayoutMenu("PlayerCollisionMenu", "OptionSelect", initInfo, 0, false);
-    mPlayerCollisionList = new CommonVerticalList(mPlayerCollisionMenu, initInfo, true);
-    al::setPaneString(mPlayerCollisionMenu, "TxtOption", u"Player Collision", 0);
-    mPlayerCollisionList->unkInt1 = 1;
-    mPlayerCollisionList->initDataNoResetSelected(4);
-    mPlayerCollisionOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, 4>();
-    updatePlayerCollisionOptions();
-    mPlayerCollisionList->addStringData(mPlayerCollisionOptions->mBuffer, "TxtContent");
-}
-
-void StageSceneStateServerConfig::initGameModeMenus(const al::LayoutInitInfo& initInfo) {
-    // Game Mode Settings
-    mGameModeSettingsMenu = new SimpleLayoutMenu("GameModeSettingsMenu", "OptionSelect", initInfo, 0, false);
-    mGameModeSettingsList = new CommonVerticalList(mGameModeSettingsMenu, initInfo, true);
-    al::setPaneString(mGameModeSettingsMenu, "TxtOption", u"Game Mode", 0);
-    mGameModeSettingsList->unkInt1 = 1;
-    mGameModeSettingsList->initDataNoResetSelected(3);
-    mGameModeSettingsOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, 3>();
-    updateGameModeSettingsOptions();
-    mGameModeSettingsList->addStringData(mGameModeSettingsOptions->mBuffer, "TxtContent");
-
-    // Mode Selection
-    mModeSelect = new SimpleLayoutMenu("GameModeSelectMenu", "OptionSelect", initInfo, 0, false);
-    mModeSelectList = new CommonVerticalList(mModeSelect, initInfo, true);
-    al::setPaneString(mModeSelect, "TxtOption", u"Select Game Mode", 0);
-
-    const int modeCount = GameModeFactory::getModeCount();
-    mModeSelectList->initDataNoResetSelected(modeCount);
-
-    auto* modeOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, modeCount>();
-    for (size_t i = 0; i < modeCount; i++) {
-        const char* modeName = GameModeFactory::getModeName(i);
-        modeOptions->mBuffer[i].convertFromMultiByteString(modeName, strlen(modeName));
-    }
-    mModeSelectList->addStringData(modeOptions->mBuffer, "TxtContent");
-
-    // Mode Config
-    GameModeConfigMenuFactory factory("GameModeConfigFactory");
-    for (int mode = 0; mode < factory.getMenuCount(); mode++) {
-        GameModeEntry& entry = mGamemodeConfigMenus[mode];
-        const char* name = factory.getMenuName(mode);
-        entry.mMenu = factory.getCreator(name)(name);
-        entry.mLayout = new SimpleLayoutMenu("GameModeConfigMenu", "OptionSelect", initInfo, 0, false);
-        entry.mList = new CommonVerticalList(entry.mLayout, initInfo, true);
-        al::setPaneString(entry.mLayout, "TxtOption", u"Mode Configuration", 0);
-        entry.mList->initDataNoResetSelected(entry.mMenu->getMenuSize());
-        entry.mList->addStringData(entry.mMenu->getStringData(), "TxtContent");
-    }
-}
-
-void StageSceneStateServerConfig::initTwistsMenu(const al::LayoutInitInfo& initInfo) {
-    mTwistsMenu = new SimpleLayoutMenu("TwistsMenu", "OptionSelect", initInfo, 0, false);
-    mTwistsList = new CommonVerticalList(mTwistsMenu, initInfo, true);
-    al::setPaneString(mTwistsMenu, "TxtOption", u"Twists & Modifiers", 0);
-    mTwistsList->unkInt1 = 1;
-    mTwistsList->initDataNoResetSelected(3);
-    mTwistsOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, 3>();
-    updateTwistsOptions();
-    mTwistsList->addStringData(mTwistsOptions->mBuffer, "TxtContent");
-}
-
-// ============================================================================
-// Lifecycle Methods
-// ============================================================================
-
-void StageSceneStateServerConfig::init() {
-    initNerve(&NrvStageSceneStateServerConfig.MainMenu, 0);
-}
-
-void StageSceneStateServerConfig::appear() {
-    mCurrentMenu->startAppear("Appear");
-    al::NerveStateBase::appear();
-}
-
-void StageSceneStateServerConfig::kill() {
-    if (Client::hasServerChanged()) {
-        Client::showUIMessage(u"Server changed. Please restart the game.");
-        for (int i = 0; i < 180; i++)
-            nn::os::YieldThread();
-        Client::hideUIMessage();
-    }
-    mCurrentMenu->startEnd("End");
-    al::NerveStateBase::kill();
-}
-
-// ============================================================================
-// Option Update Methods
-// ============================================================================
 
 void StageSceneStateServerConfig::updateMainMenuOptions() {
-    mMainMenuOptions->mBuffer[NETWORK_SETTINGS].copy(u"Network Settings");
-    mMainMenuOptions->mBuffer[GAMEPLAY_SETTINGS].copy(u"Gameplay Settings");
-    mMainMenuOptions->mBuffer[GAMEMODE_SETTINGS].copy(u"Game Mode Settings");
+    msgList[MENU_MAIN]->mBuffer[MAIN_NETWORK_SETTINGS].copy(u"Network Settings");
+    msgList[MENU_MAIN]->mBuffer[MAIN_GAMEPLAY_SETTINGS].copy(u"Gameplay Settings");
+    msgList[MENU_MAIN]->mBuffer[MAIN_GAMEMODE_SETTINGS].copy(u"Game Mode Settings");
 }
-
-void StageSceneStateServerConfig::updateNetworkSettingsOptions() {
-    mNetworkOptions->mBuffer[0].copy(u"Browse Server List");
-    mNetworkOptions->mBuffer[1].copy(u"Custom Server IP");
-    mNetworkOptions->mBuffer[2].copy(u"Custom Server Port");
-}
-
-void StageSceneStateServerConfig::updateGameplaySettingsOptions() {
-    mGameplayOptions->mBuffer[0].copy(u"Player Collision Settings");
-    mGameplayOptions->mBuffer[1].copy(sCostumeDoorsUnlocked ? u"Unlock Costume Doors (ON)" : u"Unlock Costume Doors (OFF)");
-    mGameplayOptions->mBuffer[2].copy(sLowLatencyEnabled ? u"Reduce Player Latency (OFF)" : u"Reduce Player Latency (ON)");
-    mGameplayOptions->mBuffer[3].copy(Client::isMusicDisabled() ? u"In-Game Music (OFF)" : u"In-Game Music (ON)");
-}
-
-void StageSceneStateServerConfig::updatePlayerCollisionOptions() {
-    mPlayerCollisionOptions->mBuffer[0].copy(sCapAttackEnabled ? u"Cap Collision (ON)" : u"Cap Collision (OFF)");
-    mPlayerCollisionOptions->mBuffer[1].copy(sCapReceiveEnabled ? u"Cap Bouncing (ON)" : u"Cap Bouncing (OFF)");
-    mPlayerCollisionOptions->mBuffer[2].copy(sPuppetAttackEnabled ? u"Player Collision (ON)" : u"Player Collision (OFF)");
-    mPlayerCollisionOptions->mBuffer[3].copy(sPuppetReceiveEnabled ? u"Player Bouncing (ON)" : u"Player Bouncing (OFF)");
-}
-
-void StageSceneStateServerConfig::updateGameModeSettingsOptions() {
-    const char* modeName = GameModeFactory::getModeName(GameModeManager::instance()->getGameMode());
-    char text[256];
-    snprintf(text, sizeof(text), "Configure %s", modeName);
-    mGameModeSettingsOptions->mBuffer[0].convertFromMultiByteString(text, strlen(text));
-
-    mGameModeSettingsOptions->mBuffer[1].copy(u"Twists & Modifiers");
-    mGameModeSettingsOptions->mBuffer[2].copy(GameModeManager::instance()->getInfo<GameModeInfoBase>() ? u"Change Mode (reload required)" :
-                                                                                                         u"Change Game Mode");
-}
-
-void StageSceneStateServerConfig::updateTwistsOptions() {
-    mTwistsOptions->mBuffer[0].copy(TwistsConfig::isCappyDisableEnabled() ? u"Disable Cappy (OFF)" : u"Disable Cappy (ON)");
-    mTwistsOptions->mBuffer[1].copy(TwistsConfig::isIcePhysicsEnabled() ? u"Ice Physics (ON)" : u"Ice Physics (OFF)");
-    mTwistsOptions->mBuffer[2].copy(u"More twists coming soon...");
-}
-
-// ============================================================================
-// Menu Execution Methods
-// ============================================================================
 
 void StageSceneStateServerConfig::exeMainMenu() {
     if (al::isFirstStep(this))
@@ -345,27 +185,48 @@ void StageSceneStateServerConfig::exeMainMenu() {
 
     if (rs::isTriggerUiCancel(mHost)) {
         kill();
+        SaveDataAccessFunction::startSaveDataWrite(mGameDataHolder);
     }
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
         switch (mCurrentList->mCurSelected) {
-        case NETWORK_SETTINGS:
+        case MAIN_NETWORK_SETTINGS:
             al::setNerve(this, &NrvStageSceneStateServerConfig.NetworkSettings);
             break;
-        case GAMEPLAY_SETTINGS:
+        case MAIN_GAMEPLAY_SETTINGS:
             al::setNerve(this, &NrvStageSceneStateServerConfig.GameplaySettings);
             break;
-        case GAMEMODE_SETTINGS:
+        case MAIN_GAMEMODE_SETTINGS:
             al::setNerve(this, &NrvStageSceneStateServerConfig.GameModeSettings);
             break;
         }
     }
 }
 
+// ============================================================================
+// Network Menu
+// ============================================================================
+
+void StageSceneStateServerConfig::initNetworkMenu(const al::LayoutInitInfo& initInfo) {
+    menuList[MENU_NETWORK] = new SimpleLayoutMenu("NetworkMenu", "OptionSelect", initInfo, 0, false);
+    optionsList[MENU_NETWORK] = new CommonVerticalList(menuList[MENU_NETWORK], initInfo, true);
+    al::setPaneString(menuList[MENU_NETWORK], "TxtOption", u"Network Settings", 0);
+    optionsList[MENU_NETWORK]->unkInt1 = 1;
+    optionsList[MENU_NETWORK]->initDataNoResetSelected(mNetworkMenuOptionsCount);
+    updateNetworkSettingsOptions();
+    optionsList[MENU_NETWORK]->addStringData(msgList[MENU_NETWORK]->mBuffer, "TxtContent");
+}
+
+void StageSceneStateServerConfig::updateNetworkSettingsOptions() {
+    msgList[MENU_NETWORK]->mBuffer[NETW_SERVERLIST].copy(u"Browse Server List");
+    msgList[MENU_NETWORK]->mBuffer[NETW_SERVERIP].copy(u"Custom Server IP");
+    msgList[MENU_NETWORK]->mBuffer[NETW_SERVERPORT].copy(u"Custom Server Port");
+}
+
 void StageSceneStateServerConfig::exeNetworkSettings() {
     if (al::isFirstStep(this)) {
-        mCurrentList = mNetworkList;
-        mCurrentMenu = mNetworkMenu;
+        mCurrentList = optionsList[MENU_NETWORK];
+        mCurrentMenu = menuList[MENU_NETWORK];
         subMenuStart();
     }
 
@@ -373,34 +234,15 @@ void StageSceneStateServerConfig::exeNetworkSettings() {
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
         switch (mCurrentList->mCurSelected) {
-        case 0:
+        case NETW_SERVERLIST:
             al::setNerve(this, &NrvStageSceneStateServerConfig.ServerBrowserSelect);
             break;
-        case 1:
+        case NETW_SERVERIP:
             al::setNerve(this, &NrvStageSceneStateServerConfig.OpenKeyboardIP);
             break;
-        case 2:
+        case NETW_SERVERPORT:
             al::setNerve(this, &NrvStageSceneStateServerConfig.OpenKeyboardPort);
             break;
-        }
-    }
-}
-
-void StageSceneStateServerConfig::exeServerBrowserSelect() {
-    if (al::isFirstStep(this)) {
-        mCurrentList = mServerBrowserList;
-        mCurrentMenu = mServerBrowserMenu;
-        subMenuStart();
-    }
-
-    subMenuUpdate();
-
-    if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
-        int selected = mCurrentList->mCurSelected;
-        if (selected >= 0 && selected < mServerBrowserCount) {
-            Client::setServerIP(mServerBrowserServers[selected].ip);
-            Client::setServerPort(mServerBrowserServers[selected].port);
-            endSubMenuToParent(mNetworkMenu, mNetworkList);
         }
     }
 }
@@ -445,43 +287,120 @@ void StageSceneStateServerConfig::exeOpenKeyboardPort() {
     }
 }
 
-void StageSceneStateServerConfig::exeGameplaySettings() {
+// ============================================================================
+// Server Browser Menu
+// ============================================================================
+
+void StageSceneStateServerConfig::initServerBrowserMenu(const al::LayoutInitInfo& initInfo) {
+    menuList[MENU_SERVERBROWSER] = new SimpleLayoutMenu("ServerBrowserMenu", "OptionSelect", initInfo, 0, false);
+    optionsList[MENU_SERVERBROWSER] = new CommonVerticalList(menuList[MENU_SERVERBROWSER], initInfo, true);
+    al::setPaneString(menuList[MENU_SERVERBROWSER], "TxtOption", u"Server List (OnlineData/ServerList.txt)", 0);
+    optionsList[MENU_SERVERBROWSER]->unkInt1 = 1;
+    optionsList[MENU_SERVERBROWSER]->initDataNoResetSelected(mServerBrowserCount);
+
+    mServerBrowserOptions = new sead::WFixedSafeString<0x200>[mServerBrowserCount];
+    for (int i = 0; i < mServerBrowserCount; i++) {
+        mServerBrowserOptions[i].convertFromMultiByteString(mServerBrowserServers[i].name, strlen(mServerBrowserServers[i].name));
+    }
+    optionsList[MENU_SERVERBROWSER]->addStringData(mServerBrowserOptions, "TxtContent");
+}
+
+void StageSceneStateServerConfig::exeServerBrowserSelect() {
     if (al::isFirstStep(this)) {
-        mCurrentList = mGameplayList;
-        mCurrentMenu = mGameplayMenu;
+        mCurrentList = optionsList[MENU_SERVERBROWSER];
+        mCurrentMenu = menuList[MENU_SERVERBROWSER];
         subMenuStart();
     }
 
     subMenuUpdate();
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
-        if (mCurrentList->mCurSelected == 0) {
-            al::setNerve(this, &NrvStageSceneStateServerConfig.PlayerCollisionSettings);
-            return;
+        int selected = mCurrentList->mCurSelected;
+        if (selected >= 0 && selected < mServerBrowserCount) {
+            Client::setServerIP(mServerBrowserServers[selected].ip);
+            Client::setServerPort(mServerBrowserServers[selected].port);
+            endSubMenuToParent(menuList[MENU_NETWORK], optionsList[MENU_NETWORK]);
         }
+    }
+}
 
+// ============================================================================
+// Gameplay Menu
+// ============================================================================
+
+void StageSceneStateServerConfig::initGameplayMenu(const al::LayoutInitInfo& initInfo) {
+    menuList[MENU_GAMEPLAY] = new SimpleLayoutMenu("GameplayMenu", "OptionSelect", initInfo, 0, false);
+    optionsList[MENU_GAMEPLAY] = new CommonVerticalList(menuList[MENU_GAMEPLAY], initInfo, true);
+    al::setPaneString(menuList[MENU_GAMEPLAY], "TxtOption", u"Gameplay Settings", 0);
+    optionsList[MENU_GAMEPLAY]->unkInt1 = 1;
+    optionsList[MENU_GAMEPLAY]->initDataNoResetSelected(mGameplayMenuOptionsCount);
+    updateGameplaySettingsOptions();
+    optionsList[MENU_GAMEPLAY]->addStringData(msgList[MENU_GAMEPLAY]->mBuffer, "TxtContent");
+}
+
+void StageSceneStateServerConfig::updateGameplaySettingsOptions() {
+    msgList[MENU_GAMEPLAY]->mBuffer[GP_PLAYERCOLLISION].copy(u"Player Collision Settings");
+    msgList[MENU_GAMEPLAY]->mBuffer[GP_COSTUMEDOORS].copy(sCostumeDoorsUnlocked ? u"Unlock Costume Doors (ON)" : u"Unlock Costume Doors (OFF)");
+    msgList[MENU_GAMEPLAY]->mBuffer[GP_LATENCY].copy(sLowLatencyEnabled ? u"Reduce Player Latency (OFF)" : u"Reduce Player Latency (ON)");
+    msgList[MENU_GAMEPLAY]->mBuffer[GP_MUSIC].copy(Client::isMusicDisabled() ? u"In-Game Music (OFF)" : u"In-Game Music (ON)");
+}
+
+void StageSceneStateServerConfig::exeGameplaySettings() {
+    if (al::isFirstStep(this)) {
+        mCurrentList = optionsList[MENU_GAMEPLAY];
+        mCurrentMenu = menuList[MENU_GAMEPLAY];
+        subMenuStart();
+    }
+
+    subMenuUpdate();
+
+    if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
         // Toggle settings
         switch (mCurrentList->mCurSelected) {
-        case 1:
+        case GP_PLAYERCOLLISION:
+            al::setNerve(this, &NrvStageSceneStateServerConfig.PlayerCollisionSettings);
+            return;
+        case GP_COSTUMEDOORS:
             sCostumeDoorsUnlocked = !sCostumeDoorsUnlocked;
             break;
-        case 2:
+        case GP_LATENCY:
             sLowLatencyEnabled = !sLowLatencyEnabled;
             break;
-        case 3:
+        case GP_MUSIC:
             Client::toggleMusicDisabled();
             break;
         }
 
         updateGameplaySettingsOptions();
-        refreshMenu(mGameplayList, mGameplayOptions->mBuffer, 4);
+        refreshMenu(optionsList[MENU_GAMEPLAY], msgList[MENU_GAMEPLAY]->mBuffer, mGameplayMenuOptionsCount);
     }
+}
+
+// ============================================================================
+// Player Collision Menu
+// ============================================================================
+
+void StageSceneStateServerConfig::initPlayerCollisionMenu(const al::LayoutInitInfo& initInfo) {
+    menuList[MENU_PLAYERCOLLISION] = new SimpleLayoutMenu("PlayerCollisionMenu", "OptionSelect", initInfo, 0, false);
+    optionsList[MENU_PLAYERCOLLISION] = new CommonVerticalList(menuList[MENU_PLAYERCOLLISION], initInfo, true);
+    al::setPaneString(menuList[MENU_PLAYERCOLLISION], "TxtOption", u"Player Collision", 0);
+    optionsList[MENU_PLAYERCOLLISION]->unkInt1 = 1;
+    optionsList[MENU_PLAYERCOLLISION]->initDataNoResetSelected(mPlayerCollisionMenuOptionsCount);
+    updatePlayerCollisionOptions();
+    optionsList[MENU_PLAYERCOLLISION]->addStringData(msgList[MENU_PLAYERCOLLISION]->mBuffer, "TxtContent");
+}
+
+void StageSceneStateServerConfig::updatePlayerCollisionOptions() {
+    msgList[MENU_PLAYERCOLLISION]->mBuffer[PC_CAPCOLLISION].copy(sCapCollisionEnabled ? u"Cap Collision (ON)" : u"Cap Collision (OFF)");
+    msgList[MENU_PLAYERCOLLISION]->mBuffer[PC_CAPBOUNCE].copy(sCapBounceEnabled ? u"Cap Bouncing (ON)" : u"Cap Bouncing (OFF)");
+    msgList[MENU_PLAYERCOLLISION]->mBuffer[PC_PLAYERCOLLISION].copy(sPuppetCollisionEnabled ? u"Player Collision (ON)" : u"Player Collision (OFF)");
+    msgList[MENU_PLAYERCOLLISION]->mBuffer[PC_PLAYERBOUNCE].copy(sPuppetBounceEnabled ? u"Player Bouncing (ON)" : u"Player Bouncing (OFF)");
 }
 
 void StageSceneStateServerConfig::exePlayerCollisionSettings() {
     if (al::isFirstStep(this)) {
-        mCurrentList = mPlayerCollisionList;
-        mCurrentMenu = mPlayerCollisionMenu;
+        mCurrentList = optionsList[MENU_PLAYERCOLLISION];
+        mCurrentMenu = menuList[MENU_PLAYERCOLLISION];
         subMenuStart();
     }
 
@@ -489,29 +408,83 @@ void StageSceneStateServerConfig::exePlayerCollisionSettings() {
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
         switch (mCurrentList->mCurSelected) {
-        case 0:
-            sCapAttackEnabled = !sCapAttackEnabled;
+        case PC_CAPCOLLISION:
+            sCapCollisionEnabled = !sCapCollisionEnabled;
             break;
-        case 1:
-            sCapReceiveEnabled = !sCapReceiveEnabled;
+        case PC_CAPBOUNCE:
+            sCapBounceEnabled = !sCapBounceEnabled;
             break;
-        case 2:
-            sPuppetAttackEnabled = !sPuppetAttackEnabled;
+        case PC_PLAYERCOLLISION:
+            sPuppetCollisionEnabled = !sPuppetCollisionEnabled;
             break;
-        case 3:
-            sPuppetReceiveEnabled = !sPuppetReceiveEnabled;
+        case PC_PLAYERBOUNCE:
+            sPuppetBounceEnabled = !sPuppetBounceEnabled;
             break;
         }
 
         updatePlayerCollisionOptions();
-        refreshMenu(mPlayerCollisionList, mPlayerCollisionOptions->mBuffer, 4);
+        refreshMenu(optionsList[MENU_PLAYERCOLLISION], msgList[MENU_PLAYERCOLLISION]->mBuffer, mPlayerCollisionMenuOptionsCount);
     }
+}
+
+// ============================================================================
+// Game Mode Menus
+// ============================================================================
+
+void StageSceneStateServerConfig::initGameModeMenus(const al::LayoutInitInfo& initInfo) {
+    // Game Mode Settings
+    menuList[MENU_GAMEMODE] = new SimpleLayoutMenu("GameModeSettingsMenu", "OptionSelect", initInfo, 0, false);
+    optionsList[MENU_GAMEMODE] = new CommonVerticalList(menuList[MENU_GAMEMODE], initInfo, true);
+    al::setPaneString(menuList[MENU_GAMEMODE], "TxtOption", u"Game Mode", 0);
+    optionsList[MENU_GAMEMODE]->unkInt1 = 1;
+    optionsList[MENU_GAMEMODE]->initDataNoResetSelected(mGameModeMenuOptionsCount);
+    updateGameModeSettingsOptions();
+    optionsList[MENU_GAMEMODE]->addStringData(msgList[MENU_GAMEMODE]->mBuffer, "TxtContent");
+
+    // Mode Selection
+    menuList[MENU_GAMEMODE_MODESEL] = new SimpleLayoutMenu("GameModeSelectMenu", "OptionSelect", initInfo, 0, false);
+    optionsList[MENU_GAMEMODE_MODESEL] = new CommonVerticalList(menuList[MENU_GAMEMODE_MODESEL], initInfo, true);
+    al::setPaneString(menuList[MENU_GAMEMODE_MODESEL], "TxtOption", u"Select Game Mode", 0);
+
+    const int modeCount = GameModeFactory::getModeCount();
+    optionsList[MENU_GAMEMODE_MODESEL]->initDataNoResetSelected(modeCount);
+
+    auto* modeOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, modeCount>();
+    for (size_t i = 0; i < modeCount; i++) {
+        const char* modeName = GameModeFactory::getModeName(i);
+        modeOptions->mBuffer[i].convertFromMultiByteString(modeName, strlen(modeName));
+    }
+    optionsList[MENU_GAMEMODE_MODESEL]->addStringData(modeOptions->mBuffer, "TxtContent");
+
+    // Mode Config
+    GameModeConfigMenuFactory factory("GameModeConfigFactory");
+    for (int mode = 0; mode < factory.getMenuCount(); mode++) {
+        GameModeEntry& entry = mGamemodeConfigMenus[mode];
+        const char* name = factory.getMenuName(mode);
+        entry.mMenu = factory.getCreator(name)(name);
+        entry.mLayout = new SimpleLayoutMenu("GameModeConfigMenu", "OptionSelect", initInfo, 0, false);
+        entry.mList = new CommonVerticalList(entry.mLayout, initInfo, true);
+        al::setPaneString(entry.mLayout, "TxtOption", u"Mode Configuration", 0);
+        entry.mList->initDataNoResetSelected(entry.mMenu->getMenuSize());
+        entry.mList->addStringData(entry.mMenu->getStringData(), "TxtContent");
+    }
+}
+
+void StageSceneStateServerConfig::updateGameModeSettingsOptions() {
+    const char* modeName = GameModeFactory::getModeName(GameModeManager::instance()->getGameMode());
+    char text[256];
+    snprintf(text, sizeof(text), "Configure %s", modeName);
+    msgList[MENU_GAMEMODE]->mBuffer[GM_MODESETTINGS].convertFromMultiByteString(text, strlen(text));
+
+    msgList[MENU_GAMEMODE]->mBuffer[GM_TWISTS].copy(u"Twists & Modifiers");
+    msgList[MENU_GAMEMODE]->mBuffer[GM_MODESELECT].copy(GameModeManager::instance()->getInfo<GameModeInfoBase>() ? u"Change Mode (reload required)" :
+                                                                                                                   u"Change Game Mode");
 }
 
 void StageSceneStateServerConfig::exeGameModeSettings() {
     if (al::isFirstStep(this)) {
-        mCurrentList = mGameModeSettingsList;
-        mCurrentMenu = mGameModeSettingsMenu;
+        mCurrentList = optionsList[MENU_GAMEMODE];
+        mCurrentMenu = menuList[MENU_GAMEMODE];
         subMenuStart();
     }
 
@@ -519,13 +492,13 @@ void StageSceneStateServerConfig::exeGameModeSettings() {
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
         switch (mCurrentList->mCurSelected) {
-        case 0:
+        case GM_MODESETTINGS:
             al::setNerve(this, &NrvStageSceneStateServerConfig.GameModeConfig);
             break;
-        case 1:
+        case GM_TWISTS:
             al::setNerve(this, &NrvStageSceneStateServerConfig.TwistsSettings);
             break;
-        case 2:
+        case GM_MODESELECT:
             al::setNerve(this, &NrvStageSceneStateServerConfig.GameModeSelect);
             break;
         }
@@ -536,7 +509,7 @@ void StageSceneStateServerConfig::exeGameModeConfig() {
     if (al::isFirstStep(this)) {
         int mode = GameModeManager::instance()->getGameMode();
         if (mode < 0 || mode >= mGamemodeConfigMenus.size()) {
-            endSubMenuToParent(mGameModeSettingsMenu, mGameModeSettingsList);
+            endSubMenuToParent(menuList[MENU_GAMEMODE], optionsList[MENU_GAMEMODE]);
             return;
         }
 
@@ -568,8 +541,8 @@ void StageSceneStateServerConfig::exeGameModeConfig() {
 
 void StageSceneStateServerConfig::exeGameModeSelect() {
     if (al::isFirstStep(this)) {
-        mCurrentList = mModeSelectList;
-        mCurrentMenu = mModeSelect;
+        mCurrentList = optionsList[MENU_GAMEMODE_MODESEL];
+        mCurrentMenu = menuList[MENU_GAMEMODE_MODESEL];
         subMenuStart();
     }
 
@@ -578,17 +551,37 @@ void StageSceneStateServerConfig::exeGameModeSelect() {
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
         GameModeManager::instance()->setMode(static_cast<GameMode>(mCurrentList->mCurSelected));
         updateGameModeSettingsOptions();
-        mGameModeSettingsList->initDataNoResetSelected(3);
-        mGameModeSettingsList->addStringData(mGameModeSettingsOptions->mBuffer, "TxtContent");
-        mGameModeSettingsList->updateParts();
-        endSubMenuToParent(mGameModeSettingsMenu, mGameModeSettingsList);
+        optionsList[MENU_GAMEMODE]->initDataNoResetSelected(mGameModeMenuOptionsCount);
+        optionsList[MENU_GAMEMODE]->addStringData(msgList[MENU_GAMEMODE]->mBuffer, "TxtContent");
+        optionsList[MENU_GAMEMODE]->updateParts();
+        endSubMenuToParent(menuList[MENU_GAMEMODE], optionsList[MENU_GAMEMODE]);
     }
+}
+
+// ============================================================================
+// Twists Menu
+// ============================================================================
+
+void StageSceneStateServerConfig::initTwistsMenu(const al::LayoutInitInfo& initInfo) {
+    menuList[MENU_TWISTS] = new SimpleLayoutMenu("TwistsMenu", "OptionSelect", initInfo, 0, false);
+    optionsList[MENU_TWISTS] = new CommonVerticalList(menuList[MENU_TWISTS], initInfo, true);
+    al::setPaneString(menuList[MENU_TWISTS], "TxtOption", u"Twists & Modifiers", 0);
+    optionsList[MENU_TWISTS]->unkInt1 = 1;
+    optionsList[MENU_TWISTS]->initDataNoResetSelected(mTwistsMenuOptionsCount);
+    updateTwistsOptions();
+    optionsList[MENU_TWISTS]->addStringData(msgList[MENU_TWISTS]->mBuffer, "TxtContent");
+}
+
+void StageSceneStateServerConfig::updateTwistsOptions() {
+    msgList[MENU_TWISTS]->mBuffer[TW_DISABLECAP].copy(TwistsConfig::isCappyDisableEnabled() ? u"Disable Cappy (OFF)" : u"Disable Cappy (ON)");
+    msgList[MENU_TWISTS]->mBuffer[TW_ICEPHYSICS].copy(TwistsConfig::isIcePhysicsEnabled() ? u"Ice Physics (ON)" : u"Ice Physics (OFF)");
+    msgList[MENU_TWISTS]->mBuffer[TW_MORESOON].copy(u"More twists coming soon...");
 }
 
 void StageSceneStateServerConfig::exeTwistsSettings() {
     if (al::isFirstStep(this)) {
-        mCurrentList = mTwistsList;
-        mCurrentMenu = mTwistsMenu;
+        mCurrentList = optionsList[MENU_TWISTS];
+        mCurrentMenu = menuList[MENU_TWISTS];
         subMenuStart();
     }
 
@@ -596,19 +589,47 @@ void StageSceneStateServerConfig::exeTwistsSettings() {
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
         switch (mCurrentList->mCurSelected) {
-        case 0:
+        case TW_DISABLECAP:
             TwistsConfig::toggleCappyDisable();
             break;
-        case 1:
+        case TW_ICEPHYSICS:
             TwistsConfig::toggleIcePhysics();
             break;
         }
 
         updateTwistsOptions();
-        refreshMenu(mTwistsList, mTwistsOptions->mBuffer, 3);
+        refreshMenu(optionsList[MENU_TWISTS], msgList[MENU_TWISTS]->mBuffer, mTwistsMenuOptionsCount);
         mIsDecideConfig = false;
     }
 }
+
+// ============================================================================
+// Lifecycle Methods
+// ============================================================================
+
+void StageSceneStateServerConfig::init() {
+    initNerve(&NrvStageSceneStateServerConfig.MainMenu, 0);
+}
+
+void StageSceneStateServerConfig::appear() {
+    mCurrentMenu->startAppear("Appear");
+    al::NerveStateBase::appear();
+}
+
+void StageSceneStateServerConfig::kill() {
+    if (Client::hasServerChanged()) {
+        Client::showUIMessage(u"Server changed. Please restart the game.");
+        for (int i = 0; i < 180; i++)
+            nn::os::YieldThread();
+        Client::hideUIMessage();
+    }
+    mCurrentMenu->startEnd("End");
+    al::NerveStateBase::kill();
+}
+
+// ============================================================================
+// Option Update Methods
+// ============================================================================
 
 void StageSceneStateServerConfig::exeSaveData() {
     if (al::isFirstStep(this)) {
@@ -652,15 +673,15 @@ void StageSceneStateServerConfig::subMenuUpdate() {
 
     if (rs::isTriggerUiCancel(mHost) && !mIsDecideConfig) {
         // Determine parent menu
-        if (mCurrentMenu == mPlayerCollisionMenu) {
-            endSubMenuToParent(mGameplayMenu, mGameplayList);
-        } else if (mCurrentMenu == mServerBrowserMenu) {
-            endSubMenuToParent(mNetworkMenu, mNetworkList);
-        } else if (mCurrentMenu == mModeSelect || mCurrentMenu == mTwistsMenu) {
-            endSubMenuToParent(mGameModeSettingsMenu, mGameModeSettingsList);
+        if (mCurrentMenu == menuList[MENU_PLAYERCOLLISION]) {
+            endSubMenuToParent(menuList[MENU_GAMEPLAY], optionsList[MENU_GAMEPLAY]);
+        } else if (mCurrentMenu == menuList[MENU_SERVERBROWSER]) {
+            endSubMenuToParent(menuList[MENU_NETWORK], optionsList[MENU_NETWORK]);
+        } else if (mCurrentMenu == menuList[MENU_GAMEMODE_MODESEL] || mCurrentMenu == menuList[MENU_TWISTS]) {
+            endSubMenuToParent(menuList[MENU_GAMEMODE], optionsList[MENU_GAMEMODE]);
         } else if (mGamemodeConfigMenu && mCurrentMenu == mGamemodeConfigMenu->mLayout) {
-            endSubMenuToParent(mGameModeSettingsMenu, mGameModeSettingsList);
-        } else if (mCurrentMenu == mNetworkMenu || mCurrentMenu == mGameplayMenu || mCurrentMenu == mGameModeSettingsMenu) {
+            endSubMenuToParent(menuList[MENU_GAMEMODE], optionsList[MENU_GAMEMODE]);
+        } else {
             endSubMenu();
         }
     }
@@ -685,8 +706,8 @@ void StageSceneStateServerConfig::refreshMenu(CommonVerticalList* list, sead::WF
 void StageSceneStateServerConfig::endSubMenu() {
     mCurrentList->deactivate();
     mCurrentMenu->startEnd("End");
-    mCurrentList = mMainOptionsList;
-    mCurrentMenu = mMainOptions;
+    mCurrentList = optionsList[MENU_MAIN];
+    mCurrentMenu = menuList[MENU_MAIN];
     mCurrentMenu->startAppear("Appear");
     al::startHitReaction(mCurrentMenu, "リセット", 0);
     al::setNerve(this, &NrvStageSceneStateServerConfig.MainMenu);
@@ -701,11 +722,11 @@ void StageSceneStateServerConfig::endSubMenuToParent(SimpleLayoutMenu* parentMen
     mIsDecideConfig = false;
 
     // Set appropriate nerve based on parent menu
-    if (parentMenu == mGameplayMenu) {
+    if (parentMenu == menuList[MENU_GAMEPLAY]) {
         al::setNerve(this, &NrvStageSceneStateServerConfig.GameplaySettings);
-    } else if (parentMenu == mNetworkMenu) {
+    } else if (parentMenu == menuList[MENU_NETWORK]) {
         al::setNerve(this, &NrvStageSceneStateServerConfig.NetworkSettings);
-    } else if (parentMenu == mGameModeSettingsMenu) {
+    } else if (parentMenu == menuList[MENU_GAMEMODE]) {
         al::setNerve(this, &NrvStageSceneStateServerConfig.GameModeSettings);
     }
 }
@@ -722,36 +743,4 @@ void StageSceneStateServerConfig::deactivateInput() {
     mCurrentList->endCursor();
     mCurrentList->decide();
     mIsDecideConfig = true;
-}
-
-// ============================================================================
-// Static Getters
-// ============================================================================
-
-bool StageSceneStateServerConfig::isCapAttackEnabled() {
-    return sCapAttackEnabled;
-}
-
-bool StageSceneStateServerConfig::isCapReceiveEnabled() {
-    return sCapReceiveEnabled;
-}
-
-bool StageSceneStateServerConfig::isPuppetAttackEnabled() {
-    return sPuppetAttackEnabled;
-}
-
-bool StageSceneStateServerConfig::isPuppetReceiveEnabled() {
-    return sPuppetReceiveEnabled;
-}
-
-bool StageSceneStateServerConfig::isCostumeDoorsUnlocked() {
-    return sCostumeDoorsUnlocked;
-}
-
-bool StageSceneStateServerConfig::isLowLatencyEnabled() {
-    return sLowLatencyEnabled;
-}
-
-al::MessageSystem* StageSceneStateServerConfig::getMessageSystem() const {
-    return mMsgSystem;
 }

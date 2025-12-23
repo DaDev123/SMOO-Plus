@@ -42,13 +42,6 @@
 #include "System/GameDataHolder.h"
 #include "TwistsConfig.hpp"
 
-bool checkpointPatch() {
-    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
-        return false;
-
-    return true;
-}
-
 static HkReplace<bool, al::IUseSceneObjHolder*> comboBtnHook = hk::hook::replace([](al::IUseSceneObjHolder* holder) -> bool {
     // only switch to combo if the gamemode is active
     if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
@@ -68,6 +61,13 @@ static HkTrampoline<void, GameConfigData*, al::ByamlWriter*> saveWriteHook = hk:
     const char* serverIP = Client::getCurrentIP();
     const int serverPort = Client::getCurrentPort();
     const bool serverHidden = Client::isServerHidden();
+    const bool capCollision = StageSceneStateServerConfig::isCapCollisionEnabled();
+    const bool capBounce = StageSceneStateServerConfig::isCapBounceEnabled();
+    const bool playerCollision = StageSceneStateServerConfig::isPuppetCollisionEnabled();
+    const bool playerBounce = StageSceneStateServerConfig::isPuppetBounceEnabled();
+    const bool costumeDoorsUnlocked = StageSceneStateServerConfig::isCostumeDoorsUnlocked();
+    const bool lowLatency = StageSceneStateServerConfig::isLowLatencyEnabled();
+    const bool music = !Client::isMusicDisabled();
 
     writer->pushHash("SMOOData");
     if (serverIP) {
@@ -83,6 +83,13 @@ static HkTrampoline<void, GameConfigData*, al::ByamlWriter*> saveWriteHook = hk:
     }
 
     writer->addBool("ServerHidden", serverHidden);
+    writer->addBool("CapCollision", capCollision);
+    writer->addBool("CapBounce", capBounce);
+    writer->addBool("PlayerCollision", playerCollision);
+    writer->addBool("PlayerBounce", playerBounce);
+    writer->addBool("CostumeDoorsUnlocked", costumeDoorsUnlocked);
+    writer->addBool("LowLatency", lowLatency);
+    writer->addBool("Music", music);
     writer->pop();
 });
 
@@ -93,6 +100,13 @@ static HkTrampoline<void, GameConfigData*, const al::ByamlIter&> saveReadHook =
         const char* serverIP = "";
         int serverPort = 0;
         bool serverHidden = false;
+        bool capCollision = false;
+        bool capBounce = false;
+        bool playerCollision = true;
+        bool playerBounce = true;
+        bool costumeDoorsUnlocked = true;
+        bool lowLatency = false;
+        bool music = true;
 
         al::ByamlIter iterIntern;
         al::tryGetByamlIterByKey(&iterIntern, iter, "SMOOData");
@@ -108,6 +122,30 @@ static HkTrampoline<void, GameConfigData*, const al::ByamlIter&> saveReadHook =
         if (al::tryGetByamlBool(&serverHidden, iterIntern, "ServerHidden")) {
             Client::setServerHidden(serverHidden);
         }
+
+        if (al::tryGetByamlBool(&capCollision, iterIntern, "CapCollision")) {
+            StageSceneStateServerConfig::setCapCollisionEnabled(capCollision);
+        }
+        if (al::tryGetByamlBool(&capBounce, iterIntern, "CapBounce")) {
+            StageSceneStateServerConfig::setCapBounceEnabled(capBounce);
+        }
+        if (al::tryGetByamlBool(&playerCollision, iterIntern, "PlayerCollision")) {
+            StageSceneStateServerConfig::setPuppetCollisionEnabled(playerCollision);
+        }
+        if (al::tryGetByamlBool(&playerBounce, iterIntern, "PlayerBounce")) {
+            StageSceneStateServerConfig::setPuppetBounceEnabled(playerBounce);
+        }
+        if (al::tryGetByamlBool(&costumeDoorsUnlocked, iterIntern, "CostumeDoorsUnlocked")) {
+            StageSceneStateServerConfig::setCostumeDoorsUnlocked(costumeDoorsUnlocked);
+        }
+        if (al::tryGetByamlBool(&lowLatency, iterIntern, "LowLatency")) {
+            StageSceneStateServerConfig::setLowLatencyEnabled(lowLatency);
+        }
+        if (al::tryGetByamlBool(&music, iterIntern, "Music")) {
+            if (Client::isMusicDisabled() != !music) {
+                Client::toggleMusicDisabled();
+            }
+        }
     });
 
 static HkTrampoline<void, Shine*> registerShineToListHook = hk::hook::trampoline([](Shine* shine) -> void {
@@ -116,15 +154,6 @@ static HkTrampoline<void, Shine*> registerShineToListHook = hk::hook::trampoline
         Client::tryRegisterShine(shine);
     }
 });
-
-// void overrideNerveHook(StageSceneStatePauseMenu* thisPtr, al::Nerve* nrvSet) {
-
-//     if (al::isPadHoldZL(-1)) {
-//         al::setNerve(thisPtr, &nrvStageSceneStatePauseMenuServerConfig);
-//     } else {
-//         al::setNerve(thisPtr, nrvSet);
-//     }
-// }
 
 static HkReplace<void, StageSceneStatePauseMenu*> overrideHelpFadeNerve = hk::hook::replace([](StageSceneStatePauseMenu* state) -> void {
     // Set label in menu inside LocalizedData/${lang}/MessageData/LayoutMessage.szs/Menu.msbt/Menu_Help
@@ -161,19 +190,19 @@ static HkTrampoline<void, CoinCounter*> startCoinCounterHook = hk::hook::trampol
 });
 
 // Simple hook that can be used to override isModeE3 checks to enable/disable certain behaviors
-bool modeE3Hook() {
+static bool modeE3Hook() {
     return GameModeManager::instance()->isModeRequireUI();
 }
 
 // Gravity Hooks
 
-void initHackCapHook(al::LiveActor* cappy) {
+static void initHackCapHook(al::LiveActor* cappy) {
     al::initActorPoseTQGSV(cappy);
 }
 
 // Skips ending the play guide layout if a mode is active, since the mode would have already ended
 // it
-void playGuideEndHook(al::SimpleLayoutAppearWaitEnd* thisPtr) {
+static void playGuideEndHook(al::SimpleLayoutAppearWaitEnd* thisPtr) {
     if (!GameModeManager::instance()->isModeRequireUI()) {
         thisPtr->end();
     }
