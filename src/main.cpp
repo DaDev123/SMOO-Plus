@@ -275,7 +275,7 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
         }
 
         if (Client::isNeedUpdateHealthCoins()) {
-            PlayerHitPointData* data = holder.mData->getGameDataFile()->getPlayerHitPointData();
+            PlayerHitPointData* data = GameDataHolderAccessor(holder)->getGameDataFile()->getPlayerHitPointData();
             data->mIsKidsMode = Client::shouldKids();
             data->mCurrentHealth = Client::getHealth();
             Client::setNeedUpdateHealthCoins(false);

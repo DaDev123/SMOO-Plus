@@ -27,6 +27,7 @@
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/snh/SardineMode.hpp"
 #include "System/GameDataHolder.h"
+#include "System/GameDataHolderAccessor.h"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
@@ -598,7 +599,7 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
         packet->is2D = false;
     }
 
-    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
+    packet->scenarioNo = GameDataHolderAccessor(holder)->getGameDataFile()->getScenarioNo();
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -627,7 +628,7 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
 
     packet->is2D = false;
 
-    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
+    packet->scenarioNo = GameDataHolderAccessor(holder)->getGameDataFile()->getScenarioNo();
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -1209,7 +1210,7 @@ PuppetInfo* Client::findPuppetInfo(const nn::account::Uid& id, bool isFindAvaila
 void Client::setStageInfo(GameDataHolderAccessor holder) {
     if (sInstance) {
         sInstance->mStageName = GameDataFunction::getCurrentStageName(holder);
-        sInstance->mScenario = holder.mData->getGameDataFile()->getScenarioNo();  // holder.mData->mGameDataFile->getMainScenarioNoCurrent();
+        sInstance->mScenario = GameDataHolderAccessor(holder)->getGameDataFile()->getScenarioNo();  // holder.mData->mGameDataFile->getMainScenarioNoCurrent();
 
         sInstance->mPuppetHolder->setStageInfo(sInstance->mStageName.cstr(), sInstance->mScenario);
     }
@@ -1367,7 +1368,7 @@ void Client::updateShines() {
                     stageShine->onSwitchGet();
                 }
 
-                accessor.mData->getGameDataFile()->setGotShine(shineInfo);
+                GameDataHolderAccessor(accessor)->getGameDataFile()->setGotShine(shineInfo);
             }
         }
     }

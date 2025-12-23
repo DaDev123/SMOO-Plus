@@ -54,7 +54,7 @@ void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene*
         // Toggle is OFF - use normal proximity logic
         if (!odyssey) {
             if (isCappyCurrentlyEnabled) {
-                writer.mData->getGameDataFile()->mIsEnableCap = false;
+                GameDataHolderWriter(writer)->getGameDataFile()->mIsEnableCap = false;
                 cappyDisabled = true;
                 weDisabledCappy = true;
                 Logger::log("Cappy disabled - no Odyssey\n");
@@ -66,12 +66,12 @@ void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene*
         bool shouldEnable = (distance <= cappyThreshold);
 
         if (shouldEnable && !isCappyCurrentlyEnabled) {
-            writer.mData->getGameDataFile()->mIsEnableCap = true;
+            GameDataHolderWriter(writer)->getGameDataFile()->mIsEnableCap = true;
             cappyDisabled = false;
             weDisabledCappy = false;
             Logger::log("Cappy enabled - near Odyssey (%.1f)\n", distance);
         } else if (!shouldEnable && isCappyCurrentlyEnabled) {
-            writer.mData->getGameDataFile()->mIsEnableCap = false;
+            GameDataHolderWriter(writer)->getGameDataFile()->mIsEnableCap = false;
             cappyDisabled = true;
             weDisabledCappy = true;
             Logger::log("Cappy disabled - far from Odyssey (%.1f)\n", distance);
@@ -85,7 +85,7 @@ void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene*
         // Cappy is disabled. Was it us who disabled it, or the game naturally?
         if (weDisabledCappy || cappyDisabled) {
             // We disabled it due to proximity, safe to re-enable
-            writer.mData->getGameDataFile()->mIsEnableCap = true;
+            GameDataHolderWriter(writer)->getGameDataFile()->mIsEnableCap = true;
             cappyDisabled = false;
             weDisabledCappy = false;
             Logger::log("Cappy forced enabled by toggle\n");
