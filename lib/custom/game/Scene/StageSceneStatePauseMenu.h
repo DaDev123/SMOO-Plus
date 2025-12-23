@@ -21,11 +21,12 @@ namespace al {
 class WindowConfirm;
 class KeyRepeatCtrl;
 class WipeSimple;
-} // namespace al
+}  // namespace al
 
 class StageSceneStatePauseMenu : public al::HostStateBase<al::Scene> {
 public:
-    StageSceneStatePauseMenu(const char*, al::Scene*, al::SimpleLayoutAppearWaitEnd*, GameDataHolder*, const al::SceneInitInfo&, const al::ActorInitInfo&, const al::LayoutInitInfo&, al::WindowConfirm*, StageSceneLayout*, bool, SceneAudioSystemPauseController*);
+    StageSceneStatePauseMenu(const char*, al::Scene*, al::SimpleLayoutAppearWaitEnd*, GameDataHolder*, const al::SceneInitInfo&, const al::ActorInitInfo&,
+                             const al::LayoutInitInfo&, al::WindowConfirm*, StageSceneLayout*, bool, SceneAudioSystemPauseController*);
     ~StageSceneStatePauseMenu();
 
     void appear(void);
@@ -47,7 +48,7 @@ public:
     void checkNeedKillByHostAndEnd(void);
     void startActionMario(const char*);
     void getMarioActor(void);
-    void isDrawLayout(void);
+    bool isDrawLayout(void) const;
     void isDrawLayoutMain(void);
     void isDrawViewRenderer(void);
     void isDrawChromakey(void);
@@ -73,13 +74,13 @@ public:
 
     void exeServerConfig(void);
 
-    al::SimpleLayoutAppearWaitEnd* field_0x20; // 0x20
-    al::SimpleLayoutAppearWaitEnd* mMenuGuide; // 0x28
-    al::SimpleLayoutAppearWaitEnd* mMenuRight; // 0x30
-    FooterParts* mFooterParts;                 // 0x38
-    MenuSelectParts* mSelectParts;             // 0x40
-    al::WipeSimple* mWipeSimple;               // 0x48
-    void* field_0x50;                          // 0x50
+    al::SimpleLayoutAppearWaitEnd* field_0x20;  // 0x20
+    al::SimpleLayoutAppearWaitEnd* mMenuGuide;  // 0x28
+    al::SimpleLayoutAppearWaitEnd* mMenuRight;  // 0x30
+    FooterParts* mFooterParts;                  // 0x38
+    MenuSelectParts* mSelectParts;              // 0x40
+    al::WipeSimple* mWipeSimple;                // 0x48
+    void* field_0x50;                           // 0x50
     int field_0x58;
     int field_0x5c;
     StageSceneStateStartSeparatePlay* mStateStartSeperatePlay;
@@ -115,8 +116,6 @@ NERVE_IMPL(StageSceneStatePauseMenu, NotExistEmptyFile)
 // custom nerves
 NERVE_IMPL(StageSceneStatePauseMenu, ServerConfig)
 
-NERVES_MAKE_STRUCT(
-    StageSceneStatePauseMenu, Appear, Wait, FadeBeforeHelp, StartHelp, WaitDraw, End, StartSeparatePlay, EndSeparatePlay, Option, Save, ConfirmNewGame,
-    NotExistEmptyFile, ServerConfig
-)
-} // namespace
+NERVES_MAKE_STRUCT(StageSceneStatePauseMenu, Appear, Wait, FadeBeforeHelp, StartHelp, WaitDraw, End, StartSeparatePlay, EndSeparatePlay, Option, Save,
+                   ConfirmNewGame, NotExistEmptyFile, ServerConfig)
+}  // namespace

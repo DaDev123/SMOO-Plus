@@ -285,11 +285,17 @@ static HkTrampoline<bool, al::Triangle&, char*> icePhysicsHook = hk::hook::tramp
     return isNaturalIce ? true : TwistsConfig::isIcePhysicsEnabled();
 });
 
-static HkTrampoline<void, StageSceneStatePauseMenu*> menuTextHook = hk::hook::trampoline([](StageSceneStatePauseMenu* menu) -> void {
+static HkTrampoline<void, StageSceneStatePauseMenu*> pauseMenuWaitHook = hk::hook::trampoline([](StageSceneStatePauseMenu* menu) -> void {
     if (al::isFirstStep(menu))
         menu->mSelectParts->setSelectMessage(2, u"Mod Menu");
 
-    menuTextHook.orig(menu);
+    pauseMenuWaitHook.orig(menu);
+
+    if (!menu->isDrawLayout()) {
+        ConnectionStatus::sInstance->tryStart();
+    } else {
+        ConnectionStatus::sInstance->tryEnd();
+    }
 });
 
 static HkTrampoline<void, AppearSwitchTimer*, const al::ActorInitInfo&, const al::IUseAudioKeeper*, al::IUseStageSwitch*, al::IUseCamera*, al::LiveActor*>
@@ -302,18 +308,4 @@ static HkTrampoline<void, AppearSwitchTimer*, const al::ActorInitInfo&, const al
 static HkTrampoline<bool, al::WindowConfirmWait*> windowConfirmWaitHook = hk::hook::trampoline([](al::WindowConfirmWait* win) -> bool {
     al::setNerve(win, (al::Nerve*)(hk::ro::getMainModule()->range().start() + 0x1e05be8));
     return true;
-});
-
-static HkTrampoline<void, StageSceneStatePauseMenu*> pauseMenuAppearHook = hk::hook::trampoline([](StageSceneStatePauseMenu* menu) -> void {
-    if (al::isFirstStep(menu)) {
-        ConnectionStatus::sInstance->tryStart();
-    }
-
-    pauseMenuAppearHook.orig(menu);
-});
-static HkTrampoline<void, StageSceneStatePauseMenu*> pauseMenuEndHook = hk::hook::trampoline([](StageSceneStatePauseMenu* menu) -> void {
-    if (al::isFirstStep(menu)) {
-        ConnectionStatus::sInstance->tryEnd();
-    }
-    pauseMenuEndHook.orig(menu);
 });
