@@ -35,7 +35,6 @@
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Player/PlayerAnimator.h"
-#include "game/Player/PlayerFunction.h"
 #include "game/Player/PlayerHackKeeper.h"
 #include "game/Scene/StageScene.h"
 #include "game/Sequence/HakoniwaSequence.h"
@@ -55,6 +54,7 @@
 #include "hooksFreezeTag.hpp"
 #include "imgui.h"
 #include "Imgui.hpp"
+#include "layouts/ConnectionStatus.h"
 #include "logger.hpp"
 #include "nn/hid.h"
 #include "nn/socket.h"
@@ -149,6 +149,8 @@ HkTrampoline<void, HakoniwaSequence*, al::SequenceInitInfo*> hakoniwaSequenceIni
                                initInfo->mSystemInfo->messageSystem, initInfo->mSystemInfo->gamePadSystem);
 
         Client::instance()->init(lytInfo, sequence->mGameDataHolderAccessor);
+
+        ConnectionStatus::sInstance = new ConnectionStatus("Status", lytInfo);
     });
 
 HkTrampoline<void, al::ActorInitInfo*, al::Scene*, al::PlacementInfo*, al::LayoutInitInfo*, al::ActorFactory*, al::SceneMsgCtrl*, al::GameDataHolderBase*>
@@ -328,51 +330,6 @@ void drawMain(al::Sequence* curSequence) {
     bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0) || (strcmp(currentUser, "KleinTimmi") == 0) ||
                             (strcmp(currentUser, "Katzen") == 0);
 
-    // ===== PAUSE MENU DEBUG WINDOW =====
-    // Check using the GameModeManager's pause state
-    if (gmm->isPaused()) {
-        ImGui::Begin("Connection Info", nullptr,
-                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus |
-                         ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar);
-
-        // Get display dimensions
-        int dispWidth = al::getLayoutDisplayWidth();
-
-        // Calculate position for top-right
-        float rightPadding = 10.f;
-        float topPadding = 5.f;
-        float textWidth = 200.f;
-        float xPos = dispWidth - textWidth - rightPadding;
-        float yPos = topPadding;
-
-        ImGui::SetWindowPos(ImVec2(xPos, yPos), ImGuiCond_Always);
-        ImGui::SetWindowSize(ImVec2(al::getLayoutDisplayWidth() / 3.f, 150));
-
-        // Cyan header
-        ImGui::TextColored(ImVec4(0.f, 1.f, 1.f, 1.f), "======= CONNECTION INFO =======\n\n");
-
-        // Server IP and Port
-        ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Server: ");
-        ImGui::SameLine();
-        Client::isServerHidden() ? ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.f), "<hidden>") :
-                                   ImGui::TextColored(ImVec4(1.f, 1.f, 1.f, 1.f), "%s:%d", socket->getIP(), socket->getPort());
-
-        // Connection status
-        ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Status: ");
-        ImGui::SameLine();
-        isConnected ? ImGui::TextColored(ImVec4(0.f, 1.f, 0.f, 1.f), "Connected") : ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Disconnected");
-
-        // Player count
-
-        ImGui::TextColored(ImVec4(1.f, 1.f, 0.f, 1.f), "Players: ");
-        ImGui::SameLine();
-        isConnected ? ImGui::TextColored(ImVec4(1.f, 1.f, 1.f, 1.f), "%d/%d", Client::getConnectCount() + 1, Client::getMaxPlayerCount()) :
-                      ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.f), "N/A");
-
-        ImGui::End();
-        return;
-    }
-
     // // ===== CHAT RENDERING (Non-debug mode, in-game only) =====
     // if (!debugMode && curScene && isInGame) {
     //     // Try to get camera for chat rendering
@@ -430,6 +387,7 @@ void drawMain(al::Sequence* curSequence) {
     ImGui::SetWindowPos(ImVec2(0, (dispHeight / 3.f)), ImGuiCond_Always);
     ImGui::SetWindowSize(ImVec2(al::getLayoutDisplayWidth() / 3.f, dispHeight - (dispHeight / 4.f)));
     // ===== DEBUG MODE RENDERING =====
+
     ImGui::Text("FPS: %d\n", static_cast<int>(round(Application::sInstance->mGameFramework->calcFps())));
     // Server info
     if (Client::isServerHidden()) {
@@ -680,6 +638,8 @@ extern "C" void hkMain() {
     hk::hook::a64::assemble<"mov w2, #5">().installAtSym<"R_ZN24StageSceneStatePauseMenuNrvStateCount">();  // increase nerve state count to 5
     initNerveStateHook.installAtSym<"R_ZN24StageSceneStatePauseMenuC1">();                                  // inits options nerve state and server config state
     menuTextHook.installAtSym<"_ZN24StageSceneStatePauseMenu7exeWaitEv">();                                 // Change Action Guide Text
+    pauseMenuAppearHook.installAtSym<"_ZN24StageSceneStatePauseMenu9exeAppearEv">();
+    pauseMenuEndHook.installAtSym<"_ZN24StageSceneStatePauseMenu6exeEndEv">();
 
     // inits StageSceneStateOption and StageSceneStateServerConfig
     initStateHook.installAtSym<"_ZN21StageSceneStateOptionC1EPKcPN2al5SceneERKNS2_14LayoutInitInfoEP11FooterPartsP14GameDataHolderb">();

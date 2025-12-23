@@ -29,6 +29,7 @@
 #include <sys/types.h>
 
 #include "helpers.hpp"
+#include "layouts/ConnectionStatus.h"
 #include "Library/Collision/CollisionPartsTriangle.h"
 #include "Library/Nerve/Nerve.h"
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
@@ -301,4 +302,18 @@ static HkTrampoline<void, AppearSwitchTimer*, const al::ActorInitInfo&, const al
 static HkTrampoline<bool, al::WindowConfirmWait*> windowConfirmWaitHook = hk::hook::trampoline([](al::WindowConfirmWait* win) -> bool {
     al::setNerve(win, (al::Nerve*)(hk::ro::getMainModule()->range().start() + 0x1e05be8));
     return true;
+});
+
+static HkTrampoline<void, StageSceneStatePauseMenu*> pauseMenuAppearHook = hk::hook::trampoline([](StageSceneStatePauseMenu* menu) -> void {
+    if (al::isFirstStep(menu)) {
+        ConnectionStatus::sInstance->tryStart();
+    }
+
+    pauseMenuAppearHook.orig(menu);
+});
+static HkTrampoline<void, StageSceneStatePauseMenu*> pauseMenuEndHook = hk::hook::trampoline([](StageSceneStatePauseMenu* menu) -> void {
+    if (al::isFirstStep(menu)) {
+        ConnectionStatus::sInstance->tryEnd();
+    }
+    pauseMenuEndHook.orig(menu);
 });
