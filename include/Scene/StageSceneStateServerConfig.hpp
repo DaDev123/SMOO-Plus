@@ -103,8 +103,8 @@ private:
     void initNetworkMenu(const al::LayoutInitInfo& initInfo);
     void updateNetworkSettingsOptions();
 
-    enum NetworkMenuOption { NETW_SERVERLIST, NETW_SERVERIP, NETW_SERVERPORT };
-    static constexpr int mNetworkMenuOptionsCount = 3;
+    enum NetworkMenuOption { NETW_SERVERLIST, NETW_SERVERIP, NETW_SERVERPORT, NETW_RECONNECT };
+    static constexpr int mNetworkMenuOptionsCount = 4;
 
     //@ ============= Server Browser Menu =============
     void initServerBrowserMenu(const al::LayoutInitInfo& initInfo);

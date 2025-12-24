@@ -34,6 +34,9 @@ public:
     void sendFunc();
     void recvFunc();
 
+    void setLogState(SocketLogState state) { this->socket_log_state = state; };
+    void startEndThread() { this->mEndThread->start(); };
+
     void printPacket(Packet* packet);
     bool isConnected() { return socket_log_state == SOCKET_LOG_CONNECTED; }
 
@@ -50,6 +53,7 @@ private:
 
     al::AsyncFunctorThread* mRecvThread = nullptr;
     al::AsyncFunctorThread* mSendThread = nullptr;
+    al::AsyncFunctorThread* mEndThread = nullptr;
 
     sead::MessageQueue mRecvQueue;
     sead::MessageQueue mSendQueue;

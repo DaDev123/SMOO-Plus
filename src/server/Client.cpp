@@ -19,21 +19,28 @@
 #include "game/System/SaveDataAccessFunction.h"
 #include "game/Util/ActorDimensionKeeper.h"
 
+#include <cmath>
 #include <cstring>
+#include <netinet/in.h>
+#include <sys/socket.h>
 
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "Library/LiveActor/LiveActor.h"
 #include "logger.hpp"
+#include "nn/socket.h"
 #include "packets/MessagePacket.h"
 #include "packets/Packet.h"
+#include "packets/PlayerDC.h"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/snh/SardineMode.hpp"
+#include "server/SocketClient.hpp"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
 #include "thread/seadMessageQueue.h"
+#include "types.h"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
@@ -135,12 +142,53 @@ bool Client::startThread() {
 }
 void Client::restartConnection() {
     // Just close the socket without sending disconnect packet
+
+    // send disconnect packet
+    Packet* dc = new (sInstance->mHeap) Packet();
+    dc->mType = PacketType::PLAYERDC;
+    dc->mUserID = Client::getClientId();
+    sInstance->mSocket->send(dc);
+    sInstance->mHeap->free(dc);
+
+    // close socket
     if (sInstance->mSocket->closeSocket()) {
         Logger::log("Successfully Closed Socket.\n");
     }
 
     sInstance->mConnectCount = 0;
+    for (PuppetInfo* curInfo : sInstance->mPuppetInfoArr) {
+        curInfo->isConnected = false;
+
+        curInfo->scenarioNo = -1;
+        strcpy(curInfo->stageName, "");
+        curInfo->isInSameStage = false;
+    }
+
+    sInstance->mSocket->setLogState(SOCKET_LOG_DISCONNECTED);
+    sInstance->mSocket->startEndThread();
+
     sInstance->mIsConnectionActive = sInstance->mSocket->init(sInstance->mServerIP.cstr(), sInstance->mServerPort).IsSuccess();
+
+    if (sInstance->lastGameInfPacket != sInstance->emptyGameInfPacket) {
+        // Assume game packets are empty from first connection
+        if (sInstance->lastGameInfPacket.mUserID != sInstance->mUserID) {
+            sInstance->lastGameInfPacket.mUserID = sInstance->mUserID;
+        }
+        sInstance->mSocket->send(&sInstance->lastGameInfPacket);
+    }
+
+    // No need to send player/costume packets if they're empty
+    if (sInstance->lastPlayerInfPacket.mUserID == sInstance->mUserID) {
+        sInstance->mSocket->send(&sInstance->lastPlayerInfPacket);
+    }
+
+    if (sInstance->lastCostumeInfPacket.mUserID == sInstance->mUserID) {
+        sInstance->mSocket->send(&sInstance->lastCostumeInfPacket);
+    }
+
+    if (sInstance->lastCaptureInfPacket.mUserID == sInstance->mUserID) {
+        sInstance->mSocket->send(&sInstance->lastCaptureInfPacket);
+    }
 }
 /**
  * @brief starts a connection using client's TCP socket class, pulling up the software keyboard for
@@ -354,6 +402,8 @@ void Client::hideUIMessage() {
  *
  */
 void Client::readFunc() {
+    Logger::log("Starting Client read thread\n");
+
     if (waitForGameInit) {
         nn::os::YieldThread();  // sleep the thread for the first thing we do so that game init can
                                 // finish

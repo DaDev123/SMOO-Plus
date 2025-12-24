@@ -22,7 +22,6 @@
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
-#include "System/GameDataHolderWriter.h"
 #include "TwistsConfig.hpp"
 
 // ============================================================================
@@ -226,6 +225,7 @@ void StageSceneStateServerConfig::updateNetworkSettingsOptions() {
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERLIST].copy(u"Browse Server List");
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERIP].copy(u"Custom Server IP");
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERPORT].copy(u"Custom Server Port");
+    msgList[MENU_NETWORK]->mBuffer[NETW_RECONNECT].copy(u"Reconnect to Server");
 }
 
 void StageSceneStateServerConfig::exeNetworkSettings() {
@@ -247,6 +247,11 @@ void StageSceneStateServerConfig::exeNetworkSettings() {
             break;
         case NETW_SERVERPORT:
             al::setNerve(this, &NrvStageSceneStateServerConfig.OpenKeyboardPort);
+            break;
+        case NETW_RECONNECT:
+            Client::restartConnection();
+            updateNetworkSettingsOptions();
+            refreshMenu(optionsList[MENU_NETWORK], msgList[MENU_NETWORK]->mBuffer, mNetworkMenuOptionsCount);
             break;
         }
     }
@@ -628,7 +633,8 @@ void StageSceneStateServerConfig::appear() {
 
 void StageSceneStateServerConfig::kill() {
     if (Client::hasServerChanged()) {
-        Client::showUIMessage(u"Server changed. Please restart the game.");
+        Client::restartConnection();
+        Client::showUIMessage(u"Reconnecting...");
         for (int i = 0; i < 180; i++)
             nn::os::YieldThread();
         Client::hideUIMessage();

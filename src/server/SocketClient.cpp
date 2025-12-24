@@ -9,19 +9,26 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
+#include "heap/seadHeapMgr.h"
 #include "logger.hpp"
 #include "nn/nifm.h"
+#include "nn/os.h"
 #include "nn/socket.h"
 #include "packets/Packet.h"
 #include "server/Client.hpp"
 #include "syssocket/sockdefines.h"
+#include "thread/seadThread.h"
+#include "types.h"
 #include "vapours/results/results_common.hpp"
 
 SocketClient::SocketClient(const char* name, sead::Heap* heap) : mHeap(heap), SocketBase(name) {
+    sead::ScopedCurrentHeapSetter setter(mHeap);
     mRecvThread =
         new al::AsyncFunctorThread("SocketRecvThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::recvFunc), 0, 0x1000, {0});
     mSendThread =
         new al::AsyncFunctorThread("SocketSendThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::sendFunc), 0, 0x1000, {0});
+    mEndThread =
+        new al::AsyncFunctorThread("SocketEndThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::endThreads), 0, 0x1000, {0});
 
     mRecvQueue.allocate(maxBufSize, mHeap);
     mSendQueue.allocate(maxBufSize, mHeap);
@@ -204,7 +211,7 @@ bool SocketClient::recv() {
                 }
             }
         } else {
-            Logger::log("Failed to aquire valid data! Packet Type: %d Full Packet Size %d valread size: %d", header->mType, fullSize, valread);
+            Logger::log("Failed to aquire valid data! Packet Type: %d Full Packet Size %d valread size: %d\n", header->mType, fullSize, valread);
         }
 
         return true;
@@ -302,8 +309,9 @@ bool SocketClient::startThreads() {
 }
 
 void SocketClient::endThreads() {
-    mRecvThread->mDelegateThread->destroy();
+    nn::os::SleepThread(nn::TimeSpan::FromMilliSeconds(500));
     mSendThread->mDelegateThread->destroy();
+    mRecvThread->mDelegateThread->destroy();
 }
 
 void SocketClient::sendFunc() {
