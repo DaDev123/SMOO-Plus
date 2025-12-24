@@ -1,11 +1,16 @@
 #include "Scene/StageSceneStateServerConfig.hpp"
 
 #include "al/Library/Layout/LayoutActionFunction.h"
+#include "al/Library/LiveActor/ActorInitInfo.h"
 #include "al/Library/Nerve/NerveUtil.h"
 
 #include "sead/container/seadSafeArray.h"
 #include "sead/prim/seadSafeString.h"
 
+#include "game/Sequence/ChangeStageInfo.h"
+#include "game/System/GameDataFile.h"
+#include "game/System/GameDataFunction.h"
+#include "game/System/GameDataHolderAccessor.h"
 #include "game/System/SaveDataAccessFunction.h"
 #include "game/Util/StageInputFunction.h"
 
@@ -14,10 +19,10 @@
 #include <vector>
 
 #include "BloodMoon/BloodMoonUtils.hpp"
-#include "logger.hpp"
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
+#include "System/GameDataHolderWriter.h"
 #include "TwistsConfig.hpp"
 
 // ============================================================================
@@ -477,8 +482,7 @@ void StageSceneStateServerConfig::updateGameModeSettingsOptions() {
     msgList[MENU_GAMEMODE]->mBuffer[GM_MODESETTINGS].convertFromMultiByteString(text, strlen(text));
 
     msgList[MENU_GAMEMODE]->mBuffer[GM_TWISTS].copy(u"Twists & Modifiers");
-    msgList[MENU_GAMEMODE]->mBuffer[GM_MODESELECT].copy(GameModeManager::instance()->getInfo<GameModeInfoBase>() ? u"Change Mode (reload required)" :
-                                                                                                                   u"Change Game Mode");
+    msgList[MENU_GAMEMODE]->mBuffer[GM_MODESELECT].copy(u"Change Mode");
 }
 
 void StageSceneStateServerConfig::exeGameModeSettings() {
@@ -550,6 +554,12 @@ void StageSceneStateServerConfig::exeGameModeSelect() {
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
         GameModeManager::instance()->setMode(static_cast<GameMode>(mCurrentList->mCurSelected));
+
+        ChangeStageInfo info =
+            ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->mPlayerStartId.cstr(),
+                            GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1, (ChangeStageInfo::SubScenarioType)0);
+        Client::get()->getHolder()->changeNextStage(&info, 0);
+
         updateGameModeSettingsOptions();
         optionsList[MENU_GAMEMODE]->initDataNoResetSelected(mGameModeMenuOptionsCount);
         optionsList[MENU_GAMEMODE]->addStringData(msgList[MENU_GAMEMODE]->mBuffer, "TxtContent");
