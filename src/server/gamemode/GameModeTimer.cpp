@@ -108,7 +108,7 @@ void GameModeTimer::timerControl() {
 
         if (al::isPadHoldLeft(-1)) {
             mTime.mMilliseconds = 0;
-            if (mTime.mMinutes != 0 || mTime.mSeconds != 0) {
+            if (mTime.mHours != 0 || mTime.mMinutes != 0 || mTime.mSeconds != 0) {
                 mTime.mSeconds--;
                 if (mTime.mSeconds < 0) {
                     mTime.mSeconds = 59;
