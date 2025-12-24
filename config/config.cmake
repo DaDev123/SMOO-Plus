@@ -26,4 +26,4 @@ set(USE_SAIL TRUE)
 set(TRAMPOLINE_POOL_SIZE 0x30)
 set(BAKE_SYMBOLS FALSE)
 
-set(HAKKUN_ADDONS Nvn ImGui HeapSourceDynamic)
+set(HAKKUN_ADDONS Nvn ImGui DebugRenderer HeapSourceDynamic)

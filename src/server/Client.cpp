@@ -19,10 +19,13 @@
 #include "game/System/SaveDataAccessFunction.h"
 #include "game/Util/ActorDimensionKeeper.h"
 
+#include <cstring>
+
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "Library/LiveActor/LiveActor.h"
 #include "logger.hpp"
+#include "packets/MessagePacket.h"
 #include "packets/Packet.h"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
@@ -30,6 +33,7 @@
 #include "server/snh/SardineMode.hpp"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
+#include "thread/seadMessageQueue.h"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
@@ -61,13 +65,13 @@ Client::Client() {
 
     strcpy(mDebugPuppetInfo.puppetName, "PuppetDebug");
 
+    mMessageQueue.allocate(sMaxMsgCount, mHeap);
+
     mConnectCount = 0;
 
     curCollectedShines.fill(-1);
 
     collectedShineCount = 0;
-
-    messages.fill(sead::FixedSafeString<MESSAGESIZE>());
 
     mShineArray.allocBuffer(100, nullptr);  // max of 100 shine actors in buffer
 
@@ -399,16 +403,25 @@ void Client::readFunc() {
 
                 // Send relevant info packets when another client is connected
 
-                // Assume game packets are empty from first connection
-                if (lastGameInfPacket.mUserID != mUserID)
-                    lastGameInfPacket.mUserID = mUserID;
-                mSocket->send(&lastGameInfPacket);
+                if (lastGameInfPacket != emptyGameInfPacket) {
+                    // Assume game packets are empty from first connection
+                    if (lastGameInfPacket.mUserID != mUserID) {
+                        lastGameInfPacket.mUserID = mUserID;
+                    }
+                    mSocket->send(&lastGameInfPacket);
+                }
 
                 // No need to send player/costume packets if they're empty
-                if (lastPlayerInfPacket.mUserID == mUserID)
+                if (lastPlayerInfPacket.mUserID == mUserID) {
                     mSocket->send(&lastPlayerInfPacket);
-                if (lastCostumeInfPacket.mUserID == mUserID)
+                }
+                if (lastCostumeInfPacket.mUserID == mUserID) {
                     mSocket->send(&lastCostumeInfPacket);
+                }
+
+                if (lastCaptureInfPacket.mUserID == mUserID) {
+                    mSocket->send(&lastCaptureInfPacket);
+                }
 
                 break;
             case PacketType::COSTUMEINF:
@@ -989,23 +1002,15 @@ void Client::updateGameInfo(GameInf* packet) {
  * @param packet
  */
 void Client::updateMessages(MessagePacket* packet) {
-    if (!sInstance) {
-        return;
-    }
-    bool foundEmpty = false;
-    for (int i = 0; i < 3; i++) {
-        if (sInstance->messages[i].isEmpty()) {
-            sInstance->messages[i].append(packet->message);
-            foundEmpty = true;
-            break;
-        }
-    }
-    if (!foundEmpty) {
-        sInstance->messages[0] = sInstance->messages[1];
-        sInstance->messages[1] = sInstance->messages[2];
-        sInstance->messages[2].clear();
-        sInstance->messages[2].append(packet->message);
-    }
+    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
+    MessagePacket* p = new MessagePacket();
+
+    *p = *packet;
+
+    if (mMessageQueue.mMessageQueueInner._count != sMaxMsgCount)
+        mMessageQueue.push((s64)p, sead::MessageQueue::BlockType::NonBlocking);
+    else
+        sInstance->mHeap->free(p);
 }
 
 /**
@@ -1411,24 +1416,20 @@ void Client::clearArrays() {
  * @brief
  *
  */
-sead::FixedSafeString<MESSAGESIZE> Client::getMessage(int index) {
-    if (!sInstance) {
-        return sead::FixedSafeString<MESSAGESIZE>();
-    }
+sead::FixedSafeString<MESSAGESIZE>* Client::tryGetMessage() {
+    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
 
-    return sInstance->messages[index];
-}
+    MessagePacket* p = (MessagePacket*)mMessageQueue.pop(sead::MessageQueue::BlockType::Blocking);
+    sead::FixedSafeString<MESSAGESIZE>* message = new sead::FixedSafeString<MESSAGESIZE>;
 
-/**
- * @brief
- *
- */
-void Client::setMessage(int index, const char* message) {
-    if (!sInstance) {
-        return;
-    }
+    message->append(p->message);
+    message->assureTerminationImpl_();
 
-    sInstance->messages[index] = message;
+    Logger::log("Getting message with type: %d\n", p->messageType);
+
+    sInstance->mHeap->free(p);
+
+    return message;
 }
 
 void Client::setNeedUpdateHealthCoins(bool value) {

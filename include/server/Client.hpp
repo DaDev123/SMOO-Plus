@@ -50,6 +50,7 @@
 #include "puppets/PuppetInfo.h"
 #include "server/SocketClient.hpp"
 #include "syssocket/sockdefines.h"
+#include "thread/seadMessageQueue.h"
 #include "types.h"
 
 // ===== CONSTANTS =====
@@ -139,8 +140,7 @@ public:
     static const char* getClientName() { return sInstance ? sInstance->mUsername.cstr() : "Player"; }
     static nn::account::Uid getClientId() { return sInstance ? sInstance->mUserID : nn::account::Uid(); }
     static sead::FixedSafeString<0x20> getUsername() { return sInstance ? sInstance->mUsername : sead::FixedSafeString<0x20>::cEmptyString; }
-    static sead::FixedSafeString<MESSAGESIZE> getMessage(int index);
-    static void setMessage(int index, const char* message);
+    sead::FixedSafeString<MESSAGESIZE>* tryGetMessage();
     static bool shouldKids() { return sInstance ? sInstance->isKids : false; }
     static u8 getHealth() { return sInstance ? sInstance->mHealth : 3; }
     static int getCoins() { return sInstance ? sInstance->mCoins : 0; }
@@ -215,6 +215,10 @@ public:
         }
     }
 
+    // ===== Message System =====
+    int getMsgCount() { return mMessageQueue.mMessageQueueInner._count; };
+    static int getMaxMsgCount() { return sMaxMsgCount; };
+
 private:
     // ===== CORE FUNCTIONALITY =====
     void readFunc();
@@ -267,7 +271,8 @@ private:
     int lastCollectedShine = -1;
 
     // ===== MESSAGE MEMBERS =====
-    sead::SafeArray<sead::FixedSafeString<MESSAGESIZE>, 3> messages;
+    static const int sMaxMsgCount = 100;
+    sead::MessageQueue mMessageQueue;
 
     // ===== PACKET BACKUPS =====
     PlayerInf lastPlayerInfPacket = PlayerInf();

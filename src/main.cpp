@@ -5,9 +5,13 @@
 
 #include "main.hpp"
 
+#include "hk/gfx/DebugRenderer.h"
+#include "hk/gfx/Util.h"
+#include "hk/gfx/Vertex.h"
 #include "hk/hook/a64/Assembler.h"
 #include "hk/hook/InstrUtil.h"
 #include "hk/hook/Trampoline.h"
+#include "hk/util/Math.h"
 
 #include "al/Library/Bgm/BgmLineFunction.h"
 #include "al/Library/Camera/CameraUtil.h"
@@ -50,6 +54,7 @@
 
 #include "actors/PuppetActor.h"
 #include "factoryPatches.h"
+#include "gfx/seadColor.h"
 #include "hooks.hpp"
 #include "hooksFreezeTag.hpp"
 #include "imgui.h"
@@ -73,7 +78,6 @@
 // ===== GLOBAL VARIABLES =====
 static int pInfSendTimer = 0;
 static int gameInfSendTimer = 0;
-static int chatUpdateTimer = 0;
 static int debugPuppetIndex = 0;
 static int debugCaptureIndex = 0;
 static int pageIndex = 0;
@@ -284,25 +288,22 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
         gameInfSendTimer = 0;
     }
 
-    // In updatePlayerInfo function, replace the chat timer section:
-
-    if (chatUpdateTimer >= 450) {
-        // Shift messages up and clear the oldest
-        if (!Client::getMessage(0).isEmpty()) {
-            Client::setMessage(0, Client::getMessage(1).cstr());
-            Client::setMessage(1, Client::getMessage(2).cstr());
-            Client::setMessage(2, "");
-            chatUpdateTimer = 0;
-        }
-    } else if (!Client::getMessage(0).isEmpty() || !Client::getMessage(1).isEmpty() || !Client::getMessage(2).isEmpty()) {
-        chatUpdateTimer++;
-    }
-
     pInfSendTimer++;
     gameInfSendTimer++;
 }
 
 // ===== MAIN DRAW HOOK =====
+static int msgCount = 0;
+
+struct DisplayMessage {
+    sead::FixedSafeString<MESSAGESIZE> text;
+    float displayTimer;
+    bool active;
+};
+
+static const int maxDisplayMsgCount = 5;
+static const float messageDisplayDuration = 10.0f;
+static DisplayMessage displayMessages[maxDisplayMsgCount] = {};
 
 void drawMain(al::Sequence* curSequence) {
     GameModeManager* gmm = GameModeManager::instance();
@@ -330,50 +331,97 @@ void drawMain(al::Sequence* curSequence) {
     bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0) || (strcmp(currentUser, "KleinTimmi") == 0) ||
                             (strcmp(currentUser, "Katzen") == 0);
 
-    // // ===== CHAT RENDERING (Non-debug mode, in-game only) =====
-    // if (!debugMode && curScene && isInGame) {
-    //     // Try to get camera for chat rendering
-    //     sead::LookAtCamera* cam = &const_cast<sead::LookAtCamera&>(al::getLookAtCamera(curScene, 0));
-    //     sead::Projection* projection = cam ? &const_cast<sead::Projection&>(al::getProjectionSead(curScene, 0)) : nullptr;
+    // ===== CHAT RENDERING (Non-debug mode, in-game only) =====
+    if (!debugMode && curScene && isInGame) {
+        auto* renderer = hk::gfx::DebugRenderer::instance();
+        auto* drawContext = Application::instance()->mDrawSystemInfo->drawContext;
 
-    //     if (cam && projection) {
-    //         sead::PrimitiveRenderer* renderer = sead::PrimitiveRenderer::instance();
-    //         // renderer->setDrawContext(drawContext);
-    //         renderer->setCamera(*cam);
-    //         renderer->setProjection(*projection);
+        float deltaTime = Time::deltaTime;
+        float baseY = (dispHeight * 7 / 10) + 95.f - 5.f;
+        float lineHeight = 30.f;
 
-    //         int msgCount = 0;
-    //         for (int i = 0; i < 3; i++) {
-    //             if (!Client::getMessage(i).isEmpty())
-    //                 msgCount++;
-    //         }
+        // Update display timer and active state
+        for (int i = 0; i < maxDisplayMsgCount; i++) {
+            if (displayMessages[i].active) {
+                displayMessages[i].displayTimer -= deltaTime;
+                if (displayMessages[i].displayTimer <= 0.0f) {
+                    displayMessages[i].active = false;
+                    msgCount--;
+                }
+            }
+        }
 
-    //         if (msgCount > 0) {
-    //             drawChatBackground((agl::DrawContext*)drawContext, (float)(4 - msgCount));
+        // Add new messages from the queue if there's space
+        while (msgCount < maxDisplayMsgCount && Client::get()->getMsgCount() > 0) {
+            sead::FixedSafeString<MESSAGESIZE>* msg = Client::get()->tryGetMessage();
+            if (msg) {
+                // Find an empty slot
+                for (int i = 0; i < maxDisplayMsgCount; i++) {
+                    if (!displayMessages[i].active) {
+                        displayMessages[i].text = *msg;
+                        displayMessages[i].displayTimer = messageDisplayDuration;
+                        displayMessages[i].active = true;
+                        msgCount++;
+                        break;
+                    }
+                }
+                Client::getClientHeap()->free(msg);
+            }
+        }
 
-    //             gTextWriter->beginDraw();
-    //             gTextWriter->setScaleFromFontHeight(15.f);
+        renderer->begin(drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
+        renderer->clear();
 
-    //             float baseY = (dispHeight * 7 / 10) + 95.f - 5.f;
-    //             float lineHeight = 18.f;
+        if (msgCount > 0) {
+            float charWidth = 15.f;
+            int maxCharCount = 0;
+            for (int i = 0; i < maxDisplayMsgCount; i++) {
+                if (displayMessages[i].active) {
+                    int len = displayMessages[i].text.calcLength();
+                    if (len > maxCharCount) {
+                        maxCharCount = len;
+                    }
+                }
+            }
+            float lineWidth = 10.f + charWidth * maxCharCount + 3.f;
 
-    //             // Draw messages from oldest to newest (bottom to top)
-    //             for (int i = msgCount - 1; i >= 0; i--) {
-    //                 if (!Client::getMessage(i).isEmpty()) {
-    //                     float yPos = baseY - (lineHeight * (msgCount - 1 - i));
-    //                     gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, yPos));
-    //                     gTextWriter->printf("%s\n", Client::getMessage(i).cstr());
-    //                 }
-    //             }
+            hk::gfx::Vertex bl = {{0, baseY + lineHeight + 10}, {0, 1.0}, 0xef000000};
+            hk::gfx::Vertex tl = {{0, baseY - (msgCount - 1) * lineHeight - 10}, {0, 0}, 0xef000000};
+            hk::gfx::Vertex tr = {{lineWidth, baseY - (msgCount - 1) * lineHeight - 10}, {1.0, 0}, 0xef000000};
+            hk::gfx::Vertex br = {{lineWidth, baseY + lineHeight + 10}, {1.0, 1.0}, 0xef000000};
 
-    //             gTextWriter->endDraw();
-    //         }
-    //     }
+            renderer->drawQuad(tl, tr, br, bl);
+        }
 
-    //     isInGame = false;
-    //     al::executeDraw(curSequence->mLayoutKit, "２Ｄバック（メイン画面）");
-    //     return;
-    // }
+        // Draw all active messages
+
+        // TODO: Fix Outline
+        int displayIndex = 0;
+        for (int i = 0; i < maxDisplayMsgCount; i++) {
+            if (displayMessages[i].active) {
+                float yPos = baseY - (lineHeight * displayIndex);
+                hk::util::Vector2f pos(10.f, yPos);
+                hk::util::Vector2f shadowPos = pos + hk::util::Vector2f(2.f, 2.f);
+                sead::Color4f color(255, 255, 255, 255);
+                u32 coloru32 = hk::gfx::rgba(color.a, color.g, color.b, color.a);
+                u8 shadowAlpha = fmax(0.0f, color.a - 25);
+                u32 shadowColor = hk::gfx::rgba(0, 0, 0, shadowAlpha);
+                renderer->setGlyphHeight(30.f);
+
+                renderer->drawString(shadowPos, displayMessages[i].text.cstr(), shadowColor);
+
+                // then draw text
+                renderer->drawString(pos, displayMessages[i].text.cstr(), coloru32);
+                displayIndex++;
+            }
+        }
+
+        renderer->end();
+
+        isInGame = false;
+
+        return;
+    }
 
     // ===== NON-DEBUG MODE EXIT =====
     if (!debugMode) {
@@ -419,8 +467,8 @@ void drawMain(al::Sequence* curSequence) {
     }
 
     // Queue info
-    ImGui::Text("Queue Count: %d/%d (Send) %d/%d (Receive)\n", socket->getSendCount(), socket->getSendMaxCount(), socket->getRecvCount(),
-                socket->getRecvMaxCount());
+    ImGui::Text("Queue Count: %d/%d (Send) %d/%d (Receive) %d/%d (Msg)\n", socket->getSendCount(), socket->getSendMaxCount(), socket->getRecvCount(),
+                socket->getRecvMaxCount(), Client::get()->getMsgCount(), Client::get()->getMaxMsgCount());
 
     ImGui::Text("Mod version: %s\n", TOSTRING(BUILDVERSTR));
     ImGui::Text("Server is running version: %s\n", Client::getServerVersion());
@@ -679,4 +727,5 @@ extern "C" void hkMain() {
     icePhysicsHook.installAtSym<"_ZN2al11isFloorCodeERKNS_8TriangleEPKc">();  // Enables Ice Physics
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
+    hk::gfx::DebugRenderer::instance()->installHooks();
 }
