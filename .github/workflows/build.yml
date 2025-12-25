@@ -1,26 +1,41 @@
-name: Build
+name: build
 
-
-on:
-  push:
-    branches:
-    - '**'
-    tags:
-    - '**'
-    - '!v[0-9]+.[0-9]+.[0-9]+'
-  pull_request:
-    branches:
-    - '**'
-
+on: [workflow_dispatch, push, pull_request]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
-    -
-      name : Checkout
-      uses : actions/checkout@v4
-    -
-      name : Build artifacts
-      uses : ./.github/actions/build
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Set up dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip git wget
+          make -j32 setup
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 20
+          sudo apt-get install -y clang-20 llvm-20 lld-20
+          sudo rm -rf /usr/bin/clang
+          sudo rm -rf /usr/bin/llvm
+          sudo rm -rf /usr/bin/lld
+          sudo rm -rf /usr/bin/clang++
+          sudo ln -s /usr/bin/clang-20 /usr/bin/clang
+          sudo ln -s /usr/bin/llvm-20 /usr/bin/llvm
+          sudo ln -s /usr/bin/lld-20 /usr/bin/lld
+          sudo ln -s /usr/bin/clang++-20 /usr/bin/clang++
+          python3 -m pip install pyelftools mmh lz4
+      - name: Build
+        run: |
+          make -j32 release_build
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: |
+            build/*.nss
+            build/main.npdm
+            build/*.nso
