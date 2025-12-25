@@ -34,8 +34,8 @@ static HkTrampoline<void, PlayerHitPointData*> playerHitPointDamageHook = hk::ho
     }
 });
 
-static HkTrampoline<bool, GameDataFile*> isKidsModeHook = hk::hook::trampoline(
-    [](GameDataFile* file) -> bool { return GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ? true : isKidsModeHook.orig(file); });
+static HkTrampoline<bool, HackCap*> isEnableRescuePlayerHook = hk::hook::trampoline(
+    [](HackCap* hackCap) -> bool { return GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) ? true : isEnableRescuePlayerHook.orig(hackCap); });
 
 static HkTrampoline<bool, Shine*, al::SensorMsg*, al::HitSensor*, al::HitSensor*> freezeMoonHitboxHook =
     hk::hook::trampoline([](Shine* shine, al::SensorMsg* msg, al::HitSensor* sourve, al::HitSensor* target) -> bool {

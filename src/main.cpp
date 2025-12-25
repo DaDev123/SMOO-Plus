@@ -106,7 +106,7 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
 
     gameSystemInit.orig(gameSystem);
 
-    //nn::hid::InitializeMouse();
+    // nn::hid::InitializeMouse();
 });
 
 HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSystem* gameSystem) -> void {
@@ -116,7 +116,7 @@ HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSys
 
     /* ImGui */
 
-    //imgui::updateImGuiInput();
+    // imgui::updateImGuiInput();
 
     ImGui::NewFrame();
     drawMain(gameSystem->mSequence);
@@ -470,6 +470,7 @@ void drawMain(al::Sequence* curSequence) {
     ImGui::Text("Queue Count: %d/%d (Send) %d/%d (Receive) %d/%d (Msg)\n", socket->getSendCount(), socket->getSendMaxCount(), socket->getRecvCount(),
                 socket->getRecvMaxCount(), Client::get()->getMsgCount(), Client::get()->getMaxMsgCount());
 
+    ImGui::Text("Framework: Hakkun");
     ImGui::Text("Mod version: %s\n", TOSTRING(BUILDVERSTR));
     ImGui::Text("Server is running version: %s\n", Client::getServerVersion());
 
@@ -705,7 +706,7 @@ extern "C" void hkMain() {
     isCheckpointWarpAllowedHook.installAtSym<"_ZNK9MapLayout22isEnableCheckpointWarpEv">();             // always allow warping except in freeze tag
     freezeDeathAreaHook.installAtSym<"_ZN2al13isInDeathAreaEPKNS_9LiveActorE">();                       // Replaces functionality of death areas in freeze tag
     playerHitPointDamageHook.installAtSym<"_ZN18PlayerHitPointData6damageEv">();                        // disables the damage function in Freeze Tag
-    isKidsModeHook.installAtSym<"_ZNK12GameDataFile10isKidsModeEv">();                                  // Forces kids mode to be enabled during Freeze Tag
+    isEnableRescuePlayerHook.installAtSym<"_ZNK7HackCap20isEnableRescuePlayerEv">();                    // Forces kids mode to be enabled during Freeze Tag
     freezeMoonHitboxHook.installAtSym<"_ZN5Shine10receiveMsgEPKN2al9SensorMsgEPNS0_9HitSensorES5_">();  // When mode enabled, disable moon
                                                                                                         // hitboxes to avoid softlocks
 
@@ -721,7 +722,7 @@ extern "C" void hkMain() {
     // QOL Patches
     hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
     hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);  // Notes Demo Skip
-    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);  // Removes Assist Mode Ledge Grabs
+    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);  // Removes Assist Mode Ledge Grabs
 
     // Twists
     icePhysicsHook.installAtSym<"_ZN2al11isFloorCodeERKNS_8TriangleEPKc">();  // Enables Ice Physics

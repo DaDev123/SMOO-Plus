@@ -561,3 +561,4 @@ _ZN4sead12MessageQueueD1Ev
 _ZN4sead12MessageQueueD2Ev
 _ZN14GameDataHolder15changeNextStageEPK15ChangeStageInfoi
 _ZN2al13isPadHoldLeftEi
+_ZNK7HackCap20isEnableRescuePlayerEv
