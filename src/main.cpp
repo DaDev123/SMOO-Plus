@@ -477,6 +477,7 @@ void drawMain(al::Sequence* curSequence) {
     // ===== AUTHORIZED USER ONLY CONTENT =====
     if (!isAuthorizedUser) {
         if (gmm->getMode<GameModeBase>()) {
+            ImGui::Text("\n------------------- Controls --------------------\n");
             gmm->getMode<GameModeBase>()->debugMenuControls();
         }
         ImGui::End();
@@ -618,6 +619,11 @@ void drawMain(al::Sequence* curSequence) {
         isInGame = false;
         ImGui::End();
         return;
+    }
+
+    if (gmm->getMode<GameModeBase>()) {
+        ImGui::Text("\n------------------- Controls --------------------\n");
+        gmm->getMode<GameModeBase>()->debugMenuControls();
     }
     ImGui::End();
 }

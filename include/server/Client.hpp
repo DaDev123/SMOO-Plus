@@ -215,6 +215,8 @@ public:
         }
     }
 
+    bool mIsAllowReconnect = false;
+
     // ===== Message System =====
     int getMsgCount() { return mMessageQueue.mMessageQueueInner._count; };
     static int getMaxMsgCount() { return sMaxMsgCount; };

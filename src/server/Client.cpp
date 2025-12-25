@@ -26,8 +26,10 @@
 
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
+#include "Library/Base/StringUtil.h"
 #include "Library/LiveActor/LiveActor.h"
 #include "logger.hpp"
+#include "nn/os.h"
 #include "nn/socket.h"
 #include "packets/MessagePacket.h"
 #include "packets/Packet.h"
@@ -142,6 +144,8 @@ bool Client::startThread() {
 }
 void Client::restartConnection() {
     // Just close the socket without sending disconnect packet
+    if (!sInstance->mIsAllowReconnect)
+        return;
 
     // send disconnect packet
     Packet* dc = new (sInstance->mHeap) Packet();
@@ -168,6 +172,8 @@ void Client::restartConnection() {
     sInstance->mSocket->startEndThread();
 
     sInstance->mIsConnectionActive = sInstance->mSocket->init(sInstance->mServerIP.cstr(), sInstance->mServerPort).IsSuccess();
+
+    nn::os::SleepThread(nn::TimeSpan::FromMilliSeconds(10));  // BAD
 
     if (sInstance->lastGameInfPacket != sInstance->emptyGameInfPacket) {
         // Assume game packets are empty from first connection
@@ -241,6 +247,12 @@ bool Client::startConnection() {
 
                     maxPuppets = initPacket->maxPlayers - 1;
                     mPuppetHolder->resizeHolder(maxPuppets);
+
+                    if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
+                        sInstance->mIsAllowReconnect = true;
+                    } else {
+                        sInstance->mIsAllowReconnect = false;
+                    }
 
                     setServerVersion(initPacket->ServerVersion);
                     Logger::log("Server version: %s\n", initPacket->ServerVersion);
@@ -502,6 +514,11 @@ void Client::readFunc() {
                 Logger::log("Server Max Player Size: %d\n", initPacket->maxPlayers);
                 maxPuppets = initPacket->maxPlayers - 1;
                 mPuppetHolder->resizeHolder(maxPuppets);
+                if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
+                    sInstance->mIsAllowReconnect = true;
+                } else {
+                    sInstance->mIsAllowReconnect = false;
+                }
                 setServerVersion(initPacket->ServerVersion);
                 Logger::log("Server version: ", initPacket->ServerVersion);
                 break;

@@ -225,7 +225,7 @@ void StageSceneStateServerConfig::updateNetworkSettingsOptions() {
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERLIST].copy(u"Browse Server List");
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERIP].copy(u"Custom Server IP");
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERPORT].copy(u"Custom Server Port");
-    msgList[MENU_NETWORK]->mBuffer[NETW_RECONNECT].copy(u"Reconnect to Server");
+    msgList[MENU_NETWORK]->mBuffer[NETW_RECONNECT].copy(Client::get()->mIsAllowReconnect ? u"Reconnect to Server" : u"Reconnect to Server (Disabled)");
 }
 
 void StageSceneStateServerConfig::exeNetworkSettings() {
@@ -633,8 +633,9 @@ void StageSceneStateServerConfig::appear() {
 
 void StageSceneStateServerConfig::kill() {
     if (Client::hasServerChanged()) {
-        Client::restartConnection();
-        Client::showUIMessage(u"Reconnecting...");
+        if (Client::get()->mIsAllowReconnect)
+            Client::restartConnection();
+        Client::showUIMessage(Client::get()->mIsAllowReconnect ? u"Reconnecting..." : u"Server changed. Please restart the game.");
         for (int i = 0; i < 180; i++)
             nn::os::YieldThread();
         Client::hideUIMessage();
