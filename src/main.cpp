@@ -709,12 +709,12 @@ extern "C" void hkMain() {
                                                                                        // player if they reach the map border
 
     // Freeze tag hooks
-    isCheckpointWarpAllowedHook.installAtSym<"_ZNK9MapLayout22isEnableCheckpointWarpEv">();             // always allow warping except in freeze tag
-    freezeDeathAreaHook.installAtSym<"_ZN2al13isInDeathAreaEPKNS_9LiveActorE">();                       // Replaces functionality of death areas in freeze tag
-    playerHitPointDamageHook.installAtSym<"_ZN18PlayerHitPointData6damageEv">();                        // disables the damage function in Freeze Tag
-    isEnableRescuePlayerHook.installAtSym<"_ZNK7HackCap20isEnableRescuePlayerEv">();                    // Forces kids mode to be enabled during Freeze Tag
-    freezeMoonHitboxHook.installAtSym<"_ZN5Shine10receiveMsgEPKN2al9SensorMsgEPNS0_9HitSensorES5_">();  // When mode enabled, disable moon
-                                                                                                        // hitboxes to avoid softlocks
+    isCheckpointWarpAllowedHook.installAtSym<"_ZNK9MapLayout22isEnableCheckpointWarpEv">();  // always allow warping except in freeze tag
+    freezeDeathAreaHook.installAtSym<"_ZN2al13isInDeathAreaEPKNS_9LiveActorE">();            // Replaces functionality of death areas in freeze tag
+    playerHitPointDamageHook.installAtSym<"_ZN18PlayerHitPointData6damageEv">();             // disables the damage function in Freeze Tag
+    isEnableRescuePlayerHook.installAtSym<"_ZNK7HackCap20isEnableRescuePlayerEv">();         // Forces kids mode to be enabled during Freeze Tag
+    freezeMoonHitboxHook.installAtSym<"_ZN5Shine14makeActorAliveEv">();                      // When mode enabled, disable moon
+                                                                                             // hitboxes to avoid softlocks
 
     // custom bootscreen hooks
     hk::hook::writeBranchLinkAtSym<"R_hakoniwaSetNerveSetup">(speedboot::hakoniwaSetNerveSetup);

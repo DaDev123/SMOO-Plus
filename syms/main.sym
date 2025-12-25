@@ -564,3 +564,4 @@ _ZN2al13isPadHoldLeftEi
 _ZNK7HackCap20isEnableRescuePlayerEv
 _ZN2al17isStartWithStringEPKcS1_
 _ZN18CommonVerticalList13setEnableDataEPKb
+_ZN5Shine14makeActorAliveEv

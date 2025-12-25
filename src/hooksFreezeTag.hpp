@@ -39,7 +39,7 @@ static HkTrampoline<bool, HackCap*> isEnableRescuePlayerHook = hk::hook::trampol
 
 static HkTrampoline<bool, Shine*, al::SensorMsg*, al::HitSensor*, al::HitSensor*> freezeMoonHitboxHook =
     hk::hook::trampoline([](Shine* shine, al::SensorMsg* msg, al::HitSensor* sourve, al::HitSensor* target) -> bool {
-        if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
+        if (GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
             return true;
         }
         return freezeMoonHitboxHook.orig(shine, msg, sourve, target);
