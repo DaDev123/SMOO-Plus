@@ -41,7 +41,7 @@ setup:
 	python sys/tools/setup_sail.py
 
 format:
-	clear
+	clear || true
 	find ./src -name "*.*" | xargs clang-format -i
 
 clean:
