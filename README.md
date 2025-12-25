@@ -1,6 +1,7 @@
 # Super Mario Odyssey Online - PLUS
 
 Welcome to the official repository for the Super Mario Odyssey Online - PLUS (SMOO-Plus) mod! 
+
 SMOO-Plus is a version of the Super Mario Odyssey Online mod which adds multiple new features, optimisations and a LOT more
 
 
