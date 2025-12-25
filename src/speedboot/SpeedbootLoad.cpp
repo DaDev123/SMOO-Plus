@@ -174,6 +174,14 @@ void SpeedbootLoad::updateTextElements() {
     al::setPaneString(this, "TxtDebug", debugString.cstr(), 0);
     al::setPaneString(this, "TxtCurModName", u"Super Mario Odyssey Online - Plus", 0);
     al::setPaneStringFormat(this, "TxtCurModVersion", "%s\n", TOSTRING(BUILDVERSTR));
+    al::setPaneString(this, "TxtCredits", u"CONTRIBUTORS", 0);
+    al::setPaneString(this, "TxtContributors",
+                      u"MrKatzenGaming\n"
+                      u"KleinTimmi\n"
+                      u"Neorix09\n"
+                      u"KGamer77\n"
+                      u"Dimenzio",
+                      0);
 }
 
 void SpeedbootLoad::exeDecrease() {
