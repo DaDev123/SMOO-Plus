@@ -106,7 +106,7 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
 
     gameSystemInit.orig(gameSystem);
 
-    nn::hid::InitializeMouse();
+    //nn::hid::InitializeMouse();
 });
 
 HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSystem* gameSystem) -> void {
@@ -116,7 +116,7 @@ HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSys
 
     /* ImGui */
 
-    imgui::updateImGuiInput();
+    //imgui::updateImGuiInput();
 
     ImGui::NewFrame();
     drawMain(gameSystem->mSequence);
