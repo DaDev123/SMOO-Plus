@@ -1,4 +1,4 @@
-.PHONY: debug clean release file_structure
+.PHONY: debug clean release file_structure release_build
 
 # Color definitions
 RESET := \033[0m
@@ -29,9 +29,16 @@ ECONTENTPATH :=  $(EMUPATH)/$(PROJNAME)
 debug: format
 	cmake -DCMAKE_BUILD_TYPE=Debug -DDEBUG=TRUE -DPROJNAME=$(PROJNAME) -DSMOVER=$(SMOVER) -DBUILDVER=$(BUILDVER) -DBUILDVERSTR=$(BUILDVERSTR) -DSERVERIP=$(SERVERIP) -DDEBUGLOG=$(DEBUGLOG) -S . -B build && $(MAKE) -C build
 
-release: clean format
+release_build: clean format
 	cmake -DCMAKE_BUILD_TYPE=Debug -DDEBUG=FALSE -DPROJNAME=$(PROJNAME) -DSMOVER=$(SMOVER) -DBUILDVER=$(BUILDVER) -DBUILDVERSTR=$(BUILDVERSTR) -DSERVERIP=$(SERVERIP) -DDEBUGLOG=0 -S . -B build && $(MAKE) -C build
-	python ./make-Release/release.py
+
+release:
+	$(MAKE) release_build
+	$(MAKE) file_structure
+
+setup:
+	python sys/tools/setup_libcxx_prepackaged.py
+	python sys/tools/setup_sail.py
 
 format:
 	clear
