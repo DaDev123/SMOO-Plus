@@ -565,3 +565,5 @@ _ZNK7HackCap20isEnableRescuePlayerEv
 _ZN2al17isStartWithStringEPKcS1_
 _ZN18CommonVerticalList13setEnableDataEPKb
 _ZN5Shine14makeActorAliveEv
+_ZN2al20getSceneResourceHeapEv
+_ZN2al20getWorldResourceHeapEv

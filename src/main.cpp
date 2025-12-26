@@ -60,6 +60,7 @@
 #include "imgui.h"
 #include "Imgui.hpp"
 #include "layouts/ConnectionStatus.h"
+#include "Library/Memory/HeapUtil.h"
 #include "logger.hpp"
 #include "nn/hid.h"
 #include "nn/socket.h"
@@ -81,7 +82,7 @@ static int gameInfSendTimer = 0;
 static int debugPuppetIndex = 0;
 static int debugCaptureIndex = 0;
 static int pageIndex = 0;
-static const int maxPages = 3;
+static const int maxPages = 4;
 
 al::SequenceInitInfo* initInfo;
 
@@ -600,6 +601,46 @@ ImGui::SetWindowPos(ImVec2(0, dispHeight / 3.f), ImGuiCond_FirstUseEver);
                 break;
             }
             case 2: {
+                ImGui::Text("------------------- Heaps --------------------\n\n");
+
+                auto displayHeapInfo = [](sead::Heap* heap, const char* heapName, bool isKB = false) {
+                    if (!heap) {
+                        return;
+                    }
+
+                    ImGui::Text("%s   ", heapName);
+                    ImGui::SameLine();
+
+                    ImVec2 pos = ImGui::GetCursorScreenPos();
+                    pos.x -= 10;
+                    ImVec2 size(300, 24);
+
+                    f32 const progress = 1.0f - static_cast<float>(heap->getFreeSize()) / heap->getSize();
+
+                    ImGui::GetWindowDrawList()->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), 0xFF966C52);  // fill
+                    ImGui::GetWindowDrawList()->AddRectFilled(pos, ImVec2(pos.x + size.x * progress, pos.y + size.y),
+                                                              0xFF13869D);  // fill
+
+                    float used = isKB ? (heap->getSize() - heap->getFreeSize()) / 1024.f : (heap->getSize() - heap->getFreeSize()) / (1024.f * 1024.f);
+                    float max = isKB ? heap->getSize() / 1024.f : heap->getSize() / (1024.f * 1024.f);
+                    float percentUsed = (heap->getSize() - heap->getFreeSize()) / (float(heap->getSize()) / 100);
+                    char buf[32];
+                    snprintf(buf, sizeof(buf), "%.3f/%.3f %s", used, max, isKB ? "KB" : "MB");
+
+                    ImGui::ProgressBar(percentUsed / 100, ImVec2(-FLT_MIN, 0), buf);
+                };
+
+                displayHeapInfo(Client::getClientHeap(), "Client", true);
+                displayHeapInfo(GameModeManager::sInstance->getHeap(), "GameMode", true);
+                displayHeapInfo(al::getStationedHeap(), "Stationed");
+                displayHeapInfo(al::getSequenceHeap(), "Sequence");
+                displayHeapInfo(al::getSceneHeap(), "Scene");
+                displayHeapInfo(al::getSceneResourceHeap(), "SceneResource", true);
+                displayHeapInfo(al::getWorldResourceHeap(), "WorldResource");
+
+                break;
+            }
+            case 3: {
                 ImGui::Text("------------------- Controls --------------------\n\n");
 
                 if (gameModeBase) {
