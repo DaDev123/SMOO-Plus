@@ -28,7 +28,7 @@ Before installing, Ensure that your switch is hacked. If not, follow [This Guide
 
 1. Download the latest mod build from either from the [Releases](https://github.com/DaDev123/NEW-SMOO-Plus/releases/latest) tab. (Alternatively, build from source)
 2. Extract the downloaded zip onto the root of your Switch's SD card.
-3. If you need to host an online server, head over to the [Super Mario Odyssey Online - PLUS Server](https://github.com/Sanae6/SmoOnlineServer) repository and follow the instructions there to set up the server.
+3. If you need to host an online server, head over to the [Super Mario Odyssey Online - PLUS Server](https://github.com/KleinTimmi/Smoo-Plus-Server) repository and follow the instructions there to set up the server.
 4. Launch the game! Upon first time bootup, the mod should ask for a server IP to save to the games common save file. This IP address will be the server you wish to connect to every time you launch the game with the mod installed. (Note: un-installing the mod and launching the game will remove the server IP from the common save file.)
 
 ## Gamemode Info
@@ -77,7 +77,7 @@ Before installing, Ensure that your switch is hacked. If not, follow [This Guide
 
 - CMake + GNUMake
 - cURL
-- Clang, LLVM, LLD 19 or later
+- Clang, LLVM, LLD 20 or later
 - Python 3.10, `pyelftools`, `mmh`, and `lz4` packages
 
 ### Building
