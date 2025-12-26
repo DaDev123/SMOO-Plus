@@ -42,7 +42,7 @@ setup:
 
 format:
 	clear || true
-	find ./src -name "*.*" | xargs clang-format -i
+	find ./src -name "*.*" | xargs clang-format -i || true
 
 clean:
 	rm -r build || true
