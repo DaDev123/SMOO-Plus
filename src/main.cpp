@@ -112,9 +112,6 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
     nn::hid::InitializeMouse();
     nn::hid::InitializeKeyboard();
 
-    if (nn::hid::GetKeyboardState(nullptr) != nn::hid::Keyb) {
-        Logger::log("Keyboard initialization failed!");
-    }
     
 });
 

@@ -63,14 +63,14 @@ namespace StageWarper
 }
 
 
-    if (SmooSettings::HAS_KEYBOARD == true)
+
+    void ShowSearchWindow()
     {
-        void ShowSearchWindow()
-        {
-            if (!IsOpen)
-            
+         if (!IsOpen)
                 return;
 
+        if (SmooSettings::HAS_KEYBOARD == true)
+        {
             ImGui::Begin(
                 "Stage Search",
                 &IsOpen,
@@ -84,31 +84,11 @@ namespace StageWarper
                 IM_ARRAYSIZE(searchBuf)
             );
 
-            ImGui::Separator();
+        ImGui::Separator();
 
-            // Child-Fenster mit allen (gefilterten) Stages
-            DrawSearchResults();
+        DrawSearchResults();
 
-            ImGui::End();
-        }
-    }
-    else
-    {
-        void ShowSearchWindow()
-        {
-            if (!IsOpen)
-                return;
-
-            ImGui::Begin(
-                "Stage Search",
-                &IsOpen,
-                ImGuiWindowFlags_AlwaysAutoResize
-            );
-
-            ImGui::Text("Keyboard not detected!");
-            ImGui::Text("Please connect a keyboard to use the stage search feature.");
-
-            ImGui::End();
+        ImGui::End();
         }
     }
 
