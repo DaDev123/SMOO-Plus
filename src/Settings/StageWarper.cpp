@@ -97,7 +97,7 @@ namespace StageWarper
                 ImGuiWindowFlags_AlwaysAutoResize
             );
 
-            ImGui::Text("Keyboard not available.");
+            ImGui::Text("Not Implemented yet.");
             
 
             ImGui::End();

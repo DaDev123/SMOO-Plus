@@ -404,11 +404,18 @@ void drawMain(al::Sequence* curSequence) {
 
         // TODO: Fix Outline
         int displayIndex = 0;
+        ImVec2 winPos = ImGui::GetWindowPos();
+        float winX = winPos.x;
+        float winY = winPos.y;
         for (int i = 0; i < maxDisplayMsgCount; i++) {
             if (displayMessages[i].active) {
-                float yPos = baseY - (lineHeight * displayIndex);
-                hk::util::Vector2f pos(10.f, yPos);
+                // Position relativ zum Fenster
+                float yPos = 20.f + lineHeight * displayIndex; // 20px Padding vom Fenster-Top
+                float xPos = 10.f; // Padding von links
+
+                hk::util::Vector2f pos(winX + xPos, winY + yPos);
                 hk::util::Vector2f shadowPos = pos + hk::util::Vector2f(2.f, 2.f);
+
                 sead::Color4f color(255, 255, 255, 255);
                 u32 coloru32 = hk::gfx::rgba(color.a, color.g, color.b, color.a);
                 u8 shadowAlpha = fmax(0.0f, color.a - 25);
@@ -438,7 +445,7 @@ void drawMain(al::Sequence* curSequence) {
                  ImGuiWindowFlags_NoSavedSettings /*| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse*/| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus |
                      ImGuiWindowFlags_NoScrollbar);
 
-    ImGui::SetWindowPos(ImVec2(0, (dispHeight / 3.f)), ImGuiCond_Always);
+    ImGui::SetWindowPos(ImVec2(0, dispHeight / 3.f), ImGuiCond_FirstUseEver);
     ImGui::SetWindowSize(ImVec2(al::getLayoutDisplayWidth() / 3.f, dispHeight - (dispHeight / 4.f)));
     // ===== DEBUG MODE RENDERING =====
 
