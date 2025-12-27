@@ -5,6 +5,7 @@
 #include "server/Client.hpp"
 
 namespace SmooSettings {
+    bool HAS_KEYBOARD = false;
 void showSmooSettingsWindow(bool* p_open) {
     ImGui::Begin("SMOO+ Settings", p_open, ImGuiWindowFlags_AlwaysAutoResize);
 

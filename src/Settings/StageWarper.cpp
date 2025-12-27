@@ -1,4 +1,5 @@
 #include "Settings/StageWarper.hpp"
+#include "Settings/SmooSettings.hpp"
 #include "nn/hid.h"
 #include <imgui.h>
 #include <algorithm>
@@ -84,11 +85,22 @@ namespace StageWarper
                 IM_ARRAYSIZE(searchBuf)
             );
 
-        ImGui::Separator();
+            ImGui::Separator();
 
-        DrawSearchResults();
+            DrawSearchResults();
 
-        ImGui::End();
+            ImGui::End();
+        }else{
+            ImGui::Begin(
+                "Stage Search",
+                &IsOpen,
+                ImGuiWindowFlags_AlwaysAutoResize
+            );
+
+            ImGui::Text("Keyboard not available.");
+            
+
+            ImGui::End();
         }
     }
 
