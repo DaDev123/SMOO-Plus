@@ -1,51 +1,48 @@
 #include "Settings/StageWarper.hpp"
-#include "Settings/SmooSettings.hpp"
-#include "nn/hid.h"
-#include <imgui.h>
-#include <algorithm>
-#include "server/Client.hpp"
+
+#include "al/Library/Base/StringUtil.h"
+#include "al/Library/Sequence/Sequence.h"
+
+#include "game/Scene/StageScene.h"
 #include "game/Sequence/ChangeStageInfo.h"
+#include "game/Sequence/HakoniwaSequence.h"
 #include "game/System/GameDataFunction.h"
 #include "game/System/GameDataHolderAccessor.h"
-#include "game/Scene/StageScene.h"
 #include "game/System/GameSystem.h"
+
+#include <algorithm>
+#include <imgui.h>
+
+#include "nn/hid.h"
+#include "server/Client.hpp"
 #include "server/gamemode/GameModeBase.hpp"
-#include "al/Library/Sequence/Sequence.h"
-#include "al/Library/Base/StringUtil.h"
-#include "game/Sequence/HakoniwaSequence.h"
+#include "Settings/SmooSettings.hpp"
 
+namespace StageWarper {
 
-namespace StageWarper
-{
+static std::string pendingWarpStage;
 
-    static std::string pendingWarpStage;
+bool IsOpen = false;
 
+static char searchBuf[200] = "";
 
-    bool IsOpen = false;
+static const int g_stagesCount = sizeof(g_stages) / sizeof(g_stages[0]);
 
-    static char searchBuf[200] = "";
-
-    static const int g_stagesCount = sizeof(g_stages) / sizeof(g_stages[0]);
-
-    static void DrawSearchResults()
-{
+static void DrawSearchResults() {
     const char* query = searchBuf;
 
-    ImGui::BeginChild("stage_results", ImVec2(0, 150), true); // kleineres Fenster
+    ImGui::BeginChild("stage_results", ImVec2(0, 150), true);  // kleineres Fenster
 
-    if (query[0] != '\0')
-    {
+    if (query[0] != '\0') {
         int displayed = 0;
-        for (int i = 0; i < g_stagesCount && displayed < 5; ++i)
-        {
+        for (int i = 0; i < g_stagesCount && displayed < 5; ++i) {
             const char* stage = g_stages[i];
 
             // Case-insensitive Match
             if (!strcasestr(stage, query))
                 continue;
 
-            if (ImGui::Selectable(stage))
-            {
+            if (ImGui::Selectable(stage)) {
                 warpPlayer(stage);
             }
 
@@ -54,58 +51,37 @@ namespace StageWarper
 
         if (displayed == 0)
             ImGui::Text("No matches");
-    }
-    else
-    {
+    } else {
         ImGui::Text("Type to search stages...");
     }
 
     ImGui::EndChild();
 }
 
+void ShowSearchWindow() {
+    if (!IsOpen)
+        return;
 
+    if (SmooSettings::HAS_KEYBOARD == true) {
+        ImGui::Begin("Stage Search", &IsOpen, ImGuiWindowFlags_AlwaysAutoResize);
 
-    void ShowSearchWindow()
-    {
-         if (!IsOpen)
-                return;
+        ImGui::InputTextWithHint("##stage_search", "Stage name...", searchBuf, IM_ARRAYSIZE(searchBuf));
 
-        if (SmooSettings::HAS_KEYBOARD == true)
-        {
-            ImGui::Begin(
-                "Stage Search",
-                &IsOpen,
-                ImGuiWindowFlags_AlwaysAutoResize
-            );
+        ImGui::Separator();
 
-            ImGui::InputTextWithHint(
-                "##stage_search",
-                "Stage name...",
-                searchBuf,
-                IM_ARRAYSIZE(searchBuf)
-            );
+        DrawSearchResults();
 
-            ImGui::Separator();
+        ImGui::End();
+    } else {
+        ImGui::Begin("Stage Search", &IsOpen, ImGuiWindowFlags_AlwaysAutoResize);
 
-            DrawSearchResults();
+        ImGui::Text("Not Implemented yet.");
 
-            ImGui::End();
-        }else{
-            ImGui::Begin(
-                "Stage Search",
-                &IsOpen,
-                ImGuiWindowFlags_AlwaysAutoResize
-            );
-
-            ImGui::Text("Not Implemented yet.");
-            
-
-            ImGui::End();
-        }
+        ImGui::End();
     }
+}
 
-GameDataHolder* tryGetGameDataHolder()
-{
+GameDataHolder* tryGetGameDataHolder() {
     auto* sequence = GameSystemFunction::getGameSystem()->mSequence;
     if (!sequence)
         return nullptr;
@@ -118,26 +94,16 @@ GameDataHolder* tryGetGameDataHolder()
     return hakoniwa->mGameDataHolderAccessor.mData;
 }
 
-
-void warpPlayer(const char* stageName)
-{
+void warpPlayer(const char* stageName) {
     GameDataHolder* holder = tryGetGameDataHolder();
     if (!holder)
         return;
 
     GameDataHolderWriter writer(holder);
 
-    ChangeStageInfo info(
-        writer.mData,
-        "",
-        stageName,
-        false,
-        -1,
-        ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO
-    );
+    ChangeStageInfo info(writer.mData, "", stageName, false, -1, ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO);
 
     GameDataFunction::tryChangeNextStage(writer, &info);
 }
-
 
 }  // namespace StageWarper

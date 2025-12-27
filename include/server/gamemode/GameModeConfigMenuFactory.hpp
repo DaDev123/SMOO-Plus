@@ -1,6 +1,7 @@
 #pragma once
 
 #include "al/Library/Factory/Factory.h"
+
 #include "server/freeze/FreezeTagConfigMenu.hpp"
 #include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/hns/HideAndSeekConfigMenu.hpp"

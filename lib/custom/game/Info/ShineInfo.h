@@ -3,7 +3,7 @@
 #include "Library/LiveActor/LiveActor.h"
 #include "prim/seadSafeString.h"
 
-struct ShineData; // unused class identical to this one (maybe)
+struct ShineData;  // unused class identical to this one (maybe)
 struct QuestInfo;
 struct UniqObjInfo;
 
@@ -26,12 +26,12 @@ public:
     void readShineData(const UniqObjInfo*);
     void copyShineInfo(const ShineInfo*);
 
-    sead::FixedSafeString<0x80> stageName = sead::FixedSafeString<0x80>();   // 0x0 (Size: 0x98)
-    sead::FixedSafeString<0x80> objectId = sead::FixedSafeString<0x80>();    // 0xA0
-    sead::FixedSafeString<0x80> mShineLabel = sead::FixedSafeString<0x80>(); // 0x138
+    sead::FixedSafeString<0x80> stageName = sead::FixedSafeString<0x80>();    // 0x0 (Size: 0x98)
+    sead::FixedSafeString<0x80> objectId = sead::FixedSafeString<0x80>();     // 0xA0
+    sead::FixedSafeString<0x80> mShineLabel = sead::FixedSafeString<0x80>();  // 0x138
 
-    int shineId;               // 1C8
-    const QuestInfo* curQuest; // 1D0
-    bool unkA;                 // 0x1D8
-    unsigned long timeDay;     // 0x1E0
+    int shineId;                // 1C8
+    const QuestInfo* curQuest;  // 1D0
+    bool unkA;                  // 0x1D8
+    unsigned long timeDay;      // 0x1E0
 };

@@ -37,6 +37,6 @@ public:
     al::LayoutActor* mPartsHardKey;
 };
 
-} // namespace al
+}  // namespace al
 
 static_assert(sizeof(al::WindowConfirmWait) == 0x138, "Size of WindowConfirmWait");

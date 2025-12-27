@@ -26,4 +26,4 @@ public:
     unsigned char padding[0x18];
     int mRumbleCount;
 };
-} // namespace al
+}  // namespace al

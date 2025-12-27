@@ -16,6 +16,6 @@ public:
     ~WorldEndBorderKeeper();
 
     al::LiveActor* mActor;
-    sead::Vector3f unkVec1; // = sead::Vector3f::ex;
-    sead::Vector3f unkVec2; // = sead::Vector3f::ex;
+    sead::Vector3f unkVec1;  // = sead::Vector3f::ex;
+    sead::Vector3f unkVec2;  // = sead::Vector3f::ex;
 };

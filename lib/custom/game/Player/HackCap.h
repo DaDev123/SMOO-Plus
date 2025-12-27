@@ -25,13 +25,16 @@ class PlayerSeparateCapFlag;
 
 class CapTargetInfo;
 
-class PlayerActorHakoniwa; // use a stub instead of the actual class file
+class PlayerActorHakoniwa;  // use a stub instead of the actual class file
 
 #define HACKSIZE sizeof(al::LiveActor)
 
 class HackCap : public al::LiveActor {
 public:
-    HackCap(const al::LiveActor*, const char*, const PlayerInput*, struct PlayerAreaChecker const*, const PlayerWallActionHistory*, const PlayerCapActionHistory*, const PlayerEyeSensorHitHolder*, const PlayerSeparateCapFlag*, const IUsePlayerCollision*, const IUsePlayerHeightCheck*, const PlayerWetControl*, const PlayerJointControlKeeper*, HackCapJudgePreInputSeparateThrow*, HackCapJudgePreInputSeparateJump*);
+    HackCap(const al::LiveActor*, const char*, const PlayerInput*, struct PlayerAreaChecker const*, const PlayerWallActionHistory*,
+            const PlayerCapActionHistory*, const PlayerEyeSensorHitHolder*, const PlayerSeparateCapFlag*, const IUsePlayerCollision*,
+            const IUsePlayerHeightCheck*, const PlayerWetControl*, const PlayerJointControlKeeper*, HackCapJudgePreInputSeparateThrow*,
+            HackCapJudgePreInputSeparateJump*);
 
     enum SwingHandType { Left, Right };
 
@@ -58,15 +61,13 @@ public:
     void syncHackDamageVisibility(bool);
     void endHack(void);
     void startSpinAttack(const char*);
-    void startThrow(
-        bool, const sead::Vector3f&, const sead::Vector3f&, float, const sead::Vector2f&, const sead::Vector2f&, const sead::Vector3f&, bool,
-        const sead::Vector3f&, HackCap::SwingHandType, bool, float, int
-    );
+    void startThrow(bool, const sead::Vector3f&, const sead::Vector3f&, float, const sead::Vector2f&, const sead::Vector2f&, const sead::Vector3f&, bool,
+                    const sead::Vector3f&, HackCap::SwingHandType, bool, float, int);
     void startThrowSeparatePlay(const sead::Vector3f&, const sead::Vector3f&, float, bool);
     void startThrowSeparatePlayJump(const sead::Vector3f&, const sead::Vector3f&, float);
     void startCatch(const char*, bool, const sead::Vector3f&);
     void forcePutOn(void);
-    void forceHack(al::HitSensor*, const CapTargetInfo*); // :eyes:
+    void forceHack(al::HitSensor*, const CapTargetInfo*);  // :eyes:
     void resetLockOnParam(void);
     void setupStartLockOn(void);
     void cancelCapState(void);
@@ -191,15 +192,15 @@ public:
     void exeReturn(void);
     void exeBlow(void);
 
-    void* unkPtr1;                     // 0x108
-    void* unkPtr2;                     // 0x110
-    al::LiveActor* mLockOnEyes;        // 0x118
-    al::LiveActor* mCapEyes;           // 0x120
-    PlayerActorHakoniwa* mPlayerActor; // 0x128
+    void* unkPtr1;                      // 0x108
+    void* unkPtr2;                      // 0x110
+    al::LiveActor* mLockOnEyes;         // 0x118
+    al::LiveActor* mCapEyes;            // 0x120
+    PlayerActorHakoniwa* mPlayerActor;  // 0x128
     unsigned char padding_220[0x220 - 0x130];
-    HackCapThrowParam* throwParam; // 0x220
+    HackCapThrowParam* throwParam;  // 0x220
     unsigned char padding_2B8[0x2B8 - 0x228];
-    PlayerCapActionHistory* mCapActionHistory; // 0x2B8
+    PlayerCapActionHistory* mCapActionHistory;  // 0x2B8
     unsigned char padding_2E0[0x2E0 - 0x2C0];
-    HackCapJointControlKeeper* mJointKeeper; // 0x2E0
+    HackCapJointControlKeeper* mJointKeeper;  // 0x2E0
 };

@@ -15,8 +15,7 @@ namespace al {
 class RateParamV3f;
 }
 
-class Shine : public al::LiveActor,
-              public IUseDimension {
+class Shine : public al::LiveActor, public IUseDimension {
 public:
     Shine(const char*);
 
@@ -124,7 +123,7 @@ public:
     void* qword110;
     int dword118;
     bool mIsGotShine;
-    ShineInfo* curShineInfo; // 0x120
+    ShineInfo* curShineInfo;  // 0x120
     unsigned char padding_188[0x188 - 0x128];
     al::RateParamV3f* mRateParam;
     void* qword190;
@@ -140,10 +139,10 @@ public:
     int dword268;
     bool byte26C;
     void* qword270;
-    QuestInfo* shineQuestInfo;              // 0x278
-    void* unkPtr1;                          // 0x280
-    ActorDimensionKeeper* mDimensionKeeper; // 0x288
-    int mShineIdx;                          // 0x290
+    QuestInfo* shineQuestInfo;               // 0x278
+    void* unkPtr1;                           // 0x280
+    ActorDimensionKeeper* mDimensionKeeper;  // 0x288
+    int mShineIdx;                           // 0x290
     bool mIsMainShine;
     void* qword298;
     void* qword2A0;

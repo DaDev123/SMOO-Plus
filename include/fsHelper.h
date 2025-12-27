@@ -17,4 +17,4 @@ void loadFileFromPath(LoadData& loadData);
 long getFileSize(const char* path);
 
 bool isFileExist(const char* path);
-} // namespace FsHelper
+}  // namespace FsHelper

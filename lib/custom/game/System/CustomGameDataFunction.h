@@ -16,4 +16,4 @@ static const GameDataFile::HintInfo* getHintInfoByIndex(al::LiveActor* actor, in
     GameDataHolderAccessor accessor(actor);
     return getHintInfoByIndex(accessor, index);
 }
-} // namespace CustomGameDataFunction
+}  // namespace CustomGameDataFunction

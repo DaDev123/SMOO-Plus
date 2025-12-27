@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Packet.h"
 #include "al/Library/Base/StringUtil.h"
+
+#include "Packet.h"
 
 struct PACKED GameInf : Packet {
     GameInf() : Packet() {
@@ -12,10 +13,7 @@ struct PACKED GameInf : Packet {
     u8 scenarioNo = -1;
     char stageName[0x40] = {};
 
-    bool operator==(const GameInf& rhs) const {
-        return (is2D == rhs.is2D && scenarioNo == rhs.scenarioNo &&
-                al::isEqualString(stageName, rhs.stageName));
-    }
+    bool operator==(const GameInf& rhs) const { return (is2D == rhs.is2D && scenarioNo == rhs.scenarioNo && al::isEqualString(stageName, rhs.stageName)); }
 
     bool operator!=(const GameInf& rhs) const { return !operator==(rhs); }
 };

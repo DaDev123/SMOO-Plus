@@ -1,11 +1,10 @@
 #pragma once
 
-#include "sead/time/seadTickTime.h"
-#include "sead/time/seadDateTime.h"
 #include "sead/math/seadQuatCalcCommon.hpp"
+#include "sead/time/seadDateTime.h"
+#include "sead/time/seadTickTime.h"
 
 struct Time {
-
     static void calcTime();
 
     static sead::TickTime prevTime;

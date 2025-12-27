@@ -46,7 +46,7 @@ public:
     bool isScoreEventsEnabled() const { return mIsScoreEventsValid; };
     bool isPlayerRunner() const { return mInfo->mIsPlayerRunner; };
     bool isPlayerFreeze() const { return mInfo->mIsPlayerFreeze; };
-    bool isEndgameActive() { return mIsEndgameActive; }  // The endagme is the time during the WIPEOUT message is on screen
+    bool isEndgameActive() { return mIsEndgameActive; }     // The endagme is the time during the WIPEOUT message is on screen
     bool isPlayerLastSurvivor(PuppetInfo* changingPuppet);  // Only meant to be called on getting a packet
     bool isAllRunnerFrozen(PuppetInfo* changingPuppet);     // Only meant to be called on getting a
                                                             // packet, starts the endgame
@@ -60,13 +60,13 @@ public:
                                                       // stood position, unless endgame variant
     bool tryEndRecoveryEvent();                       // Called after the fade of the recovery event
     void tryScoreEvent(FreezeInf* incomingPacket,
-                       PuppetInfo* sourcePuppet);  // Attempt score gain when getting a packet
+                       PuppetInfo* sourcePuppet);                      // Attempt score gain when getting a packet
     void setWipeHolder(al::WipeHolder* wipe) { mWipeHolder = wipe; };  // Called with HakoniwaSequence hook, wipe used in recovery event
-    bool trySetPostProcessingType(FreezePostProcessingType type);  // Sets the post processing type, also used for disabling
+    bool trySetPostProcessingType(FreezePostProcessingType type);      // Sets the post processing type, also used for disabling
 
     void warpToRecoveryPoint(al::LiveActor* actor);  // Warps runner to chaser OR if impossible, last standing position
 
-    void updateSpectateCam(PlayerActorBase* playerBase);  // Updates the frozen spectator camera
+    void updateSpectateCam(PlayerActorBase* playerBase);                  // Updates the frozen spectator camera
     void setCameraTicket(al::CameraTicket* ticket) { mTicket = ticket; }  // Called when the camera ticket is constructed to get a pointer
 
     FreezeUpdateType mNextUpdateType = FreezeUpdateType::PLAYER;  // Set for the sendPacket funtion to know what packet type is

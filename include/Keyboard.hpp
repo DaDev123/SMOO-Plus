@@ -1,7 +1,8 @@
 #pragma once
 
-#include <cstddef>
 #include "al/Library/Thread/AsyncFunctorThread.h"
+
+#include <cstddef>
 
 #include "nn/swkbd/swkbd.h"
 #include "types.h"

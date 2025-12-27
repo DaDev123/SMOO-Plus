@@ -34,8 +34,7 @@ class SpecialCameraHolder;
 struct CameraFlagCtrl;
 struct CameraPoserSceneInfo;
 
-class CameraDirector : public HioNode,
-                       public IUseExecutor {
+class CameraDirector : public HioNode, public IUseExecutor {
 public:
     CameraDirector(s32 maxCameras);
     virtual ~CameraDirector();
@@ -106,4 +105,4 @@ public:
 
 static_assert(sizeof(CameraDirector) == 0xA8);
 
-} // namespace al
+}  // namespace al

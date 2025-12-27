@@ -1,7 +1,8 @@
 #pragma once
 
-#include "ModeModifierBase.hpp"
 #include "al/Library/Camera/CameraTicket.h"
+
+#include "ModeModifierBase.hpp"
 
 class GravityModifier : public ModeModifierBase {
 public:

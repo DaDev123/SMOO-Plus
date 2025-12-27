@@ -5,7 +5,7 @@
 class NoCapModifier : public ModeModifierBase {
 public:
     NoCapModifier(GameModeBase* modeInfo);
-    
+
     void enable() override;
     void disable() override;
 };

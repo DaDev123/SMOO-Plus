@@ -3,7 +3,7 @@
 namespace al {
 class IUseSceneObjHolder;
 class SceneObjHolder;
-} // namespace al
+}  // namespace al
 class SaveObjInfo;
 class GameDataHolder;
 

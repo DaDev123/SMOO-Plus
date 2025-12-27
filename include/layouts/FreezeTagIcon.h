@@ -4,10 +4,9 @@
 #include "al/Library/Layout/LayoutInitInfo.h"
 #include "al/Library/Nerve/NerveSetupUtil.h"
 
+#include "container/seadPtrArray.h"
 #include "layouts/FreezeTagChaserSlot.h"
 #include "layouts/FreezeTagRunnerSlot.h"
-
-#include "container/seadPtrArray.h"
 
 // TODO: kill layout if going through loading zone or paused
 

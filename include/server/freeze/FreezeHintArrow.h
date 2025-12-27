@@ -1,12 +1,13 @@
 #pragma once
 
-#include <stdint.h>
 #include "al/Library/HitSensor/HitSensorKeeper.h"
 #include "al/Library/LiveActor/LiveActor.h"
 #include "al/Library/Nerve/NerveSetupUtil.h"
 
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
+
+#include <stdint.h>
 
 #include "server/freeze/FreezeTagInfo.h"
 
@@ -15,8 +16,7 @@ public:
     FreezeHintArrow(const char* name);
     void init(al::ActorInitInfo const&) override;
     void initAfterPlacement(void) override;
-    bool receiveMsg(const al::SensorMsg* message, al::HitSensor* source,
-                    al::HitSensor* target) override;
+    bool receiveMsg(const al::SensorMsg* message, al::HitSensor* source, al::HitSensor* target) override;
     void attackSensor(al::HitSensor* source, al::HitSensor* target) override;
     void control(void) override;
     void appear() override;

@@ -1,7 +1,9 @@
 #pragma once
 
-#include <stdint.h>
 #include "al/Library/Math/MathUtil.h"
+
+#include <stdint.h>
+
 #include "layouts/FreezeTagIcon.h"
 
 class FreezeTagScore {

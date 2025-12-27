@@ -1,8 +1,9 @@
 #pragma once
 
+#include "game/Player/PlayerActorHakoniwa.h"
+
 #include <cstring>
 
-#include "game/Player/PlayerActorHakoniwa.h"
 #include "puppets/PuppetInfo.h"
 
 bool isPartOf(const char* w1, const char* w2);
@@ -32,20 +33,12 @@ void killMainPlayer(al::LiveActor* actor);
 void killMainPlayer(PlayerActorHakoniwa* mainPlayer);
 
 __attribute__((used)) static const char* costumeNames[] = {
-    "Mario",           "MarioCaptain",    "Mario64",
-    "Mario64Metal",    "MarioAloha",      "MarioArmor",
-    "MarioBone",       "MarioClown",      "MarioColorClassic",
-    "MarioColorGold",  "MarioColorLuigi", "MarioColorWaluigi",
-    "MarioColorWario", "MarioCook",       "MarioDiddyKong",
-    "MarioDoctor",     "MarioExplorer",   "MarioFootball",
-    "MarioGolf",       "MarioGunman",     "MarioHakama",
-    "MarioHappi",      "MarioKing",       "MarioKoopa",
-    "MarioMaker",      "MarioMechanic",   "MarioNew3DS",
-    "MarioPainter",    "MarioPeach",      "MarioPilot",
-    "MarioPirate",     "MarioPoncho",     "MarioPrimitiveMan",
-    "MarioSailor",     "MarioScientist",  "MarioShopman",
-    "MarioSnowSuit",   "MarioSpaceSuit",  "MarioSuit",
-    "MarioSwimwear",   "MarioTailCoat",   "MarioTuxedo",
+    "Mario",          "MarioCaptain",      "Mario64",        "Mario64Metal",    "MarioAloha",        "MarioArmor",      "MarioBone",
+    "MarioClown",     "MarioColorClassic", "MarioColorGold", "MarioColorLuigi", "MarioColorWaluigi", "MarioColorWario", "MarioCook",
+    "MarioDiddyKong", "MarioDoctor",       "MarioExplorer",  "MarioFootball",   "MarioGolf",         "MarioGunman",     "MarioHakama",
+    "MarioHappi",     "MarioKing",         "MarioKoopa",     "MarioMaker",      "MarioMechanic",     "MarioNew3DS",     "MarioPainter",
+    "MarioPeach",     "MarioPilot",        "MarioPirate",    "MarioPoncho",     "MarioPrimitiveMan", "MarioSailor",     "MarioScientist",
+    "MarioShopman",   "MarioSnowSuit",     "MarioSpaceSuit", "MarioSuit",       "MarioSwimwear",     "MarioTailCoat",   "MarioTuxedo",
     "MarioUnderwear"};
 
 struct HackActorName {
@@ -88,15 +81,11 @@ public:
      * called, and will drop to 0 whenever the moveTransform has "caught up".
      * @param maxAngularSpeed The max angular speed to to rotate at, in degrees/s.
      */
-    static float SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta,
-                            float closingSpeed, float maxAngularSpeed);
+    static float SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed);
 
     // Ultra-smooth exponential version (recommended for best visual quality)
-    static float SmoothMove_LowLatency(Transform moveTransform, Transform targetTransform,
-                                       float timeDelta, float closingSpeed, float maxAngularSpeed);
-    static float SmoothMove_RegularLatency(Transform moveTransform, Transform targetTransform,
-                                           float timeDelta, float closingSpeed,
-                                           float maxAngularSpeed);
+    static float SmoothMove_LowLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed);
+    static float SmoothMove_RegularLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed);
 
     constexpr static const float k_MinSmoothSpeed = 0.1f;
     constexpr static const float k_TargetCatchupTime = 0.2f;

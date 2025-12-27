@@ -11,20 +11,15 @@
 #include "cameras/CameraPoserCustom.h"
 #include "server/freeze/FreezePlayerBlock.h"
 
-__attribute((used)) static al::NameToCreator<al::ActorCreatorFunction>
-    sCustomActorFactoryEntries[] = {
-        {"FreezePlayerBlock", &al::createActorFunction<FreezePlayerBlock>},
-        {"PuppetActor", &al::createActorFunction<PuppetActor>},
-        {"PuppetHackActor", &al::createActorFunction<PuppetHackActor>},
+__attribute((used)) static al::NameToCreator<al::ActorCreatorFunction> sCustomActorFactoryEntries[] = {
+    {"FreezePlayerBlock", &al::createActorFunction<FreezePlayerBlock>},
+    {"PuppetActor", &al::createActorFunction<PuppetActor>},
+    {"PuppetHackActor", &al::createActorFunction<PuppetHackActor>},
 };
 
-__attribute((used)) static al::NameToCreator<al::CameraPoserCreatorFunction>
-    sCustomCameraFactoryEntries[] = {
-        {"CameraPoserCustom",
-         &al::createCameraPoserFunction<cc::CameraPoserCustom>},  // al::CameraPoserFollowSimple
-        {"CameraPoserActorSpectate",
-         &al::createCameraPoserFunction<
-             cc::CameraPoserActorSpectate>},  // al::CameraPoserFollowSimple
+__attribute((used)) static al::NameToCreator<al::CameraPoserCreatorFunction> sCustomCameraFactoryEntries[] = {
+    {"CameraPoserCustom", &al::createCameraPoserFunction<cc::CameraPoserCustom>},                // al::CameraPoserFollowSimple
+    {"CameraPoserActorSpectate", &al::createCameraPoserFunction<cc::CameraPoserActorSpectate>},  // al::CameraPoserFollowSimple
 };
 
 void insertCustomThingsInFactory();

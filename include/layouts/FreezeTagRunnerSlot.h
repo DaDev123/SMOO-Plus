@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Layout/LayoutActor.h"
 #include "al/Library/Layout/LayoutInitInfo.h"
 #include "al/Library/Layout/LayoutUtil.h"
 #include "al/Library/Nerve/NerveSetupUtil.h"
+
+#include "Library/Layout/LayoutActorUtil.h"
 
 // TODO: kill layout if going through loading zone or paused
 
@@ -22,12 +23,8 @@ public:
     void hideSlot();
 
     void setFreezeAngle();
-    void setSlotName(const char* name) {
-        al::setPaneStringFormat(this, "TxtRunnerName", "%s", name);
-    };
-    void setSlotScore(int score) {
-        al::setPaneStringFormat(this, "TxtRunnerScore", "%04u", score);
-    };
+    void setSlotName(const char* name) { al::setPaneStringFormat(this, "TxtRunnerName", "%s", name); };
+    void setSlotScore(int score) { al::setPaneStringFormat(this, "TxtRunnerScore", "%04u", score); };
 
     void exeAppear();
     void exeWait();

@@ -1,16 +1,14 @@
 #pragma once
 
-#include "algorithms/PlayerAnims.h"
-#include "packets/Packet.h"
-
-#include "nn/account.h"
-
 #include "sead/math/seadQuat.h"
+
+#include "algorithms/PlayerAnims.h"
+#include "nn/account.h"
+#include "packets/Packet.h"
 
 struct PuppetInfo {
     // General Puppet Info
-    char puppetName[0x10] =
-        {};  // max user account name size is 10 chars, so this could go down to 0xB
+    char puppetName[0x10] = {};  // max user account name size is 10 chars, so this could go down to 0xB
     bool isConnected = false;
     nn::account::Uid playerID;
     // Puppet Translation Info
@@ -50,7 +48,6 @@ struct PuppetInfo {
     uint16_t freezeTagScore = 0;
     bool isFreezeTagRunner = true;
     bool isFreezeTagFreeze = false;
-    bool isFreezeTagFallenOff =
-        false;  // When runenr falls off and is automatically frozen, this flag is set
+    bool isFreezeTagFallenOff = false;  // When runenr falls off and is automatically frozen, this flag is set
     float freezeIconSize = 0.f;
 };

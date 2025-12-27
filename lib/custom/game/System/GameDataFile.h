@@ -14,7 +14,7 @@ namespace al {
 class ActorInitInfo;
 class PlacementInfo;
 class PlacementId;
-} // namespace al
+}  // namespace al
 
 class UniqObjInfo;
 class SphinxQuizData;
@@ -47,33 +47,33 @@ public:
         bool isHintStatusUnlockByAmiibo(void) const;
         bool isEnableNameUnlockByScenario(int, int, bool) const;
 
-        sead::FixedSafeString<0x80> mStageName;    // 0x0
-        sead::FixedSafeString<0x80> mObjId;        // 0x98
-        sead::FixedSafeString<0x40> mScenarioName; // 0x130
-        const char* mObjectName;                   // 0x188
-        sead::Vector3f mTrans;                     // 0x190
-        sead::Vector3f mTransAgain;                // 0x19C
-        void* unkPtr1;                             // 0x1A8
-        void* unkPtr2;                             // 0x1B0
-        void* unkPtr3;                             // 0x1B8
-        void* unkPtr4;                             // 0x1C0
-        s32 mMainScenarioNo;                       // 0x1C8
-        int mWorldIndex;                           // 0x1CC
-        bool mIsMoonRock;                          // 0x1D0
-        bool unkBool1;                             // 0x1D1
-        bool mIsAchievement;                       // 0x1D2
-        bool mIsGrand;                             // 0x1D3
-        bool mIsShopMoon;                          // 0x1D4
-        int unkInt;                                // 0x1D8
-        int unkInt2;                               // 0x1DC
-        void* unkPtr6;                             // 0x1E0
-        void* unkPtr7;                             // 0x1E8
-        int mUniqueID;                             // 0x1F0
-        int mHintIdx;                              // 0x1F4
-        sead::FixedSafeString<0x20> mOptionalID;   // 0x1F8
-        uint mProcessBitflag;                      // 0x230
-        bool unkBool2;                             // 0x234
-        bool unkBool3;                             // 0x235
+        sead::FixedSafeString<0x80> mStageName;     // 0x0
+        sead::FixedSafeString<0x80> mObjId;         // 0x98
+        sead::FixedSafeString<0x40> mScenarioName;  // 0x130
+        const char* mObjectName;                    // 0x188
+        sead::Vector3f mTrans;                      // 0x190
+        sead::Vector3f mTransAgain;                 // 0x19C
+        void* unkPtr1;                              // 0x1A8
+        void* unkPtr2;                              // 0x1B0
+        void* unkPtr3;                              // 0x1B8
+        void* unkPtr4;                              // 0x1C0
+        s32 mMainScenarioNo;                        // 0x1C8
+        int mWorldIndex;                            // 0x1CC
+        bool mIsMoonRock;                           // 0x1D0
+        bool unkBool1;                              // 0x1D1
+        bool mIsAchievement;                        // 0x1D2
+        bool mIsGrand;                              // 0x1D3
+        bool mIsShopMoon;                           // 0x1D4
+        int unkInt;                                 // 0x1D8
+        int unkInt2;                                // 0x1DC
+        void* unkPtr6;                              // 0x1E0
+        void* unkPtr7;                              // 0x1E8
+        int mUniqueID;                              // 0x1F0
+        int mHintIdx;                               // 0x1F4
+        sead::FixedSafeString<0x20> mOptionalID;    // 0x1F8
+        uint mProcessBitflag;                       // 0x230
+        bool unkBool2;                              // 0x234
+        bool unkBool3;                              // 0x235
     };
 
     static_assert(sizeof(HintInfo) == 0x238, "size of HintInfo");
@@ -453,7 +453,7 @@ public:
     bool byte901;
     int dword904;
     sead::FixedSafeString<0x80> char908;
-    HintInfo* mShineHintList; // 0x9A0
+    HintInfo* mShineHintList;  // 0x9A0
     sead::PtrArrayImpl sead__ptrarrayimpl9A8;
     sead::PtrArrayImpl sead__ptrarrayimpl9B8;
     sead::PtrArrayImpl sead__ptrarrayimpl9C8;

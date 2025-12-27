@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Library/Nerve/NerveSetupUtil.h"
 #include "al/Library/Layout/LayoutActor.h"
 #include "al/Library/Play/Layout/WipeSimple.h"
+
+#include "Library/Nerve/NerveSetupUtil.h"
 
 namespace al {
 class LayoutInitInfo;
@@ -17,8 +18,7 @@ class HakoniwaSequence;
  */
 class SpeedbootLoad : public al::LayoutActor {
 public:
-    SpeedbootLoad(WorldResourceLoader* resourceLoader, const al::LayoutInitInfo& initInfo,
-                  HakoniwaSequence* sequence);
+    SpeedbootLoad(WorldResourceLoader* resourceLoader, const al::LayoutInitInfo& initInfo, HakoniwaSequence* sequence);
 
     // Nerve execution functions
     void exeAppear();

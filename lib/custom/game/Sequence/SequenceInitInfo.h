@@ -9,4 +9,4 @@ public:
 
     const GameSystemInfo* mSystemInfo;
 };
-} // namespace al
+}  // namespace al

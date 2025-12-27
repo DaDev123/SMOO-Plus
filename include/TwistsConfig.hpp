@@ -5,14 +5,14 @@ class PlayerActorHakoniwa;
 class StageScene;
 
 namespace al {
-    class Triangle;
+class Triangle;
 }
 
 class TwistsConfig {
 public:
     // Twist toggle states
     static bool sCappyForceEnabled;
-    static bool sIcePhysicsEnabled;   // Declare here (no extern!)
+    static bool sIcePhysicsEnabled;  // Declare here (no extern!)
 
     // Getters
     static bool isCappyDisableEnabled();

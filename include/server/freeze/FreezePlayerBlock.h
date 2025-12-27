@@ -11,8 +11,7 @@ public:
     FreezePlayerBlock(const char* name);
     void init(al::ActorInitInfo const&) override;
     void initAfterPlacement(void) override;
-    bool receiveMsg(const al::SensorMsg* message, al::HitSensor* source,
-                    al::HitSensor* target) override;
+    bool receiveMsg(const al::SensorMsg* message, al::HitSensor* source, al::HitSensor* target) override;
     void attackSensor(al::HitSensor* source, al::HitSensor* target) override;
     void control(void) override;
     void appear() override;
@@ -25,8 +24,7 @@ public:
     void exeDead();
 
     bool mIsLocked = false;
-    float mDitheringOffset =
-        -150.f;  // -150 is fully opaque, 0 is fully dithered, -80 is good looking
+    float mDitheringOffset = -150.f;  // -150 is fully opaque, 0 is fully dithered, -80 is good looking
 };
 
 namespace {

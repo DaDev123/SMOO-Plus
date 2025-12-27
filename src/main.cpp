@@ -21,6 +21,7 @@
 #include "al/Library/LiveActor/ActorPoseKeeper.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/LiveActor/LiveActor.h"
+#include "al/Library/Memory/HeapUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Scene/SceneUtil.h"
@@ -60,7 +61,6 @@
 #include "imgui.h"
 #include "Imgui.hpp"
 #include "layouts/ConnectionStatus.h"
-#include "Library/Memory/HeapUtil.h"
 #include "logger.hpp"
 #include "nn/hid.h"
 #include "nn/socket.h"
@@ -72,11 +72,11 @@
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
+#include "Settings/SmooSettings.hpp"
+#include "Settings/StageWarper.hpp"
 #include "speedboot/BootHooks.hpp"
 #include "System/GameSystem.h"
 #include "TwistsConfig.hpp"
-#include "Settings/SmooSettings.hpp"
-#include "Settings/StageWarper.hpp"
 
 // ===== GLOBAL VARIABLES =====
 static int pInfSendTimer = 0;
@@ -111,8 +111,6 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
 
     nn::hid::InitializeMouse();
     nn::hid::InitializeKeyboard();
-
-    
 });
 
 HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSystem* gameSystem) -> void {
@@ -372,7 +370,7 @@ void drawMain(al::Sequence* curSequence) {
                         break;
                     }
                 }
-                Client::getClientHeap()->free(msg);             
+                Client::getClientHeap()->free(msg);
             }
         }
 
@@ -410,8 +408,8 @@ void drawMain(al::Sequence* curSequence) {
         for (int i = 0; i < maxDisplayMsgCount; i++) {
             if (displayMessages[i].active) {
                 // Position relativ zum Fenster
-                float yPos = 20.f + lineHeight * displayIndex; // 20px Padding vom Fenster-Top
-                float xPos = 10.f; // Padding von links
+                float yPos = 20.f + lineHeight * displayIndex;  // 20px Padding vom Fenster-Top
+                float xPos = 10.f;                              // Padding von links
 
                 hk::util::Vector2f pos(winX + xPos, winY + yPos);
                 hk::util::Vector2f shadowPos = pos + hk::util::Vector2f(2.f, 2.f);
@@ -442,8 +440,8 @@ void drawMain(al::Sequence* curSequence) {
         return;
 
     ImGui::Begin("Debug Menu", nullptr,
-                 ImGuiWindowFlags_NoSavedSettings /*| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse*/| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus |
-                     ImGuiWindowFlags_NoScrollbar);
+                 ImGuiWindowFlags_NoSavedSettings /*| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse*/ | ImGuiWindowFlags_NoResize |
+                     ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoScrollbar);
 
     ImGui::SetWindowPos(ImVec2(0, dispHeight / 3.f), ImGuiCond_FirstUseEver);
     ImGui::SetWindowSize(ImVec2(al::getLayoutDisplayWidth() / 3.f, dispHeight - (dispHeight / 4.f)));
@@ -465,15 +463,14 @@ void drawMain(al::Sequence* curSequence) {
     if (clientHeap) {
         sead::Heap* gmHeap = gmm->getHeap();
         if (gmHeap && clientHeap->getSize() > 0 && gmHeap->getSize() > 0) {
-            size_t clientUsed = clientHeap->getSize() - clientHeap->getFreeSize();
-            size_t clientTotal = clientHeap->getSize();
-            size_t gmUsed = gmHeap->getSize() - gmHeap->getFreeSize();
-            size_t gmTotal = gmHeap->getSize();
-            size_t ImguiUsed = imgui::sImGuiHeap->getSize() - imgui::sImGuiHeap->getFreeSize();
-            size_t ImguiTotal = imgui::sImGuiHeap->getSize();
+            float clientUsed = clientHeap->getSize() - clientHeap->getFreeSize();
+            float clientTotal = clientHeap->getSize();
+            float gmUsed = gmHeap->getSize() - gmHeap->getFreeSize();
+            float gmTotal = gmHeap->getSize();
+            float ImguiUsed = imgui::sImGuiHeap->getSize() - imgui::sImGuiHeap->getFreeSize();
+            float ImguiTotal = imgui::sImGuiHeap->getSize();
 
-            ImGui::Text("Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode) %.1f/%.0f (ImGui)\n", 0.0009765625 * clientUsed, 0.0009765625 * clientTotal, 0.0009765625 * gmUsed,  0.0009765625 * clientTotal,
-                        0.0009765625 * ImguiUsed,  0.0009765625 * ImguiTotal);
+            ImGui::Text("Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode)\n", clientUsed / 1_KB, clientTotal / 1_KB, gmUsed / 1_KB, gmTotal / 1_KB);
         } else {
             ImGui::Text("Heap Use: Invalid heap sizes\n");
         }
@@ -500,14 +497,14 @@ void drawMain(al::Sequence* curSequence) {
         ImGui::End();
         return;
     }
-        if(showSettingsWindow) {
-            SmooSettings::showSmooSettingsWindow(&showSettingsWindow);
-        }
+    if (showSettingsWindow) {
+        SmooSettings::showSmooSettingsWindow(&showSettingsWindow);
+    }
 
-        if(ImGui::Button("SMOO+ Settings")) {
-            showSettingsWindow = true;
-        }
-    
+    if (ImGui::Button("SMOO+ Settings")) {
+        showSettingsWindow = true;
+    }
+
     // ===== 3D DEBUG RENDERING (Authorized users only) =====
     if (curScene && isInGame) {
         sead::LookAtCamera* cam = &const_cast<sead::LookAtCamera&>(al::getLookAtCamera(curScene, 0));
@@ -646,12 +643,12 @@ void drawMain(al::Sequence* curSequence) {
 
                 displayHeapInfo(Client::getClientHeap(), "Client", true);
                 displayHeapInfo(GameModeManager::sInstance->getHeap(), "GameMode", true);
+                displayHeapInfo(imgui::sImGuiHeap, "ImGui");
                 displayHeapInfo(al::getStationedHeap(), "Stationed");
                 displayHeapInfo(al::getSequenceHeap(), "Sequence");
                 displayHeapInfo(al::getSceneHeap(), "Scene");
                 displayHeapInfo(al::getSceneResourceHeap(), "SceneResource", true);
                 displayHeapInfo(al::getWorldResourceHeap(), "WorldResource");
-                displayHeapInfo(imgui::sImGuiHeap, "ImGui");
 
                 break;
             }

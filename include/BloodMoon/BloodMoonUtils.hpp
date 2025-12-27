@@ -1,7 +1,8 @@
 #pragma once
 
-#include <vector>
 #include "sead/basis/seadTypes.h"
+
+#include <vector>
 
 namespace BloodMoon {
 
@@ -14,4 +15,4 @@ namespace BloodMoon {
  */
 u8* loadFile(const char* filePath, size_t* outSize);
 
-} // namespace BloodMoon
+}  // namespace BloodMoon

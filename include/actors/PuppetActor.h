@@ -1,21 +1,17 @@
 #pragma once
 
 #include "al/Library/LiveActor/LiveActor.h"
-#include "game/Player/PlayerCostumeInfo.h"
-
 #include "al/Library/Play/Layout/BalloonMessage.h"
 
+#include "game/Player/PlayerCostumeInfo.h"
 #include "game/Player/PlayerModelHolder.h"
 
 #include "actors/PuppetCapActor.h"
 #include "actors/PuppetHackActor.h"
-#include "layouts/NameTag.h"
-
 #include "algorithms/CaptureTypes.h"
-
+#include "layouts/NameTag.h"
 #include "puppets/HackModelHolder.hpp"
 #include "puppets/PuppetInfo.h"
-
 #include "server/freeze/FreezePlayerBlock.h"
 
 class PuppetActor : public al::LiveActor {
@@ -90,10 +86,7 @@ private:
     FreezePlayerBlock* mFreezeTagIceBlock = nullptr;
 };
 
-PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo,
-                                        char const* bodyName, char const* capName, int subActorNum,
+PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo, char const* bodyName, char const* capName, int subActorNum,
                                         al::AudioKeeper* audioKeeper);
-PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player,
-                                                const al::ActorInitInfo& initInfo,
-                                                const char* headModelName, const char* capModelName,
+PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player, const al::ActorInitInfo& initInfo, const char* headModelName, const char* capModelName,
                                                 const char* headType, const char* headSuffix);

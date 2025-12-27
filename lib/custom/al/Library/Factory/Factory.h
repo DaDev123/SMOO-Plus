@@ -68,4 +68,4 @@ public:
     s32 mNumFactoryEntries;
 };
 
-} // namespace al
+}  // namespace al

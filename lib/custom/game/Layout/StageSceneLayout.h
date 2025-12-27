@@ -15,7 +15,7 @@ class MapMini;
 namespace al {
 class SubCameraRenderer;
 class PlayerHolder;
-} // namespace al
+}  // namespace al
 
 class StageSceneLayout : public al::NerveStateBase {
 public:
@@ -68,17 +68,17 @@ public:
     bool isEndShineCountAnim(void) const;
     bool isActionEndAll(void) const;
 
-    CoinCounter* mCoinCountLyt;                       // 0x18
-    CounterLifeCtrl* mHealthLyt;                      // 0x20
-    struct ShineCounter* mShineCountLyt;              // 0x28
-    CoinCounter* mCoinCollectLyt;                     // 0x30
-    struct ShineChipLayoutParts* mShineChipPartsLyt;  // 0x38
-    struct PlayGuideCamera* mPlayGuideCamLyt;         // 0x40
-    struct PlayGuideBgm* mPlayGuideBgmLyt;            // 0x48
-    MapMini* mMapMiniLyt;                             // 0x50
-    al::PlayerHolder* mPlayerHolder;                  // 0x58
-    void* unkPtr;                                     // 0x60
-    al::SimpleLayoutAppearWaitEnd* mPlayGuideMenuLyt; // 0x68
-    void* voidPtr;                                    // 0x70
-    al::LayoutActor* mKidsModeLyt;                    // 0x78
+    CoinCounter* mCoinCountLyt;                        // 0x18
+    CounterLifeCtrl* mHealthLyt;                       // 0x20
+    struct ShineCounter* mShineCountLyt;               // 0x28
+    CoinCounter* mCoinCollectLyt;                      // 0x30
+    struct ShineChipLayoutParts* mShineChipPartsLyt;   // 0x38
+    struct PlayGuideCamera* mPlayGuideCamLyt;          // 0x40
+    struct PlayGuideBgm* mPlayGuideBgmLyt;             // 0x48
+    MapMini* mMapMiniLyt;                              // 0x50
+    al::PlayerHolder* mPlayerHolder;                   // 0x58
+    void* unkPtr;                                      // 0x60
+    al::SimpleLayoutAppearWaitEnd* mPlayGuideMenuLyt;  // 0x68
+    void* voidPtr;                                     // 0x70
+    al::LayoutActor* mKidsModeLyt;                     // 0x78
 };

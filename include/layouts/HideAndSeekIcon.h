@@ -3,8 +3,8 @@
 #include "al/Library/Layout/LayoutActor.h"
 #include "al/Library/Layout/LayoutInitInfo.h"
 #include "al/Library/Nerve/NerveSetupUtil.h"
-#include "container/seadPtrArray.h"
 
+#include "container/seadPtrArray.h"
 #include "layouts/GameModePlayerSlot.h"
 
 // TODO: kill layout if going through loading zone or paused

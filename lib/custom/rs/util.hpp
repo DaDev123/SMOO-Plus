@@ -7,4 +7,4 @@
 namespace rs {
 bool calcOnGroundNormalOrGravityDir(sead::Vector3f*, const al::LiveActor*, const IUsePlayerCollision*);
 
-} // namespace rs
+}  // namespace rs

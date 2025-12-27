@@ -7,4 +7,4 @@
 namespace PlayerCostumeFunction {
 PlayerBodyCostumeInfo* createBodyCostumeInfo(al::Resource*, const char*);
 PlayerHeadCostumeInfo* createHeadCostumeInfo(al::Resource*, const char*, bool);
-} // namespace PlayerCostumeFunction
+}  // namespace PlayerCostumeFunction

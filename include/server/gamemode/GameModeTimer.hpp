@@ -9,10 +9,10 @@ struct GameTime {
 
 class GameModeTimer {
 public:
-    GameModeTimer(bool isCountUp, float milli, int seconds, int minutes, int hours); // can set start time or max time, depending on isCountUp
-    GameModeTimer(float milli, int seconds, int minutes, int hours); // defaults to counting down with a start time
-    GameModeTimer(GameTime const& time); // sets timer's current time to time struct argument, defaults to incrementing
-    GameModeTimer(); // defaults to counting up with zero time
+    GameModeTimer(bool isCountUp, float milli, int seconds, int minutes, int hours);  // can set start time or max time, depending on isCountUp
+    GameModeTimer(float milli, int seconds, int minutes, int hours);                  // defaults to counting down with a start time
+    GameModeTimer(GameTime const& time);  // sets timer's current time to time struct argument, defaults to incrementing
+    GameModeTimer();                      // defaults to counting up with zero time
 
     void toggleTimer() { mIsEnabled = !mIsEnabled; }
     void enableTimer() { mIsEnabled = true; }

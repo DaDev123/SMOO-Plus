@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Packet.h"
 #include "algorithms/PlayerAnims.h"
+#include "Packet.h"
 
 struct PACKED PlayerInf : Packet {
     PlayerInf() : Packet() {
@@ -22,8 +22,7 @@ struct PACKED PlayerInf : Packet {
                 break;
             }
         }
-        return (playerPos == rhs.playerPos && playerRot == rhs.playerRot && isWeightsEqual &&
-                actName == rhs.actName && subActName == rhs.subActName);
+        return (playerPos == rhs.playerPos && playerRot == rhs.playerRot && isWeightsEqual && actName == rhs.actName && subActName == rhs.subActName);
     }
 
     bool operator!=(const PlayerInf& rhs) const { return !operator==(rhs); }

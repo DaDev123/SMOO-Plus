@@ -12,8 +12,7 @@ enum class GameModePlayerSlotMode { HideAndSeek, Sardine };
 
 class GameModePlayerSlot : public al::LayoutActor {
 public:
-    GameModePlayerSlot(const char* name, const al::LayoutInitInfo& initInfo,
-                       GameModePlayerSlotMode mode);
+    GameModePlayerSlot(const char* name, const al::LayoutInitInfo& initInfo, GameModePlayerSlotMode mode);
 
     void init(int index);
     void setScene(StageScene* scene) { mScene = scene; }

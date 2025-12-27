@@ -8,8 +8,7 @@ class PuppetActor;
 
 class NameTag : public al::LayoutActor {
 public:
-    NameTag(PuppetActor*, const al::LayoutInitInfo&, float startDist, float endDist,
-            const char* playerName);
+    NameTag(PuppetActor*, const al::LayoutInitInfo&, float startDist, float endDist, const char* playerName);
 
     void appear(void) override;
     void control(void) override;

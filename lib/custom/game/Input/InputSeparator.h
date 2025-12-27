@@ -26,9 +26,9 @@ public:
     bool isTriggerUiRight(void);
     bool isTriggerUiUp(void);
 
-    al::IUseSceneObjHolder* mSceneObjHolder; // 0x0
-    bool unkBool;                            // 0x8
-    bool unkBool2;                           // 0x9
-    int unkInt;                              // 0xC
-    int unkInt2;                             // 0x10
+    al::IUseSceneObjHolder* mSceneObjHolder;  // 0x0
+    bool unkBool;                             // 0x8
+    bool unkBool2;                            // 0x9
+    int unkInt;                               // 0xC
+    int unkInt2;                              // 0x10
 };

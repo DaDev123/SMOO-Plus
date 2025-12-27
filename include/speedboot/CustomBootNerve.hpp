@@ -4,6 +4,7 @@
 #include "al/Library/Nerve/NerveKeeper.h"
 #include "al/Library/Nerve/NerveSetupUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
+
 #include "game/Sequence/HakoniwaSequence.h"
 
 namespace {
