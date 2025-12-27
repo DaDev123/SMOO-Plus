@@ -75,6 +75,8 @@
 #include "speedboot/BootHooks.hpp"
 #include "System/GameSystem.h"
 #include "TwistsConfig.hpp"
+#include "Settings/SmooSettings.hpp"
+#include "Settings/StageWarper.hpp"
 
 // ===== GLOBAL VARIABLES =====
 static int pInfSendTimer = 0;
@@ -107,7 +109,8 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
 
     gameSystemInit.orig(gameSystem);
 
-    // nn::hid::InitializeMouse();
+    nn::hid::InitializeMouse();
+    nn::hid::InitializeKeyboard();
 });
 
 HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSystem* gameSystem) -> void {
@@ -121,6 +124,7 @@ HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSys
 
     ImGui::NewFrame();
     drawMain(gameSystem->mSequence);
+    StageWarper::ShowSearchWindow();
     ImGui::Render();
 
     hk::gfx::ImGuiBackendNvn::instance()->draw(ImGui::GetDrawData(), drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
@@ -366,7 +370,7 @@ void drawMain(al::Sequence* curSequence) {
                         break;
                     }
                 }
-                Client::getClientHeap()->free(msg);
+                Client::getClientHeap()->free(msg);             
             }
         }
 
@@ -425,13 +429,12 @@ void drawMain(al::Sequence* curSequence) {
     }
 
     // ===== NON-DEBUG MODE EXIT =====
-    if (!debugMode) {
+    if (!debugMode)
         return;
-    }
 
     ImGui::Begin("Debug Menu", nullptr,
-                 ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus |
-                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar);
+                 ImGuiWindowFlags_NoSavedSettings /*| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse*/| ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus |
+                     ImGuiWindowFlags_NoScrollbar);
 
     ImGui::SetWindowPos(ImVec2(0, (dispHeight / 3.f)), ImGuiCond_Always);
     ImGui::SetWindowSize(ImVec2(al::getLayoutDisplayWidth() / 3.f, dispHeight - (dispHeight / 4.f)));
@@ -457,9 +460,11 @@ void drawMain(al::Sequence* curSequence) {
             size_t clientTotal = clientHeap->getSize();
             size_t gmUsed = gmHeap->getSize() - gmHeap->getFreeSize();
             size_t gmTotal = gmHeap->getSize();
+            size_t ImguiUsed = imgui::sImGuiHeap->getSize() - imgui::sImGuiHeap->getFreeSize();
+            size_t ImguiTotal = imgui::sImGuiHeap->getSize();
 
-            ImGui::Text("Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode)\n", 0.0009765625 * clientUsed, 0.0009765625 * clientTotal, 0.0009765625 * gmUsed,
-                        0.0009765625 * gmTotal);
+            ImGui::Text("Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode) %.1f/%.0f (ImGui)\n", 0.0009765625 * clientUsed, 0.0009765625 * clientTotal, 0.0009765625 * gmUsed,  0.0009765625 * clientTotal,
+                        0.0009765625 * ImguiUsed,  0.0009765625 * ImguiTotal);
         } else {
             ImGui::Text("Heap Use: Invalid heap sizes\n");
         }
@@ -477,6 +482,15 @@ void drawMain(al::Sequence* curSequence) {
 
     // ===== AUTHORIZED USER ONLY CONTENT =====
     if (!isAuthorizedUser) {
+            static bool showSettingsWindow = false;
+    if(ImGui::Button("SMOO+ Settings")) {
+        showSettingsWindow = true;
+    }
+
+    if(showSettingsWindow) {
+        SmooSettings::showSmooSettingsWindow(&showSettingsWindow);
+    }
+
         if (gmm->getMode<GameModeBase>()) {
             ImGui::Text("\n------------------- Controls --------------------\n");
             gmm->getMode<GameModeBase>()->debugMenuControls();
