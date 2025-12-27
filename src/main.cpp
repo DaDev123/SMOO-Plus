@@ -111,6 +111,11 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
 
     nn::hid::InitializeMouse();
     nn::hid::InitializeKeyboard();
+
+    if (nn::hid::GetKeyboardState(nullptr) != nn::hid::Keyb) {
+        Logger::log("Keyboard initialization failed!");
+    }
+    
 });
 
 HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSystem* gameSystem) -> void {
@@ -120,7 +125,7 @@ HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSys
 
     /* ImGui */
 
-    // imgui::updateImGuiInput();
+    imgui::updateImGuiInput();
 
     ImGui::NewFrame();
     drawMain(gameSystem->mSequence);
@@ -480,17 +485,10 @@ void drawMain(al::Sequence* curSequence) {
     ImGui::Text("Mod version: %s\n", TOSTRING(BUILDVERSTR));
     ImGui::Text("Server is running version: %s\n", Client::getServerVersion());
 
+    static bool showSettingsWindow = false;
+
     // ===== AUTHORIZED USER ONLY CONTENT =====
     if (!isAuthorizedUser) {
-            static bool showSettingsWindow = false;
-    if(ImGui::Button("SMOO+ Settings")) {
-        showSettingsWindow = true;
-    }
-
-    if(showSettingsWindow) {
-        SmooSettings::showSmooSettingsWindow(&showSettingsWindow);
-    }
-
         if (gmm->getMode<GameModeBase>()) {
             ImGui::Text("\n------------------- Controls --------------------\n");
             gmm->getMode<GameModeBase>()->debugMenuControls();
@@ -498,7 +496,14 @@ void drawMain(al::Sequence* curSequence) {
         ImGui::End();
         return;
     }
+        if(showSettingsWindow) {
+            SmooSettings::showSmooSettingsWindow(&showSettingsWindow);
+        }
 
+        if(ImGui::Button("SMOO+ Settings")) {
+            showSettingsWindow = true;
+        }
+    
     // ===== 3D DEBUG RENDERING (Authorized users only) =====
     if (curScene && isInGame) {
         sead::LookAtCamera* cam = &const_cast<sead::LookAtCamera&>(al::getLookAtCamera(curScene, 0));
@@ -642,6 +647,7 @@ void drawMain(al::Sequence* curSequence) {
                 displayHeapInfo(al::getSceneHeap(), "Scene");
                 displayHeapInfo(al::getSceneResourceHeap(), "SceneResource", true);
                 displayHeapInfo(al::getWorldResourceHeap(), "WorldResource");
+                displayHeapInfo(imgui::sImGuiHeap, "ImGui");
 
                 break;
             }

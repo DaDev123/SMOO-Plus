@@ -63,62 +63,54 @@ namespace StageWarper
 }
 
 
+    if (SmooSettings::HAS_KEYBOARD == true)
+    {
+        void ShowSearchWindow()
+        {
+            if (!IsOpen)
+            
+                return;
 
-    // void ShowSearchWindow()
-    // {
-    //     if (!IsOpen)
-    //         return;
+            ImGui::Begin(
+                "Stage Search",
+                &IsOpen,
+                ImGuiWindowFlags_AlwaysAutoResize
+            );
 
-    //     ImGui::Begin(
-    //         "Stage Search",
-    //         &IsOpen,
-    //         ImGuiWindowFlags_AlwaysAutoResize
-    //     );
+            ImGui::InputTextWithHint(
+                "##stage_search",
+                "Stage name...",
+                searchBuf,
+                IM_ARRAYSIZE(searchBuf)
+            );
 
-    //     ImGui::InputTextWithHint(
-    //         "##stage_search",
-    //         "Stage name...",
-    //         searchBuf,
-    //         IM_ARRAYSIZE(searchBuf)
-    //     );
+            ImGui::Separator();
 
-    //     ImGui::Separator();
+            // Child-Fenster mit allen (gefilterten) Stages
+            DrawSearchResults();
 
-    //     DrawSearchResults();
+            ImGui::End();
+        }
+    }
+    else
+    {
+        void ShowSearchWindow()
+        {
+            if (!IsOpen)
+                return;
 
-    //     ImGui::End();
-    // }
+            ImGui::Begin(
+                "Stage Search",
+                &IsOpen,
+                ImGuiWindowFlags_AlwaysAutoResize
+            );
 
-    void ShowSearchWindow()
-{
-    if (!IsOpen)
-    
-        return;
+            ImGui::Text("Keyboard not detected!");
+            ImGui::Text("Please connect a keyboard to use the stage search feature.");
 
-    ImGui::Begin(
-        "Stage Search",
-        &IsOpen,
-        ImGuiWindowFlags_AlwaysAutoResize
-    );
-
-    ImGui::InputTextWithHint(
-        "##stage_search",
-        "Stage name...",
-        searchBuf,
-        IM_ARRAYSIZE(searchBuf)
-    );
-
-    ImGui::Separator();
-
-    // Child-Fenster mit allen (gefilterten) Stages
-    DrawSearchResults();
-
-    ImGui::End();
-}
-
-void HandleWarp() {
-
-}
+            ImGui::End();
+        }
+    }
 
 GameDataHolder* tryGetGameDataHolder()
 {
