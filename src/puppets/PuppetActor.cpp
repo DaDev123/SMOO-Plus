@@ -149,70 +149,15 @@ void PuppetActor::calcAnim() {
 }
 
 void PuppetActor::control() {
-    if (!mInfo) {
-        return;
-    }
+    if (mInfo) {
+        al::LiveActor* curModel = getCurrentModel();
 
-    al::LiveActor* curModel = getCurrentModel();
+        // Animation Updating
 
-    // Enhanced safety checks
-    if (!curModel) {
-        Logger::log("[Puppet] Error: getCurrentModel() returned null for %s\n", mInfo->puppetName);
-        return;
-    }
-
-    // CRITICAL: Check if action keeper exists before trying to play animations
-    if (!curModel->mActionKeeper) {
-        Logger::log("[Puppet] Warning: Model has no ActionKeeper for %s (model: %s)\n", mInfo->puppetName, mIsCaptureModel ? mInfo->curHack : "Normal");
-        return;
-    }
-
-    // ============================================================================
-    // POSITION & ROTATION
-    // ============================================================================
-
-    // Use smooth movement if low latency is enabled, otherwise snap directly
-    if (StageSceneStateServerConfig::isLowLatencyEnabled()) {
-        sead::Vector3f* pPos = al::getTransPtr(this);
-        sead::Quatf* pQuat = al::getQuatPtr(this);
-
-        mClosingSpeed = VisualUtils::SmoothMove_RegularLatency({pPos, pQuat}, {&mInfo->playerPos, &mInfo->playerRot}, Time::deltaTime, mClosingSpeed, 1440.0f);
-    } else {
-        al::setTrans(this, mInfo->playerPos);
-        al::setQuat(this, mInfo->playerRot);
-    }
-
-    // ============================================================================
-    // MODEL UPDATING
-    // ============================================================================
-
-    if (!mIs2DModel && mInfo->is2D) {
-        changeModel("Normal2D");
-        mIs2DModel = true;
-    } else if (mIs2DModel && !mInfo->is2D) {
-        changeModel("Normal");
-        mIs2DModel = false;
-    }
-
-    // ============================================================================
-    // ANIMATION UPDATING
-    // ============================================================================
-
-    const char* targetAnim = mInfo->curAnimStr;
-
-    // Validate animation name
-    if (!targetAnim || targetAnim[0] == '\0') {
-        targetAnim = "Wait";
-    }
-
-    if (!mIsCaptureModel) {
-        // ======== MARIO MODEL ANIMATION ========
-
-        // Fixed: Check the SAME animation we're about to start
-        if (!al::isActionPlaying(curModel, targetAnim)) {
-            startAction(targetAnim);
+        if (!al::isActionPlaying(curModel, mInfo->curSubAnimStr)) {
+            startAction(mInfo->curAnimStr);
         } else if (al::isActionEnd(curModel)) {
-            startAction(targetAnim);
+            startAction(mInfo->curAnimStr);
         }
 
         if (isNeedBlending()) {
@@ -220,129 +165,100 @@ void PuppetActor::control() {
                 setBlendWeight(i, mInfo->blendWeights[i]);
             }
         }
-    } else {
-        // ======== CAPTURE MODEL ANIMATION ========
 
-        // Check if we need to start or restart the animation
-        if (!al::isActionPlaying(curModel, targetAnim)) {
-            startAction(targetAnim);
-        } else if (al::isActionEnd(curModel)) {
-            startAction(targetAnim);
-        }
-    }
+        // Position & Rotation Handling
 
-    // ============================================================================
-    // CAPTURE UPDATING
-    // ============================================================================
+        // Use smooth movement if low latency is enabled, otherwise snap directly
+        if (StageSceneStateServerConfig::isLowLatencyEnabled()) {
+            sead::Vector3f* pPos = al::getTransPtr(this);
+            sead::Quatf* pQuat = al::getQuatPtr(this);
 
-    if (mInfo->isCaptured && !mIsCaptureModel) {
-        getCurrentModel()->makeActorDead();  // sets previous model to dead so we can try to
-                                             // switch to capture model
-        setCapture(mInfo->curHack);
-        mIsCaptureModel = true;
-
-        al::LiveActor* newModel = getCurrentModel();
-        if (newModel) {
-            newModel->makeActorAlive();  // make new model alive
+            mClosingSpeed =
+                VisualUtils::SmoothMove_RegularLatency({pPos, pQuat}, {&mInfo->playerPos, &mInfo->playerRot}, Time::deltaTime, mClosingSpeed, 1440.0f);
         } else {
-            // Fallback if capture model doesn't exist
-            Logger::log("[Puppet] Warning: Capture model '%s' not found, reverting to normal\n", mInfo->curHack);
-            mModelHolder->changeModel("Normal");
-            mIsCaptureModel = false;
-            getCurrentModel()->makeActorAlive();
+            al::setTrans(this, mInfo->playerPos);
+            al::setQuat(this, mInfo->playerRot);
         }
 
-    } else if (!mInfo->isCaptured && mIsCaptureModel) {
-        getCurrentModel()->makeActorDead();   // make capture model dead
-        mModelHolder->changeModel("Normal");  // set player model to normal
-        mIsCaptureModel = false;
-        getCurrentModel()->makeActorAlive();  // make player model alive
-    }
+        // Model Updating
 
-    // Re-fetch current model after potential capture state change
-    curModel = getCurrentModel();
-    if (!curModel || !curModel->mActionKeeper) {
-        return;  // Exit early if model state is invalid
-    }
+        if (!mIs2DModel && mInfo->is2D) {
+            changeModel("Normal2D");
+            mIs2DModel = true;
 
-    // ============================================================================
-    // CAP VISIBILITY & SYNC
-    // ============================================================================
+        } else if (mIs2DModel && !mInfo->is2D) {
+            changeModel("Normal");
+            mIs2DModel = false;
+        }
 
-    if (!mIsCaptureModel) {
-        // Cap visibility handling
-        bool shouldCapBeVisible = mInfo->isCapThrow;
-        bool isCapCurrentlyAlive = al::isAlive(mPuppetCap);
+        // Capture Updating
 
-        if (shouldCapBeVisible != isCapCurrentlyAlive) {
-            if (shouldCapBeVisible) {
+        if (mInfo->isCaptured && !mIsCaptureModel) {
+            getCurrentModel()->makeActorDead();  // sets previous model to dead so we can try to
+                                                 // switch to capture model
+            setCapture(mInfo->curHack);
+            mIsCaptureModel = true;
+            getCurrentModel()->makeActorAlive();  // make new model alive
+
+        } else if (!mInfo->isCaptured && mIsCaptureModel) {
+            getCurrentModel()->makeActorDead();   // make capture model dead
+            mModelHolder->changeModel("Normal");  // set player model to normal
+            mIsCaptureModel = false;
+            getCurrentModel()->makeActorAlive();  // make player model alive
+        }
+
+        // Visibility Updating
+
+        if (mInfo->isCapThrow) {
+            if (al::isDead(mPuppetCap)) {
                 mPuppetCap->makeActorAlive();
-            } else {
+                al::setTrans(mPuppetCap, mInfo->capPos);
+            }
+        } else {
+            if (al::isAlive(mPuppetCap)) {
                 mPuppetCap->makeActorDead();
-                // Turn cap back on for 3D models
-                if (!mIs2DModel) {
-                    al::LiveActor* headModel = al::tryGetSubActor(curModel, "頭");
-                    if (headModel) {
-                        al::startVisAnimForAction(headModel, "CapOn");
-                    }
+
+                // startAction(mInfo->curSubAnimStr);
+
+                al::LiveActor* headModel = al::getSubActor(curModel, "頭");
+                if (headModel) {
+                    al::startVisAnimForAction(headModel, "CapOn");
                 }
             }
         }
 
-        // ======== CAP ANIMATION SYNC ========
-        if (shouldCapBeVisible && mPuppetCap && mInfo->capAnim && mInfo->capAnim[0] != '\0') {
-            if (!al::isActionPlaying(mPuppetCap, mInfo->capAnim) || al::isActionEnd(mPuppetCap)) {
-                mPuppetCap->startAction(mInfo->capAnim);
+        if (mNameTag && !GameModeManager::instance()->isActive())
+            if (!mNameTag->mIsAlive)
+                mNameTag->appear();
+
+        if (mNameTag && GameModeManager::instance()->isActive()) {
+            GameMode curMode = GameModeManager::instance()->getGameMode();
+            switch (curMode) {
+            case GameMode::HIDEANDSEEK:
+                mNameTag->mIsAlive = GameModeManager::instance()->getMode<HideAndSeekMode>()->isPlayerIt() && mInfo->isIt;
+                break;
+            case GameMode::SARDINE:
+                mNameTag->mIsAlive = GameModeManager::instance()->getMode<SardineMode>()->isPlayerIt() && mInfo->isIt;
+                break;
+            case GameMode::FREEZETAG: {
+                bool isRun = GameModeManager::instance()->getInfo<FreezeTagInfo>()->mIsPlayerRunner;
+                mNameTag->mIsAlive = (isRun && mInfo->isFreezeTagRunner) || (!isRun && !mInfo->isFreezeTagRunner);
+                break;
             }
-        }
-    }
-
-    // ============================================================================
-    // NAME TAG VISIBILITY
-    // ============================================================================
-
-    if (mNameTag && !GameModeManager::instance()->isActive()) {
-        if (!mNameTag->mIsAlive) {
-            mNameTag->appear();
-        }
-    }
-
-    if (mNameTag && GameModeManager::instance()->isActive()) {
-        GameMode curMode = GameModeManager::instance()->getGameMode();
-
-        switch (curMode) {
-        case GameMode::HIDEANDSEEK:
-            mNameTag->mIsAlive = GameModeManager::instance()->getMode<HideAndSeekMode>()->isPlayerIt() && mInfo->isIt;
-            break;
-
-        case GameMode::SARDINE:
-            mNameTag->mIsAlive = GameModeManager::instance()->getMode<SardineMode>()->isPlayerIt() && mInfo->isIt;
-            break;
-
-        case GameMode::FREEZETAG: {
-            bool isRun = GameModeManager::instance()->getInfo<FreezeTagInfo>()->mIsPlayerRunner;
-            mNameTag->mIsAlive = (isRun && mInfo->isFreezeTagRunner) || (!isRun && !mInfo->isFreezeTagRunner);
-            break;
+            default:
+                Logger::log("Name tag display failed due to unknown active game mode!\n");
+                break;
+            };
         }
 
-        default:
-            break;
-        }
-    }
+        // Sub-Actor Updating
 
-    // ============================================================================
-    // SUB-ACTOR UPDATING
-    // ============================================================================
-
-    if (mPuppetCap) {
         mPuppetCap->update();
+
+        // Syncing
+
+        syncPose();
     }
-
-    // ============================================================================
-    // POSE SYNCING
-    // ============================================================================
-
-    syncPose();
 }
 
 void PuppetActor::setBlendWeight(int index, float weight) {
