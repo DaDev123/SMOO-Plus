@@ -685,6 +685,9 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
+    GameModeManager* gmm = GameModeManager::instance();
+    packet->gameMode = gmm ? static_cast<s8>(gmm->getGameMode()) : static_cast<s8>(-1);
+
     if (*packet != sInstance->lastGameInfPacket) {
         sInstance->lastGameInfPacket = *packet;
         sInstance->mSocket->queuePacket(packet);
@@ -713,6 +716,9 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
     packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
+
+    GameModeManager* gmm = GameModeManager::instance();
+    packet->gameMode = gmm ? static_cast<s8>(gmm->getGameMode()) : static_cast<s8>(-1);
 
     sInstance->lastGameInfPacket = *packet;
 
@@ -1060,6 +1066,7 @@ void Client::updateGameInfo(GameInf* packet) {
         }
 
         curInfo->is2D = packet->is2D;
+        curInfo->gameMode = packet->gameMode;
     }
 }
 

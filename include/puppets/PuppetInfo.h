@@ -5,6 +5,9 @@
 #include "algorithms/PlayerAnims.h"
 #include "nn/account.h"
 #include "packets/Packet.h"
+#include "server/gamemode/GameMode.h"
+
+enum GameMode : s8;
 
 struct PuppetInfo {
     // General Puppet Info
@@ -33,6 +36,7 @@ struct PuppetInfo {
     float blendWeights[6] = {};
     float animRate = 0.f;
     bool is2D = false;
+    s8 gameMode = -1;
     // Puppet Hack Cap Info
     sead::Vector3f capPos = sead::Vector3f(0.f, 0.f, 0.f);
     sead::Quatf capRot = sead::Quatf(0.f, 0.f, 0.f, 0.f);

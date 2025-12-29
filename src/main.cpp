@@ -560,6 +560,8 @@ void drawMain(al::Sequence* curSequence) {
                     if (curModel && curPupInfo) {
                         ImGui::Text("Player Name: %s\n", curPupInfo->puppetName);
                         ImGui::Text("Connection Status: %s\n", curPupInfo->isConnected ? "Online" : "Offline");
+                        GameMode puppetGameMode = static_cast<GameMode>(curPupInfo->gameMode);
+                        ImGui::Text("Game mode: %i | %s\n", curPupInfo->gameMode, GameModeFactory::getModeName(puppetGameMode));
                         ImGui::Text("Is in same Stage: %s\n", curPupInfo->isInSameStage ? "Yes" : "No");
                         ImGui::Text("Stage: %s\n", curPupInfo->stageName);
                         ImGui::Text("Scenario: %u\n", curPupInfo->scenarioNo);
