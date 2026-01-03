@@ -34,6 +34,8 @@ bool StageSceneStateServerConfig::sPuppetCollisionEnabled = true;
 bool StageSceneStateServerConfig::sPuppetBounceEnabled = true;
 bool StageSceneStateServerConfig::sCostumeDoorsUnlocked = true;
 bool StageSceneStateServerConfig::sLowLatencyEnabled = true;
+bool StageSceneStateServerConfig::sSpeedrunModeEnabled = false;
+bool StageSceneStateServerConfig::sSpeedrunNonStopEnabled = false;
 
 // ============================================================================
 // ServerBrowser Implementation
@@ -79,7 +81,7 @@ static std::vector<ServerBrowser> loadServersFromFile() {
     u8* fileData = BloodMoon::loadFile("OnlineData/ServerList.txt", &fileSize);
 
     if (!fileData) {
-        servers.push_back(ServerBrowser("ERROR: OnlineData/serverlist.txt not found", "", 0));
+        servers.push_back(ServerBrowser("ERROR: OnlineData/ServerList.txt not found", "", 0));
         return servers;
     }
 
@@ -149,6 +151,8 @@ StageSceneStateServerConfig::StageSceneStateServerConfig(const char* name, al::S
     initPlayerCollisionMenu(initInfo);
     initGameModeMenus(initInfo);
     initTwistsMenu(initInfo);
+    initMiscMenu(initInfo);
+    initSpeedrunConfigMenu(initInfo);
 
     mCurrentList = optionsList[MENU_MAIN];
     mCurrentMenu = menuList[MENU_MAIN];
@@ -179,6 +183,7 @@ void StageSceneStateServerConfig::updateMainMenuOptions() {
     msgList[MENU_MAIN]->mBuffer[MAIN_NETWORK_SETTINGS].copy(u"Network Settings");
     msgList[MENU_MAIN]->mBuffer[MAIN_GAMEPLAY_SETTINGS].copy(u"Gameplay Settings");
     msgList[MENU_MAIN]->mBuffer[MAIN_GAMEMODE_SETTINGS].copy(u"Game Mode Settings");
+    msgList[MENU_MAIN]->mBuffer[MAIN_MISC_SETTINGS].copy(u"Misc Settings");
 }
 
 void StageSceneStateServerConfig::exeMainMenu() {
@@ -202,6 +207,9 @@ void StageSceneStateServerConfig::exeMainMenu() {
             break;
         case MAIN_GAMEMODE_SETTINGS:
             al::setNerve(this, &NrvStageSceneStateServerConfig.GameModeSettings);
+            break;
+        case MAIN_MISC_SETTINGS:
+            al::setNerve(this, &NrvStageSceneStateServerConfig.MiscSettings);
             break;
         }
     }
@@ -619,6 +627,96 @@ void StageSceneStateServerConfig::exeTwistsSettings() {
 }
 
 // ============================================================================
+// Misc Menu
+// ============================================================================
+
+void StageSceneStateServerConfig::initMiscMenu(const al::LayoutInitInfo& initInfo) {
+    menuList[MENU_MISC] = new SimpleLayoutMenu("MiscMenu", "OptionSelect", initInfo, 0, false);
+    optionsList[MENU_MISC] = new CommonVerticalList(menuList[MENU_MISC], initInfo, true);
+    al::setPaneString(menuList[MENU_MISC], "TxtOption", u"Misc Settings", 0);
+    optionsList[MENU_MISC]->unkInt1 = 1;
+    optionsList[MENU_MISC]->initDataNoResetSelected(mMiscMenuOptionsCount);
+    updateMiscOptions();
+    optionsList[MENU_MISC]->addStringData(msgList[MENU_MISC]->mBuffer, "TxtContent");
+}
+
+void StageSceneStateServerConfig::updateMiscOptions() {
+    msgList[MENU_MISC]->mBuffer[MISC_SPEEDRUN_MODE].copy(sSpeedrunModeEnabled ? u"Speedrun Mode (ON)" : u"Speedrun Mode (OFF)");
+    msgList[MENU_MISC]->mBuffer[MISC_SPEEDRUN_CONFIG].copy(u"Speedrun Config");
+}
+
+void StageSceneStateServerConfig::exeMiscSettings() {
+    if (al::isFirstStep(this)) {
+        mCurrentList = optionsList[MENU_MISC];
+        mCurrentMenu = menuList[MENU_MISC];
+        subMenuStart();
+    }
+
+    subMenuUpdate();
+
+    if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
+        switch (mCurrentList->mCurSelected) {
+        case MISC_SPEEDRUN_MODE:
+            sSpeedrunModeEnabled = !sSpeedrunModeEnabled;
+            if (sSpeedrunModeEnabled) {
+                GameModeBase* mode = GameModeManager::instance()->getMode<GameModeBase>();
+                if (mode && mode->isModeActive()) {
+                    mode->end();
+                }
+            }
+
+            updateMiscOptions();
+            refreshMenu(optionsList[MENU_MISC], msgList[MENU_MISC]->mBuffer, mMiscMenuOptionsCount);
+            break;
+
+        case MISC_SPEEDRUN_CONFIG:
+            al::setNerve(this, &NrvStageSceneStateServerConfig.SpeedrunConfig);
+            break;
+        }
+    }
+}
+
+// ============================================================================
+// Speedrun Config Menu
+// ============================================================================
+
+void StageSceneStateServerConfig::initSpeedrunConfigMenu(const al::LayoutInitInfo& initInfo) {
+    menuList[MENU_SPEEDRUN_CONFIG] = new SimpleLayoutMenu("SpeedrunConfigMenu", "OptionSelect", initInfo, 0, false);
+    optionsList[MENU_SPEEDRUN_CONFIG] = new CommonVerticalList(menuList[MENU_SPEEDRUN_CONFIG], initInfo, true);
+    al::setPaneString(menuList[MENU_SPEEDRUN_CONFIG], "TxtOption", u"Speedrun Config", 0);
+    optionsList[MENU_SPEEDRUN_CONFIG]->unkInt1 = 1;
+    optionsList[MENU_SPEEDRUN_CONFIG]->initDataNoResetSelected(mSpeedrunConfigOptionsCount);
+    updateSpeedrunConfigOptions();
+    optionsList[MENU_SPEEDRUN_CONFIG]->addStringData(msgList[MENU_SPEEDRUN_CONFIG]->mBuffer, "TxtContent");
+}
+
+void StageSceneStateServerConfig::updateSpeedrunConfigOptions() {
+    msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_NONSTOP].copy(sSpeedrunNonStopEnabled ? u"Non-Stop (ON)" : u"Non-Stop (OFF)");
+}
+
+void StageSceneStateServerConfig::exeSpeedrunConfig() {
+    if (al::isFirstStep(this)) {
+        mCurrentList = optionsList[MENU_SPEEDRUN_CONFIG];
+        mCurrentMenu = menuList[MENU_SPEEDRUN_CONFIG];
+        subMenuStart();
+    }
+
+    subMenuUpdate();
+
+    if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
+        switch (mCurrentList->mCurSelected) {
+        case SPEEDRUN_NONSTOP:
+            sSpeedrunNonStopEnabled = !sSpeedrunNonStopEnabled;
+            // TODO: Implement non-stop
+            break;
+        }
+
+        updateSpeedrunConfigOptions();
+        refreshMenu(optionsList[MENU_SPEEDRUN_CONFIG], msgList[MENU_SPEEDRUN_CONFIG]->mBuffer, mSpeedrunConfigOptionsCount);
+    }
+}
+
+// ============================================================================
 // Lifecycle Methods
 // ============================================================================
 
@@ -696,6 +794,8 @@ void StageSceneStateServerConfig::subMenuUpdate() {
             endSubMenuToParent(menuList[MENU_NETWORK], optionsList[MENU_NETWORK]);
         } else if (mCurrentMenu == menuList[MENU_GAMEMODE_MODESEL] || mCurrentMenu == menuList[MENU_TWISTS]) {
             endSubMenuToParent(menuList[MENU_GAMEMODE], optionsList[MENU_GAMEMODE]);
+        } else if (mCurrentMenu == menuList[MENU_SPEEDRUN_CONFIG]) {
+            endSubMenuToParent(menuList[MENU_MISC], optionsList[MENU_MISC]);
         } else if (mGamemodeConfigMenu && mCurrentMenu == mGamemodeConfigMenu->mLayout) {
             endSubMenuToParent(menuList[MENU_GAMEMODE], optionsList[MENU_GAMEMODE]);
         } else {
@@ -745,6 +845,8 @@ void StageSceneStateServerConfig::endSubMenuToParent(SimpleLayoutMenu* parentMen
         al::setNerve(this, &NrvStageSceneStateServerConfig.NetworkSettings);
     } else if (parentMenu == menuList[MENU_GAMEMODE]) {
         al::setNerve(this, &NrvStageSceneStateServerConfig.GameModeSettings);
+    } else if (parentMenu == menuList[MENU_MISC]) {
+        al::setNerve(this, &NrvStageSceneStateServerConfig.MiscSettings);
     }
 }
 

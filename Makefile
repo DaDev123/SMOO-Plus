@@ -13,8 +13,8 @@ WHITE := \033[37m
 
 SMOVER ?= 100
 BUILDVER ?= 101
-BUILDVERSTR ?= 0.5.0-pre
-DEBUGLOG ?= 0 # defaults to disable debug logger 
+BUILDVERSTR ?= 0.6.1-pre
+DEBUGLOG ?= 1 # defaults to disable debug logger 
 SERVERIP ?= 192.168.178.41 # put debug logger server IP here
 
 PROJNAME ?= SMOO-Plus

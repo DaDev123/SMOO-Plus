@@ -61,6 +61,7 @@
 #include "imgui.h"
 #include "Imgui.hpp"
 #include "layouts/ConnectionStatus.h"
+#include "layouts/SpeedrunIcon.h"
 #include "logger.hpp"
 #include "nn/hid.h"
 #include "nn/socket.h"
@@ -160,6 +161,7 @@ HkTrampoline<void, HakoniwaSequence*, al::SequenceInitInfo*> hakoniwaSequenceIni
         Client::instance()->init(lytInfo, sequence->mGameDataHolderAccessor);
 
         ConnectionStatus::sInstance = new ConnectionStatus("Status", lytInfo);
+        SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", lytInfo);
     });
 
 HkTrampoline<void, al::ActorInitInfo*, al::Scene*, al::PlacementInfo*, al::LayoutInitInfo*, al::ActorFactory*, al::SceneMsgCtrl*, al::GameDataHolderBase*>
@@ -211,6 +213,14 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
 
     TwistsConfig::updateCappyProximity(player, stageScene);
 
+    if (SpeedrunIcon::sInstance) {
+        if (StageSceneStateServerConfig::isSpeedrunModeEnabled()) {
+            SpeedrunIcon::sInstance->tryStart();
+        } else {
+            SpeedrunIcon::sInstance->tryEnd();
+        }
+    }
+
     if (al::isPadHoldZR(-1)) {
         if (al::isPadTriggerUp(-1)) {  // ZR + Up => Debug menu
             debugMode = !debugMode;
@@ -245,10 +255,11 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
             }
         }
     } else if (al::isPadHoldL(-1)) {
-        if (al::isPadTriggerLeft(-1)) {  // L + Left => Activate gamemode
+        if (al::isPadTriggerLeft(-1) && !StageSceneStateServerConfig::isSpeedrunModeEnabled()) {
             GameModeManager::instance()->toggleActive();
         }
     }
+
     if (Client::isMusicDisabled()) {
         if (al::isPlayingBgm(stageScene)) {
             al::stopAllBgm(stageScene, 0);
