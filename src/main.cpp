@@ -220,6 +220,7 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
             SpeedrunIcon::sInstance->tryEnd();
         }
     }
+    stageScene->stageSceneLayout->updateCounterParts();
 
     if (al::isPadHoldZR(-1)) {
         if (al::isPadTriggerUp(-1)) {  // ZR + Up => Debug menu
