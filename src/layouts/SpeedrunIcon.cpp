@@ -56,7 +56,7 @@ void SpeedrunIcon::exeWait() {
     }
 
     if (StageSceneStateServerConfig::isSpeedrunNonStopEnabled()) {
-        al::showPane(this, "TxtNonstop");
+        al::hidePane(this, "TxtNonstop");
     } else {
         al::hidePane(this, "TxtNonstop");
     }

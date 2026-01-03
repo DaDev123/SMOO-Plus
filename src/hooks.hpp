@@ -1,4 +1,6 @@
+#include "hk/hook/a64/Assembler.h"
 #include "hk/hook/Trampoline.h"
+#include "hk/util/Math.h"
 
 #include "al/Library/Camera/CameraDirector.h"
 #include "al/Library/Controller/InputFunction.h"
@@ -338,3 +340,37 @@ static HkTrampoline<bool, al::WindowConfirmWait*> windowConfirmWaitHook = hk::ho
     al::setNerve(win, (al::Nerve*)(hk::ro::getMainModule()->range().start() + 0x1e05be8));
     return true;
 });
+
+namespace speedrun {
+
+static bool isHooksCreated = false;
+
+static constexpr u32 listPtrNop[] = {
+    0x4DB934,
+    0x2D250C,
+};
+
+static hk::hook::a64::AsmBlock<true, 1>* listNop[hk::util::arraySize(listPtrNop)];
+
+static void uninstallHooks() {
+    for (hk::hook::a64::AsmBlock<true, 1>* b : listNop) {
+        b->uninstall();
+    }
+}
+
+static void createHooks() {
+    if (!isHooksCreated) {
+        for (int i = 0; i < hk::util::arraySize(listPtrNop); i++) {
+            listNop[i] = new hk::hook::a64::AsmBlock<true, 1>(hk::hook::a64::assemble<"nop", true>());
+        }
+        isHooksCreated = true;
+    }
+}
+
+static void installHooks() {
+    for (int i = 0; i < hk::util::arraySize(listPtrNop); i++) {
+        listNop[i]->installAtMainOffset(listPtrNop[i]);
+    }
+}
+
+}  // namespace speedrun

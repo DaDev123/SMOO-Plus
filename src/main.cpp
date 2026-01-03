@@ -110,8 +110,8 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
 
     gameSystemInit.orig(gameSystem);
 
-    nn::hid::InitializeMouse();
-    nn::hid::InitializeKeyboard();
+    // nn::hid::InitializeMouse();
+    // nn::hid::InitializeKeyboard();
 });
 
 HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSystem* gameSystem) -> void {
@@ -121,7 +121,7 @@ HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSys
 
     /* ImGui */
 
-    imgui::updateImGuiInput();
+    // imgui::updateImGuiInput();
 
     ImGui::NewFrame();
     drawMain(gameSystem->mSequence);
@@ -159,6 +159,8 @@ HkTrampoline<void, HakoniwaSequence*, al::SequenceInitInfo*> hakoniwaSequenceIni
                                initInfo->mSystemInfo->messageSystem, initInfo->mSystemInfo->gamePadSystem);
 
         Client::instance()->init(lytInfo, sequence->mGameDataHolderAccessor);
+
+        speedrun::createHooks();
 
         ConnectionStatus::sInstance = new ConnectionStatus("Status", lytInfo);
         SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", lytInfo);
@@ -216,8 +218,10 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
     if (SpeedrunIcon::sInstance) {
         if (StageSceneStateServerConfig::isSpeedrunModeEnabled()) {
             SpeedrunIcon::sInstance->tryStart();
+            speedrun::uninstallHooks();
         } else {
             SpeedrunIcon::sInstance->tryEnd();
+            speedrun::installHooks();
         }
     }
     stageScene->stageSceneLayout->updateCounterParts();
@@ -802,8 +806,8 @@ extern "C" void hkMain() {
     hk::hook::writeBranchLinkAtSym<"R_metroCostumeDoor">(unlockCostumeDoorMetroHook);                                   // metro
 
     // QOL Patches
-    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
-    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);  // Notes Demo Skip
+    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
+    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);  // Notes Demo Skip
     // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);  // Removes Assist Mode Ledge Grabs
 
     // Twists

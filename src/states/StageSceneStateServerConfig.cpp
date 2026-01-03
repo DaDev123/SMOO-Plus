@@ -691,7 +691,7 @@ void StageSceneStateServerConfig::initSpeedrunConfigMenu(const al::LayoutInitInf
 }
 
 void StageSceneStateServerConfig::updateSpeedrunConfigOptions() {
-    msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_NONSTOP].copy(sSpeedrunNonStopEnabled ? u"Non-Stop (ON)" : u"Non-Stop (OFF)");
+    msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_NONSTOP].copy(sSpeedrunNonStopEnabled ? u"Non-Stop (WIP)" : u"Non-Stop (WIP)");
 }
 
 void StageSceneStateServerConfig::exeSpeedrunConfig() {
