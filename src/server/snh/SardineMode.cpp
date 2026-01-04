@@ -103,6 +103,7 @@ void SardineMode::end() {
     mModeLayout->tryEnd();
 
     mModeTimer->disableTimer();
+    mCurScene->stageSceneLayout->start();
 
     CoinCounter* coinCollect = mCurScene->stageSceneLayout->mCoinCollectLyt;
     CoinCounter* coinCounter = mCurScene->stageSceneLayout->mCoinCountLyt;

@@ -215,6 +215,7 @@ private:
     SimpleLayoutMenu* mCurrentMenu = nullptr;
     CommonVerticalList* mCurrentList = nullptr;
     bool mIsDecideConfig = false;
+    int mLastSelectedIndex = 0;
 };
 
 // ============================================================================

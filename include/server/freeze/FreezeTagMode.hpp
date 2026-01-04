@@ -71,7 +71,6 @@ public:
 
     FreezeUpdateType mNextUpdateType = FreezeUpdateType::PLAYER;  // Set for the sendPacket funtion to know what packet type is
                                                                   // sent
-    // In FreezeTagMode.hpp, add to public section:
     FreezeUpdateType getNextUpdateType() const { return mNextUpdateType; }
 
 private:

@@ -661,8 +661,9 @@ void StageSceneStateServerConfig::exeMiscSettings() {
             if (sSpeedrunModeEnabled) {
                 GameModeBase* mode = GameModeManager::instance()->getMode<GameModeBase>();
                 if (mode && mode->isModeActive()) {
-                    mode->end();
+                    GameModeManager::instance()->end();
                 }
+                GameModeManager::instance()->setActive(false);
             }
 
             updateMiscOptions();

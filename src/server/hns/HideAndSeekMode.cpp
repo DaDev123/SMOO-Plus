@@ -104,6 +104,7 @@ void HideAndSeekMode::begin() {
 
 void HideAndSeekMode::end() {
     mModeLayout->tryEnd();
+    mCurScene->stageSceneLayout->start();
 
     mModeTimer->disableTimer();
 
