@@ -14,7 +14,6 @@ SpeedrunIcon::SpeedrunIcon(const char* name, const al::LayoutInitInfo& initInfo)
     al::initLayoutActor(this, initInfo, "SpeedrunIcon", 0);
 
     al::hidePane(this, "TxtNonstop");
-    al::setPaneStringFormat(this, "TxtSpeedrun", "Speedrun");
     al::setPaneStringFormat(this, "TxtNonstop", "Non-Stop");
 
     initNerve(&NrvSpeedrunIcon.End, 0);
@@ -55,6 +54,8 @@ void SpeedrunIcon::exeWait() {
         al::startAction(this, "Wait", 0);
     }
 
+    updateSpeedrunText();
+
     if (StageSceneStateServerConfig::isSpeedrunNonStopEnabled()) {
         al::hidePane(this, "TxtNonstop");
     } else {
@@ -70,4 +71,9 @@ void SpeedrunIcon::exeEnd() {
     if (al::isActionEnd(this, 0)) {
         kill();
     }
+}
+
+void SpeedrunIcon::updateSpeedrunText() {
+    int playerCount = Client::getConnectCount() + 1;  // include local player
+    al::setPaneStringFormat(this, "TxtSpeedrun", "%dP Speedrun", playerCount);
 }

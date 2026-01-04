@@ -18,12 +18,10 @@ public:
     bool tryStart();
     bool tryEnd();
 
-    void showOnline();
-    void showOffline();
-
     void exeAppear();
     void exeWait();
     void exeEnd();
+    void updateSpeedrunText();
 
     void setCurScene(StageScene* scene) {
         mCurScene = scene;
@@ -36,7 +34,6 @@ public:
     static SpeedrunIcon* sInstance;
 
 private:
-    struct HideAndSeekInfo* mInfo;
     sead::PtrArray<GameModePlayerSlot> mPlayerSlots;
     static constexpr int mMaxPlayers = 16;
     StageScene* mCurScene = nullptr;
