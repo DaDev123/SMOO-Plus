@@ -98,7 +98,7 @@ Check out the hakkun [README](./sys/README.md) for more info
 - [Kgamer77](https://github.com/Kgamer77) Added Most of the New Server Packets
 - [Neorix](https://github.com/Neorix09) Wrote the Majority of the new server code
 
-# Orignal SMOO 
+# Original SMOO 
 
 - [CraftyBoss](https://github.com/CraftyBoss) Created SMOO
 - [Sanae](https://github.com/sanae6) Wrote the majority of the server code
