@@ -51,11 +51,13 @@
 #include "game/System/PlayerHitPointData.h"
 
 #include <cmath>
+#include <cstring>
 #include <math.h>
 
 #include "actors/PuppetActor.h"
 #include "factoryPatches.h"
 #include "gfx/seadColor.h"
+#include "helpers.hpp"
 #include "hooks.hpp"
 #include "hooksFreezeTag.hpp"
 #include "imgui.h"
@@ -78,6 +80,7 @@
 #include "speedboot/BootHooks.hpp"
 #include "System/GameSystem.h"
 #include "TwistsConfig.hpp"
+#include "Util/AchievementUtil.h"
 
 // ===== GLOBAL VARIABLES =====
 static int pInfSendTimer = 0;
@@ -147,6 +150,18 @@ HkTrampoline<void, GameDataHolderWriter, ShineInfo*> sendShinePacketHook = hk::h
         }
     }
     sendShinePacketHook.orig(writer, info);
+});
+
+HkTrampoline<void, GameDataFile*, const char*> sendShinePacketHook2 = hk::hook::trampoline([](GameDataFile* file, const char* name) -> void {
+    if (!rs::checkGetAchievement(file->mGameDataHolder, name)) {
+        for (int i = 0; i < hk::util::arraySize(toadetteMoons); i++) {
+            if (strcmp(toadetteMoons[i], name) == 0) {
+                Client::sendShineCollectPacket(2000 + i);
+            }
+        }
+    }
+
+    sendShinePacketHook2.orig(file, name);
 });
 
 HkTrampoline<void, HakoniwaSequence*, al::SequenceInitInfo*> hakoniwaSequenceInitHook =
@@ -743,6 +758,7 @@ extern "C" void hkMain() {
 
     // Shine Syncing
     sendShinePacketHook.installAtSym<"_ZN16GameDataFunction11setGotShineE20GameDataHolderWriterPK9ShineInfo">();
+    sendShinePacketHook2.installAtSym<"_ZN12GameDataFile14getAchievementEPKc">();
     registerShineToListHook.installAtSym<"_ZN5Shine18initAfterPlacementEv">();
 
     // Amiibo Button Disabling
@@ -809,6 +825,10 @@ extern "C" void hkMain() {
     // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
     // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);  // Notes Demo Skip
     // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);  // Removes Assist Mode Ledge Grabs
+
+    // World Resource Heap stuff
+    hk::ro::getMainModule()->writeRo(0x5145c8, 0x9FD20771);  // cmp w20, #500
+    hk::hook::a64::assemble<"ret">().installAtMainOffset(0x514710);
 
     // Twists
     icePhysicsHook.installAtSym<"_ZN2al11isFloorCodeERKNS_8TriangleEPKc">();  // Enables Ice Physics

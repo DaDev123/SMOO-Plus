@@ -43,6 +43,7 @@
 #include "System/GameDataHolderAccessor.h"
 #include "thread/seadMessageQueue.h"
 #include "types.h"
+#include "Util/AchievementUtil.h"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
@@ -1433,6 +1434,13 @@ void Client::updateShines() {
             continue;
 
         Logger::log("Shine UID: %d\n", shineID);
+
+        if (shineID >= 2000) {
+            if (!rs::checkGetAchievement(sInstance->mCurStageScene, toadetteMoons[shineID - 2000])) {
+                GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile()->getAchievement(toadetteMoons[shineID - 2000]);
+            }
+            continue;
+        }
 
         GameDataFile::HintInfo* shineInfo = CustomGameDataFunction::getHintInfoByUniqueID(accessor, shineID);
 
