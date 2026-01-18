@@ -69,6 +69,7 @@
 #include "nn/socket.h"
 #include "puppetHooks.hpp"
 #include "puppets/PuppetInfo.h"
+#include "sdredirect.hpp"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "server/freeze/FreezeTagMode.hpp"
@@ -835,4 +836,7 @@ extern "C" void hkMain() {
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
     hk::gfx::DebugRenderer::instance()->installHooks();
+
+    //SD Redirect
+    SDRedirect::installHooks();
 }
