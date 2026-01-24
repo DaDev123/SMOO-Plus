@@ -827,7 +827,7 @@ extern "C" void hkMain() {
     // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);  // Removes Assist Mode Ledge Grabs
 
     // World Resource Heap stuff
-    hk::ro::getMainModule()->writeRo(0x5145c8, 0x9FD20771);  // cmp w20, #500
+    hk::ro::getMainModule()->writeRo(0x5145c8, 0x7107D29F);  // cmp w20, #500
     hk::hook::a64::assemble<"ret">().installAtMainOffset(0x514710);
 
     // Twists
