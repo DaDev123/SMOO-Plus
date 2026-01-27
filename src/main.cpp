@@ -164,6 +164,11 @@ HkTrampoline<void, GameDataFile*, const char*> sendShinePacketHook2 = hk::hook::
     sendShinePacketHook2.orig(file, name);
 });
 
+HkTrampoline<void, GameDataFile*, al::PlacementId*> sendCoinCollectCollectPacketHook = hk::hook::trampoline([](GameDataFile* file, al::PlacementId* placeID) -> void {
+    Client::sendCoinCollectCollectPacket(placeID, file->getCurrentWorldIdNoDevelop(), file->mCurrentStageName);
+    sendCoinCollectCollectPacketHook.orig(file, placeID);
+});
+
 HkTrampoline<void, HakoniwaSequence*, al::SequenceInitInfo*> hakoniwaSequenceInitHook =
     hk::hook::trampoline([](HakoniwaSequence* sequence, al::SequenceInitInfo* initInfo) -> void {
         hakoniwaSequenceInitHook.orig(sequence, initInfo);
@@ -760,6 +765,9 @@ extern "C" void hkMain() {
     sendShinePacketHook.installAtSym<"_ZN16GameDataFunction11setGotShineE20GameDataHolderWriterPK9ShineInfo">();
     sendShinePacketHook2.installAtSym<"_ZN12GameDataFile14getAchievementEPKc">();
     registerShineToListHook.installAtSym<"_ZN5Shine18initAfterPlacementEv">();
+
+    // CoinCollect Syncing
+    sendCoinCollectCollectPacketHook.installAtSym<"_ZN12GameDataFile14addCoinCollectEPKN2al11PlacementIdE">();
 
     // Amiibo Button Disabling
     hk::hook::replace([]() -> void { return; }).installAtSym<"_ZN2rs16isHoldAmiiboModeEPKN2al18IUseSceneObjHolderE">();

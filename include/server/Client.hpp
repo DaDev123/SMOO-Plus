@@ -121,6 +121,7 @@ public:
     static void sendTagInfPacket();
     static void sendFreezeInfPacket();
     static void sendPuppetPosInfoPacket();
+    static void sendCoinCollectCollectPacket(al::PlacementId* placeID, int worldID, sead::FixedSafeString<128> stage);
 
     // ===== PUPPET MANAGEMENT =====
     static bool tryAddPuppet(PuppetActor* puppet);
@@ -241,6 +242,7 @@ private:
     void disconnectPlayer(PlayerDC* packet);
     void updateMessages(MessagePacket* packet);
     void updateHealthCoins(HealthCoins* packet);
+    void updateCoinCollects(CoinCollectCollect* packet);
 
     // ===== UTILITY METHODS =====
     PuppetInfo* findPuppetInfo(const nn::account::Uid& id, bool isFindAvailable);

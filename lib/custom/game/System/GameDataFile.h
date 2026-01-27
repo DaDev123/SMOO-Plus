@@ -1,6 +1,8 @@
 #pragma once
 
 #include "container/seadPtrArray.h"
+#include "Library/Base/StringUtil.h"
+#include "Library/Placement/PlacementId.h"
 #include "Library/Scene/IUseSceneObjHolder.h"
 #include "Library/Scene/SceneObjHolder.h"
 #include "math/seadVector.h"
@@ -9,6 +11,8 @@
 #include "System/GameProgressData.h"
 #include "System/PlayerHitPointData.h"
 #include "types.h"
+
+constexpr s32 sNumWorlds = 20;
 
 namespace al {
 class ActorInitInfo;
@@ -78,9 +82,40 @@ public:
 
     static_assert(sizeof(HintInfo) == 0x238, "size of HintInfo");
 
+    struct CoinCollectInfo {
+        void clear();
+
+        s32 worldId;
+        sead::FixedSafeString<128> stageName;
+        sead::FixedSafeString<128> objId;
+        s32 uniqueId;
+        bool isGet;
+    };
+
+    template <typename T, s32 Size>
+    class FixedHeapArray {
+    public:
+        void alloc() { mPtr = new T[Size]; }
+
+        s32 size() const { return Size; }
+
+        T& operator[](s32 index) { return mPtr[index]; }
+
+        const T& operator[](s32 index) const { return mPtr[index]; }
+
+        T* begin() const { return mPtr; }
+
+        T* end() const { return mPtr + Size; }
+
+    private:
+        T* mPtr = nullptr;
+    };
+
+    enum class CountType { Value_0, Value_1, Value_2 };
+
     void initializeData(void);
     bool tryReadByamlData(al::ByamlIter*);
-    void tryFindCoinCollectInfo(const char*, const char*);
+    CoinCollectInfo* tryFindCoinCollectInfo(const char* curStage, const char* objID) const;
     void tryFindShineIndexByUniqueId(int);
     void tryFindCoinCollectIndexByUniqueId(int);
     void buyDefaultItem(void);
@@ -349,6 +384,10 @@ public:
     bool isEmpty(void) const;
     bool isKidsMode(void) const;
 
+    s32 getCurrentWorldId() const { return mCurWorldID; }
+
+    s32 getCurrentWorldIdNoDevelop() const { return sead::Mathi::max(mCurWorldID, 0); }
+
     // custom methods
 
     // custom impl of findShine that uses shine UID instead of index to get the right HintInfo
@@ -360,6 +399,25 @@ public:
             }
         }
         return nullptr;
+    }
+
+    // custom impl of addCoinCollect that uses a provided stage and world instead of your current ones
+    void customAddCoinCollect(const al::PlacementId* placeID, int worldID, sead::FixedSafeString<128> stage) {
+        if (customIsGotCoinCollect(placeID, stage))
+            return;
+        al::StringTmp<128> objID;
+        placeID->makeString(&objID);
+        if (GameDataFile::CoinCollectInfo* info = tryFindCoinCollectInfo(stage.cstr(), objID.cstr())) {
+            info->isGet = true;
+            mCoinCollectGotNum[worldID]++;
+        }
+    }
+    // custom impl of isGotCoinCollect that uses a provided stage instead of your current one
+    bool customIsGotCoinCollect(const al::PlacementId* placeID, sead::FixedSafeString<128> stage) const {
+        al::StringTmp<128> objID;
+        placeID->makeString(&objID);
+        const CoinCollectInfo* info = tryFindCoinCollectInfo(stage.cstr(), objID.cstr());
+        return info && info->isGet;
     }
 
     // end custom methods
@@ -376,7 +434,7 @@ public:
     sead::FixedSafeString<0x80> char160;
     sead::FixedSafeString<0x80> char1F8;
     sead::FixedSafeString<0x80> char290;
-    sead::FixedSafeString<0x80> char328;
+    sead::FixedSafeString<0x80> mCurrentStageName;
     sead::FixedSafeString<0x80> char3C0;
     u16 word458;
     char gap45A[6];
@@ -461,7 +519,7 @@ public:
     void* qword9E8;
     int mCurWorldID;
     void* qword9F8;
-    void* qwordA00;
+    FixedHeapArray<s32, sNumWorlds> mCoinCollectGotNum;
     u16 wordA08;
     bool byteA0A;
     void* qwordA10;

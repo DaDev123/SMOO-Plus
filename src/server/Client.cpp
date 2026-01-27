@@ -510,6 +510,9 @@ void Client::readFunc() {
             case PacketType::HEALTHCOINS:
                 updateHealthCoins((HealthCoins*)curPacket);
                 break;
+            case PacketType::COINCOLLECTCOLL:
+                updateCoinCollects((CoinCollectCollect*)curPacket);
+                break;
             case PacketType::CLIENTINIT: {
                 InitPacket* initPacket = (InitPacket*)curPacket;
                 Logger::log("Server Max Player Size: %d\n", initPacket->maxPlayers);
@@ -894,6 +897,30 @@ void Client::sendShineCollectPacket(int shineID) {
 
         sInstance->mSocket->queuePacket(packet);
     }
+}
+
+/**
+ * @brief
+ *
+ * @param placeID
+ * @param worldID
+ * @param stage
+ */
+void Client::sendCoinCollectCollectPacket(al::PlacementId* placeID, int worldID, sead::FixedSafeString<128> stage) {
+    if (!sInstance) {
+        Logger::log("Static Instance is Null!\n");
+        return;
+    }
+
+    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
+
+    CoinCollectCollect* packet = new CoinCollectCollect();
+    packet->mUserID = sInstance->mUserID;
+    packet->placeID = placeID;
+    packet->worldID = worldID;
+    packet->stage = stage;
+
+    sInstance->mSocket->queuePacket(packet);
 }
 
 /**
@@ -1535,6 +1562,14 @@ void Client::updateHealthCoins(HealthCoins* packet) {
     sInstance->mCoins = packet->coins;
     sInstance->isKids = packet->isKids;
     sInstance->mNeedsUpdateHealthCoins = true;
+}
+
+/**
+ * @brief
+ *
+ */
+void Client::updateCoinCollects(CoinCollectCollect* packet) {
+    GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile()->customAddCoinCollect(packet->placeID, packet->worldID, packet->stage);
 }
 
 /**

@@ -33,6 +33,7 @@ enum PacketType : short {
     HOLEPUNCH,
     EXTRA,
     HEALTHCOINS,
+    COINCOLLECTCOLL,
     End  // end of enum for bounds checking
 };
 
@@ -40,7 +41,7 @@ enum PacketType : short {
 USED static const char* packetNames[] = {"Unknown", "Client Initialization", "Player Info", "Player Cap Info", "Game Info", "Tag Info",
                                          //"Freeze Info",
                                          "Player Connect", "Player Disconnect", "Costume Info", "Moon Collection", "Capture Info", "Change Stage",
-                                         "Server Command", "Message", "UDP Initialization", "UDP Hole Punch", "Extra", "Health and Coins"};
+                                         "Server Command", "Message", "UDP Initialization", "UDP Hole Punch", "Extra", "Health and Coins", "Purple Coin Collection"};
 
 enum SenderType { SERVER, CLIENT };
 
@@ -77,3 +78,4 @@ struct PACKED Packet {
 #include "packets/MessagePacket.h"
 #include "packets/ServerCommand.h"
 #include "packets/ShineCollect.h"
+#include "packets/CoinCollectCollect.h"
