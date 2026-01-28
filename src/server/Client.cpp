@@ -85,6 +85,10 @@ Client::Client() {
 
     mShineArray.allocBuffer(100, nullptr);  // max of 100 shine actors in buffer
 
+    mCoinCollectArray.allocBuffer(100, nullptr);
+
+    mCoinCollect2DArray.allocBuffer(25, nullptr);
+
     nn::account::GetLastOpenedUser(&mUserID);
 
     nn::account::Nickname playerName;
@@ -1518,6 +1522,8 @@ void Client::clearArrays() {
     if (sInstance) {
         sInstance->mPuppetHolder->clearPuppets();
         sInstance->mShineArray.clear();
+        sInstance->mCoinCollectArray.clear();
+        sInstance->mCoinCollect2DArray.clear();
     }
 }
 
@@ -1571,7 +1577,24 @@ void Client::updateHealthCoins(HealthCoins* packet) {
 void Client::updateCoinCollects(CoinCollectCollect* packet) {
     al::PlacementId placeID(packet->placeID, nullptr, nullptr);
     sead::FixedSafeString<128> stage(packet->stage);
-    GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile()->customAddCoinCollect(&placeID, packet->worldID, stage);
+    GameDataFile* gdf = GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile();
+    gdf->customAddCoinCollect(&placeID, packet->worldID, stage);
+    if (gdf->isGotCoinCollect(&placeID)) {
+        for (int i = 0; i < sInstance->mCoinCollectArray.size(); i++) {
+            if (sInstance->mCoinCollectArray[i]->mPlacementId->isEqual(placeID)) {
+                sInstance->mCoinCollectArray[i]->makeActorDead();
+                return;
+            }
+        }
+        for (int i = 0; i < sInstance->mCoinCollect2DArray.size(); i++) {
+            al::StringTmp<128> placeIDString;
+            sInstance->mCoinCollect2DArray[i]->mPlacementId->makeString(&placeIDString);
+            if (placeIDString.isEqual(packet->placeID)) {
+                sInstance->mCoinCollect2DArray[i]->makeActorDead();
+                return;
+            }
+        }
+    }
 }
 
 /**
@@ -1729,6 +1752,32 @@ bool Client::tryRegisterShine(Shine* shine) {
         }
     }
     return false;
+}
+
+/**
+ * @brief stores CoinCollect pointer supplied into a ptr array if space is available.
+ *
+ * @param coin
+ */
+void Client::tryRegisterCoinCollect(CoinCollect* coin) {
+    if (sInstance) {
+        if (!sInstance->mCoinCollectArray.isFull()) {
+            sInstance->mCoinCollectArray.pushBack(coin);
+        }
+    }
+}
+
+/**
+ * @brief stores CoinCollect2D pointer supplied into a ptr array if space is available.
+ *
+ * @param coin
+ */
+void Client::tryRegisterCoinCollect2D(CoinCollect2D* coin) {
+    if (sInstance) {
+        if (!sInstance->mCoinCollect2DArray.isFull()) {
+            sInstance->mCoinCollect2DArray.pushBack(coin);
+        }
+    }
 }
 
 /**

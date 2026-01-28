@@ -157,6 +157,16 @@ static HkTrampoline<void, Shine*> registerShineToListHook = hk::hook::trampoline
     }
 });
 
+static HkTrampoline<void, CoinCollect*> registerCoinCollectToListHook = hk::hook::trampoline([](CoinCollect* coin) -> void {
+    registerCoinCollectToListHook.orig(coin);
+    Client::tryRegisterCoinCollect(coin);
+});
+
+static HkTrampoline<void, CoinCollect2D*> registerCoinCollect2DToListHook = hk::hook::trampoline([](CoinCollect2D* coin) -> void {
+    registerCoinCollect2DToListHook.orig(coin);
+    Client::tryRegisterCoinCollect2D(coin);
+});
+
 static HkReplace<void, StageSceneStatePauseMenu*> overrideHelpFadeNerve = hk::hook::replace([](StageSceneStatePauseMenu* state) -> void {
     // Set label in menu inside LocalizedData/${lang}/MessageData/LayoutMessage.szs/Menu.msbt/Menu_Help
     state->exeServerConfig();

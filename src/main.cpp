@@ -770,6 +770,8 @@ extern "C" void hkMain() {
 
     // CoinCollect Syncing
     sendCoinCollectCollectPacketHook.installAtSym<"_ZN12GameDataFile14addCoinCollectEPKN2al11PlacementIdE">();
+    registerCoinCollectToListHook.installAtSym<"_ZN11CoinCollect18initAfterPlacementEv">();
+    registerCoinCollect2DToListHook.installAtSym<"_ZN13CoinCollect2D18initAfterPlacementEv">();
 
     // Amiibo Button Disabling
     hk::hook::replace([]() -> void { return; }).installAtSym<"_ZN2rs16isHoldAmiiboModeEPKN2al18IUseSceneObjHolderE">();

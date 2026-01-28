@@ -25,6 +25,8 @@
 #include "al/Library/Thread/AsyncFunctorThread.h"
 
 // ===== GAME INCLUDES =====
+#include "game/Item/CoinCollect.h"
+#include "game/Item/CoinCollect2D.h"
 #include "game/Item/Shine.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Scene/StageScene.h"
@@ -109,6 +111,10 @@ public:
     static bool tryRegisterShine(Shine* shine);
     static Shine* findStageShine(int shineID);
     static void updateShines();
+
+    // ==== COINCOLLECT MANAGEMENT ====
+    static void tryRegisterCoinCollect(CoinCollect* coin);
+    static void tryRegisterCoinCollect2D(CoinCollect2D* coin);
 
     // ===== PACKET SENDING METHODS =====
     static void sendHackCapInfPacket(const HackCap* hackCap);
@@ -299,6 +305,8 @@ private:
     al::ActorSceneInfo* mSceneInfo = nullptr;
     const StageScene* mCurStageScene = nullptr;
     sead::PtrArray<Shine> mShineArray;
+    sead::PtrArray<CoinCollect> mCoinCollectArray;
+    sead::PtrArray<CoinCollect2D> mCoinCollect2DArray;
     sead::FixedSafeString<0x40> mStageName;
     GameDataHolderAccessor mHolder;
     u8 mScenario = 0;

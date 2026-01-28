@@ -515,7 +515,7 @@ public:
     sead::PtrArrayImpl sead__ptrarrayimpl9A8;
     sead::PtrArrayImpl sead__ptrarrayimpl9B8;
     sead::PtrArrayImpl sead__ptrarrayimpl9C8;
-    sead::PtrArrayImpl sead__ptrarrayimpl9D8;
+    sead::PtrArray<CoinCollectInfo> mCoinCollectList;
     void* qword9E8;
     int mCurWorldID;
     void* qword9F8;
