@@ -165,7 +165,9 @@ HkTrampoline<void, GameDataFile*, const char*> sendShinePacketHook2 = hk::hook::
 });
 
 HkTrampoline<void, GameDataFile*, al::PlacementId*> sendCoinCollectCollectPacketHook = hk::hook::trampoline([](GameDataFile* file, al::PlacementId* placeID) -> void {
-    Client::sendCoinCollectCollectPacket(placeID, file->getCurrentWorldIdNoDevelop(), file->mCurrentStageName);
+    al::StringTmp<128> placeIDString;
+    placeID->makeString(&placeIDString);
+    Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(), file->mCurrentStageName.cstr());
     sendCoinCollectCollectPacketHook.orig(file, placeID);
 });
 

@@ -121,7 +121,7 @@ public:
     static void sendTagInfPacket();
     static void sendFreezeInfPacket();
     static void sendPuppetPosInfoPacket();
-    static void sendCoinCollectCollectPacket(al::PlacementId* placeID, int worldID, sead::FixedSafeString<128> stage);
+    static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
 
     // ===== PUPPET MANAGEMENT =====
     static bool tryAddPuppet(PuppetActor* puppet);

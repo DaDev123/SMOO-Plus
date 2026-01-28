@@ -906,7 +906,7 @@ void Client::sendShineCollectPacket(int shineID) {
  * @param worldID
  * @param stage
  */
-void Client::sendCoinCollectCollectPacket(al::PlacementId* placeID, int worldID, sead::FixedSafeString<128> stage) {
+void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage) {
     if (!sInstance) {
         Logger::log("Static Instance is Null!\n");
         return;
@@ -916,9 +916,9 @@ void Client::sendCoinCollectCollectPacket(al::PlacementId* placeID, int worldID,
 
     CoinCollectCollect* packet = new CoinCollectCollect();
     packet->mUserID = sInstance->mUserID;
-    packet->placeID = placeID;
+    strcpy(packet->placeID, placeID);
     packet->worldID = worldID;
-    packet->stage = stage;
+    strcpy(packet->stage, stage);
 
     sInstance->mSocket->queuePacket(packet);
 }
@@ -1569,7 +1569,9 @@ void Client::updateHealthCoins(HealthCoins* packet) {
  *
  */
 void Client::updateCoinCollects(CoinCollectCollect* packet) {
-    GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile()->customAddCoinCollect(packet->placeID, packet->worldID, packet->stage);
+    al::PlacementId placeID(packet->placeID, nullptr, nullptr);
+    sead::FixedSafeString<128> stage(packet->stage);
+    GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile()->customAddCoinCollect(&placeID, packet->worldID, stage);
 }
 
 /**
