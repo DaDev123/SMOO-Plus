@@ -4,6 +4,7 @@
 #include "al/Library/Base/StringUtil.h"
 #include "al/Library/Draw/GraphicsSystemInfo.h"
 #include "al/Library/Effect/EffectSystemInfo.h"
+#include "al/Library/HitSensor/HitSensorKeeper.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorAnimFunction.h"
 #include "al/Library/LiveActor/ActorClippingFunction.h"
@@ -35,6 +36,7 @@
 #include "helpers.hpp"
 #include "logger.hpp"
 #include "math/seadQuat.h"
+#include "Project/HitSensor/HitSensor.h"
 #include "Scene/StageSceneStateServerConfig.hpp"
 #include "server/DeltaTime.hpp"
 #include "server/freeze/FreezeTagInfo.h"
@@ -59,8 +61,7 @@ PuppetActor::PuppetActor(const char* name) : al::LiveActor(name) {
 
 void PuppetActor::init(al::ActorInitInfo const& initInfo) {
     mPuppetCap->init(initInfo);
-
-    al::initActorWithArchiveName(this, initInfo, "PuppetActor", nullptr);
+    al::initActorWithArchiveName(this, initInfo, "PlayerActorHakoniwa", nullptr);
 
     const char* bodyName = "Mario";
     const char* capName = "Mario";
@@ -76,7 +77,7 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
 
     mCostumeInfo = initMarioModelPuppet(normalModel, initInfo, bodyName, capName, 0, nullptr);
 
-    normalModel->mActionKeeper->mPadAndCameraCtrl->mRumbleCount = 0;  // set rumble count to zero so that no rumble actions will run
+    normalModel->mActionKeeper->mPadAndCameraCtrl->mRumbleCount = 0;
 
     mModelHolder->registerModel(normalModel, "Normal");
 
@@ -95,11 +96,6 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
 
     al::hideSilhouetteModelIfShow(normalModel);
 
-    // "頭" = Head
-    // "髪" = Hair
-    // "キャップの目" = Cap Eyes
-    // "[デモ用]キャップの目" = [Demo] Cap Eyes
-
     al::LiveActor* headModel = al::getSubActor(normalModel, "頭");
     al::getSubActor(headModel, "キャップの目")->kill();
     al::startVisAnimForAction(headModel, "CapOn");
@@ -107,6 +103,16 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
     mModelHolder->changeModel("Normal");
 
     startAction("Wait");
+
+    // Clear existing sensors loaded from BYML
+    if (mHitSensorKeeper) {
+        mHitSensorKeeper->clear();
+    }
+
+    initHitSensor(3);
+    al::addHitSensor(this, initInfo, "Body", static_cast<u32>(al::HitSensorType::Npc), 50.0f, 16, sead::Vector3f(0.0f, 75.0f, 0.0f));
+    al::addHitSensor(this, initInfo, "Head", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 16, sead::Vector3f(0.0f, 110.0f, 0.0f));
+    al::addHitSensor(this, initInfo, "Foot", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 1, sead::Vector3f(0.0f, 40.0f, 0.0f));
 
     al::validateClipping(normalModel);
     al::validateClipping(normal2DModel);
