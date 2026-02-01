@@ -11,6 +11,7 @@
 
 #include "game/Player/HackCap.h"
 #include "game/Player/PlayerAnimator.h"
+#include "game/Player/PlayerAnimFrameCtrl.h"
 #include "game/Player/PlayerHackKeeper.h"
 #include "game/Sequence/ChangeStageInfo.h"
 #include "game/System/CustomGameDataFunction.h"
@@ -579,7 +580,7 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
         if (hackName != nullptr) {
             sInstance->isClientCaptured = true;
 
-            const char* actName = al::getActionName(player->mHackKeeper->mCurrentHackActor);
+            const char* actName = al::getActionName(player->mHackKeeper->mHackActor);
 
             if (actName) {
                 packet->actName = PlayerAnims::FindType(actName);

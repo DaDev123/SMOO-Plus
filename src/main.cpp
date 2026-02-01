@@ -40,6 +40,7 @@
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Player/PlayerAnimator.h"
+#include "game/Player/PlayerAnimFrameCtrl.h"
 #include "game/Player/PlayerHackKeeper.h"
 #include "game/Scene/StageScene.h"
 #include "game/Sequence/HakoniwaSequence.h"
@@ -585,8 +586,8 @@ void drawMain(al::Sequence* curSequence) {
                     PlayerHackKeeper* hackKeeper = playerBase->getPlayerHackKeeper();
                     if (hackKeeper) {
                         PlayerActorHakoniwa* p1 = (PlayerActorHakoniwa*)playerBase;
-                        if (hackKeeper->mCurrentHackActor && p1 && isInGame && curScene) {
-                            ImGui::Text("Animation: %s\n", al::getActionName(hackKeeper->mCurrentHackActor));
+                        if (hackKeeper->mHackActor && p1 && isInGame && curScene) {
+                            ImGui::Text("Animation: %s\n", al::getActionName(hackKeeper->mHackActor));
                         } else {
                             ImGui::Text("Animation: %s\n", p1->mAnimator->mAnimFrameCtrl->getActionName());
                         }
@@ -621,8 +622,8 @@ void drawMain(al::Sequence* curSequence) {
                 if (hackKeeper) {
                     PlayerActorHakoniwa* p1 = (PlayerActorHakoniwa*)playerBase;
 
-                    if (hackKeeper->mCurrentHackActor) {
-                        al::LiveActor* curHack = hackKeeper->mCurrentHackActor;
+                    if (hackKeeper->mHackActor) {
+                        al::LiveActor* curHack = hackKeeper->mHackActor;
                         ImGui::Text("Current Hack Animation: %s\n", al::getActionName(curHack));
                         ImGui::Text("Current Hack Name: %s\n", hackKeeper->getCurrentHackName());
 

@@ -6,6 +6,7 @@
 
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
+#include "game/Player/PlayerAnimFrameCtrl.h"
 
 #include <stdint.h>
 

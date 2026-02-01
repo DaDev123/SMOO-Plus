@@ -67,7 +67,7 @@ void FreezeHintArrow::exeWait() {
         al::startAction(this, "Wait");
 
     bool isInFreezeMode = GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG);
-    if (!isInFreezeMode || mInfo->mIsPlayerRunner || !mInfo->mIsRound || !mTargetTrans || mPlayer->getPlayerHackKeeper()->mCurrentHackActor) {
+    if (!isInFreezeMode || mInfo->mIsPlayerRunner || !mInfo->mIsRound || !mTargetTrans || mPlayer->getPlayerHackKeeper()->mHackActor) {
         mSize = al::lerpValue(mSize, 0.f, 0.3f);
         al::setScaleAll(this, mSize);
         return;

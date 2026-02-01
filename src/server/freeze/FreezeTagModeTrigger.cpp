@@ -75,7 +75,7 @@ bool FreezeTagMode::trySetPlayerRunnerState(FreezeState newState) {
             return false;
 
         mInfo->mIsPlayerFreeze = FreezeState::FREEZE;
-        if (player->getPlayerHackKeeper()->mCurrentHackActor)
+        if (player->getPlayerHackKeeper()->mHackActor)
             player->getPlayerHackKeeper()->cancelHackArea();
 
         player->startDemoPuppetable();
@@ -231,7 +231,7 @@ void FreezeTagMode::tryStartEndgameEvent() {
     if (!player)
         return;
 
-    if (player->getPlayerHackKeeper()->mCurrentHackActor)
+    if (player->getPlayerHackKeeper()->mHackActor)
         player->getPlayerHackKeeper()->cancelHackArea();
 
     player->startDemoPuppetable();
