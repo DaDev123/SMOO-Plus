@@ -1467,7 +1467,7 @@ void Client::updateShines() {
 
         Logger::log("Shine UID: %d\n", shineID);
 
-        if (shineID >= 2000) {
+        if (shineID >= 2000 && shineID <= 2060) {
             if (!rs::checkGetAchievement(sInstance->mCurStageScene, toadetteMoons[shineID - 2000])) {
                 GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile()->getAchievement(toadetteMoons[shineID - 2000]);
             }
