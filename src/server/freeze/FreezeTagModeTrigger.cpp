@@ -153,7 +153,7 @@ bool FreezeTagMode::tryStartRecoveryEvent(bool isEndgame) {
     mWipeHolder->startClose("FadeBlack", (mRecoveryEventLength / 4) * (isEndgame + 1));
 
     if (!isEndgame) {
-        mRecoverySafetyPoint = *player->mRecoverySafetyPoint->getSafetyPoint();
+        mRecoverySafetyPoint = player->mRecoverySafetyPoint->getSafetyPoint();
         if (mInfo->mIsPlayerRunner && mInfo->mIsRound)
             sendFreezePacket(FreezeUpdateType::FALLOFF);
     } else {

@@ -19,3 +19,6 @@ _ZN2nn6socket11GetSockNameEiP8sockaddrPj
 _ZN2nn6socket9InetNtohsEt
 _ZN2nn6socket4PollEP6pollfdmi
 _ZN2nn4util9VSNPrintfEPcmPKcSt9__va_list
+_ZN2nn3pcv12SetClockRateENS0_6ModuleEj
+_ZN2nn3pcv10InitializeEv
+_ZN2nn3pcv8FinalizeEv
