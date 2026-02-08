@@ -4,9 +4,11 @@
 #include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
 
+#include "helpers.hpp"
 #include "Scene/StageSceneStateServerConfig.hpp"
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeConfigMenuFactory.hpp"
+#include "System/GameDataFile.h"
 
 SpeedrunIcon* SpeedrunIcon::sInstance = nullptr;
 
@@ -55,6 +57,7 @@ void SpeedrunIcon::exeWait() {
     }
 
     updateSpeedrunText();
+    updateShineCount();
 
     if (StageSceneStateServerConfig::isSpeedrunNonStopEnabled()) {
         al::hidePane(this, "TxtNonstop");
@@ -76,4 +79,9 @@ void SpeedrunIcon::exeEnd() {
 void SpeedrunIcon::updateSpeedrunText() {
     int playerCount = Client::getConnectCount() + 1;  // include local player
     al::setPaneStringFormat(this, "TxtSpeedrun", "%dP Speedrun", playerCount);
+}
+
+void SpeedrunIcon::updateShineCount() {
+    if (getStageScene())
+        al::setPaneStringFormat(this, "ShineCount", "%d", GameDataHolderAccessor(getStageScene())->getGameDataFile()->getTotalShineNum());
 }

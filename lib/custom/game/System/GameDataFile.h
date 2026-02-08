@@ -267,7 +267,7 @@ public:
     void setGotShine(const GameDataFile::HintInfo*);
     // void tryWriteByByaml(al::ByamlWriter *);
 
-    int getTotalShineNum(void);
+    s32 getTotalShineNum() const;
     void getCollectBgmByIndex(int);
     u8 getMainScenarioNoCurrent(void) const;
     int getStartShineNextIndex(void);

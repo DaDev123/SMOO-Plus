@@ -4,13 +4,18 @@
 #include "al/Library/LiveActor/LiveActor.h"
 #include "al/Library/Math/MathUtil.h"
 #include "al/Library/Player/PlayerUtil.h"
+#include "al/Library/Scene/Scene.h"
+#include "al/Library/Sequence/Sequence.h"
 
 #include "sead/math/seadMathCalcCommon.h"
 #include "sead/math/seadQuat.h"
 #include "sead/math/seadVector.h"
 
 #include "game/Player/PlayerAnimator.h"
+#include "game/Scene/StageScene.h"
+#include "game/Sequence/HakoniwaSequence.h"
 #include "game/System/GameDataFunction.h"
+#include "game/System/GameSystem.h"
 
 #include "logger.hpp"
 #include "Scene/StageSceneStateServerConfig.hpp"
@@ -219,4 +224,16 @@ void killMainPlayer(PlayerActorHakoniwa* mainPlayer) {
     al::setVelocityZero(mainPlayer);
     mainPlayer->mAnimator->endSubAnim();
     mainPlayer->mAnimator->startAnimDead();
+}
+
+StageScene* getStageScene() {
+    al::Sequence* curSequence = GameSystemFunction::getGameSystem()->mSequence;
+    if (curSequence && al::isEqualString(curSequence->mName.cstr(), "HakoniwaSequence")) {
+        auto gameSeq = (HakoniwaSequence*)curSequence;
+        auto curScene = gameSeq->mCurrentScene;
+
+        if (curScene && curScene->mIsAlive && al::isEqualString(curScene->mName.cstr(), "StageScene"))
+            return (StageScene*)curScene;
+    }
+    return nullptr;
 }

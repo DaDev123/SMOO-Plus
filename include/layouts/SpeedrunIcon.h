@@ -22,6 +22,7 @@ public:
     void exeWait();
     void exeEnd();
     void updateSpeedrunText();
+    void updateShineCount();
 
     void setCurScene(StageScene* scene) {
         mCurScene = scene;

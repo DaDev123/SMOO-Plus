@@ -151,3 +151,7 @@ public:
     constexpr static const float k_MinSmoothSpeed = 0.1f;
     constexpr static const float k_TargetCatchupTime = 0.2f;
 };
+
+class StageScene;
+
+StageScene* getStageScene();
