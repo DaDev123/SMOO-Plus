@@ -655,6 +655,9 @@ void StageSceneStateServerConfig::exeMiscSettings() {
     subMenuUpdate();
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
+        ChangeStageInfo info =
+            ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->mPlayerStartId.cstr(),
+                            GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1, (ChangeStageInfo::SubScenarioType)0);
         switch (mCurrentList->mCurSelected) {
         case MISC_SPEEDRUN_MODE:
             sSpeedrunModeEnabled = !sSpeedrunModeEnabled;
@@ -665,6 +668,8 @@ void StageSceneStateServerConfig::exeMiscSettings() {
                 }
                 GameModeManager::instance()->setActive(false);
             }
+
+            Client::get()->getHolder()->changeNextStage(&info, 0);
 
             updateMiscOptions();
             refreshMenu(optionsList[MENU_MISC], msgList[MENU_MISC]->mBuffer, mMiscMenuOptionsCount);

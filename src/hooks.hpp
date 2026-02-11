@@ -31,6 +31,7 @@
 #include <sys/types.h>
 
 #include "helpers.hpp"
+#include "Imgui.hpp"
 #include "layouts/ConnectionStatus.h"
 #include "Library/Collision/CollisionPartsTriangle.h"
 #include "Library/Nerve/Nerve.h"
@@ -343,7 +344,8 @@ static HkTrampoline<void, AppearSwitchTimer*, const al::ActorInitInfo&, const al
     disableAppearSwitchCameraHook = hk::hook::trampoline([](AppearSwitchTimer* timer, const al::ActorInitInfo& initInofo, const al::IUseAudioKeeper* audio,
                                                             al::IUseStageSwitch* stageSwitch, al::IUseCamera* camera, al::LiveActor* actor) -> void {
         disableAppearSwitchCameraHook.orig(timer, initInofo, audio, stageSwitch, camera, actor);
-        timer->mDemoCameraFrame = 0;
+        if (!StageSceneStateServerConfig::isSpeedrunModeEnabled())
+            timer->mDemoCameraFrame = 0;
     });
 
 static HkTrampoline<bool, al::WindowConfirmWait*> windowConfirmWaitHook = hk::hook::trampoline([](al::WindowConfirmWait* win) -> bool {
@@ -363,15 +365,15 @@ static constexpr u32 listPtrNop[] = {
 static hk::hook::a64::AsmBlock<true, 1>* listNop[hk::util::arraySize(listPtrNop)];
 
 static void uninstallHooks() {
-    for (hk::hook::a64::AsmBlock<true, 1>* b : listNop) {
-        b->uninstall();
+    for (int i = 0; i < hk::util::arraySize(listPtrNop); i++) {
+        listNop[i]->uninstall();
     }
 }
 
 static void createHooks() {
     if (!isHooksCreated) {
         for (int i = 0; i < hk::util::arraySize(listPtrNop); i++) {
-            listNop[i] = new hk::hook::a64::AsmBlock<true, 1>(hk::hook::a64::assemble<"nop", true>());
+            listNop[i] = new (imgui::sImGuiHeap) hk::hook::a64::AsmBlock<true, 1>(hk::hook::a64::assemble<"nop", true>());
         }
         isHooksCreated = true;
     }

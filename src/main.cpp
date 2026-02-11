@@ -248,6 +248,7 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
             speedrun::installHooks();
         }
     }
+
     stageScene->stageSceneLayout->updateCounterParts();
 
     if (al::isPadHoldZR(-1)) {
