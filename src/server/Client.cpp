@@ -1577,9 +1577,8 @@ void Client::updateHealthCoins(HealthCoins* packet) {
  */
 void Client::updateCoinCollects(CoinCollectCollect* packet) {
     al::PlacementId placeID(packet->placeID, nullptr, nullptr);
-    sead::FixedSafeString<128> stage(packet->stage);
     GameDataFile* gdf = GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile();
-    gdf->customAddCoinCollect(&placeID, packet->worldID, stage);
+    gdf->customAddCoinCollect(&placeID, packet->worldID, packet->stage);
     if (gdf->isGotCoinCollect(&placeID)) {
         for (int i = 0; i < sInstance->mCoinCollectArray.size(); i++) {
             if (sInstance->mCoinCollectArray[i]->mPlacementId->isEqual(placeID)) {

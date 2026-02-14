@@ -723,31 +723,31 @@ public:
     }
 
     // custom impl of addCoinCollect that uses a provided stage and world instead of your current ones
-    void customAddCoinCollect(const al::PlacementId* placeID, int worldID, sead::FixedSafeString<128> stage) {
+    void customAddCoinCollect(const al::PlacementId* placeID, int worldID, const char* stage) {
         if (customIsGotCoinCollect(placeID, stage))
             return;
         al::StringTmp<128> objID;
         placeID->makeString(&objID);
-        if (GameDataFile::CoinCollectInfo* info = tryFindCoinCollectInfo(stage.cstr(), objID.cstr())) {
+        if (GameDataFile::CoinCollectInfo* info = tryFindCoinCollectInfo(stage, objID.cstr())) {
             info->isGet = true;
             mCoinCollectGotNum[worldID]++;
         }
     }
 
     // custom impl of isGotCoinCollect that uses a provided stage instead of your current one
-    bool customIsGotCoinCollect(const al::PlacementId* placeID, sead::FixedSafeString<128> stage) const {
+    bool customIsGotCoinCollect(const al::PlacementId* placeID, const char* stage) const {
         al::StringTmp<128> objID;
         placeID->makeString(&objID);
-        const CoinCollectInfo* info = tryFindCoinCollectInfo(stage.cstr(), objID.cstr());
+        const CoinCollectInfo* info = tryFindCoinCollectInfo(stage, objID.cstr());
         return info && info->isGet;
     }
 
     // get the total shine count, only including unique shines (no more than 1 shop shine per kingdom)
     s32 getTotalUniqueShineNum() {
         int shines = 0;
-        for (int i = 0; i <= 16; i++) {
-            shines += mShineNum[i];
-            shines -= std::max(mShopShineNum[i] - 1, 0);
+        for (int i = 0; i < sNumWorlds; i++) {
+            shines += mShineNum[i]; // all shines including shop
+            shines -= std::max(mShopShineNum[i] - 1, 0); // subtract shop moons except for 1 per kingdom
         }
         return shines;
     }
