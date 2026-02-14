@@ -742,6 +742,16 @@ public:
         return info && info->isGet;
     }
 
+    // get the total shine count, only including unique shines (no more than 1 shop shine per kingdom)
+    s32 getTotalUniqueShineNum() {
+        int shines = 0;
+        for (int i = 0; i <= 16; i++) {
+            shines += mShineNum[i];
+            shines -= std::max(mShopShineNum[i] - 1, 0);
+        }
+        return shines;
+    }
+
     // some getters/setters for private member variables
     FixedHeapArray<HintInfo, 1024> getHintList() const { return mHintList; }
     bool& getIsEnableCap() { return mIsEnableCap; }
