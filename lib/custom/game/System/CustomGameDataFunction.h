@@ -9,7 +9,7 @@ static GameDataFile::HintInfo* getHintInfoByUniqueID(GameDataHolderAccessor acce
 }
 
 static const GameDataFile::HintInfo* getHintInfoByIndex(GameDataHolderAccessor accessor, int index) {
-    return &accessor.mData->getGameDataFile()->mShineHintList[index];
+    return &accessor.mData->getGameDataFile()->getHintList()[index];
 }
 
 static const GameDataFile::HintInfo* getHintInfoByIndex(al::LiveActor* actor, int index) {

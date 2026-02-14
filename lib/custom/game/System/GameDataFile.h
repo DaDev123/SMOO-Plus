@@ -1,86 +1,152 @@
 #pragma once
 
-#include "container/seadPtrArray.h"
-#include "Library/Base/StringUtil.h"
-#include "Library/Placement/PlacementId.h"
-#include "Library/Scene/IUseSceneObjHolder.h"
-#include "Library/Scene/SceneObjHolder.h"
-#include "math/seadVector.h"
-#include "prim/seadSafeString.h"
-#include "stream/seadStream.h"
-#include "System/GameProgressData.h"
-#include "System/PlayerHitPointData.h"
-#include "types.h"
+#include <basis/seadTypes.h>
+#include <container/seadPtrArray.h>
+#include <math/seadVector.h>
+#include <prim/seadBitFlag.h>
+#include <prim/seadSafeString.h>
+#include <stream/seadStream.h>
+
+#include "al/Library/Placement/PlacementId.h"
+
+#include "Npc/SessionEventProgress.h"
+#include "Npc/SessionMusicianType.h"
+#include "System/UniqObjInfo.h"
+#include "Util/ScenePrepoFunction.h"
 
 constexpr s32 sNumWorlds = 20;
 
 namespace al {
-class ActorInitInfo;
-class PlacementInfo;
+struct ActorInitInfo;
+class ByamlWriter;
+class IUseSceneObjHolder;
 class PlacementId;
+class PlacementInfo;
 }  // namespace al
 
-class UniqObjInfo;
+namespace ShopItem {
+struct ItemInfo;
+}
+
+struct CollectBgm;
+class AchievementSaveData;
+class BossSaveData;
+class ChangeStageInfo;
+class GameDataHolder;
+class GameProgressData;
+class HintPhotoData;
+class MoonRockData;
+class NetworkUploadFlag;
+class PlayerHitPointData;
+class QuestInfo;
+class RaceRecord;
+class SearchAmiiboDataTable;
+class SequenceDemoSkipData;
+class SessionMusicianType;
+class ShineInfo;
+class ShopTalkData;
 class SphinxQuizData;
 class TimeBalloonSaveData;
-class WorldWarpTalkData;
 class VisitStageData;
-class MoonRockData;
-class BossSaveData;
-class AchievementSaveData;
-class SearchAmiiboDataTable;
-class NetworkUploadFlag;
-class SequenceDemoSkipData;
-class HintPhotoData;
-class ShopTalkData;
-class RaceRecord;
-
-class GameDataHolder;
-class ShineInfo;
+class WorldWarpTalkData;
 
 class GameDataFile {
 public:
-    GameDataFile(GameDataHolder*);
+    enum class CapStatus { None, Removed, GotBack };
 
-    struct HintInfo {
-        void clear(void);
-        bool isDisableByWorldWarpHole(bool) const;
-        bool isEnableUnlock(int, bool, int, bool) const;
-        bool isHintStatusUnlock(int, int, bool) const;
-        bool isHintStatusUnlockByNpc(void) const;
-        bool isHintStatusUnlockByAmiibo(void) const;
-        bool isEnableNameUnlockByScenario(int, int, bool) const;
-
-        sead::FixedSafeString<0x80> mStageName;     // 0x0
-        sead::FixedSafeString<0x80> mObjId;         // 0x98
-        sead::FixedSafeString<0x40> mScenarioName;  // 0x130
-        const char* mObjectName;                    // 0x188
-        sead::Vector3f mTrans;                      // 0x190
-        sead::Vector3f mTransAgain;                 // 0x19C
-        void* unkPtr1;                              // 0x1A8
-        void* unkPtr2;                              // 0x1B0
-        void* unkPtr3;                              // 0x1B8
-        void* unkPtr4;                              // 0x1C0
-        s32 mMainScenarioNo;                        // 0x1C8
-        int mWorldIndex;                            // 0x1CC
-        bool mIsMoonRock;                           // 0x1D0
-        bool unkBool1;                              // 0x1D1
-        bool mIsAchievement;                        // 0x1D2
-        bool mIsGrand;                              // 0x1D3
-        bool mIsShopMoon;                           // 0x1D4
-        int unkInt;                                 // 0x1D8
-        int unkInt2;                                // 0x1DC
-        void* unkPtr6;                              // 0x1E0
-        void* unkPtr7;                              // 0x1E8
-        int mUniqueID;                              // 0x1F0
-        int mHintIdx;                               // 0x1F4
-        sead::FixedSafeString<0x20> mOptionalID;    // 0x1F8
-        uint mProcessBitflag;                       // 0x230
-        bool unkBool2;                              // 0x234
-        bool unkBool3;                              // 0x235
+    enum RaceType {
+        RaceType_None,
+        RaceType_Flag,
+        RaceType_Yukimaru,
+        RaceType_YukimaruTutorial,
     };
 
-    static_assert(sizeof(HintInfo) == 0x238, "size of HintInfo");
+    enum RaceResult {
+        RaceResult_None,
+        RaceResult_Win,
+        RaceResult_Lose,
+        RaceResult_Second,
+        RaceResult_Third,
+        RaceResult_Cancel,
+    };
+
+    enum HintStatus {
+        HintStatus_Lock,
+        HintStatus_UnlockByNpc,
+        HintStatus_UnlockByAmiibo,
+    };
+
+    enum AchievementStatus {
+        AchievementStatus_None,
+        AchievementStatus_Unlocked,
+        AchievementStatus_Got,
+    };
+
+    struct SaveObjS32 {
+        UniqObjInfo objInfo;
+        s32 value;
+    };
+
+    static_assert(sizeof(SaveObjS32) == 0x138);
+
+    struct GrowFlower {
+        sead::FixedSafeString<128> potObj;
+        sead::FixedSafeString<128> seedObj;
+        u64 time;
+        u32 growLevel;
+    };
+
+    static_assert(sizeof(GrowFlower) == 0x140);
+
+    struct CollectBgmInfo {
+        const char* name;
+        const char* situationName;
+        bool isCollected;
+    };
+
+    static_assert(sizeof(CollectBgmInfo) == 0x18);
+
+    struct HintInfo {
+        void clear();
+
+        bool isDisableByWorldWarpHole(bool is_game_clear) const;
+        bool isEnableUnlock(s32 world_id, bool is_moon_rock, s32 scenario_no,
+                            bool is_game_clear) const;
+        bool isHintStatusUnlock(s32 world_id, s32 scenario_no, bool is_moon_rock) const;
+        bool isHintStatusUnlockByNpc() const;
+        bool isHintStatusUnlockByAmiibo() const;
+        bool isEnableNameUnlockByScenario(s32 world_id, s32 scenario_no, bool is_game_clear) const;
+
+        sead::FixedSafeString<128> stageName;
+        sead::FixedSafeString<128> objId;
+        const char* scenarioName;
+        sead::FixedSafeString<64> objectName;
+        sead::Vector3f trans;
+        sead::Vector3f originalTrans;
+        s64 _1a8 = 0;
+        s64 _1b0 = 0;
+        s64 _1b8 = 0;
+        s64 _1c0 = 0;
+        s32 mainScenarioNo;
+        s32 worldId;
+        bool isMoonRock;
+        bool isGet;
+        bool isAchievement;
+        bool isGrand;
+        bool isShop;
+        s32 _1d8;
+        s32 hintStatus;
+        AchievementStatus status;
+        u64 getTime;
+        s32 uniqueId;
+        s32 hintIdx;
+        sead::FixedSafeString<32> optionalId;
+        sead::BitFlag32 progressBitFlag;
+        bool isDisabled;
+        bool isEnableHintInCeremony;
+    };
+
+    static_assert(sizeof(HintInfo) == 0x238);
 
     struct CoinCollectInfo {
         void clear();
@@ -91,6 +157,17 @@ public:
         s32 uniqueId;
         bool isGet;
     };
+
+    static_assert(sizeof(CoinCollectInfo) == 0x140);
+
+    struct CheckpointInfo {
+        UniqObjInfo objInfo = {};
+        sead::BitFlag32 scenarios = 0;
+        sead::Vector3f trans = sead::Vector3f::zero;
+        bool isGet = false;
+    };
+
+    static_assert(sizeof(CheckpointInfo) == 0x148);
 
     template <typename T, s32 Size>
     class FixedHeapArray {
@@ -113,288 +190,532 @@ public:
 
     enum class CountType { Value_0, Value_1, Value_2 };
 
-    void initializeData(void);
-    bool tryReadByamlData(al::ByamlIter*);
-    CoinCollectInfo* tryFindCoinCollectInfo(const char* curStage, const char* objID) const;
-    void tryFindShineIndexByUniqueId(int);
-    void tryFindCoinCollectIndexByUniqueId(int);
-    void buyDefaultItem(void);
-    void unlockAchievementShineName(void);
-    void updateWorldMapIndex(void);
-    void updateWorldWarpIndex(void);
-    void initializeCheckpointTable(void);
-    void generateSaveDataIdForPrepo(void);
-    void resetMapIcon(void);
-    void wearDefault(void);
-    void initializeHintList(void);
-    void initializeCoinCollectList(void);
-    void resetTempData(void);
-    void addPlayTime(int, const al::IUseSceneObjHolder*);
-    void updateSaveTime(void);
-    void updateSaveTimeForDisp(void);
-    void updateSaveInfoForDisp(void);
-    void generateSaveDataIdForPrepoForWrite(void);
-    void resetSaveDataIdForPrepoForWrite(void);
-    void startStage(const char*, int);
-    void checkIsHomeStage(const char*);
-    void setGameClear(void);
-    void startDemoStage(const char*);
-    void changeNextStage(struct ChangeStageInfo const*, int);
-    void returnPrevStage(void);
-    void changeNextStageWithDemoWorldWarp(const char*);
-    void changeNextStageWithWorldWarpHole(const char*);
-    void restartStage(void);
-    void calcNextScenarioNo(void);
-    void tryGetStageNameCurrent(void);
-    void changeWipeType(const char*);
-    void setRestartPointId(const al::PlacementId*);
-    void clearStartId(void);
-    void tryGetRestartPointIdString(void);
-    void endStage(void);
-    void missAndRestartStage(void);
-    void checkGotShine(const char*);
-    void tryGetNextMainScenarioLabel(sead::BufferedSafeString*, sead::BufferedSafeString*);
-    void tryGetNextMainScenarioPos(sead::Vector3f*);
-    void tryFindNextMainScenarioInfo(void);
-    void addPayShine(int);
-    void addPayShineCurrentAll(void);
-    void addKey(int);
-    void addOpenDoorLockNum(int);
-    void tryFindSaveObjS32(const al::PlacementId*);
-    void addSessionMember(struct SessionMusicianType const&);
-    void addCoinCollect(const al::PlacementId*);
-    void useCoinCollect(int);
-    void tryFindExistCoinCollectStageName(int);
-    void payCoinToSphinx(void);
-    void answerCorrectSphinxQuiz(void);
-    void answerCorrectSphinxQuizAll(void);
-    void talkLocalLanguage(void);
-    void saveWorldTravelingStatus(const char*);
-    void startWorldTravelingPeach(void);
-    void setGrowFlowerTime(const al::PlacementId*, ulong);
-    void addGrowFlowerGrowLevel(const al::PlacementId*, uint);
-    void findGrowFlowerPotIdFromSeedId(const al::PlacementId*);
-    void addCoin(int);
-    void addPlayerJumpCount(void);
-    void addPlayerThrowCapCount(void);
-    void readFromStream(sead::ReadStream*, uchar*);
-    void tryReadByamlDataFromStream(sead::ReadStream*, uchar*, int);
-    void writeToStream(sead::WriteStream*, sead::Heap*);
-    void tryWriteByByaml(sead::WriteStream*, sead::Heap*);
-    void calcCheckpointIndexInScenario(int);
-    void changeNextSceneByGotCheckpoint(int);
-    void changeNextSceneByWarp(void);
-    void changeNextSceneByHome(void);
-    void startYukimaruRace(void);
-    void startYukimaruRaceTutorial(void);
-    void startRaceManRace(void);
-    void registerCheckpointTrans(const al::PlacementId*, const sead::Vector3f&);
-    void calcGetCheckpointNum(void);
-    void calcRestHintNum(void);
-    void unlockHint(void);
-    void unlockHintImpl(int);
-    void unlockHintAmiibo(void);
-    void unlockHintAddByMoonRock(void);
-    void calcHintNum(void);
-    void calcHintTrans(int);
-    void findHint(int);
-    void calcHintTransMostEasy(void);
-    void findHintInfoMostEasy(void);
-    void calcHintMoonRockNum(void);
-    void calcHintMoonRockTrans(int);
-    void findHintMoonRock(int);
-    void tryUnlockShineName(int, int);
-    void calcShineIndexTableNameAvailable(int*, int*, int);
-    void calcShineIndexTableNameUnlockable(int*, int*, int);
-    void unlockWorld(int);
-    void noPlayDemoWorldWarp(void);
-    void calcWorldWarpHoleThroughNum(void);
-    void enteredStage(void);
-    // void buyItem(ShopItem::ItemInfo const*,bool);
-    // void tryFindItemList(ShopItem::ItemInfo const*);
-    void calcHaveClothNum(void);
-    void calcHaveCapNum(void);
-    void calcHaveStickerNum(void);
-    void calcHaveGiftNum(void);
-    void buyItemAll(void);
-    void wearCostume(const char*);
-    void wearCap(const char*);
-    void addHackDictionary(const char*);
-    HintInfo* findShine(int worldIndex, int shineIndex);
-    void calcShineNumInOneShine(int, int);
-    void checkAchievementShine(int, int);
-    void winRace(void);
-    void findRaceRecord(const char*);
-    void incrementRaceLoseCount(int);
-    void setUpdateJumpingRopeScoreFlag(void);
-    void setVolleyballBestCount(int);
-    void setUpdateVolleyballScoreFlag(void);
-    void setAmiiboNpcTrans(const sead::Vector3f&);
-    void setTimeBalloonNpcTrans(const sead::Vector3f&);
-    void setPoetterTrans(const sead::Vector3f&);
-    void setShopNpcTrans(const sead::Vector3f&, const char*, int);
-    void setMoonRockTrans(const sead::Vector3f&);
-    void setMiniGameInfo(const sead::Vector3f&, const char*);
-    void calcMiniGameNum(void);
-    void showExplainCheckpointFlag(void);
-    void calcShopNum(void);
-    void talkKakku(void);
-    void talkWorldTravelingPeach(void);
-    void talkCollectBgmNpc(void);
-    void noFirstNetwork(void);
-    void calcIsGetMainShineAll(const al::IUseSceneObjHolder*);
-    void calcIsGetShineAllInWorld(int);
-    void tryFindLinkedShineIndex(const al::ActorInitInfo&, const al::IUseSceneObjHolder*);
-    void tryFindLinkedShineIndex(const al::ActorInitInfo&, int, const al::IUseSceneObjHolder*);
-    void tryFindLinkedShineIndexByLinkName(const al::IUseSceneObjHolder*, const al::ActorInitInfo&, const char*);
-    void calcLinkedShineNum(const al::ActorInitInfo&);
-    void tryFindShineIndex(const al::ActorInitInfo&);
-    void tryFindShineIndex(const char*, const char*);
-    void disableHintById(int);
-    void enableHintById(int);
-    void setHintTrans(int, const sead::Vector3f&);
-    void resetHintTrans(int);
-    void registerShineInfo(const ShineInfo*, const sead::Vector3f&);
-    void calcRestShineInStageWithWorldProgress(const char*);
-    // void calcGetShineNumByObjectNameOrOptionalId(char const*, GameDataFile::CountType);
-    void calcGetShineNumByObjectNameWithWorldId(const char*, int);
-    void calcAllShineNumByObjectNameOrOptionalId(const char*);
-    void calcGetShineNumByStageName(const char*);
-    void tryFindAndInitShineInfoByOptionalId(ShineInfo*, const char*);
-    void tryFindUniqueId(const ShineInfo*);
-    void findUnlockShineNumCurrentWorld(bool*);
-    void trySetCollectedBgm(const char*, const char*);
-    void setGotShine(const GameDataFile::HintInfo*);
-    // void tryWriteByByaml(al::ByamlWriter *);
-
-    s32 getTotalShineNum() const;
-    void getCollectBgmByIndex(int);
-    u8 getMainScenarioNoCurrent(void) const;
-    int getStartShineNextIndex(void);
-    void getTokimekiMayorNpcFavorabilityRating(void);
-    void getShopNpcIconNumMax(void);
-    void getShopNpcTrans(int);
-    void getPoetterTrans(void);
-    void getTimeBalloonNpcTrans(void);
-    void getMiniGameNumMax(void);
-    void getRaceLoseCount(int);
-    int getWorldTotalShineNum(int);
-    int getWorldWarpHoleThroughNumMax(void);
-    void getCheckpointObjIdInWorld(int);
-    void getCheckpointNumMaxInWorld(void);
-    void getPlayerThrowCapCount(void);
-    void getPlayerJumpCount(void);
-    void getGrowFlowerGrowLevel(const al::PlacementId*);
-    void getGrowFlowerTime(const al::PlacementId*);
-    void getWorldTravelingStatus(void);
-    void getCoinCollectNum(void);
-    void getKeyNum(void);
-    int getPayShineNum(int);
-    int getShineNum(void);
-    void getAchievement(const char*);
-    void getPlayerStartId(void);
-    void getStageNameNext(void);
-    void getStageNameCurrent(void);
+    GameDataFile(GameDataHolder* game_data_holder);
+    bool tryReadByamlData(const u8* data);
+    CoinCollectInfo* tryFindCoinCollectInfo(const char* stage_name, const char* obj_id) const;
+    s32 tryFindShineIndexByUniqueId(s32 unique_id) const;
+    s32 tryFindCoinCollectIndexByUniqueId(s32 unique_id) const;
+    void unlockAchievementShineName();
+    bool isKidsMode() const;
+    s32 getScenarioNo(s32 world_id) const;
+    s32 getMainScenarioNo(s32 world_id) const;
+    bool isEmpty() const;
+    void initializeData();
+    void initializeCheckpointTable();
+    void generateSaveDataIdForPrepo();
+    void resetMapIcon();
+    void wearDefault();
+    void initializeHintList();
+    void initializeCoinCollectList();
+    void resetTempData();
+    bool isGameClear() const;
+    bool isUnlockedWorld(s32 world_id) const;
+    bool isAlreadyGoWorld(s32 world_id) const;
+    void updateWorldMapIndex();
+    void updateWorldWarpIndex();
+    void addPlayTime(s32 time, const al::IUseSceneObjHolder*);
+    s64 getPlayTimeTotal() const;
+    void updateSaveTime();
+    void updateSaveTimeForDisp();
+    void updateSaveInfoForDisp();
+    u64 getLastUpdateTime() const;
+    void generateSaveDataIdForPrepoForWrite();
+    void resetSaveDataIdForPrepoForWrite();
+    void startStage(const char* stage_name, s32 scenario_no);
+    bool isRaceStart() const;
+    bool checkIsHomeStage(const char* stage_name) const;
+    void setGameClear();
     PlayerHitPointData* getPlayerHitPointData() const;
-    void getLastUpdateTime(void);
-    void getPlayTimeTotal(void);
-    int getMainScenarioNo(int) const;
-    void getCollectedBgmMaxNum(void);
-    int getScenarioNo(void) const;
-    void getMiniGameName(int);
-    void getWorldTotalShineNumMax(int);
-    void getCheckpointTransInWorld(const char*);
-    void getCoinCollectGotNum(void);
-    void getTotalPayShineNum(void);
-    void getShineNum(int);
-    int getScenarioNo(int worldIndex) const;
-    void getCollectedBgmNum(void);
-    void getScenarioNoPlacement(void);
-    void getMiniGameTrans(int);
-    void getCoinCollectGotNum(int);
-    void getTotalShopShineNum(void);
+    void startDemoStage(const char* stage_name);
+    void changeNextStage(const ChangeStageInfo* info, s32 race_type);
+    void changeNextStageWithDemoWorldWarp(const char* stage_name);
+    void changeNextStageWithWorldWarpHole(const char* name);
+    void returnPrevStage();
+    void restartStage();
+    s32 calcNextScenarioNo() const;
+    const char* getStageNameCurrent() const;
+    const char* tryGetStageNameCurrent() const;
+    const char* getStageNameNext() const;
+    void changeWipeType(const char* type);
+    void setActivateHome();
+    bool isGoToCeremonyFromInsideHomeShip() const;
+    const char* getPlayerStartId() const;
+    void setCheckpointId(const al::PlacementId* placement_id);
+    void setRestartPointId(const al::PlacementId* placement_id);
+    void clearStartId();
+    const char* tryGetRestartPointIdString() const;
+    void endStage();
+    void missAndRestartStage();
+    void setMissRestartInfo(const al::PlacementInfo& info);
+    bool isUseMissRestartInfo() const;
+    bool isFirstTimeNextWorld() const;
+    void getAchievement(const char* name);
+    bool isGotShine(const ShineInfo* info) const;
+    bool isGotShine(s32 index) const;
+    bool checkGotShine(const char* obj_id) const;
+    void setGotShine(const ShineInfo* info);
+    s32 getShineNum() const;
+    s32 getShineNum(s32 world_id) const;
+    s32 getTotalShineNum() const;
+    s32 getTotalShopShineNum() const;
+    bool tryGetNextMainScenarioLabel(sead::BufferedSafeString* out_label,
+                                     sead::BufferedSafeString* out_stage_name) const;
+    bool tryGetNextMainScenarioPos(sead::Vector3f* out) const;
+    const HintInfo* tryFindNextMainScenarioInfo() const;
+    void addPayShine(s32 count);
+    void addPayShineCurrentAll();
+    s32 getPayShineNum(s32 world_id = -1) const;
+    s32 getTotalPayShineNum() const;
+    bool isPayShineAllInAllWorld() const;
+    void addKey(s32 count);
+    s32 getKeyNum() const;
+    void addOpenDoorLockNum(s32 count);
+    void setStartedObj(const al::PlacementId* placement_id);
+    bool isStartedObj(const al::PlacementId* placement_id, const char* stage_name = nullptr) const;
+    bool isStartedObj(const char* stage_name, const char* obj_id) const;
+    void setSaveObjS32(const al::PlacementId* placement_id, s32 value);
+    const SaveObjS32* tryFindSaveObjS32(const al::PlacementId* placement_id);
+    bool isExistSessionMember(const SessionMusicianType& type) const;
+    void addSessionMember(const SessionMusicianType& type);
+    void addCoinCollect(const al::PlacementId* placement_id);
+    bool isGotCoinCollect(const al::PlacementId* placement_id) const;
+    s32 getCoinCollectNum() const;
+    s32 getCoinCollectGotNum() const;
+    s32 getCoinCollectGotNum(s32 world_id) const;
+    void useCoinCollect(s32 count);
+    const char* tryFindExistCoinCollectStageName(s32 world_id) const;
+    void payCoinToSphinx();
+    bool isPayCoinToSphinx() const;
+    void answerCorrectSphinxQuiz();
+    void answerCorrectSphinxQuizAll();
+    bool isAnswerCorrectSphinxQuiz(s32 index) const;
+    bool isAnswerCorrectSphinxQuizAll(s32 index) const;
+    bool isTalkAlreadyLocalLanguage() const;
+    void talkLocalLanguage();
+    bool isFirstWorldTravelingStatus() const;
+    void saveWorldTravelingStatus(const char* status);
+    const char* getWorldTravelingStatus() const;
+    bool isStartWorldTravelingPeach() const;
+    void startWorldTravelingPeach();
+    void setGrowFlowerTime(const al::PlacementId* pot_placement_id,
+                           const al::PlacementId* seed_placement_id, u64 time);
+    void setGrowFlowerTime(const al::PlacementId* pot_placement_id, u64 time);
+    u64 getGrowFlowerTime(const al::PlacementId* pot_placement_id) const;
+    void addGrowFlowerGrowLevel(const al::PlacementId* pot_placement_id, u32 level);
+    u32 getGrowFlowerGrowLevel(const al::PlacementId* pot_placement_id) const;
+    bool isUsedGrowFlowerSeed(const al::PlacementId* seed_placement_id) const;
+    const char* findGrowFlowerPotIdFromSeedId(const al::PlacementId* seed_placement_id);
+    void addCoin(s32 count);
+    void addPlayerJumpCount();
+    s32 getPlayerJumpCount() const;
+    void addPlayerThrowCapCount();
+    s32 getPlayerThrowCapCount() const;
+    bool readFromStream(sead::ReadStream* stream, u8* buffer);
+    bool tryReadByamlDataFromStream(sead::ReadStream* stream, u8* buffer, s32 size);
+    void writeToStream(sead::WriteStream* stream, sead::Heap* heap) const;
+    bool isPlayDemoPlayerDownForBattleKoopaAfter() const;
+    s32 getCheckpointNumMaxInWorld() const;
+    const sead::Vector3f& getCheckpointTransInWorld(const char* obj_id) const;
+    bool isGotCheckpointInWorld(s32 index) const;
+    const char* getCheckpointObjIdInWorld(s32 index) const;
+    bool isGotCheckpoint(al::PlacementId* placement_id) const;
+    void changeNextSceneByGotCheckpoint(s32 index);
+    void changeNextSceneByWarp();
+    void changeNextSceneByHome();
+    void startYukimaruRace();
+    void startYukimaruRaceTutorial();
+    void startRaceManRace();
+    void registerCheckpointTrans(const al::PlacementId* placement_id, const sead::Vector3f& trans);
+    s32 calcGetCheckpointNum() const;
+    bool isEnableUnlockHint() const;
+    s32 calcRestHintNum() const;
+    void unlockHint();
+    void unlockHintImpl(s32 hint_status);
+    void unlockHintAmiibo();
+    void unlockHintAddByMoonRock();
+    s32 calcHintNum() const;
+    const sead::Vector3f& calcHintTrans(s32 index) const;
+    const HintInfo& findHint(s32 index) const;
+    const sead::Vector3f& calcHintTransMostEasy() const;
+    const HintInfo* findHintInfoMostEasy() const;
+    s32 calcHintMoonRockNum() const;
+    const sead::Vector3f& calcHintMoonRockTrans(s32 index) const;
+    const HintInfo& findHintMoonRock(s32 index) const;
+    bool tryUnlockShineName(s32 world_id, s32 index);
+    bool isOpenMoonRock(s32 world_id) const;
+    void calcShineIndexTableNameAvailable(s32*, s32*, s32);
+    void calcShineIndexTableNameUnlockable(s32*, s32*, s32);
+    bool isUnlockAchievementShineName() const;
+    void unlockWorld(s32 world_id);
+    void noPlayDemoWorldWarp();
+    s32 calcWorldWarpHoleThroughNum() const;
+    s32 getWorldWarpHoleThroughNumMax() const;
+    void enteredStage();
+    void buyDefaultItem();
+    void buyItem(const ShopItem::ItemInfo* info, bool is_save_prepo);
+    sead::FixedSafeString<64>* tryFindItemList(const ShopItem::ItemInfo* info) const;
+    bool isBuyItem(const ShopItem::ItemInfo* info) const;
+    bool isBuyItem(const char* name, const sead::FixedSafeString<64>* item_list) const;
+    s32 calcHaveClothNum() const;
+    s32 calcHaveCapNum() const;
+    s32 calcHaveStickerNum() const;
+    s32 calcHaveGiftNum() const;
+    void buyItemAll();
+    void wearCostume(const char* name);
+    void wearCap(const char* name);
+    void addHackDictionary(const char* hack_name);
+    bool isExistInHackDictionary(const char* hack_name) const;
+    const HintInfo* findShine(s32 world_id, s32 index) const;
+    bool isGotShine(s32 world_id, s32 index) const;
+    bool isOpenShineName(s32 world_id, s32 index) const;
+    s32 calcShineNumInOneShine(s32 world_id, s32 index) const;
+    bool checkAchievementShine(s32 world_id, s32 index) const;
+    s32 getWorldTotalShineNum(s32 world_id) const;
+    s32 getWorldTotalShineNumMax(s32 world_id) const;
+    void winRace();
+    RaceRecord* findRaceRecord(const char* name) const;
+    void incrementRaceLoseCount(s32 level);
+    s32 getRaceLoseCount(s32 level) const;
+    void setJumpingRopeBestCount(s32 count);
+    void setUpdateJumpingRopeScoreFlag();
+    void setVolleyballBestCount(s32 count);
+    void setUpdateVolleyballScoreFlag();
+    bool isExistJango() const;
+    void setJangoTrans(const sead::Vector3f& trans);
+    void setAmiiboNpcTrans(const sead::Vector3f& trans);
+    void setTimeBalloonNpcTrans(const sead::Vector3f& trans);
+    void setPoetterTrans(const sead::Vector3f& trans);
+    void setShopNpcTrans(const sead::Vector3f& trans, const char* name, s32 type);
+    void setMoonRockTrans(const sead::Vector3f& trans);
+    void setMiniGameInfo(const sead::Vector3f& trans, const char* name);
+    s32 calcMiniGameNum() const;
+    s32 getMiniGameNumMax() const;
+    const sead::Vector3f& getMiniGameTrans(s32 index) const;
+    const char* getMiniGameName(s32 index) const;
+    bool isExistTimeBalloonNpc() const;
+    const sead::Vector3f& getTimeBalloonNpcTrans() const;
+    bool isExistPoetter() const;
+    const sead::Vector3f& getPoetterTrans() const;
+    bool isAlreadyShowExplainCheckpointFlag() const;
+    void showExplainCheckpointFlag();
+    const sead::Vector3f& getShopNpcTrans(s32 index) const;
+    bool isShopSellout(s32 index) const;
+    s32 calcShopNum() const;
+    s32 getShopNpcIconNumMax() const;
+    s32 getScenarioNo() const;
+    s32 getScenarioNoPlacement() const;
+    bool isClearWorldMainScenario(s32 world_id) const;
+    s32 calcCheckpointIndexInScenario(s32 index) const;
+    bool isFlagOnTalkMessageInfo(s32 index) const;
+    void setFlagOnTalkMessageInfo(s32 index);
+    bool isTalkKakku() const;
+    void talkKakku();
+    bool isTalkWorldTravelingPeach() const;
+    void talkWorldTravelingPeach();
+    bool isTalkCollectBgmNpc() const;
+    void talkCollectBgmNpc();
+    s32 getTokimekiMayorNpcFavorabilityRating() const;
+    void setTokimekiMayorNpcFavorabilityRating(s32 rating);
+    bool isFirstNetwork() const;
+    void noFirstNetwork();
+    void setKidsMode(bool is_kids_mode);
+    bool isPlayScenarioCamera(const QuestInfo* info) const;
+    bool isNextMainShine(const QuestInfo* info) const;
+    bool isNextMainShine(s32 index) const;
+    bool isMainShine(s32 index) const;
+    bool isLatestGetMainShine(const ShineInfo* info) const;
+    bool calcIsGetMainShineAll(const al::IUseSceneObjHolder* scene_obj_holder) const;
+    bool calcIsGetShineAllInWorld(s32 world_id) const;
+    s32 tryFindLinkedShineIndex(const al::ActorInitInfo& actor_info,
+                                const al::IUseSceneObjHolder* scene_obj_holder) const;
+    s32 tryFindLinkedShineIndex(const al::ActorInitInfo& actor_info, s32 link_index,
+                                const al::IUseSceneObjHolder* scene_obj_holder) const;
+    s32 tryFindLinkedShineIndexByLinkName(const al::IUseSceneObjHolder* scene_obj_holder,
+                                          const al::ActorInitInfo& actor_info,
+                                          const char* link_name) const;
+    s32 calcLinkedShineNum(const al::ActorInitInfo& actor_info) const;
+    s32 tryFindShineIndex(const al::ActorInitInfo& actor_info) const;
+    s32 tryFindShineIndex(const char* stage_name, const char* obj_id) const;
+    void disableHintById(s32 index);
+    void enableHintById(s32 index);
+    void setStartShine(const ShineInfo* info);
+    s32 getStartShineNextIndex() const;
+    void setHintTrans(s32 index, const sead::Vector3f& trans);
+    void setOriginalHintTrans(s32);
+    void resetHintTrans(s32 index);
+    void registerShineInfo(const ShineInfo* info, const sead::Vector3f& trans);
+    s32 calcRestShineInStageWithWorldProgress(const char* stage_name) const;
+    s32 calcGetShineNumByObjectNameOrOptionalId(const char* object_name_or_optional_id,
+                                                CountType count_type) const;
+    s32 calcGetShineNumByObjectNameWithWorldId(const char* object_name, s32 world_id) const;
+    s32 calcAllShineNumByObjectNameOrOptionalId(const char* object_name_or_optional_id) const;
+    s32 calcGetShineNumByStageName(const char* stage_name) const;
+    bool tryFindAndInitShineInfoByOptionalId(ShineInfo* info, const char* optional_id);
+    s32 tryFindUniqueId(const ShineInfo* shine_info) const;
+    s32 findUnlockShineNumCurrentWorld(bool* out_is_game_clear) const;
+    s32 getMainScenarioNoCurrent() const;
+    void setMainScenarioNo(s32 scenario_no);
+    bool isCollectedBgm(const char* name, const char* situation_name) const;
+    const CollectBgm& getCollectBgmByIndex(s32 index) const;
+    bool trySetCollectedBgm(const char* name, const char* situation_name);
+    s32 getCollectedBgmNum() const;
+    s32 getCollectedBgmMaxNum() const;
+    void setGotShine(s32 index);
+    void setGotShine(const HintInfo* info);
+    bool isEnableOpenMoonRock(s32 world_id) const;
+    bool tryWriteByByaml(sead::WriteStream* stream, sead::Heap* heap) const;
+    bool tryWriteByByaml(al::ByamlWriter* writer) const;
 
-    void setGotShine(int);
-    void setMainScenarioNo(int);
-    void setStartShine(const ShineInfo*);
-    void setKidsMode(bool);
-    void setTokimekiMayorNpcFavorabilityRating(int);
-    void setFlagOnTalkMessageInfo(int);
-    void setJangoTrans(const sead::Vector3f&);
-    void setJumpingRopeBestCount(int);
-    void setGrowFlowerTime(const al::PlacementId*, const al::PlacementId*, ulong);
-    void setSaveObjS32(const al::PlacementId*, int);
-    void setStartedObj(const al::PlacementId*);
-    void setGotShine(const ShineInfo*);
-    void setMissRestartInfo(const al::PlacementInfo&);
-    void setCheckpointId(const al::PlacementId*);
-    void setActivateHome(void);
-    void setOriginalHintTrans(int);
+    const ShineInfo* getLatestGetShineInfo() const { return mLatestGetShineInfo; }
 
-    bool isUnlockedWorld(int) const;
-    bool isAlreadyGoWorld(int) const;
-    bool isFirstTimeNextWorld(void) const;
-    bool isGotShine(const ShineInfo*) const;
-    bool isGotShine(int) const;
-    bool isStartedObj(const char*, const char*) const;
-    bool isAnswerCorrectSphinxQuizAll(int) const;
-    bool isTalkAlreadyLocalLanguage(void) const;
-    bool isBuyItem(const char*, const sead::FixedSafeString<64>*) const;
-    bool isOpenShineName(int, int) const;
-    bool isExistPoetter(void) const;
-    bool isAlreadyShowExplainCheckpointFlag(void) const;
-    bool isFlagOnTalkMessageInfo(int) const;
-    bool isTalkKakku(void) const;
-    bool isNextMainShine(struct QuestInfo const*) const;
-    bool isNextMainShine(int) const;
-    bool isMainShine(int) const;
-    bool isLatestGetMainShine(const ShineInfo*) const;
-    bool isEnableOpenMoonRock(int) const;
-    bool isCollectedBgm(const char*, const char*) const;
-    bool isPlayScenarioCamera(struct QuestInfo const*) const;
-    bool isFirstNetwork(void) const;
-    bool isTalkCollectBgmNpc(void) const;
-    bool isTalkWorldTravelingPeach(void) const;
-    bool isClearWorldMainScenario(int) const;
-    bool isShopSellout(int) const;
-    bool isExistTimeBalloonNpc(void) const;
-    bool isExistJango(void) const;
-    bool isGotShine(int, int) const;
-    bool isExistInHackDictionary(const char*) const;
-    // bool isBuyItem(ShopItem::ItemInfo const*) const;
-    bool isUnlockAchievementShineName(void) const;
-    bool isOpenMoonRock(int) const;
-    bool isEnableUnlockHint(void) const;
-    bool isGotCheckpoint(al::PlacementId*) const;
-    bool isGotCheckpointInWorld(int) const;
-    bool isPlayDemoPlayerDownForBattleKoopaAfter(void) const;
-    bool isUsedGrowFlowerSeed(const al::PlacementId*) const;
-    bool isStartWorldTravelingPeach(void) const;
-    bool isFirstWorldTravelingStatus(void) const;
-    bool isAnswerCorrectSphinxQuiz(int) const;
-    bool isPayCoinToSphinx(void) const;
-    bool isGotCoinCollect(const al::PlacementId*) const;
-    bool isExistSessionMember(struct SessionMusicianType const&) const;
-    bool isStartedObj(const al::PlacementId*, const char*) const;
-    bool isPayShineAllInAllWorld(void) const;
-    bool isUseMissRestartInfo(void) const;
-    bool isGoToCeremonyFromInsideHomeShip(void) const;
-    bool isRaceStart(void) const;
-    bool isGameClear(void) const;
-    bool isEmpty(void) const;
-    bool isKidsMode(void) const;
+    s64 getSaveDataIdForPrepo() const { return mSaveDataIdForPrepo; }
 
-    s32 getCurrentWorldId() const { return mCurWorldID; }
+    const char* getCheckpointWarpObjId() const { return mCheckpointWarpObjId.cstr(); }
 
-    s32 getCurrentWorldIdNoDevelop() const { return sead::Mathi::max(mCurWorldID, 0); }
+    s32 getOpenDoorLockNum() const { return mOpenDoorLockNum; }
+
+    s32 getCoinNum() const { return mCoinNum; }
+
+    s32 getTotalCoinNum() const { return mTotalCoinNum; }
+
+    bool isPlayDemoOpening() const { return mIsPlayDemoOpening; }
+
+    bool isEnableCap() const {
+        return mIsMeetCap && mIsEnableCap && mCapStatusForJango != CapStatus::Removed &&
+               mCapStatusForJangoSubArea != CapStatus::Removed;
+    }
+
+    bool isMeetCap() const { return mIsMeetCap; }
+
+    void meetCap() { mIsMeetCap = true; }
+
+    void disableCapByPlacement() { mIsEnableCap = false; }
+
+    const SessionEventProgress& getSessionEventProgress() const { return mSessionEventProgress; }
+
+    void setSessionEventProgress(const SessionEventProgress& progress) {
+        mSessionEventProgress = progress;
+    }
+
+    bool isHintNpcFirstTalk() const { return mIsHintNpcFirstTalk; }
+
+    void hintNpcFirstTalk() { mIsHintNpcFirstTalk = true; }
+
+    bool isKinopioBrigadeNpcFirstTalk() const { return mIsKinopioBrigadeNpcFirstTalk; }
+
+    void kinopioBrigadeNpcFirstTalk() { mIsKinopioBrigadeNpcFirstTalk = true; }
+
+    CapStatus getCapStatusForJango() const { return mCapStatusForJango; }
+
+    void setCapStatusForJango(CapStatus status) { mCapStatusForJango = status; }
+
+    CapStatus getCapStatusForJangoSubArea() const { return mCapStatusForJangoSubArea; }
+
+    void setCapStatusForJangoSubArea(CapStatus status) { mCapStatusForJangoSubArea = status; }
+
+    s32 getJangoCount() const { return mJangoCount; }
+
+    void addJangoCount() { mJangoCount++; }
+
+    TimeBalloonSaveData* getTimeBalloonSaveData() const { return mTimeBalloonSaveData; }
+
+    bool isTalkFirstAmiiboNpc() const { return mIsTalkFirstAmiiboNpc; }
+
+    void offTalkFirstAmiiboNpc() { mIsTalkFirstAmiiboNpc = false; }
+
+    WorldWarpTalkData* getWorldWarpTalkData() const { return mWorldWarpTalkData; }
+
+    VisitStageData* getVisitStageData() const { return mVisitStageData; }
+
+    GameProgressData* getGameProgressData() const { return mGameProgressData; }
+
+    MoonRockData* getMoonRockData() const { return mMoonRockData; }
+
+    NetworkUploadFlag* getNetworkUploadFlag() const { return mNetworkUploadFlag; }
+
+    HintPhotoData* getHintPhotoData() const { return mHintPhotoData; }
+
+    const char* getCurrentCostumeName() const { return mCurrentCostumeName.cstr(); }
+
+    const char* getCurrentCapName() const { return mCurrentCapName.cstr(); }
+
+    bool isCostumeRandom() const { return mIsCostumeRandom; }
+
+    void setCostumeRandom(bool is_costume_random) { mIsCostumeRandom = is_costume_random; }
+
+    bool isCapRandom() const { return mIsCapRandom; }
+
+    void setCapRandom(bool is_cap_random) { mIsCapRandom = is_cap_random; }
+
+    bool isRideSphinx() const { return mIsRideSphinx; }
+
+    void rideSphinx() { mIsRideSphinx = true; }
+
+    bool isRideMotorcycle() const { return mIsRideMotorcycle; }
+
+    void rideMotorcycle() { mIsRideMotorcycle = true; }
+
+    s32 getJumpingRopeBestCount() const { return mJumpingRopeBestCount; }
+
+    s32 getJumpingRopeDayCount() const { return mJumpingRopeDayCount; }
+
+    void setJumpingRopeDayCount(s32 count) { mJumpingRopeDayCount = count; }
+
+    bool isExistRecordJumpingRope() const { return mIsExistRecordJumpingRope; }
+
+    void existRecordJumpingRope() { mIsExistRecordJumpingRope = true; }
+
+    bool isExistRecordInDayJumpingRope() const { return mIsExistRecordInDayJumpingRope; }
+
+    void existRecordInDayJumpingRope() { mIsExistRecordInDayJumpingRope = true; }
+
+    s32 getVolleyballBestCount() const { return mVolleyballBestCount; }
+
+    s32 getVolleyballDayCount() const { return mVolleyballDayCount; }
+
+    void setVolleyballDayCount(s32 count) { mVolleyballDayCount = count; }
+
+    bool isExistRecordVolleyball() const { return mIsExistRecordVolleyball; }
+
+    void existRecordVolleyball() { mIsExistRecordVolleyball = true; }
+
+    bool isExistRecordInDayVolleyball() const { return mIsExistRecordInDayVolleyball; }
+
+    void existRecordInDayVolleyball() { mIsExistRecordInDayVolleyball = true; }
+
+    s32 getNextWorldId() const { return mNextWorldId; }
+
+    s32 getPrevWorldId() const { return mPrevWorldId; }
+
+    void disablePlayDemoPlayerDownForBattleKoopaAfter() {
+        mIsPlayDemoPlayerDownForBattleKoopaAfter = false;
+    }
+
+    bool isAppearCourseName() const { return mIsAppearCourseName; }
+
+    void setStageHakoniwa() { mIsStageHakoniwa = true; }
+
+    s32 getCurrentWorldId() const { return mCurrentWorldId; }
+
+    s32 getCurrentWorldIdNoDevelop() const { return sead::Mathi::max(mCurrentWorldId, 0); }
+
+    bool isPlayDemoWorldWarp() const { return _9f8 == 1; }
+
+    bool isPlayDemoReturnToHome() const { return mIsPlayDemoReturnToHome; }
+
+    void requestPlayDemoReturnToHome() { mIsPlayDemoReturnToHome = true; }
+
+    bool isPlayDemoAwardSpecial() const { return mIsPlayDemoAwardSpecial; }
+
+    void requestPlayDemoAwardSpecial() { mIsPlayDemoAwardSpecial = true; }
+
+    bool isPlayDemoWorldWarpHole() const { return mIsPlayDemoWorldWarpHole; }
+
+    bool isEnterStageFirst() const { return mIsEnterStageFirst; }
+
+    bool isWarpCheckpoint() const { return mIsWarpCheckpoint; }
+
+    bool get_a2c() const { return _a2c; }
+
+    ChangeStageInfo* getChangeStageInfo() const { return mChangeStageInfo; }
+
+    void startKoopaCapture() { mIsStartKoopaCapture = true; }
+
+    bool isStartKoopaCapture() const { return mIsStartKoopaCapture; }
+
+    RaceType getRaceType() const { return mRaceType; }
+
+    RaceResult getRaceResult() const { return mRaceResult; }
+
+    void setRaceResult(RaceResult result) { mRaceResult = result; }
+
+    s32 getRaceRivalLevel() const { return mRaceRivalLevel; }
+
+    void setRaceRivalLevel(s32 level) { mRaceRivalLevel = level; }
+
+    s32 getLastRaceRanking() const { return mLastRaceRanking; }
+
+    void setLastRaceRanking(s32 ranking) { mLastRaceRanking = ranking; }
+
+    ShopTalkData* getShopTalkData() const { return mShopTalkData; }
+
+    s32 getTotalPayShineNumForDisp() const { return mTotalPayShineNumForDisp; }
+
+    s32 getCurrentWorldIdForDisp() const { return mCurrentWorldIdForDisp; }
+
+    const sead::Vector3f& getHomeTrans() const { return mHomeTrans; }
+
+    void setHomeTrans(const sead::Vector3f& trans) {
+        mHomeTrans.set(trans);
+        mIsExistHome = true;
+    }
+
+    void setRaceStartNpcTrans(const sead::Vector3f& trans) {
+        mRaceStartNpcTrans.set(trans);
+        mIsExistRaceStartNpc = true;
+    }
+
+    bool isExistRaceStartNpc() const { return mIsExistRaceStartNpc; }
+
+    const sead::Vector3f& getRaceStartTrans() const { return mRaceStartTrans; }
+
+    void setRaceStartTrans(const sead::Vector3f& trans) {
+        mRaceStartTrans.set(trans);
+        mIsExistRaceStart = true;
+    }
+
+    const sead::Vector3f& getRaceGoalTrans() const { return mRaceGoalTrans; }
+
+    void setRaceGoalTrans(const sead::Vector3f& trans) {
+        mRaceGoalTrans.set(trans);
+        mIsExistRaceGoal = true;
+    }
+
+    const sead::Vector3f& getHintNpcTrans() const { return mHintNpcTrans; }
+
+    void setHintNpcTrans(const sead::Vector3f& trans) {
+        mHintNpcTrans.set(trans);
+        mIsExistHintNpc = true;
+    }
+
+    bool isExistHintNpc() const { return mIsExistHintNpc; }
+
+    const sead::Vector3f& getJangoTrans() const { return mJangoTrans; }
+
+    void disableJangoTrans() { mIsEnableJangoTrans = false; }
+
+    const sead::Vector3f& getAmiiboNpcTrans() const { return mAmiiboNpcTrans; }
+
+    bool isExistAmiiboNpc() const { return mIsExistAmiiboNpc; }
+
+    const sead::Vector3f& getMoonRockTrans() const { return mMoonRockTrans; }
+
+    const HintInfo* getLatestHint() const { return mLatestHint; }
+
+    bool isMissEndPrevStage() const { return mIsMissEndPrevStage; }
+
+    bool isKoopaLv3() const { return mIsKoopaLv3; }
+
+    bool isEnableCapMessageLifeOneKidsMode() const { return mIsEnableCapMessageLifeOneKidsMode; }
+
+    void disableCapMessageLifeOneKidsMode() { mIsEnableCapMessageLifeOneKidsMode = false; }
+
+    sead::FixedSafeString<64>* getCapList() { return mItemCap.begin(); }
+
+    sead::FixedSafeString<64>* getClothList() { return mItemCloth.begin(); }
+
+    sead::FixedSafeString<64>* getStickerList() { return mItemSticker.begin(); }
+
+    sead::FixedSafeString<64>* getGiftList() { return mItemGift.begin(); }
+
 
     // custom methods
 
     // custom impl of findShine that uses shine UID instead of index to get the right HintInfo
     HintInfo* findShine(int shineUid) {
         for (int x = 0; x < 0x400; x++) {
-            GameDataFile::HintInfo* curInfo = &mShineHintList[x];
-            if (curInfo->mUniqueID == shineUid) {
+            GameDataFile::HintInfo* curInfo = &mHintList[x];
+            if (curInfo->uniqueId == shineUid) {
                 return curInfo;
             }
         }
@@ -412,6 +733,7 @@ public:
             mCoinCollectGotNum[worldID]++;
         }
     }
+
     // custom impl of isGotCoinCollect that uses a provided stage instead of your current one
     bool customIsGotCoinCollect(const al::PlacementId* placeID, sead::FixedSafeString<128> stage) const {
         al::StringTmp<128> objID;
@@ -420,178 +742,228 @@ public:
         return info && info->isGet;
     }
 
+    // some getters/setters for private member variables
+    FixedHeapArray<HintInfo, 1024> getHintList() const { return mHintList; }
+    bool& getIsEnableCap() { return mIsEnableCap; }
+    GameDataHolder* getGameDataHolder() { return mGameDataHolder; }
+    sead::FixedSafeString<128> getPlayerStartId() { return mPlayerStartId; }
+
     // end custom methods
 
-    ShineInfo** mShineInfoArray;
-    ShineInfo** mShineInfoArray2;
-    ShineInfo* mShineInfo;
-    void* qword18;
-    void* qword20;
-    int dword28;
-    int dword2C;
-    sead::FixedSafeString<0x80> mPlayerStartId;
-    sead::FixedSafeString<0x80> charC8;
-    sead::FixedSafeString<0x80> char160;
-    sead::FixedSafeString<0x80> char1F8;
-    sead::FixedSafeString<0x80> char290;
-    sead::FixedSafeString<0x80> mCurrentStageName;
-    sead::FixedSafeString<0x80> char3C0;
-    u16 word458;
-    char gap45A[6];
-    void* qword460;
-    void* qword468;
-    void* qword470;
-    void* qword478;
-    void* qword480;
-    void* qword488;
-    sead::FixedSafeString<0x100> char490;
-    void* qword5A8;
-    bool byte5B0;
-    void* qword5B4;
-    sead::FixedSafeString<0x80>* qword5C0;
-    UniqObjInfo** mUniqueObjInfoArr;
-    void* qword5D0;
-    int mCoinCount;
-    int qword5DC;
-    void* qword5E0;
-    void* qword5E8;
-    void* qword5F0;
-    u16 word5F8;
-    bool mIsEnableCap;
-    void* qword600;
-    int dword608;
-    bool byte60C;
-    SphinxQuizData* mSphinxQuizData;
-    void* qword618;
-    void* qword620;
-    void* qword628;
-    TimeBalloonSaveData* qword630;
-    sead::FixedSafeString<0x40> char638;
-    int dword690;
-    WorldWarpTalkData* mWorldWarpTalkData;
-    VisitStageData* mVisitStageData;
-    GameProgressData* mProgressData;
-    MoonRockData* mMoonRockData;
-    BossSaveData* mBossSaveData;
-    AchievementSaveData* mAchievementSaveData;
-    SearchAmiiboDataTable* mSearchAmiiboDataTable;
-    NetworkUploadFlag* mNetworkUploadFlag;
-    SequenceDemoSkipData* mSequenceDemoSkipData;
-    HintPhotoData* mHintPhotoData;
-    void* qword6E8;
-    void* qword6F0;
-    void* qword6F8;
-    void* qword700;
-    void* qword708;
-    sead::FixedSafeString<0x40> mBodyName;
-    sead::FixedSafeString<0x40> mCapName;
-    u16 word7C0;
-    void* qword7C8;
-    u16 word7D0;
-    void* qword7D8;
-    sead::PtrArray<RaceRecord> mLatestRaceRecords;
-    void* qword7F0;
-    void* qword7F8;
-    void* qword800;
-    void* qword808;
-    void* qword810;
-    bool byte818;
-    void* qword820;
-    bool mIsKidsMode;
-    sead::PtrArrayImpl sead__ptrarrayimpl830;
-    u16 word840;
-    bool byte842;
-    int dword844;
-    bool byte848;
+
+private:
+    struct WorldHintList {
+        sead::PtrArray<HintInfo> list;
+        s32 index;
+    };
+
+    static_assert(sizeof(WorldHintList) == 0x18);
+
+    struct WorldCoinCollectList {
+        s32 index;
+        sead::PtrArray<CoinCollectInfo> list;
+    };
+
+    static_assert(sizeof(WorldCoinCollectList) == 0x18);
+
+    struct ShopNpcInfo {
+        sead::FixedSafeString<64> name;
+        sead::Vector3f trans;
+        s32 type;
+    };
+
+    static_assert(sizeof(ShopNpcInfo) == 0x68);
+
+    struct MiniGameInfo {
+        sead::Vector3f trans;
+        bool isExist;
+        sead::FixedSafeString<64> name;
+
+        void clear() {
+            trans = sead::Vector3f::zero;
+            isExist = false;
+            name.clear();
+        }
+    };
+
+    static_assert(sizeof(MiniGameInfo) == 0x68);
+
+    FixedHeapArray<ShineInfo*, 1024> mGotShine;
+    FixedHeapArray<ShineInfo*, 1024> mGotGrandShine;
+    ShineInfo* mLatestGetShineInfo = nullptr;
+    FixedHeapArray<s32, sNumWorlds> mShopShineNum;
+    FixedHeapArray<s32, sNumWorlds> mMainScenarioNo;
+    s32 mStartShineIndex = -1;
+    sead::FixedSafeString<128> mPlayerStartId;
+    sead::FixedSafeString<128> mPlayerStartIdForSave;
+    sead::FixedSafeString<128> _160;
+    sead::FixedSafeString<128> mCheckpointName;
+    sead::FixedSafeString<128> _290;
+    sead::FixedSafeString<128> mCurrentStageName;
+    sead::FixedSafeString<128> mPrevStageName;
+    bool _458 = false;
+    bool _459 = false;
+    FixedHeapArray<bool, sNumWorlds> mIsWorldWarpHoleThrough;
+    u64 mSaveTimeForDisp = 0;
+    u64 mSaveTime = 0;
+    s64 mSaveDataIdForPrepo = rs::prepo::generateSaveDataId();
+    s64 mSaveDataIdForPrepoForWrite = rs::prepo::generateSaveDataId();
+    FixedHeapArray<UniqObjInfo, 320> mGotCheckpoint;
+    sead::FixedSafeString<256> mCheckpointWarpObjId;
+    FixedHeapArray<s32, sNumWorlds> mPayShineNum;
+    bool mIsPayShineAllInAllWorld = false;
+    s32 mKeyNum = 0;
+    s32 mOpenDoorLockNum = 0;
+    FixedHeapArray<UniqObjInfo, 512> mStartedObj;
+    FixedHeapArray<SaveObjS32, 256> mSaveObjS32;
+    FixedHeapArray<GrowFlower, 16> mGrowFlower;
+    s32 mCoinNum = 0;
+    s32 mTotalCoinNum = 0;
+    s32 mPlayerJumpCount = 0;
+    s32 mPlayerThrowCapCount = 0;
+    FixedHeapArray<s32, sNumWorlds> mUseCoinCollectNum;
+    FixedHeapArray<s32, sNumWorlds> mUnlockedWorldId;
+    bool mIsPlayDemoOpening = true;
+    bool mIsMeetCap = false;
+    bool mIsEnableCap = true;
+    FixedHeapArray<bool, SessionMusicianType::size()> mIsExistSessionMember;
+    SessionEventProgress mSessionEventProgress = SessionEventProgress::Entry;
+    bool mIsPayCoinToSphinx = false;
+    SphinxQuizData* mSphinxQuizData = nullptr;
+    FixedHeapArray<bool, sNumWorlds> mIsTalkLocalLanguage;
+    bool mIsHintNpcFirstTalk = false;
+    bool mIsKinopioBrigadeNpcFirstTalk = false;
+    CapStatus mCapStatusForJango = CapStatus::None;
+    CapStatus mCapStatusForJangoSubArea = CapStatus::None;
+    s32 mJangoCount = 0;
+    TimeBalloonSaveData* mTimeBalloonSaveData = nullptr;
+    sead::FixedSafeString<64> mWorldTravelingStatus;
+    bool mIsStartWorldTravelingPeach = false;
+    bool mIsPlayAlreadyWorldWarp = false;
+    bool mIsTalkFirstAmiiboNpc = true;
+    bool mIsUnlockAchievement = false;
+    WorldWarpTalkData* mWorldWarpTalkData = nullptr;
+    VisitStageData* mVisitStageData = nullptr;
+    GameProgressData* mGameProgressData = nullptr;
+    MoonRockData* mMoonRockData = nullptr;
+    BossSaveData* mBossSaveData = nullptr;
+    AchievementSaveData* mAchievementSaveData = nullptr;
+    SearchAmiiboDataTable* mSearchAmiiboDataTable = nullptr;
+    NetworkUploadFlag* mNetworkUploadFlag = nullptr;
+    SequenceDemoSkipData* mSequenceDemoSkipData = nullptr;
+    HintPhotoData* mHintPhotoData = nullptr;
+    s64 mPlayTimeTotal = 0;
+    FixedHeapArray<sead::FixedSafeString<64>, 64> mItemCap;
+    FixedHeapArray<sead::FixedSafeString<64>, 64> mItemCloth;
+    FixedHeapArray<sead::FixedSafeString<64>, 64> mItemSticker;
+    FixedHeapArray<sead::FixedSafeString<64>, 64> mItemGift;
+    sead::FixedSafeString<64> mCurrentCostumeName;
+    sead::FixedSafeString<64> mCurrentCapName;
+    bool mIsCostumeRandom = false;
+    bool mIsCapRandom = false;
+    FixedHeapArray<sead::FixedSafeString<128>, 160> mHackDictionary;
+    bool mIsRideSphinx = false;
+    bool mIsRideMotorcycle = false;
+    FixedHeapArray<s32, sNumWorlds> mScenarioNo;
+    sead::PtrArray<RaceRecord> mRaceRecord;
+    s32 mRaceLoseCountLv1 = 0;
+    s32 mRaceLoseCountLv2 = 0;
+    s32 mJumpingRopeBestCount = 0;
+    s32 mJumpingRopeDayCount = 0;
+    bool mIsExistRecordJumpingRope = false;
+    bool mIsExistRecordInDayJumpingRope = false;
+    s32 mVolleyballBestCount = 0;
+    s32 mVolleyballDayCount = 0;
+    bool mIsExistRecordVolleyball = false;
+    bool mIsExistRecordInDayVolleyball = false;
+    s32 mNextWorldId = 0;
+    s32 mPrevWorldId = 0;
+    bool mIsPlayDemoPlayerDownForBattleKoopaAfter = true;
+    FixedHeapArray<bool, 256> mFlagTalkMessage;
+    bool mIsKidsMode = false;
+    sead::PtrArray<CollectBgmInfo> mCollectBgmList;
+    bool mIsTalkKakku = false;
+    bool mIsTalkWorldTravelingPeach = false;
+    bool mIsTalkCollectBgmNpc = false;
+    s32 mTokimekiMayorNpcFavorabilityRating = 0;
+    bool mIsFirstNetwork = true;
     GameDataHolder* mGameDataHolder;
-    void* qword858;
-    PlayerHitPointData* mPlayerHitPointData;
-    sead::FixedSafeString<0x80> char868;
-    bool byte900;
-    bool byte901;
-    int dword904;
-    sead::FixedSafeString<0x80> char908;
-    HintInfo* mShineHintList;  // 0x9A0
-    sead::PtrArrayImpl sead__ptrarrayimpl9A8;
-    sead::PtrArrayImpl sead__ptrarrayimpl9B8;
-    sead::PtrArrayImpl sead__ptrarrayimpl9C8;
+    FixedHeapArray<s32, sNumWorlds> mShineNum;
+    PlayerHitPointData* mPlayerHitPointData = nullptr;
+    sead::FixedSafeString<128> mNextStageName;
+    bool mIsAppearCourseName = false;
+    bool mIsStageHakoniwa = true;
+    s32 mGotCheckpointNum = 0;
+    sead::FixedSafeString<128> _908;
+    FixedHeapArray<HintInfo, 1024> mHintList;
+    sead::PtrArray<WorldHintList> mHintTable;
+    sead::PtrArray<WorldHintList> mHintTableByIdx;
+    sead::PtrArray<WorldCoinCollectList> mCoinCollectTable;
     sead::PtrArray<CoinCollectInfo> mCoinCollectList;
-    void* qword9E8;
-    int mCurWorldID;
-    void* qword9F8;
+    FixedHeapArray<CheckpointInfo*, sNumWorlds> mCheckpointTable;
+    s32 mCurrentWorldId = -1;
+    s32 mCurrentWorldIdForWrite = -1;
+    s32 _9f8 = 0;
+    bool mIsPlayDemoReturnToHome = false;
+    bool mIsPlayDemoAwardSpecial = false;
+    bool mIsPlayDemoWorldWarpHole = false;
+    bool _9ff = false;
     FixedHeapArray<s32, sNumWorlds> mCoinCollectGotNum;
-    u16 wordA08;
-    bool byteA0A;
-    void* qwordA10;
-    void* qwordA18;
-    int dwordA20;
-    int dwordA24;
-    int dwordA28;
-    bool byteA2C;
-    ChangeStageInfo* mChangeStageInfo;
-    ChangeStageInfo* mChangeStageInfo2;
-    void* qwordA40;
-    void* qwordA48;
-    void* qwordA50;
-    void* qwordA58;
-    ShopTalkData* mShopTalkData;
-    void* qwordA68;
-    bool byteA70;
-    char gapA71[3];
-    void* qwordA74;
-    void* qwordA7C;
-    int dwordA84;
-    bool byteA88;
-    char gapA89[3];
-    void* qwordA8C;
-    int dwordA94;
-    bool byteA98;
-    char gapA99[3];
-    void* qwordA9C;
-    int dwordAA4;
-    bool byteAA8;
-    char gapAA9[3];
-    void* qwordAAC;
-    int dwordAB4;
-    bool byteAB8;
-    char gapAB9[3];
-    void* qwordABC;
-    int dwordAC4;
-    bool byteAC8;
-    char gapAC9[3];
-    void* qwordACC;
-    int dwordAD4;
-    bool byteAD8;
-    char gapAD9[3];
-    void* qwordADC;
-    int dwordAE4;
-    bool byteAE8;
-    char gapAE9[3];
-    void* qwordAEC;
-    int dwordAF4;
-    bool byteAF8;
-    char gapAF9[3];
-    void* qwordAFC;
-    int dwordB04;
-    bool byteB08;
-    char gapB09[3];
-    void* qwordB0C;
-    int dwordB14;
-    bool byteB18;
-    char gapB19[3];
-    void* qwordB1C;
-    int dwordB24;
-    bool byteB28;
-    char gapB29[7];
-    void* qwordB30;
-    bool byteB38;
-    char gapB39[7];
-    void* qwordB40;
-    int dwordB48;
-    char gapB4C[4];
-    void* qwordB50;
-    int dwordB58;
-    int dwordB5C;
-    int dwordB60;
-    u16 wordB64;
+    bool mIsEnterStageFirst = true;
+    bool _a09 = false;
+    bool mIsWarpCheckpoint = false;
+    FixedHeapArray<s32, sNumWorlds> mTotalShineNum;
+    FixedHeapArray<s32, sNumWorlds> mTotalMoonRockShineNum;
+    s32 mTotalAchievementNum = 0;
+    s32 mScenarioNoPlacement = -1;
+    s32 mScenarioNoOverride = -1;
+    bool _a2c = false;
+    ChangeStageInfo* mChangeStageInfo = nullptr;
+    ChangeStageInfo* mMissRestartInfo = nullptr;
+    bool mIsUseMissRestartInfo = false;
+    bool mIsStartKoopaCapture = false;
+    RaceType mRaceType = RaceType_None;
+    RaceResult mRaceResult = RaceResult_None;
+    s32 mRaceRivalLevel = -1;
+    s32 mLastRaceRanking = 0;
+    FixedHeapArray<ShopNpcInfo, 4> mShopNpcInfo;
+    ShopTalkData* mShopTalkData = nullptr;
+    FixedHeapArray<MiniGameInfo, 4> mMiniGameInfo;
+    bool mIsShowExplainCheckpointFlag = false;
+    s32 mTotalPayShineNumForDisp = 0;
+    s32 mCurrentWorldIdForDisp = 0;
+    sead::Vector3f mHomeTrans = sead::Vector3f::zero;
+    bool mIsExistHome = false;
+    sead::Vector3f mRaceStartNpcTrans = sead::Vector3f::zero;
+    bool mIsExistRaceStartNpc = false;
+    sead::Vector3f mRaceStartTrans = sead::Vector3f::zero;
+    bool mIsExistRaceStart = false;
+    sead::Vector3f mRaceGoalTrans = sead::Vector3f::zero;
+    bool mIsExistRaceGoal = false;
+    sead::Vector3f mHintNpcTrans = sead::Vector3f::zero;
+    bool mIsExistHintNpc = false;
+    sead::Vector3f _acc = sead::Vector3f::zero;
+    bool _ad8 = false;
+    sead::Vector3f mJangoTrans = sead::Vector3f::zero;
+    bool mIsEnableJangoTrans = false;
+    sead::Vector3f mAmiiboNpcTrans = sead::Vector3f::zero;
+    bool mIsExistAmiiboNpc = false;
+    sead::Vector3f mTimeBalloonNpcTrans = sead::Vector3f::zero;
+    bool mIsExistTimeBalloonNpc = false;
+    sead::Vector3f mPoetterTrans = sead::Vector3f::zero;
+    bool mIsExistPoetter = false;
+    sead::Vector3f mMoonRockTrans = sead::Vector3f::zero;
+    bool mIsExistMoonRock = false;
+    const HintInfo* mLatestHint = nullptr;
+    bool mIsMissEndPrevStage = false;
+    FixedHeapArray<s32, sNumWorlds> mWorldMapIndex;
+    s32 mWorldMapNum = 0;
+    FixedHeapArray<s32, sNumWorlds> mWorldWarpIndex;
+    s32 mWorldWarpNum = 0;
+    s32 mUnlockedWorldNum = 1;
+    s32 _b60 = 0;
+    bool mIsKoopaLv3 = false;
+    bool mIsEnableCapMessageLifeOneKidsMode = true;
 };
+
+static_assert(sizeof(GameDataFile) == 0xb68);

@@ -569,7 +569,7 @@ void StageSceneStateServerConfig::exeGameModeSelect() {
         GameModeManager::instance()->setMode(static_cast<GameMode>(mCurrentList->mCurSelected));
 
         ChangeStageInfo info =
-            ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->mPlayerStartId.cstr(),
+            ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),
                             GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1, (ChangeStageInfo::SubScenarioType)0);
         Client::get()->getHolder()->changeNextStage(&info, 0);
 
@@ -656,7 +656,7 @@ void StageSceneStateServerConfig::exeMiscSettings() {
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
         ChangeStageInfo info =
-            ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->mPlayerStartId.cstr(),
+            ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),
                             GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1, (ChangeStageInfo::SubScenarioType)0);
         switch (mCurrentList->mCurSelected) {
         case MISC_SPEEDRUN_MODE:

@@ -144,9 +144,9 @@ HkTrampoline<PlayerCostumeInfo*, al::LiveActor*, al::ActorInitInfo&, char*, char
 HkTrampoline<void, GameDataHolderWriter, ShineInfo*> sendShinePacketHook = hk::hook::trampoline([](GameDataHolderWriter writer, ShineInfo* info) -> void {
     if (!GameDataFunction::isGotShine(writer, info)) {
         for (int x = 0; x < 0x400; x++) {
-            GameDataFile::HintInfo* curInfo = &writer->getGameDataFile()->mShineHintList[x];
-            if (info->stageName == curInfo->mStageName && info->objectId == curInfo->mObjId) {
-                Client::sendShineCollectPacket(curInfo->mUniqueID);
+            GameDataFile::HintInfo* curInfo = &writer->getGameDataFile()->getHintList()[x];
+            if (info->stageName == curInfo->stageName && info->objectId == curInfo->objId) {
+                Client::sendShineCollectPacket(curInfo->uniqueId);
             }
         }
     }
@@ -154,7 +154,7 @@ HkTrampoline<void, GameDataHolderWriter, ShineInfo*> sendShinePacketHook = hk::h
 });
 
 HkTrampoline<void, GameDataFile*, const char*> sendShinePacketHook2 = hk::hook::trampoline([](GameDataFile* file, const char* name) -> void {
-    if (!rs::checkGetAchievement(file->mGameDataHolder, name)) {
+    if (!rs::checkGetAchievement(file->getGameDataHolder(), name)) {
         for (int i = 0; i < hk::util::arraySize(toadetteMoons); i++) {
             if (strcmp(toadetteMoons[i], name) == 0) {
                 Client::sendShineCollectPacket(2000 + i);
@@ -169,7 +169,7 @@ HkTrampoline<void, GameDataFile*, al::PlacementId*> sendCoinCollectCollectPacket
     hk::hook::trampoline([](GameDataFile* file, al::PlacementId* placeID) -> void {
         al::StringTmp<128> placeIDString;
         placeID->makeString(&placeIDString);
-        Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(), file->mCurrentStageName.cstr());
+        Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(), file->getStageNameCurrent());
         sendCoinCollectCollectPacketHook.orig(file, placeID);
     });
 

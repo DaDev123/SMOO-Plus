@@ -1477,7 +1477,7 @@ void Client::updateShines() {
         GameDataFile::HintInfo* shineInfo = CustomGameDataFunction::getHintInfoByUniqueID(accessor, shineID);
 
         if (shineInfo) {
-            if (!GameDataFunction::isGotShine(accessor, shineInfo->mStageName.cstr(), shineInfo->mObjId.cstr())) {
+            if (!GameDataFunction::isGotShine(accessor, shineInfo->stageName.cstr(), shineInfo->objId.cstr())) {
                 Shine* stageShine = findStageShine(shineID);
 
                 if (stageShine) {
@@ -1795,7 +1795,7 @@ Shine* Client::findStageShine(int shineID) {
             if (curShine) {
                 auto hintInfo = CustomGameDataFunction::getHintInfoByIndex(curShine, curShine->mShineIdx);
 
-                if (hintInfo->mUniqueID == shineID) {
+                if (hintInfo->uniqueId == shineID) {
                     return curShine;
                 }
             }

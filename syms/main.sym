@@ -588,3 +588,4 @@ _ZN2al15HitSensorKeeper5clearEv
 _ZN2al14LayoutInitInfoC1Ev
 _ZN2al14LayoutInitInfoC2Ev
 _ZNK12GameDataFile16getTotalShineNumEv
+_ZNK12GameDataFile19getStageNameCurrentEv
