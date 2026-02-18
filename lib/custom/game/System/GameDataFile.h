@@ -1,13 +1,13 @@
 #pragma once
 
+#include "al/Library/Placement/PlacementId.h"
+
 #include <basis/seadTypes.h>
 #include <container/seadPtrArray.h>
 #include <math/seadVector.h>
 #include <prim/seadBitFlag.h>
 #include <prim/seadSafeString.h>
 #include <stream/seadStream.h>
-
-#include "al/Library/Placement/PlacementId.h"
 
 #include "Npc/SessionEventProgress.h"
 #include "Npc/SessionMusicianType.h"
@@ -110,8 +110,7 @@ public:
         void clear();
 
         bool isDisableByWorldWarpHole(bool is_game_clear) const;
-        bool isEnableUnlock(s32 world_id, bool is_moon_rock, s32 scenario_no,
-                            bool is_game_clear) const;
+        bool isEnableUnlock(s32 world_id, bool is_moon_rock, s32 scenario_no, bool is_game_clear) const;
         bool isHintStatusUnlock(s32 world_id, s32 scenario_no, bool is_moon_rock) const;
         bool isHintStatusUnlockByNpc() const;
         bool isHintStatusUnlockByAmiibo() const;
@@ -258,8 +257,7 @@ public:
     s32 getShineNum(s32 world_id) const;
     s32 getTotalShineNum() const;
     s32 getTotalShopShineNum() const;
-    bool tryGetNextMainScenarioLabel(sead::BufferedSafeString* out_label,
-                                     sead::BufferedSafeString* out_stage_name) const;
+    bool tryGetNextMainScenarioLabel(sead::BufferedSafeString* out_label, sead::BufferedSafeString* out_stage_name) const;
     bool tryGetNextMainScenarioPos(sead::Vector3f* out) const;
     const HintInfo* tryFindNextMainScenarioInfo() const;
     void addPayShine(s32 count);
@@ -297,8 +295,7 @@ public:
     const char* getWorldTravelingStatus() const;
     bool isStartWorldTravelingPeach() const;
     void startWorldTravelingPeach();
-    void setGrowFlowerTime(const al::PlacementId* pot_placement_id,
-                           const al::PlacementId* seed_placement_id, u64 time);
+    void setGrowFlowerTime(const al::PlacementId* pot_placement_id, const al::PlacementId* seed_placement_id, u64 time);
     void setGrowFlowerTime(const al::PlacementId* pot_placement_id, u64 time);
     u64 getGrowFlowerTime(const al::PlacementId* pot_placement_id) const;
     void addGrowFlowerGrowLevel(const al::PlacementId* pot_placement_id, u32 level);
@@ -426,13 +423,9 @@ public:
     bool isLatestGetMainShine(const ShineInfo* info) const;
     bool calcIsGetMainShineAll(const al::IUseSceneObjHolder* scene_obj_holder) const;
     bool calcIsGetShineAllInWorld(s32 world_id) const;
-    s32 tryFindLinkedShineIndex(const al::ActorInitInfo& actor_info,
-                                const al::IUseSceneObjHolder* scene_obj_holder) const;
-    s32 tryFindLinkedShineIndex(const al::ActorInitInfo& actor_info, s32 link_index,
-                                const al::IUseSceneObjHolder* scene_obj_holder) const;
-    s32 tryFindLinkedShineIndexByLinkName(const al::IUseSceneObjHolder* scene_obj_holder,
-                                          const al::ActorInitInfo& actor_info,
-                                          const char* link_name) const;
+    s32 tryFindLinkedShineIndex(const al::ActorInitInfo& actor_info, const al::IUseSceneObjHolder* scene_obj_holder) const;
+    s32 tryFindLinkedShineIndex(const al::ActorInitInfo& actor_info, s32 link_index, const al::IUseSceneObjHolder* scene_obj_holder) const;
+    s32 tryFindLinkedShineIndexByLinkName(const al::IUseSceneObjHolder* scene_obj_holder, const al::ActorInitInfo& actor_info, const char* link_name) const;
     s32 calcLinkedShineNum(const al::ActorInitInfo& actor_info) const;
     s32 tryFindShineIndex(const al::ActorInitInfo& actor_info) const;
     s32 tryFindShineIndex(const char* stage_name, const char* obj_id) const;
@@ -445,8 +438,7 @@ public:
     void resetHintTrans(s32 index);
     void registerShineInfo(const ShineInfo* info, const sead::Vector3f& trans);
     s32 calcRestShineInStageWithWorldProgress(const char* stage_name) const;
-    s32 calcGetShineNumByObjectNameOrOptionalId(const char* object_name_or_optional_id,
-                                                CountType count_type) const;
+    s32 calcGetShineNumByObjectNameOrOptionalId(const char* object_name_or_optional_id, CountType count_type) const;
     s32 calcGetShineNumByObjectNameWithWorldId(const char* object_name, s32 world_id) const;
     s32 calcAllShineNumByObjectNameOrOptionalId(const char* object_name_or_optional_id) const;
     s32 calcGetShineNumByStageName(const char* stage_name) const;
@@ -481,8 +473,7 @@ public:
     bool isPlayDemoOpening() const { return mIsPlayDemoOpening; }
 
     bool isEnableCap() const {
-        return mIsMeetCap && mIsEnableCap && mCapStatusForJango != CapStatus::Removed &&
-               mCapStatusForJangoSubArea != CapStatus::Removed;
+        return mIsMeetCap && mIsEnableCap && mCapStatusForJango != CapStatus::Removed && mCapStatusForJangoSubArea != CapStatus::Removed;
     }
 
     bool isMeetCap() const { return mIsMeetCap; }
@@ -493,9 +484,7 @@ public:
 
     const SessionEventProgress& getSessionEventProgress() const { return mSessionEventProgress; }
 
-    void setSessionEventProgress(const SessionEventProgress& progress) {
-        mSessionEventProgress = progress;
-    }
+    void setSessionEventProgress(const SessionEventProgress& progress) { mSessionEventProgress = progress; }
 
     bool isHintNpcFirstTalk() const { return mIsHintNpcFirstTalk; }
 
@@ -587,9 +576,7 @@ public:
 
     s32 getPrevWorldId() const { return mPrevWorldId; }
 
-    void disablePlayDemoPlayerDownForBattleKoopaAfter() {
-        mIsPlayDemoPlayerDownForBattleKoopaAfter = false;
-    }
+    void disablePlayDemoPlayerDownForBattleKoopaAfter() { mIsPlayDemoPlayerDownForBattleKoopaAfter = false; }
 
     bool isAppearCourseName() const { return mIsAppearCourseName; }
 
@@ -708,7 +695,6 @@ public:
 
     sead::FixedSafeString<64>* getGiftList() { return mItemGift.begin(); }
 
-
     // custom methods
 
     // custom impl of findShine that uses shine UID instead of index to get the right HintInfo
@@ -746,8 +732,8 @@ public:
     s32 getTotalUniqueShineNum() {
         int shines = 0;
         for (int i = 0; i < sNumWorlds; i++) {
-            shines += mShineNum[i]; // all shines including shop
-            shines -= std::max(mShopShineNum[i] - 1, 0); // subtract shop moons except for 1 per kingdom
+            shines += mShineNum[i];                       // all shines including shop
+            shines -= std::max(mShopShineNum[i] - 1, 0);  // subtract shop moons except for 1 per kingdom
         }
         return shines;
     }
@@ -757,9 +743,10 @@ public:
     bool& getIsEnableCap() { return mIsEnableCap; }
     GameDataHolder* getGameDataHolder() { return mGameDataHolder; }
     sead::FixedSafeString<128> getPlayerStartId() { return mPlayerStartId; }
+    FixedHeapArray<s32, sNumWorlds> getScenarioNumArr() { return mScenarioNo; };
+    FixedHeapArray<s32, sNumWorlds> getMainScenarioNumArr() { return mMainScenarioNo; };
 
     // end custom methods
-
 
 private:
     struct WorldHintList {

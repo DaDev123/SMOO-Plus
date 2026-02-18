@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sead/math/seadQuat.h"
-#include "sead/math/seadVector.h"
+#include "sead/math/seadQuat.h"    // IWYU pragma: keep
+#include "sead/math/seadVector.h"  // IWYU pragma: keep
 
 #include "nn/account.h"
 #include "types.h"
@@ -37,11 +37,11 @@ enum PacketType : short {
     End  // end of enum for bounds checking
 };
 
-// attribute otherwise the build log is spammed with unused warnings
-USED static const char* packetNames[] = {"Unknown", "Client Initialization", "Player Info", "Player Cap Info", "Game Info", "Tag Info",
-                                         //"Freeze Info",
-                                         "Player Connect", "Player Disconnect", "Costume Info", "Moon Collection", "Capture Info", "Change Stage",
-                                         "Server Command", "Message", "UDP Initialization", "UDP Hole Punch", "Extra", "Health and Coins", "Purple Coin Collection"};
+constexpr static const char* packetNames[] = {"Unknown", "Client Initialization", "Player Info", "Player Cap Info", "Game Info", "Tag Info",
+                                              //"Freeze Info",
+                                              "Player Connect", "Player Disconnect", "Costume Info", "Moon Collection", "Capture Info", "Change Stage",
+                                              "Server Command", "Message", "UDP Initialization", "UDP Hole Punch", "Extra", "Health and Coins",
+                                              "Purple Coin Collection"};
 
 enum SenderType { SERVER, CLIENT };
 
@@ -63,19 +63,21 @@ struct PACKED Packet {
 
 // all packet types
 
-#include "packets/GameInf.h"
-#include "packets/PlayerConnect.h"
-#include "packets/PlayerDC.h"
-#include "packets/PlayerInfPacket.h"
-#include "packets/TagInf.h"
-// #include "packets/FreezeInf.h"
+// IWYU pragma: begin_keep
 #include "packets/CaptureInf.h"
 #include "packets/ChangeStagePacket.h"
+#include "packets/CoinCollectCollect.h"
 #include "packets/CostumeInf.h"
+#include "packets/FreezeInf.h"
+#include "packets/GameInf.h"
 #include "packets/HackCapInf.h"
 #include "packets/HealthCoins.h"
 #include "packets/InitPacket.h"
 #include "packets/MessagePacket.h"
+#include "packets/PlayerConnect.h"
+#include "packets/PlayerDC.h"
+#include "packets/PlayerInfPacket.h"
 #include "packets/ServerCommand.h"
 #include "packets/ShineCollect.h"
-#include "packets/CoinCollectCollect.h"
+#include "packets/TagInf.h"
+// IWYU pragma: end_keep

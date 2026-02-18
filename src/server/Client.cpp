@@ -1,6 +1,7 @@
 #include "server/Client.hpp"
 
 #include "hk/types.h"
+#include "hk/util/Math.h"
 
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/Layout/LayoutActionFunction.h"
@@ -32,9 +33,7 @@
 #include "logger.hpp"
 #include "nn/os.h"
 #include "nn/socket.h"
-#include "packets/MessagePacket.h"
 #include "packets/Packet.h"
-#include "packets/PlayerDC.h"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
@@ -42,6 +41,7 @@
 #include "server/SocketClient.hpp"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
+#include "System/GameDataHolderWriter.h"
 #include "thread/seadMessageQueue.h"
 #include "types.h"
 #include "Util/AchievementUtil.h"
@@ -518,6 +518,7 @@ void Client::readFunc() {
             case PacketType::COINCOLLECTCOLL:
                 updateCoinCollects((CoinCollectCollect*)curPacket);
                 break;
+
             case PacketType::CLIENTINIT: {
                 InitPacket* initPacket = (InitPacket*)curPacket;
                 Logger::log("Server Max Player Size: %d\n", initPacket->maxPlayers);
@@ -1079,6 +1080,46 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
         mConnectCount++;
     }
 }
+const struct {
+    const char* stage;
+    s32 index;
+    const char* warpStage = stage;
+} stageListForScenarioSync[] = {{"CapWorldHomeStage", 0},
+                                {"WaterfallWorldHomeStage", 1},
+                                {"SandWorldHomeStage", 2},
+                                {"SandWorldUnderground001Stage", 2, "SandWorldHomeStage"},
+                                {"ForestWorldHomeStage", 3},
+                                {"ForestWorldBossStage", 3, "ForestWorldHomeStage"},
+                                {"LakeWorldHomeStage", 4},
+                                {"CloudWorldHomeStage", 5},
+                                {"ClashWorldHomeStage", 6},
+                                {"CityWorldHomeStage", 7},
+                                {"SeaWorldHomeStage", 8},
+                                {"SnowWorldHomeStage", 9},
+                                {"SnowWorldLobby001Stage", 9, "SnowWorldHomeStage"},
+                                {"LavaWorldHomeStage", 10},
+                                {"BossRaidWorldHomeStage", 11},
+                                {"SkyWorldHomeStage", 12},
+                                {"PeachWorldHomeStage", 13},
+                                {"Special1WorldHomeStage", 14},
+                                {"Special2WorldHomeStage", 15}};
+static s32 findWorldIdFromStageName(const char* stageName) {
+    for (s32 i = 0; i < hk::util::arraySize(stageListForScenarioSync); i++) {
+        if (al::isEqualString(stageListForScenarioSync[i].stage, stageName)) {
+            return stageListForScenarioSync[i].index;
+        }
+    }
+    return -1;
+}
+static const char* findWarpStageFromStageName(const char* stageName) {
+    for (s32 i = 0; i < hk::util::arraySize(stageListForScenarioSync); i++) {
+        if (al::isEqualString(stageListForScenarioSync[i].stage, stageName)) {
+            return stageListForScenarioSync[i].warpStage;
+        }
+    }
+    return nullptr;
+}
+
 /**
  * @brief
  *
@@ -1100,6 +1141,19 @@ void Client::updateGameInfo(GameInf* packet) {
 
         curInfo->is2D = packet->is2D;
         curInfo->gameMode = packet->gameMode;
+    }
+    if (findWorldIdFromStageName(packet->stageName) == -1)
+        return;
+    int scenario = Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr()[findWorldIdFromStageName(packet->stageName)];
+    // int mainscenario = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr()[findWorldIdFromStageName(packet->stageName)];
+    if (packet->scenarioNo < 15 && packet->scenarioNo > scenario) {
+        Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr()[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
+        // Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr()[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
+        if (findWarpStageFromStageName(packet->stageName) &&
+            strcmp(GameDataFunction::getCurrentStageName(Client::getHolder()), findWarpStageFromStageName(packet->stageName)) == 0) {
+            ChangeStageInfo info(Client::getHolder(), "start", findWarpStageFromStageName(packet->stageName), false, packet->scenarioNo);
+            Client::getHolder()->changeNextStage(&info);
+        }
     }
 }
 

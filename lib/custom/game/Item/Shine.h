@@ -8,12 +8,16 @@
 
 struct ShineInfo;
 class QuestInfo;
+class ChangeStageInfo;
+class FukankunZoomCapMessage;
 
 enum ShineType { Normal, Dot, Grand };
 
 namespace al {
 class RateParamV3f;
-}
+class ParabolicPathMovement;
+class MtxConnector;
+}  // namespace al
 
 class Shine : public al::LiveActor, public IUseDimension {
 public:
@@ -120,70 +124,81 @@ public:
     bool isMainShine() const { return mIsMainShine; }
 
 public:
-    void* qword110;
-    int dword118;
+    al::MtxConnector* mMtxConnector;
+    int _118;
     bool mIsGotShine;
     ShineInfo* curShineInfo;  // 0x120
-    unsigned char padding_188[0x188 - 0x128];
+    void* _128;
+    void* _130;
+    void* _138;
+    void* _140;
+    void* _148;
+    void* _150;
+    void* _158;
+    void* _16c;
+    void* _168;
+    void* _170;
+    void* _178;
+    void* _180;
     al::RateParamV3f* mRateParam;
-    void* qword190;
-    void* qword198;
+    void* _190;
+    al::ParabolicPathMovement* _198;
     ShineType mModelType;
-    void* qword1A8;
-    bool byte1B0;
-    void* qword1B8;
-    int dword1C0;
-    int dword1C4;
+    void* _1A8;
+    bool _1B0;
+    ChangeStageInfo* mChangeStageInfo;
+    int _1C0;
+    int _1C4;
     sead::FixedSafeString<0x80> mShineLabel;
-    void* qword260;
-    int dword268;
-    bool byte26C;
-    void* qword270;
+    void* _260;
+    int _268;
+    bool _26C;
+    void* _270;
     QuestInfo* shineQuestInfo;               // 0x278
-    void* unkPtr1;                           // 0x280
+    void* _280;                              // 0x280
     ActorDimensionKeeper* mDimensionKeeper;  // 0x288
     int mShineIdx;                           // 0x290
     bool mIsMainShine;
-    void* qword298;
-    void* qword2A0;
-    void* qword2A8;
-    void* qword2B0;
-    void* qword2B8;
-    int dword2C0;
-    __attribute__((packed)) void* qword2C4;
-    int dword2CC;
-    int dword2D0;
+    void* _298;
+    void* _2A0;
+    void* _2A8;
+    void* _2B0;
+    void* _2B8;
+    int _2C0;
+    __attribute__((packed)) void* _2C4;
+    int _2CC;
+    int _2D0;
     bool mIsAddHeight;
-    int dword2D8;
+    int _2D8;
     al::LiveActor* mModelEmpty;
     al::LiveActor* mModelShine;
-    int dword2F0;
-    u16 word2F4;
-    int dword2F8;
+    float _2F0;
+    u16 _2F4;
+    int _2F8;
     bool mIsNoRotate;
-    void* qword300;
+    void* _300;
     bool mIsUseDemoCam;
     struct WaterSurfaceShadow* mWaterShadow;
-    void* qword318;
-    int dword320;
-    int dword324;
-    bool byte328;
-    void* qword330;
+    FukankunZoomCapMessage* _318;
+    int _320;
+    int _324;
+    bool _328;
+    void* _330;
     bool mIsCheckGroundHeightMoon;
     bool mIsHintPhoto;
-    void* qword340;
-    bool byte348;
-    void* qword350;
+    void* _340;
+    bool _348;
+    void* _350;
     bool mIsUseAppearDemoForce;
-    int dword35C;
-    int dword360;
-    int dword364;
-    int dword368;
+    int _35C;
+    int _360;
+    int _364;
+    int _368;
     bool mIsPowerStar;
     bool mIsAppearDemoHeightHigh;
-    void* qword370;
-    u16 word378;
-    int dword37C;
+    void* _370;
+    u16 _378;
+    int _37C;
 };
 
 static_assert(sizeof(Shine) == 0x380);

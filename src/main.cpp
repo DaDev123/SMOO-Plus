@@ -66,7 +66,7 @@
 #include "layouts/ConnectionStatus.h"
 #include "layouts/SpeedrunIcon.h"
 #include "logger.hpp"
-#include "nn/hid.h"
+#include "nn/hid.h"  // IWYU pragma: keep
 #include "nn/socket.h"
 #include "puppetHooks.hpp"
 #include "puppets/PuppetInfo.h"
@@ -383,7 +383,7 @@ void drawMain(al::Sequence* curSequence) {
         auto* drawContext = Application::instance()->mDrawSystemInfo->drawContext;
 
         float deltaTime = Time::deltaTime;
-        float baseY = (dispHeight * 7 / 10) + 95.f - 5.f;
+        float baseY = (dispHeight * 7.f / 10.f) + 95.f - 5.f;
         float lineHeight = 30.f;
 
         // Update display timer and active state

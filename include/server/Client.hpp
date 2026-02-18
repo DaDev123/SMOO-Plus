@@ -33,7 +33,6 @@
 #include "game/System/GameDataHolderAccessor.h"
 
 // ===== NINTENDO SDK INCLUDES =====
-#include "logger.hpp"
 #include "nn/account.h"
 
 // ===== SEAD INCLUDES =====
@@ -47,7 +46,6 @@
 
 // ===== PROJECT INCLUDES =====
 #include "Keyboard.hpp"
-#include "packets/FreezeInf.h"
 #include "puppets/PuppetHolder.hpp"
 #include "puppets/PuppetInfo.h"
 #include "server/SocketClient.hpp"
@@ -128,6 +126,7 @@ public:
     static void sendFreezeInfPacket();
     static void sendPuppetPosInfoPacket();
     static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
+    static void sendScenarioSyncPacket(const char* changeStageName, s32 scenario);
 
     // ===== PUPPET MANAGEMENT =====
     static bool tryAddPuppet(PuppetActor* puppet);
