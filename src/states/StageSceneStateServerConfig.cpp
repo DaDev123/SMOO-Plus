@@ -206,7 +206,13 @@ void StageSceneStateServerConfig::exeMainMenu() {
             al::setNerve(this, &NrvStageSceneStateServerConfig.GameplaySettings);
             break;
         case MAIN_GAMEMODE_SETTINGS:
-            al::setNerve(this, &NrvStageSceneStateServerConfig.GameModeSettings);
+            if (!sSpeedrunModeEnabled)
+                al::setNerve(this, &NrvStageSceneStateServerConfig.GameModeSettings);
+            else {
+                al::setNerve(this, &NrvStageSceneStateServerConfig.MainMenu);
+                Client::showUIMessage(u"You cannot use Gamemodes in Speedrun Mode");
+                Client::hideUIMessage();
+            }
             break;
         case MAIN_MISC_SETTINGS:
             al::setNerve(this, &NrvStageSceneStateServerConfig.MiscSettings);
