@@ -13,6 +13,7 @@
 #include "puppets/HackModelHolder.hpp"
 #include "puppets/PuppetInfo.h"
 #include "server/freeze/FreezePlayerBlock.h"
+#include "server/shine-thief/ShineThiefPlayerBlock.h"
 
 class PuppetActor : public al::LiveActor {
 public:
@@ -84,6 +85,7 @@ private:
     float mClosingSpeed = 0;
 
     FreezePlayerBlock* mFreezeTagIceBlock = nullptr;
+    ShineThiefPlayerBlock* mShineThiefPlayerBlock = nullptr;
 };
 
 PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo, char const* bodyName, char const* capName, int subActorNum,

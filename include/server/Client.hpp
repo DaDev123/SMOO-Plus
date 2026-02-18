@@ -46,6 +46,7 @@
 
 // ===== PROJECT INCLUDES =====
 #include "Keyboard.hpp"
+#include "packets/Packet.h"
 #include "puppets/PuppetHolder.hpp"
 #include "puppets/PuppetInfo.h"
 #include "server/SocketClient.hpp"
@@ -124,6 +125,7 @@ public:
     static void sendShineCollectPacket(int shineId);
     static void sendTagInfPacket();
     static void sendFreezeInfPacket();
+    static void sendShineThiefInfPacket();
     static void sendPuppetPosInfoPacket();
     static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
     static void sendScenarioSyncPacket(const char* changeStageName, s32 scenario);
@@ -242,6 +244,8 @@ private:
     void updateTagInfo(TagInf* packet);
     void updateFreezeInfo(FreezeInf* packet);
     void handleFreezeInfRoundPacket(FreezeInfRoundPacket* packet);
+    void updateShineThiefInfo(ShineThiefInf* packet);
+    void handleShineThiefRoundPacket(ShineThiefInfRoundPacket* packet);
     void updateCaptureInfo(CaptureInf* packet);
     void sendToStage(ChangeStagePacket* packet);
     void disconnectPlayer(PlayerDC* packet);

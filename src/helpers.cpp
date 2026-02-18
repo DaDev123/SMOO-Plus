@@ -144,7 +144,7 @@ float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform
     }
 }
 
-float VisualUtils::SmoothMove_RegularLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
+float VisualUtils::SmoothMove_LowLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
     // Position
 
     sead::Vector3f posDiff = *targetTransform.position - *moveTransform.position;
@@ -190,8 +190,8 @@ float VisualUtils::SmoothMove_RegularLatency(Transform moveTransform, Transform 
     return closingSpeed;
 }
 
-// Ultra-smooth exponential interpolation (Low Latency Mode)
-float VisualUtils::SmoothMove_LowLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
+// Ultra-smooth exponential interpolation
+float VisualUtils::SmoothMove_RegularLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
     // Very responsive with minimal smoothing
     const float positionSmoothTime = 0.02f;
     const float rotationSmoothTime = 0.02f;

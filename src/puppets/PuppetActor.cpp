@@ -42,6 +42,8 @@
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
+#include "server/shine-thief/ShineThiefInfo.h"
+#include "server/shine-thief/ShineThiefMode.hpp"
 #include "server/snh/SardineMode.hpp"
 #include "Util/SensorMsgFunction.h"
 
@@ -121,6 +123,10 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
         mFreezeTagIceBlock = new FreezePlayerBlock("PuppetIceBlock");
         mFreezeTagIceBlock->init(initInfo);
     }
+
+    if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
+        mShineThiefPlayerBlock = GameModeManager::instance()->getMode<ShineThiefMode>()->getShineBlock();
+    }
 }
 
 void PuppetActor::initAfterPlacement() {
@@ -147,6 +153,15 @@ void PuppetActor::movement() {
 
         al::setTrans(mFreezeTagIceBlock, mInfo->playerPos);
         al::setQuat(mFreezeTagIceBlock, mInfo->playerRot);
+    }
+
+    if (mShineThiefPlayerBlock) {
+        bool shouldMoveBlock = mInfo->isShineThiefHolder && mInfo->isConnected && mInfo->isInSameStage;
+        if (shouldMoveBlock && al::isAlive(mShineThiefPlayerBlock)) {
+            sead::Vector3f offsetPos = mInfo->playerPos;
+            offsetPos.y += 275.f;
+            al::setTrans(mShineThiefPlayerBlock, offsetPos);
+        }
     }
 }
 
@@ -237,6 +252,8 @@ void PuppetActor::control() {
             if (!mNameTag->mIsAlive)
                 mNameTag->appear();
 
+        // Nametag visibility logic for active game modes
+
         if (mNameTag && GameModeManager::instance()->isActive()) {
             GameMode curMode = GameModeManager::instance()->getGameMode();
             switch (curMode) {
@@ -249,6 +266,27 @@ void PuppetActor::control() {
             case GameMode::FREEZETAG: {
                 bool isRun = GameModeManager::instance()->getInfo<FreezeTagInfo>()->mIsPlayerRunner;
                 mNameTag->mIsAlive = (isRun && mInfo->isFreezeTagRunner) || (!isRun && !mInfo->isFreezeTagRunner);
+                break;
+            }
+            case GameMode::SHINETHIEF: {
+                ShineThiefInfo* stInfo = GameModeManager::instance()->getInfo<ShineThiefInfo>();
+
+                // In team mode, show nametags for all team members
+                if (stInfo->mIsTeamMode) {
+                    ShineThiefTeam localTeam = stInfo->mPlayerTeam;
+                    ShineThiefTeam puppetTeam = static_cast<ShineThiefTeam>(mInfo->shineThiefTeam);
+
+                    // Show nametag if puppet is on the same team as local player
+                    mNameTag->mIsAlive = (localTeam != ShineThiefTeam::NONE && puppetTeam != ShineThiefTeam::NONE && localTeam == puppetTeam);
+                } else {
+                    // Original behavior for non-team mode
+                    bool isLocalPlayerHolder = stInfo->mIsPlayerHolder;
+                    if (isLocalPlayerHolder) {
+                        mNameTag->mIsAlive = false;
+                    } else {
+                        mNameTag->mIsAlive = !mInfo->isShineThiefHolder;
+                    }
+                }
                 break;
             }
             default:

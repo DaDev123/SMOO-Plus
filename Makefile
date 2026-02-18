@@ -13,7 +13,7 @@ WHITE := \033[37m
 
 SMOVER ?= 100
 BUILDVER ?= 101
-BUILDVERSTR ?= 0.6.1-pre
+BUILDVERSTR ?= 0.6.5-pre
 DEBUGLOG ?= 0 # defaults to disable debug logger 
 SERVERIP ?= 192.168.178.41 # put debug logger server IP here
 
@@ -43,6 +43,8 @@ setup:
 format:
 	clear || true
 	find ./src -name "*.*" | xargs clang-format -i || true
+	find ./include -name "*.*" | xargs clang-format -i || true
+	find ./lib/custom -name "*.*" | xargs clang-format -i || true
 
 clean:
 	rm -r build || true

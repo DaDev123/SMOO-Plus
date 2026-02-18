@@ -42,12 +42,13 @@
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
+#include "server/shine-thief/ShineThiefMode.hpp"
 #include "System/GameDataHolder.h"
 #include "TwistsConfig.hpp"
 
 static HkReplace<bool, al::IUseSceneObjHolder*> comboBtnHook = hk::hook::replace([](al::IUseSceneObjHolder* holder) -> bool {
-    // only switch to combo if the gamemode is active
-    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG))
+    // only switch to combo if freezetag or shinethief is active
+    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) || GameModeManager::instance()->isModeAndActive(GameMode::SHINETHIEF))
         return false;
 
     // only if the gamemode wants it
@@ -249,6 +250,15 @@ static HkTrampoline<void, StageScene*, al::SceneInitInfo*> stageSceneInitHook =
                     HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
                     mode->setCameraTicket(spectateCamera);
                 }
+            }
+        }
+        if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
+            al::CameraDirector* director = curScene->getCameraDirector();
+            if (director && director->mPoserFactory) {
+                al::CameraTicket* spectateCamera = director->createCameraFromFactory("CameraPoserActorSpectate", nullptr, 0, 5, sead::Matrix34f::ident);
+
+                ShineThiefMode* mode = GameModeManager::instance()->getMode<ShineThiefMode>();
+                mode->setCameraTicket(spectateCamera);
             }
         }
     });

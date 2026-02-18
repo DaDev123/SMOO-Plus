@@ -179,6 +179,7 @@ void HideAndSeekMode::update() {
         updateSpectateCam(playerBase);
     }
 
+    // Only hiders can be tagged
     if (!mInfo->mIsPlayerIt) {
         if (mInvulnTime >= 5) {
             if (playerBase) {
@@ -252,6 +253,7 @@ void HideAndSeekMode::update() {
         }
     }
 
+    // Gravity handling
     if (mInfo->mIsUseGravity && !isYukimaru) {
         sead::Vector3f gravity;
         if (rs::calcOnGroundNormalOrGravityDir(&gravity, playerBase, playerBase->getPlayerCollision())) {
@@ -278,6 +280,7 @@ void HideAndSeekMode::update() {
         }
     }
 
+    // Manual role toggle
     if (al::isPadTriggerUp(-1) && !al::isPadHoldR(-1)) {
         mInfo->mIsPlayerIt = !mInfo->mIsPlayerIt;
 

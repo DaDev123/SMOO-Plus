@@ -79,5 +79,6 @@ struct PACKED Packet {
 #include "packets/PlayerInfPacket.h"
 #include "packets/ServerCommand.h"
 #include "packets/ShineCollect.h"
+#include "packets/ShineThiefInf.h"
 #include "packets/TagInf.h"
 // IWYU pragma: end_keep

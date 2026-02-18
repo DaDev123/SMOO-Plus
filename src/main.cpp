@@ -76,6 +76,7 @@
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
+#include "server/shine-thief/ShineThiefMode.hpp"
 #include "Settings/SmooSettings.hpp"
 #include "Settings/StageWarper.hpp"
 #include "speedboot/BootHooks.hpp"
@@ -296,8 +297,14 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
         }
     }
 
-    if (isFirstStep && GameModeManager::instance()->isMode(GameMode::FREEZETAG))
-        GameModeManager::instance()->getMode<FreezeTagMode>()->setWipeHolder(sequence->mWipeHolder);
+    // Set WipeHolder for both FreezeTag and ShineThief modes
+    if (isFirstStep) {
+        if (GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
+            GameModeManager::instance()->getMode<FreezeTagMode>()->setWipeHolder(sequence->mWipeHolder);
+        } else if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
+            GameModeManager::instance()->getMode<ShineThiefMode>()->setWipeHolder(sequence->mWipeHolder);
+        }
+    }
 
     hakoniwaSequenceHook.orig(sequence);
 });
@@ -355,8 +362,8 @@ void drawMain(al::Sequence* curSequence) {
     GameModeManager* gmm = GameModeManager::instance();
     GameModeBase* mode = gmm->getMode<GameModeBase>();
 
-    // Freeze tag needs the delta time to not update while the game is paused
-    if (gmm->isMode(GameMode::FREEZETAG)) {
+    // Freeze tag and Shine Thief need the delta time to not update while the game is paused
+    if (gmm->isMode(GameMode::FREEZETAG) || gmm->isMode(GameMode::SHINETHIEF)) {
         if (!gmm->isPaused())
             Time::calcTime();
     } else {
@@ -443,18 +450,11 @@ void drawMain(al::Sequence* curSequence) {
 
         // TODO: Fix Outline
         int displayIndex = 0;
-        ImVec2 winPos = ImGui::GetWindowPos();
-        float winX = winPos.x;
-        float winY = winPos.y;
         for (int i = 0; i < maxDisplayMsgCount; i++) {
             if (displayMessages[i].active) {
-                // Position relativ zum Fenster
-                float yPos = 20.f + lineHeight * displayIndex;  // 20px Padding vom Fenster-Top
-                float xPos = 10.f;                              // Padding von links
-
-                hk::util::Vector2f pos(winX + xPos, winY + yPos);
+                float yPos = baseY - (lineHeight * displayIndex);
+                hk::util::Vector2f pos(10.f, yPos);
                 hk::util::Vector2f shadowPos = pos + hk::util::Vector2f(2.f, 2.f);
-
                 sead::Color4f color(255, 255, 255, 255);
                 u32 coloru32 = hk::gfx::rgba(color.a, color.g, color.b, color.a);
                 u8 shadowAlpha = fmax(0.0f, color.a - 25);
@@ -824,8 +824,9 @@ extern "C" void hkMain() {
     freezeDeathAreaHook.installAtSym<"_ZN2al13isInDeathAreaEPKNS_9LiveActorE">();            // Replaces functionality of death areas in freeze tag
     playerHitPointDamageHook.installAtSym<"_ZN18PlayerHitPointData6damageEv">();             // disables the damage function in Freeze Tag
     isEnableRescuePlayerHook.installAtSym<"_ZNK7HackCap20isEnableRescuePlayerEv">();         // Forces kids mode to be enabled during Freeze Tag
-    freezeMoonHitboxHook.installAtSym<"_ZN5Shine14makeActorAliveEv">();                      // When mode enabled, disable moon
-                                                                                             // hitboxes to avoid softlocks
+    hackCapStartRescuePlayerHook.installAtSym<"_ZN7HackCap17startRescuePlayerEv">();         // Checks if the player is currently Rescued
+    // freezeMoonHitboxHook.installAtSym<"_ZN5Shine14makeActorAliveEv">();                      // When mode enabled, disable moon
+    // hitboxes to avoid softlocks
 
     // custom bootscreen hooks
     hk::hook::writeBranchLinkAtSym<"R_hakoniwaSetNerveSetup">(speedboot::hakoniwaSetNerveSetup);

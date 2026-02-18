@@ -37,6 +37,8 @@
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
+#include "server/shine-thief/ShineThiefInfo.h"
+#include "server/shine-thief/ShineThiefMode.hpp"
 #include "server/snh/SardineMode.hpp"
 #include "server/SocketClient.hpp"
 #include "System/GameDataHolder.h"
@@ -491,6 +493,36 @@ void Client::readFunc() {
                     mSocket->send(&lastCaptureInfPacket);
                 }
 
+                if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
+                    ShineThiefInfo* stInfo = GameModeManager::instance()->getInfo<ShineThiefInfo>();
+                    ShineThiefMode* stMode = GameModeManager::instance()->getMode<ShineThiefMode>();
+
+                    if (stInfo && stMode) {
+                        ShineThiefInf* stPacket = new (mHeap) ShineThiefInf();
+                        stPacket->mUserID = mUserID;
+                        stPacket->updateType = ShineThiefUpdateType::PLAYER;
+                        stPacket->isHolder = stInfo->mIsPlayerHolder;
+                        stPacket->isCaught = false;
+                        stPacket->score = stInfo->mPlayerTagScore.mScore;
+                        stPacket->shinePos = stMode->getShinePos();
+
+                        switch (stInfo->mPlayerTeam) {
+                        case ShineThiefTeam::TEAM_1:
+                            stPacket->team = 1;
+                            break;
+                        case ShineThiefTeam::TEAM_2:
+                            stPacket->team = 2;
+                            break;
+                        default:
+                            stPacket->team = 0;
+                            break;
+                        }
+
+                        mSocket->send(stPacket);
+                        mHeap->free(stPacket);
+                    }
+                }
+
                 break;
             case PacketType::COSTUMEINF:
                 updateCostumeInfo((CostumeInf*)curPacket);
@@ -828,6 +860,70 @@ void Client::sendFreezeInfPacket() {
         packet->isRunner = frInfo->mIsPlayerRunner;
         packet->isFreeze = frInfo->mIsPlayerFreeze;
         packet->score = frInfo->mPlayerTagScore.mScore;
+
+        sInstance->mSocket->queuePacket(packet);
+    }
+}
+
+void Client::sendShineThiefInfPacket() {
+    if (!sInstance) {
+        return;
+    }
+
+    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
+
+    GameMode curMode = GameModeManager::instance()->getGameMode();
+    if (curMode != GameMode::SHINETHIEF) {
+        return;
+    }
+
+    ShineThiefMode* stMode = GameModeManager::instance()->getMode<ShineThiefMode>();
+    ShineThiefInfo* stInfo = GameModeManager::instance()->getInfo<ShineThiefInfo>();
+
+    if (!stMode || !stInfo) {
+        return;
+    }
+
+    ShineThiefUpdateType updateType = stMode->getNextUpdateType();
+
+    // Round packets
+    if (updateType == ShineThiefUpdateType::ROUNDSTART || updateType == ShineThiefUpdateType::ROUNDCANCEL) {
+        ShineThiefInfRoundPacket* packet = new ShineThiefInfRoundPacket();
+
+        packet->mUserID = sInstance->mUserID;
+        packet->updateType = updateType;
+
+        if (updateType == ShineThiefUpdateType::ROUNDSTART) {
+            packet->roundTime = stInfo->mRoundLength;
+            packet->shinePos = stMode->getShinePos();
+            packet->hostStartPos = stMode->getHostStartPos();
+        }
+
+        sInstance->mSocket->queuePacket(packet);
+    }
+    // Regular player update packets
+    else {
+        ShineThiefInf* packet = new ShineThiefInf();
+
+        packet->mUserID = sInstance->mUserID;
+        packet->updateType = updateType;
+        packet->isHolder = stInfo->mIsPlayerHolder;
+        packet->isCaught = false;
+        packet->score = stInfo->mPlayerTagScore.mScore;
+        packet->shinePos = stMode->getShinePos();
+
+        // Set team explicitly
+        switch (stInfo->mPlayerTeam) {
+        case ShineThiefTeam::TEAM_1:
+            packet->team = 1;
+            break;
+        case ShineThiefTeam::TEAM_2:
+            packet->team = 2;
+            break;
+        default:
+            packet->team = 0;
+            break;
+        }
 
         sInstance->mSocket->queuePacket(packet);
     }
@@ -1247,7 +1343,7 @@ void Client::updateTagInfo(TagInf* packet) {
             return;  // Don't process as regular freeze packet
         }
 
-        // Handle regular freeze packets (your existing code)
+        // Handle regular freeze packets
         if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
             FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
             FreezeTagInfo* curInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
@@ -1282,6 +1378,90 @@ void Client::updateTagInfo(TagInf* packet) {
         curInfo->isFreezeTagFreeze = freezePak->isFreeze;
         curInfo->isFreezeTagRunner = freezePak->isRunner;
         curInfo->freezeTagScore = freezePak->score;
+    }
+
+    if (mode == GameMode::SHINETHIEF) {
+        ShineThiefInf* shinePak = (ShineThiefInf*)packet;
+
+        // Handle round packets
+        if (GameModeManager::instance()->isActive() &&
+            (shinePak->updateType == ShineThiefUpdateType::ROUNDSTART || shinePak->updateType == ShineThiefUpdateType::ROUNDCANCEL)) {
+            ShineThiefInfRoundPacket* roundPak = (ShineThiefInfRoundPacket*)packet;
+            ShineThiefMode* mMode = GameModeManager::instance()->getMode<ShineThiefMode>();
+
+            if (roundPak->updateType == ShineThiefUpdateType::ROUNDSTART) {
+                if (mMode && !mMode->isPlayerHolder()) {
+                    mMode->setHostStartPos(roundPak->hostStartPos);
+                    mMode->setShinePos(roundPak->shinePos);
+                    mMode->startRound(roundPak->roundTime);
+                }
+            } else if (roundPak->updateType == ShineThiefUpdateType::ROUNDCANCEL) {
+                if (mMode)
+                    mMode->endRound(true);
+            }
+            return;
+        }
+
+        // Ignore own packets
+        if (packet->mUserID == mUserID)
+            return;
+
+        PuppetInfo* curPupInfo = findPuppetInfo(packet->mUserID, false);
+        if (!curPupInfo)
+            return;
+
+        bool puppetIsNowHolder = shinePak->isHolder;
+        bool puppetWasHolder = curPupInfo->isShineThiefHolder;
+
+        // Update if mode inactive
+        if (!GameModeManager::instance()->isActive()) {
+            curPupInfo->isShineThiefHolder = puppetIsNowHolder;
+            curPupInfo->shineThiefScore = shinePak->score;
+            curPupInfo->shineThiefTeam = shinePak->team;
+            return;
+        }
+
+        ShineThiefMode* mMode = GameModeManager::instance()->getMode<ShineThiefMode>();
+
+        // Enforce single holder
+        if (mMode && puppetIsNowHolder && !puppetWasHolder && mMode->isPlayerHolder())
+            mMode->forceDropShine();
+
+        // Score events
+        if (mMode && mMode->isScoreEventsEnabled()) {
+            if (!puppetWasHolder && puppetIsNowHolder && !mMode->isPlayerHolder())
+                mMode->tryScoreEvent(shinePak, curPupInfo);
+            if (puppetWasHolder && !puppetIsNowHolder && !mMode->isPlayerHolder())
+                mMode->tryScoreEvent(shinePak, curPupInfo);
+        }
+
+        // Update puppet state
+        curPupInfo->isShineThiefHolder = puppetIsNowHolder;
+        curPupInfo->shineThiefScore = shinePak->score;
+        curPupInfo->shineThiefTeam = shinePak->team;
+
+        // Handle FALLOFF
+        if (shinePak->updateType == ShineThiefUpdateType::FALLOFF) {
+            curPupInfo->isShineThiefFallenOff = true;
+            curPupInfo->isShineThiefHolder = false;
+
+            if (mMode) {
+                mMode->setShinePos(shinePak->shinePos);
+
+                ShineThiefIcon* layout = mMode->getLayout();
+                if (layout) {
+                    layout->showShineRespawned();
+                }
+            }
+        }
+
+        // Update shine position when puppet is holding it
+        if (puppetIsNowHolder && shinePak->updateType != ShineThiefUpdateType::FALLOFF) {
+            sead::Vector3f offset{0, 100, 0};
+            if (mMode) {
+                mMode->setShinePos(curPupInfo->playerPos + offset);
+            }
+        }
     }
 }
 

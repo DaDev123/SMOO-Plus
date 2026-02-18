@@ -1,11 +1,11 @@
 #pragma once
 
-#include "server/freeze/FreezeTagInfo.h"
 #include "server/gamemode/GameModeHintArrow.h"
+#include "server/shine-thief/ShineThiefInfo.h"
 
-class FreezeHintArrow : public GameModeHintArrow {
+class ShineThiefHintArrow : public GameModeHintArrow {
 public:
-    FreezeHintArrow(const char* name);
+    ShineThiefHintArrow(const char* name);
     void initAfterPlacement(void) override;
 
 protected:
@@ -13,5 +13,5 @@ protected:
     void setupMaterials() override;
 
 private:
-    FreezeTagInfo* mInfo = nullptr;
+    ShineThiefInfo* mInfo = nullptr;
 };

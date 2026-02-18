@@ -40,7 +40,7 @@ struct PuppetInfo {
     // Puppet Hack Cap Info
     sead::Vector3f capPos = sead::Vector3f(0.f, 0.f, 0.f);
     sead::Quatf capRot = sead::Quatf(0.f, 0.f, 0.f, 0.f);
-    sead::Quatf capQuat = sead::Quatf(0.f, 0.f, 0.f, 1.f);  // Actor quaternion rotation
+    sead::Quatf capQuat = sead::Quatf(0.f, 0.f, 0.f, 1.f);
     char capAnim[PACKBUFSIZE] = {};
     bool isCapThrow = false;
     bool isHoldThrow = false;
@@ -54,4 +54,10 @@ struct PuppetInfo {
     bool isFreezeTagFreeze = false;
     bool isFreezeTagFallenOff = false;  // When runenr falls off and is automatically frozen, this flag is set
     float freezeIconSize = 0.f;
+    // Shine Thief Gamemode Info
+    uint16_t shineThiefScore = 0;
+    bool isShineThiefHolder = false;  // TRUE = has shine, FALSE = thief (CHANGED FROM isShineThiefRunner)
+    bool isShineThiefFallenOff = false;
+    float shineThiefIconSize = 0.f;
+    uint8_t shineThiefTeam = 0;  // 0 = NONE, 1 = TEAM_1, 2 = TEAM_2
 };

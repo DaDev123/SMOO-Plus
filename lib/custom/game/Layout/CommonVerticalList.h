@@ -1,10 +1,14 @@
 #pragma once
 
-#include "Library/Layout/LayoutActor.h"
-#include "Library/Layout/LayoutInitInfo.h"
+#include <math/seadVector.h>
+#include <prim/seadSafeString.h>
+
 #include "Library/Nerve/NerveExecutor.h"
-#include "math/seadVector.h"
-#include "prim/seadSafeString.h"
+
+namespace al {
+class LayoutActor;
+class LayoutInitInfo;
+}  // namespace al
 
 namespace nn::ui2d {
 class TextureInfo;
@@ -34,7 +38,7 @@ public:
     void endCursor(void);
     void getListPartsNum(void);
     void getParts(int);
-    void getRollPartsSelected(int);
+    s32 getRollPartsSelected(int idx);
     void getSelectedParts(void);
     void hideAll(void);
     void hideCursor(void);
@@ -71,32 +75,30 @@ public:
     void exeReject(void);
     void exeRejectEnd(void);
 
-    al::LayoutActor* mRootActor;                     // 0x10
-    void* unkPtr1;                                   // 0x18
-    void* mListPartsArr;                             // 0x20
-    struct CursorParts* mCursorParts;                // 0x28
-    struct ScrollBarParts* mScrollBarParts;          // 0x30
-    int mListPartsNum;                               // 0x38
-    int mCurSelected;                                // 0x3C
-    int mIdx;                                        // 0x40
-    void* unkPtr2;                                   // 0x48
-    void* unkPtr3;                                   // 0x50
-    sead::Vector2f mCursorPos;                       // 0x58
-    void* unkPtr4;                                   // 0x60
-    int unkInt1;                                     // 0x68
-    sead::WFixedSafeString<0x200>** mStringDataArr;  // 0x70
-    sead::FixedSafeString<0x90>** mPaneNameList;     // 0x78
-    void* unkPtr8;                                   // 0x80
-    void* unkPtr9;                                   // 0x88
-    const bool* mIsEnableData;                       // 0x90
-    int mStringDataCount;                            // 0x98
-    int mDataCount;                                  // 0x9C
-    void* unkPtr12;                                  // 0xA0
-    void* unkPtr13;                                  // 0xA8
-    void* unkPtr14;                                  // 0xB0
-    void* unkPtr15;                                  // 0xB8
-    void* RollPartsArr;                              // 0xC0
-    void* unkPtrX;                                   // 0xC8
+    al::LayoutActor* mRootActor;
+    void* field_18;
+    void* mListPartsArr;
+    struct CursorParts* mCursorParts;
+    struct ScrollBarParts* mScrollBarParts;
+    int mListPartsNum;
+    int mCurSelected;
+    int field_40;
+    void* field_48;
+    void* field_50;
+    sead::Vector2f mCursorPos;
+    void* field_60;
+    int field_68;
+    sead::WFixedSafeString<0x200>** mStringDataArr;
+    sead::FixedSafeString<0x90>** mPaneNameList;
+    void* field_80;
+    void* field_88;
+    const bool* mIsEnableData;
+    int mStringDataCount;
+    int mDataCount;
+    void* field_a0;
+    void* field_a8;
+    void* field_b0;
+    void* field_b8;
+    RollPartsData* RollPartsArr;
+    void* field_c8;
 };
-
-static_assert(sizeof(CommonVerticalList) == 0xD0, "CommonVerticalList size");

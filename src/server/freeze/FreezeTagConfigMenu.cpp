@@ -43,7 +43,7 @@ GameModeConfigMenu::UpdateAction FreezeTagConfigMenu::updateMenu(int selectIndex
 
             mScoreKeyboard->openKeyboard(buf, [](nn::swkbd::KeyboardConfig& config) {
                 config.keyboardMode = nn::swkbd::KeyboardMode::ModeNumeric;
-                config.textMaxLength = 5;
+                config.textMaxLength = 4;
                 config.textMinLength = 1;
                 config.isUseUtf8 = true;
                 config.inputFormMode = nn::swkbd::InputFormMode::OneLine;

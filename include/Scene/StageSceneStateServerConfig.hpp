@@ -77,8 +77,8 @@ public:
     static bool isPuppetBounceEnabled() { return sPuppetBounceEnabled; };
     static bool isCostumeDoorsUnlocked() { return sCostumeDoorsUnlocked; };
     static bool isLowLatencyEnabled() { return sLowLatencyEnabled; };
-    static bool isSpeedrunModeEnabled() { return sSpeedrunModeEnabled; };       
-    static bool isSpeedrunNonStopEnabled() { return sSpeedrunNonStopEnabled; }; 
+    static bool isSpeedrunModeEnabled() { return sSpeedrunModeEnabled; };
+    static bool isSpeedrunNonStopEnabled() { return sSpeedrunNonStopEnabled; };
 
     // Static setters for settings
     static void setCapCollisionEnabled(bool enabled) { sCapCollisionEnabled = enabled; };
@@ -87,7 +87,7 @@ public:
     static void setPuppetBounceEnabled(bool enabled) { sPuppetBounceEnabled = enabled; };
     static void setCostumeDoorsUnlocked(bool unlocked) { sCostumeDoorsUnlocked = unlocked; };
     static void setLowLatencyEnabled(bool enabled) { sLowLatencyEnabled = enabled; };
-    static void setSpeedrunModeEnabled(bool enabled) { sSpeedrunModeEnabled = enabled; };      
+    static void setSpeedrunModeEnabled(bool enabled) { sSpeedrunModeEnabled = enabled; };
     static void setSpeedrunNonStopEnabled(bool enabled) { sSpeedrunNonStopEnabled = enabled; };
 
 private:
@@ -96,7 +96,18 @@ private:
     SimpleLayoutMenu* menuList[menuCount];
     CommonVerticalList* optionsList[menuCount];
     sead::SafeArray<sead::WFixedSafeString<0x200>, maxMsgCount>* msgList[menuCount];
-    enum Menus { MENU_MAIN, MENU_NETWORK, MENU_SERVERBROWSER, MENU_GAMEPLAY, MENU_PLAYERCOLLISION, MENU_GAMEMODE, MENU_GAMEMODE_MODESEL, MENU_TWISTS, MENU_MISC, MENU_SPEEDRUN_CONFIG };
+    enum Menus {
+        MENU_MAIN,
+        MENU_NETWORK,
+        MENU_SERVERBROWSER,
+        MENU_GAMEPLAY,
+        MENU_PLAYERCOLLISION,
+        MENU_GAMEMODE,
+        MENU_GAMEMODE_MODESEL,
+        MENU_TWISTS,
+        MENU_MISC,
+        MENU_SPEEDRUN_CONFIG
+    };
 
     //@ ============= Main Menu =============
     void initMainMenu(const al::LayoutInitInfo& initInfo);
@@ -150,6 +161,9 @@ private:
     sead::SafeArray<GameModeEntry, GameModeConfigMenuFactory::getMenuCount()> mGamemodeConfigMenus;
     GameModeEntry* mGamemodeConfigMenu = nullptr;
 
+    bool mShouldHideMessage = false;
+    int mMessageHideTimer = 0;
+
     //@ ============= Twists Menu =============
     void initTwistsMenu(const al::LayoutInitInfo& initInfo);
     void updateTwistsOptions();
@@ -161,19 +175,14 @@ private:
     void initMiscMenu(const al::LayoutInitInfo& initInfo);
     void updateMiscOptions();
 
-    enum MiscMenuOptions { 
-        MISC_SPEEDRUN_MODE,
-        MISC_SPEEDRUN_CONFIG
-    };
+    enum MiscMenuOptions { MISC_SPEEDRUN_MODE, MISC_SPEEDRUN_CONFIG };
     static constexpr int mMiscMenuOptionsCount = 2;
 
     //@ ============= Speedrun Config Menu =============
     void initSpeedrunConfigMenu(const al::LayoutInitInfo& initInfo);
     void updateSpeedrunConfigOptions();
 
-    enum SpeedrunConfigOptions { 
-        SPEEDRUN_NONSTOP
-    };
+    enum SpeedrunConfigOptions { SPEEDRUN_NONSTOP };
     static constexpr int mSpeedrunConfigOptionsCount = 1;
 
     // ========================================================================
@@ -198,8 +207,8 @@ private:
     static bool sPuppetBounceEnabled;
     static bool sCostumeDoorsUnlocked;
     static bool sLowLatencyEnabled;
-    static bool sSpeedrunModeEnabled;    
-    static bool sSpeedrunNonStopEnabled; 
+    static bool sSpeedrunModeEnabled;
+    static bool sSpeedrunNonStopEnabled;
 
     // ========================================================================
     // Core Systems
@@ -233,8 +242,8 @@ NERVE_IMPL(StageSceneStateServerConfig, GameModeSettings)
 NERVE_IMPL(StageSceneStateServerConfig, GameModeConfig)
 NERVE_IMPL(StageSceneStateServerConfig, GameModeSelect)
 NERVE_IMPL(StageSceneStateServerConfig, TwistsSettings)
-NERVE_IMPL(StageSceneStateServerConfig, MiscSettings)        
-NERVE_IMPL(StageSceneStateServerConfig, SpeedrunConfig)       
+NERVE_IMPL(StageSceneStateServerConfig, MiscSettings)
+NERVE_IMPL(StageSceneStateServerConfig, SpeedrunConfig)
 NERVE_IMPL(StageSceneStateServerConfig, SaveData)
 
 NERVES_MAKE_STRUCT(StageSceneStateServerConfig, MainMenu, NetworkSettings, ServerBrowserSelect, OpenKeyboardIP, OpenKeyboardPort, GameplaySettings,
