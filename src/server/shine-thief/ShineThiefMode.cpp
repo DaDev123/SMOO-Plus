@@ -466,7 +466,7 @@ void ShineThiefMode::placeShine() {
             resultAngle = al::calcAngleDegree(sead::Vector3f::ey, resultTri.getFaceNormal());
 
             if (resultAngle > 45.f || al::isFloorCode(resultTri, "Needle") || al::isFloorCode(resultTri, "Poison") || al::isFloorCode(resultTri, "LavaPink") ||
-                al::isFloorCode(resultTri, "DamageFire") || al::isInWaterPos(p1, resultVec))
+                al::isFloorCode(resultTri, "DamageFire") || al::isFloorCode(resultTri, "Slide"))
                 foundPos = false;
         }
 
