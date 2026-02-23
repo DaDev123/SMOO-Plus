@@ -17,6 +17,8 @@ public:
     GameModeConfigMenu::UpdateAction updateMenu(int selectIndex) override;
 
     const int getMenuSize() override { return 4; }
+    void initMenu() override;
+    void updateDataFromRollParts() override;
 
 private:
     static constexpr int mItemCount = 4;

@@ -1,6 +1,8 @@
 #include "server/hns/HideAndSeekConfigMenu.hpp"
 
+#include "Library/Layout/LayoutActionFunction.h"
 #include "logger.hpp"
+#include "Scene/StageSceneStateServerConfig.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 
@@ -10,13 +12,15 @@ const sead::WFixedSafeString<0x200>* HideAndSeekConfigMenu::getStringData() {
     HideAndSeekInfo* curMode = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
 
     // Update the persistent array instead of creating a new one
-    if (curMode && curMode->mIsUseGravity) {
-        mItems[0].copy(u"H&S Gravity (ON)");
-    } else {
-        mItems[0].copy(u"H&S Gravity (OFF)");
+    if (curMode) {
+        mItems[0].copy(u"H&S Gravity");
     }
 
     return mItems.mBuffer;
+}
+
+void HideAndSeekConfigMenu::initMenu() {
+    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[1]);
 }
 
 GameModeConfigMenu::UpdateAction HideAndSeekConfigMenu::updateMenu(int selectIndex) {
@@ -33,6 +37,7 @@ GameModeConfigMenu::UpdateAction HideAndSeekConfigMenu::updateMenu(int selectInd
         if (GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
             curMode->mIsUseGravity = !curMode->mIsUseGravity;
             Logger::log("Gravity is now: %s\n", curMode->mIsUseGravity ? "ON" : "OFF");
+            al::startAction(mList->mListPartsArr[1], curMode->mIsUseGravity ? "On" : "Off", "State");
         }
         return GameModeConfigMenu::UpdateAction::REFRESH;
     }

@@ -25,7 +25,7 @@ struct ShineThiefInfo : GameModeInfoBase {
 
     // Team mode
     bool mIsTeamMode = false;
-    ShineThiefTeam mPlayerTeam = ShineThiefTeam::NONE;
+    ShineThiefTeam mPlayerTeam = ShineThiefTeam::TEAM_1;
     uint16_t mTeam1Score = 0;
     uint16_t mTeam2Score = 0;
     sead::PtrArray<PuppetInfo> mTeam1Players;

@@ -2,6 +2,9 @@
 
 #include "sead/prim/seadSafeString.h"
 
+#include "Layout/CommonVerticalList.h"
+#include "Layout/SimpleLayoutMenu.h"
+
 class GameModeConfigMenu {
 public:
     enum UpdateAction {
@@ -17,4 +20,9 @@ public:
     virtual const sead::WFixedSafeString<0x200>* getStringData() { return nullptr; }
 
     virtual const int getMenuSize() { return 0; }
+    virtual void initMenu() { return; };
+    virtual void updateDataFromRollParts() { return; };
+
+    SimpleLayoutMenu* mMenu;
+    CommonVerticalList* mList;
 };

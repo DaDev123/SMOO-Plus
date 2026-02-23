@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include "Scene/StageSceneStateServerConfig.hpp"
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/gamemode/GameModeManager.hpp"
 
@@ -17,6 +18,11 @@ FreezeTagConfigMenu::FreezeTagConfigMenu() : GameModeConfigMenu() {
         mRoundKeyboard->setHeaderText(u"Set length of rounds in minutes");
         mRoundKeyboard->setSubText(u"");
     }
+}
+
+void FreezeTagConfigMenu::initMenu() {
+    StageSceneStateServerConfig::setMenuItemBase(mList->mListPartsArr[1]);
+    StageSceneStateServerConfig::setMenuItemBase(mList->mListPartsArr[2]);
 }
 
 const sead::WFixedSafeString<0x200>* FreezeTagConfigMenu::getStringData() {

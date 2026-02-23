@@ -8,6 +8,7 @@
 namespace al {
 class LayoutActor;
 class LayoutInitInfo;
+class RollParts;
 }  // namespace al
 
 namespace nn::ui2d {
@@ -17,8 +18,8 @@ class TextureInfo;
 struct RollPartsData {
     int mRollMsgCount = 0;          // 0x0
     const char16_t** mRollMsgList;  // 0x8
-    int unkInt1 = 0;                // 0x10
-    bool mUnkBool = false;          // 0x14
+    int mSelectedIdx = 0;           // 0x10
+    bool mIsLoop = true;            // 0x14
 };
 
 class CommonVerticalList : public al::NerveExecutor {
@@ -37,7 +38,7 @@ public:
     void down(void);
     void endCursor(void);
     void getListPartsNum(void);
-    void getParts(int);
+    void* getParts(int) const;
     s32 getRollPartsSelected(int idx);
     void getSelectedParts(void);
     void hideAll(void);
@@ -77,7 +78,7 @@ public:
 
     al::LayoutActor* mRootActor;
     void* field_18;
-    void* mListPartsArr;
+    al::LayoutActor** mListPartsArr;
     struct CursorParts* mCursorParts;
     struct ScrollBarParts* mScrollBarParts;
     int mListPartsNum;
@@ -87,7 +88,7 @@ public:
     void* field_50;
     sead::Vector2f mCursorPos;
     void* field_60;
-    int field_68;
+    int mTopSelectableIdx;
     sead::WFixedSafeString<0x200>** mStringDataArr;
     sead::FixedSafeString<0x90>** mPaneNameList;
     void* field_80;
@@ -100,5 +101,5 @@ public:
     void* field_b0;
     void* field_b8;
     RollPartsData* RollPartsArr;
-    void* field_c8;
+    int field_c8;
 };

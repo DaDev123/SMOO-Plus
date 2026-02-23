@@ -2,6 +2,12 @@
 
 #include <stdint.h>
 
+#include "heap/seadHeapMgr.h"
+#include "Layout/CommonVerticalList.h"
+#include "Library/Layout/LayoutActionFunction.h"
+#include "Library/Memory/HeapUtil.h"
+#include "Library/Play/Layout/RollParts.h"
+#include "Scene/StageSceneStateServerConfig.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/shine-thief/ShineThiefInfo.h"
 #include "server/shine-thief/ShineThiefMode.hpp"
@@ -20,6 +26,19 @@ ShineThiefConfigMenu::ShineThiefConfigMenu() : GameModeConfigMenu() {
     }
 }
 
+void ShineThiefConfigMenu::initMenu() {
+    ShineThiefInfo* curMode = GameModeManager::instance()->getInfo<ShineThiefInfo>();
+    StageSceneStateServerConfig::setMenuItemBase(mList->mListPartsArr[1]);
+    StageSceneStateServerConfig::setMenuItemBase(mList->mListPartsArr[2]);
+    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[3]);
+    StageSceneStateServerConfig::setMenuItemRoll(mList->mListPartsArr[4]);
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+    RollPartsData* empty = new RollPartsData(0, new const char16_t*[]{u""});
+    RollPartsData* teams = new RollPartsData(2, new const char16_t*[]{u"Team 1", u"Team 2"}, 0, false);
+    mList->startLoopActionAll("Loop", "Loop");
+    mList->setRollPartsData(new RollPartsData[]{*empty, *empty, *empty, *teams});
+}
+
 const sead::WFixedSafeString<0x200>* ShineThiefConfigMenu::getStringData() {
     ShineThiefInfo* curMode = GameModeManager::instance()->getInfo<ShineThiefInfo>();
 
@@ -27,34 +46,29 @@ const sead::WFixedSafeString<0x200>* ShineThiefConfigMenu::getStringData() {
     mItems[1].copy(u"Config Host Controls");
 
     if (curMode) {
-        if (curMode->mIsTeamMode) {
-            mItems[2].copy(u"Team Mode: ON");
-        } else {
-            mItems[2].copy(u"Team Mode: OFF");
-        }
-
-        if (curMode->mIsTeamMode) {
-            switch (curMode->mPlayerTeam) {
-            case ShineThiefTeam::TEAM_1:
-                mItems[3].copy(u"My Team: Team 1");
-                break;
-            case ShineThiefTeam::TEAM_2:
-                mItems[3].copy(u"My Team: Team 2");
-                break;
-            default:
-                // Should never happen in team mode, but safety fallback
-                mItems[3].copy(u"My Team: Team 1");
-                break;
-            }
-        } else {
-            mItems[3].copy(u"My Team: N/A");
-        }
-    } else {
-        mItems[2].copy(u"Team Mode: OFF");
-        mItems[3].copy(u"My Team: N/A");
+        mItems[2].copy(u"Team Mode");
+        mItems[3].copy(u"My Team");
     }
 
     return mItems.mBuffer;
+}
+
+void ShineThiefConfigMenu::updateDataFromRollParts() {
+    if (!GameModeManager::instance()->isMode(GameMode::SHINETHIEF))
+        return;
+
+    ShineThiefMode* mode = GameModeManager::instance()->getMode<ShineThiefMode>();
+    if (!mode)
+        return;
+
+    ShineThiefInfo* modeInf = GameModeManager::instance()->getInfo<ShineThiefInfo>();
+    if (!modeInf)
+        return;
+
+    int team = ((al::RollParts*)mList->mListPartsArr[4])->mSelectedIdx;
+    modeInf->mPlayerTeam = (ShineThiefTeam)(team + 1);
+
+    mode->sendShineThiefPacket(ShineThiefUpdateType::PLAYER);
 }
 
 GameModeConfigMenu::UpdateAction ShineThiefConfigMenu::updateMenu(int selectIndex) {
@@ -136,15 +150,7 @@ GameModeConfigMenu::UpdateAction ShineThiefConfigMenu::updateMenu(int selectInde
     case 2: {
         // Toggle Team Mode
         curMode->mIsTeamMode = !curMode->mIsTeamMode;
-
-        if (!curMode->mIsTeamMode) {
-            curMode->mPlayerTeam = ShineThiefTeam::NONE;
-        } else {
-            // When enabling team mode, default to Team 1 if player has no team
-            if (curMode->mPlayerTeam == ShineThiefTeam::NONE) {
-                curMode->mPlayerTeam = ShineThiefTeam::TEAM_1;
-            }
-        }
+        al::startAction(mList->mListPartsArr[3], curMode->mIsTeamMode ? "On" : "Off", "State");
 
         // Send packet
         if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {

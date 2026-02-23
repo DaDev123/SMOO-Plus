@@ -1,13 +1,15 @@
 #pragma once
 
-#include "hk/util/Math.h"
-
+#include "al/Library/Layout/LayoutActionFunction.h"
+#include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Layout/LayoutInitInfo.h"
 #include "al/Library/Message/IUseMessageSystem.h"
 #include "al/Library/Message/MessageSystem.h"
 #include "al/Library/Nerve/NerveSetupUtil.h"
 #include "al/Library/Nerve/NerveStateBase.h"
 #include "al/Library/Scene/Scene.h"
+
+#include "sead/container/seadSafeArray.h"
 
 #include "game/Input/InputSeparator.h"
 #include "game/Layout/CommonVerticalList.h"
@@ -16,7 +18,7 @@
 
 #include <vector>
 
-#include "container/seadSafeArray.h"
+#include "server/gamemode/GameModeConfigMenu.hpp"
 #include "server/gamemode/GameModeConfigMenuFactory.hpp"
 
 class FooterParts;
@@ -90,18 +92,37 @@ public:
     static void setSpeedrunModeEnabled(bool enabled) { sSpeedrunModeEnabled = enabled; };
     static void setSpeedrunNonStopEnabled(bool enabled) { sSpeedrunNonStopEnabled = enabled; };
 
+    // Menu Creation Helpers
+    static void setMenuItemBase(al::LayoutActor* item) {
+        al::hidePane(item, "WinCheck");
+        al::hidePane(item, "Roll");
+        al::setPaneLocalSize(item, "TxtContent", {420, 50});
+    }
+
+    static void setMenuItemCheck(al::LayoutActor* item) {
+        al::showPane(item, "WinCheck");
+        al::startAction(item, "Off", "State");
+        al::hidePane(item, "Roll");
+        al::setPaneLocalSize(item, "TxtContent", {360, 50});
+    }
+
+    static void setMenuItemRoll(al::LayoutActor* item) {
+        al::hidePane(item, "WinCheck");
+        al::showPane(item, "Roll");
+        al::setPaneLocalSize(item, "TxtContent", {420, 50});
+    }
+
 private:
     static constexpr int menuCount = 10;
     static constexpr int maxMsgCount = 8;
     SimpleLayoutMenu* menuList[menuCount];
     CommonVerticalList* optionsList[menuCount];
     sead::SafeArray<sead::WFixedSafeString<0x200>, maxMsgCount>* msgList[menuCount];
-    enum Menus {
+    enum Menu {
         MENU_MAIN,
         MENU_NETWORK,
         MENU_SERVERBROWSER,
         MENU_GAMEPLAY,
-        MENU_PLAYERCOLLISION,
         MENU_GAMEMODE,
         MENU_GAMEMODE_MODESEL,
         MENU_TWISTS,
@@ -134,15 +155,8 @@ private:
     void initGameplayMenu(const al::LayoutInitInfo& initInfo);
     void updateGameplaySettingsOptions();
 
-    enum GameplayMenuOptions { GP_PLAYERCOLLISION, GP_COSTUMEDOORS, GP_LATENCY, GP_MUSIC };
-    static constexpr int mGameplayMenuOptionsCount = 4;
-
-    //@ ============= Player Collision Menu =============
-    void initPlayerCollisionMenu(const al::LayoutInitInfo& initInfo);
-    void updatePlayerCollisionOptions();
-
-    enum PlayerCollisionMenuOptions { PC_CAPCOLLISION, PC_CAPBOUNCE, PC_PLAYERCOLLISION, PC_PLAYERBOUNCE };
-    static constexpr int mPlayerCollisionMenuOptionsCount = 4;
+    enum GameplayMenuOptions { GP_PLAYERCOL, GP_CAPCOL, GP_COSTUMEDOORS, GP_LATENCY, GP_MUSIC };
+    static constexpr int mGameplayMenuOptionsCount = 5;
 
     //@ ============= Game Mode Menus =============
     void initGameModeMenus(const al::LayoutInitInfo& initInfo);
@@ -153,13 +167,8 @@ private:
     static constexpr int mGameModeMenuOptionsCount = 3;
 
     // Game Mode Configuration Menus
-    struct GameModeEntry {
-        GameModeConfigMenu* mMenu;
-        SimpleLayoutMenu* mLayout = nullptr;
-        CommonVerticalList* mList = nullptr;
-    };
-    sead::SafeArray<GameModeEntry, GameModeConfigMenuFactory::getMenuCount()> mGamemodeConfigMenus;
-    GameModeEntry* mGamemodeConfigMenu = nullptr;
+    sead::SafeArray<GameModeConfigMenu*, GameModeConfigMenuFactory::getMenuCount()> mGamemodeConfigMenus;
+    GameModeConfigMenu* mGamemodeConfigMenu = nullptr;
 
     bool mShouldHideMessage = false;
     int mMessageHideTimer = 0;
@@ -186,17 +195,20 @@ private:
     static constexpr int mSpeedrunConfigOptionsCount = 1;
 
     // ========================================================================
-    // Menu Navigation Helpers
+    // Menu Helpers
     // ========================================================================
+
+    // Navigation Helpers
     void handleMenuInput();
     void subMenuStart();
     void subMenuUpdate();
-    void subMenuRefresh();
-    void refreshMenu(CommonVerticalList* list, sead::WFixedSafeString<0x200>* options, int count);
     void endSubMenu();
     void endSubMenuToParent(SimpleLayoutMenu* parentMenu, CommonVerticalList* parentList);
     void activateInput();
     void deactivateInput();
+
+    // Update Helpers
+    void updateDataFromRollParts();
 
     // ========================================================================
     // Static Configuration
@@ -237,7 +249,6 @@ NERVE_IMPL(StageSceneStateServerConfig, ServerBrowserSelect)
 NERVE_IMPL(StageSceneStateServerConfig, OpenKeyboardIP)
 NERVE_IMPL(StageSceneStateServerConfig, OpenKeyboardPort)
 NERVE_IMPL(StageSceneStateServerConfig, GameplaySettings)
-NERVE_IMPL(StageSceneStateServerConfig, PlayerCollisionSettings)
 NERVE_IMPL(StageSceneStateServerConfig, GameModeSettings)
 NERVE_IMPL(StageSceneStateServerConfig, GameModeConfig)
 NERVE_IMPL(StageSceneStateServerConfig, GameModeSelect)
@@ -247,5 +258,5 @@ NERVE_IMPL(StageSceneStateServerConfig, SpeedrunConfig)
 NERVE_IMPL(StageSceneStateServerConfig, SaveData)
 
 NERVES_MAKE_STRUCT(StageSceneStateServerConfig, MainMenu, NetworkSettings, ServerBrowserSelect, OpenKeyboardIP, OpenKeyboardPort, GameplaySettings,
-                   PlayerCollisionSettings, GameModeSettings, GameModeConfig, GameModeSelect, TwistsSettings, MiscSettings, SpeedrunConfig, SaveData)
+                   GameModeSettings, GameModeConfig, GameModeSelect, TwistsSettings, MiscSettings, SpeedrunConfig, SaveData)
 }  // namespace

@@ -12,6 +12,7 @@ public:
     GameModeConfigMenu::UpdateAction updateMenu(int selectIndex) override;
 
     const int getMenuSize() override { return 3; }
+    void initMenu() override;
 
 private:
     static constexpr int mItemCount = 3;

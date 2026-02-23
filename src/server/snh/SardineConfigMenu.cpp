@@ -1,6 +1,7 @@
 #include "server/snh/SardineConfigMenu.hpp"
 
 #include "logger.hpp"
+#include "Scene/StageSceneStateServerConfig.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/snh/SardineMode.hpp"
 
@@ -10,25 +11,17 @@ const sead::WFixedSafeString<0x200>* SardineConfigMenu::getStringData() {
     SardineInfo* curMode = GameModeManager::instance()->getInfo<SardineInfo>();
 
     // Update the persistent array
-    if (curMode && curMode->mIsUseGravity) {
-        mItems[0].copy(u"Sardine Gravity (ON)");
-    } else {
-        mItems[0].copy(u"Sardine Gravity (OFF)");
-    }
-
-    if (curMode && curMode->mIsTether) {
-        mItems[1].copy(u"Sardine Tether (ON)");
-    } else {
-        mItems[1].copy(u"Sardine Tether (OFF)");
-    }
-
-    if (curMode && curMode->mIsTetherSnap) {
-        mItems[2].copy(u"Tether Snapping (ON)");
-    } else {
-        mItems[2].copy(u"Tether Snapping (OFF)");
-    }
+    mItems[0].copy(u"Sardine Gravity");
+    mItems[1].copy(u"Sardine Tether");
+    mItems[2].copy(u"Tether Snapping");
 
     return mItems.mBuffer;
+}
+
+void SardineConfigMenu::initMenu() {
+    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[1]);
+    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[2]);
+    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[3]);
 }
 
 GameModeConfigMenu::UpdateAction SardineConfigMenu::updateMenu(int selectIndex) {
@@ -47,16 +40,19 @@ GameModeConfigMenu::UpdateAction SardineConfigMenu::updateMenu(int selectIndex) 
     case 0: {
         curMode->mIsUseGravity = !curMode->mIsUseGravity;
         Logger::log("Sardine Gravity is now: %s\n", curMode->mIsUseGravity ? "ON" : "OFF");
+        al::startAction(mList->mListPartsArr[1], curMode->mIsUseGravity ? "On" : "Off", "State");
         return GameModeConfigMenu::UpdateAction::REFRESH;
     }
     case 1: {
         curMode->mIsTether = !curMode->mIsTether;
         Logger::log("Sardine Tether is now: %s\n", curMode->mIsTether ? "ON" : "OFF");
+        al::startAction(mList->mListPartsArr[2], curMode->mIsTether ? "On" : "Off", "State");
         return GameModeConfigMenu::UpdateAction::REFRESH;
     }
     case 2: {
         curMode->mIsTetherSnap = !curMode->mIsTetherSnap;
         Logger::log("Tether Snapping is now: %s\n", curMode->mIsTetherSnap ? "ON" : "OFF");
+        al::startAction(mList->mListPartsArr[3], curMode->mIsTetherSnap ? "On" : "Off", "State");
         return GameModeConfigMenu::UpdateAction::REFRESH;
     }
     default:

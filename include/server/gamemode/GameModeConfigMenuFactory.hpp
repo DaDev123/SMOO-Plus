@@ -35,7 +35,7 @@ public:
 };
 
 constexpr const char* GameModeConfigMenuFactory::getMenuName(int idx) {
-    if (idx >= 0 && idx < sizeof(menuTable) / sizeof(menuTable[0]))
+    if (idx >= 0 && idx < getMenuCount())
         return menuTable[idx].name;
     return nullptr;
 }
