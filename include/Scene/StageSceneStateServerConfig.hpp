@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sead/container/seadSafeArray.h"
+
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Layout/LayoutInitInfo.h"
@@ -8,8 +10,6 @@
 #include "al/Library/Nerve/NerveSetupUtil.h"
 #include "al/Library/Nerve/NerveStateBase.h"
 #include "al/Library/Scene/Scene.h"
-
-#include "sead/container/seadSafeArray.h"
 
 #include "game/Input/InputSeparator.h"
 #include "game/Layout/CommonVerticalList.h"

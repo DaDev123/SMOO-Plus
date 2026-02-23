@@ -1,9 +1,14 @@
 #include "server/SocketClient.hpp"
 
-#include "al/Library/Thread/FunctorV0M.h"
+#include "nn/nifm.h"
+#include "nn/os.h"
+#include "nn/socket.h"
+#include "vapours/results/results_common.hpp"
 
 #include "sead/basis/seadNew.h"
 #include "sead/thread/seadDelegateThread.h"
+
+#include "al/Library/Thread/FunctorV0M.h"
 
 #include <cstring>
 #include <netinet/in.h>
@@ -11,15 +16,11 @@
 
 #include "heap/seadHeapMgr.h"
 #include "logger.hpp"
-#include "nn/nifm.h"
-#include "nn/os.h"
-#include "nn/socket.h"
 #include "packets/Packet.h"
 #include "server/Client.hpp"
 #include "syssocket/sockdefines.h"
 #include "thread/seadThread.h"
 #include "types.h"
-#include "vapours/results/results_common.hpp"
 
 SocketClient::SocketClient(const char* name, sead::Heap* heap) : mHeap(heap), SocketBase(name) {
     sead::ScopedCurrentHeapSetter setter(mHeap);

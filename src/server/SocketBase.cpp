@@ -1,8 +1,9 @@
 #include "SocketBase.hpp"
 
+#include "nn/socket.h"
+
 #include <cstring>
 
-#include "nn/socket.h"
 #include "types.h"
 
 SocketBase::SocketBase(const char* name) {

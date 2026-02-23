@@ -1,10 +1,10 @@
 #pragma once
 
-#include "al/Library/Memory/HeapUtil.h"
-
 #include "sead/heap/seadHeapMgr.h"
 #include <sead/heap/seadDisposer.h>
 #include <sead/heap/seadHeap.h>
+
+#include "al/Library/Memory/HeapUtil.h"
 
 #include <container/seadSafeArray.h>
 

@@ -2,10 +2,10 @@
 
 #include "hk/diag/diag.h"
 
-#include <cstdlib>
-
-#include "nn/fs.h"
+#include "nn/fs.h"  // IWYU pragma: keep
 #include "vapours/results/results_common.hpp"
+
+#include <cstdlib>
 
 namespace FsHelper {
 nn::Result writeFileToPath(void* buf, size_t size, const char* path) {

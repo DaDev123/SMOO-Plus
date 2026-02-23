@@ -1,13 +1,13 @@
 #include "server/freeze/FreezeTagMode.hpp"
 
+#include "sead/heap/seadHeap.h"
+
 #include "al/Library/Camera/CameraUtil.h"
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/LiveActor/ActorFlagFunction.h"
 #include "al/Library/LiveActor/ActorMovementFunction.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
-
-#include "sead/heap/seadHeap.h"
 
 #include "game/Player/HackCap.h"
 #include "game/Player/PlayerActorHakoniwa.h"

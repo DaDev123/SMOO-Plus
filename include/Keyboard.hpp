@@ -1,10 +1,11 @@
 #pragma once
 
+#include "nn/swkbd/swkbd.h"
+
 #include "al/Library/Thread/AsyncFunctorThread.h"
 
 #include <cstddef>
 
-#include "nn/swkbd/swkbd.h"
 #include "types.h"
 
 typedef void (*KeyboardSetup)(nn::swkbd::KeyboardConfig&);

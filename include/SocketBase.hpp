@@ -1,8 +1,9 @@
 #pragma once
 
+#include "vapours/results/results_common.hpp"
+
 #include <cstring>
 
-#include "nn/diag.h"
 #include "types.h"
 
 class SocketBase {

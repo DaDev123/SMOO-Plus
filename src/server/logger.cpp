@@ -1,12 +1,12 @@
 #include "logger.hpp"
 
-#include <cstdlib>
-#include <netinet/in.h>
-#include <sys/socket.h>
-
 #include "nn/nifm.h"
 #include "nn/socket.h"
 #include "vapours/results/results_common.hpp"
+
+#include <cstdlib>
+#include <netinet/in.h>
+#include <sys/socket.h>
 
 // If connection fails, try X ports above the specified one
 // Useful for debugging multple clients on the same machine

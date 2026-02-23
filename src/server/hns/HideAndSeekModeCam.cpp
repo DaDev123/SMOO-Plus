@@ -207,7 +207,8 @@ void HideAndSeekMode::updateSpectateCam(PlayerActorBase* playerBase) {
             // Create a local copy or ensure the pointer remains valid
             spectatePoser->setTargetActor(&targetInfo->playerPos);
 
-            Logger::log("Now spectating player: %s at index %d\n", targetInfo->puppetName ? targetInfo->puppetName : "Unknown", mSpectateIndex);
+            Logger::log("Now spectating player: %s at index %d\n", strcmp(targetInfo->puppetName, "") != 0 ? targetInfo->puppetName : "Unknown",
+                        mSpectateIndex);
         } else {
             // Fallback to self if target not found
             Logger::log("WARNING: Could not find spectate target, falling back to self\n");

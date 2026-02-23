@@ -1,9 +1,10 @@
 #pragma once
 
+#include "nn/account.h"
+
 #include "sead/math/seadQuat.h"    // IWYU pragma: keep
 #include "sead/math/seadVector.h"  // IWYU pragma: keep
 
-#include "nn/account.h"
 #include "types.h"
 
 #define PACKBUFSIZE 0x30

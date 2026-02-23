@@ -49,7 +49,7 @@ void PuppetCapActor::movement() {
 }
 
 void PuppetCapActor::control() {
-    if (mInfo->capAnim) {
+    if (strcmp(mInfo->capAnim, "") != 0) {
         startAction(mInfo->capAnim);
     }
 

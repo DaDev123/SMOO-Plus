@@ -1,13 +1,13 @@
 #include "cameras/CameraPoserActorSpectate.h"
 
+#include "sead/math/seadVector.h"
+
 #include "al/Library/Camera/CameraPoser.h"
 #include "al/Library/Camera/CameraPoserFlag.h"
 #include "al/Library/Camera/CameraPoserFunction.h"
 #include "al/Library/Collision/CollisionPartsKeeperUtil.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/Math/MathUtil.h"
-
-#include "sead/math/seadVector.h"
 
 namespace cc {
 

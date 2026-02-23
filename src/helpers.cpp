@@ -7,10 +7,6 @@
 #include "al/Library/Scene/Scene.h"
 #include "al/Library/Sequence/Sequence.h"
 
-#include "sead/math/seadMathCalcCommon.h"
-#include "sead/math/seadQuat.h"
-#include "sead/math/seadVector.h"
-
 #include "game/Player/PlayerAnimator.h"
 #include "game/Scene/StageScene.h"
 #include "game/Sequence/HakoniwaSequence.h"
@@ -106,7 +102,7 @@ bool isInCostumeList(const char* costumeName) {
 }
 
 const char* tryGetPuppetCapName(PuppetInfo* info) {
-    if (info->costumeHead && isInCostumeList(info->costumeHead)) {
+    if (strcmp(info->costumeHead, "") != 0 && isInCostumeList(info->costumeHead)) {
         return info->costumeHead;
     } else {
         return "Mario";
@@ -114,7 +110,7 @@ const char* tryGetPuppetCapName(PuppetInfo* info) {
 }
 
 const char* tryGetPuppetBodyName(PuppetInfo* info) {
-    if (info->costumeBody && isInCostumeList(info->costumeBody)) {
+    if (strcmp(info->costumeBody, "") != 0 && isInCostumeList(info->costumeBody)) {
         return info->costumeBody;
     } else {
         return "Mario";

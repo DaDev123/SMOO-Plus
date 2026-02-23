@@ -3,6 +3,9 @@
 #include "hk/types.h"
 #include "hk/util/Math.h"
 
+#include "nn/os.h"
+#include "nn/socket.h"
+
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
@@ -31,8 +34,6 @@
 #include "Library/Base/StringUtil.h"
 #include "Library/LiveActor/LiveActor.h"
 #include "logger.hpp"
-#include "nn/os.h"
-#include "nn/socket.h"
 #include "packets/Packet.h"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"

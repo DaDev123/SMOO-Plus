@@ -1,13 +1,13 @@
 #include "cameras/CameraPoserCustom.h"
 
+#include "sead/gfx/seadCamera.h"
+#include "sead/math/seadVector.h"
+#include "sead/math/seadVectorCalcCommon.h"
+
 #include "al/Library/Camera/CameraPoser.h"
 #include "al/Library/Camera/CameraPoserFunction.h"
 #include "al/Library/Math/MathUtil.h"
 #include "al/Library/Yaml/ByamlUtil.h"
-
-#include "sead/gfx/seadCamera.h"
-#include "sead/math/seadVector.h"
-#include "sead/math/seadVectorCalcCommon.h"
 
 #include <math.h>
 

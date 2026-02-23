@@ -10,12 +10,8 @@
 #include "game/System/GameDataHolderAccessor.h"
 #include "game/System/GameSystem.h"
 
-#include <algorithm>
 #include <imgui.h>
 
-#include "nn/hid.h"
-#include "server/Client.hpp"
-#include "server/gamemode/GameModeBase.hpp"
 #include "Settings/SmooSettings.hpp"
 
 namespace StageWarper {

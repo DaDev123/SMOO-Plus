@@ -1,19 +1,18 @@
 #pragma once
 #include "hk/gfx/ImGuiBackendNvn.h"
 
-#include "al/Library/Memory/HeapUtil.h"
+#include "nn/hid.h"
 
 #include "sead/heap/seadExpHeap.h"
 
+#include "al/Library/Memory/HeapUtil.h"
+
 #include <cstring>
 #include <utility>
-#include <vector>
 
 #include "fsHelper.h"
 #include "heap/seadHeap.h"
 #include "imgui.h"
-#include "nn/hid.h"
-#include "Settings/StageWarper.hpp"
 
 namespace imgui {
 

@@ -2,8 +2,6 @@
 
 #include "al/Library/Thread/AsyncFunctorThread.h"
 
-#include "sead/container/seadPtrArray.h"
-
 #include <netinet/in.h>
 
 #include "heap/seadHeap.h"

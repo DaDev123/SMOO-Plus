@@ -1,7 +1,5 @@
 #pragma once
-
-#include "nn/types.h"
-
+#include "vapours/results/results_common.hpp"
 namespace FsHelper {
 
 struct LoadData {

@@ -5,8 +5,9 @@
 
 #pragma once
 
-#include "logger.hpp"
 #include "nn/os.h"
+
+#include "logger.hpp"
 #include "types.h"
 
 namespace nn {

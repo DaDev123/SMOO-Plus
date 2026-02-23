@@ -35,7 +35,7 @@ IncludeBlocks: Regroup
 IncludeCategories:
   - Regex: ^("|<)hk/
     Priority: 1
-  - Regex: ^("|<)(nn/|nvn/)
+  - Regex: ^("|<)(nn/|nvn/|vapours/)
     Priority: 2
   - Regex: ^("|<)sead/
     Priority: 3

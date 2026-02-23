@@ -1,14 +1,11 @@
 #pragma once
 
+#include "nn/account.h"
+
 #include "sead/math/seadQuat.h"
 
 #include "algorithms/PlayerAnims.h"
-#include "nn/account.h"
 #include "packets/Packet.h"
-#include "server/gamemode/GameMode.h"
-
-enum GameMode : s8;
-
 struct PuppetInfo {
     // General Puppet Info
     char puppetName[0x10] = {};  // max user account name size is 10 chars, so this could go down to 0xB

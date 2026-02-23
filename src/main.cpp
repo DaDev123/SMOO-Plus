@@ -13,6 +13,14 @@
 #include "hk/hook/Trampoline.h"
 #include "hk/util/Math.h"
 
+#include "nn/hid.h"  // IWYU pragma: keep
+#include "nn/socket.h"
+
+#include "sead/gfx/seadCamera.h"
+#include "sead/gfx/seadPrimitiveRenderer.h"
+#include "sead/gfx/seadProjection.h"
+#include "sead/heap/seadHeap.h"
+
 #include "al/Library/Bgm/BgmLineFunction.h"
 #include "al/Library/Camera/CameraUtil.h"
 #include "al/Library/Controller/InputFunction.h"
@@ -29,11 +37,6 @@
 #include "al/Project/Memory/Util.h"
 
 #include "agl/common/aglDrawContext.h"
-
-#include "sead/gfx/seadCamera.h"
-#include "sead/gfx/seadPrimitiveRenderer.h"
-#include "sead/gfx/seadProjection.h"
-#include "sead/heap/seadHeap.h"
 
 #include "game/Info/ShineInfo.h"
 #include "game/Player/HackCap.h"
@@ -66,8 +69,6 @@
 #include "layouts/ConnectionStatus.h"
 #include "layouts/SpeedrunIcon.h"
 #include "logger.hpp"
-#include "nn/hid.h"  // IWYU pragma: keep
-#include "nn/socket.h"
 #include "puppetHooks.hpp"
 #include "puppets/PuppetInfo.h"
 #include "server/Client.hpp"
