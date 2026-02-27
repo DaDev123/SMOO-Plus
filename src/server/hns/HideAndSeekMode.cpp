@@ -18,6 +18,7 @@
 
 #include <heap/seadHeap.h>
 
+#include "../src/smallMarioHooks.hpp"
 #include "helpers.hpp"
 #include "imgui.h"
 #include "layouts/HideAndSeekIcon.h"
@@ -29,6 +30,7 @@
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
+#include "TwistsConfig.hpp"
 
 HideAndSeekMode::HideAndSeekMode(const char* name) : GameModeBase(name) {}
 
@@ -197,7 +199,8 @@ void HideAndSeekMode::update() {
                                                                                // sensors to determine this
 
                         if (!isYukimaru) {
-                            if (pupDist < 200.f && ((PlayerActorHakoniwa*)playerBase)->mDimensionKeeper->mIs2D == curInfo->is2D) {
+                            if (pupDist < (TwistsConfig::isSmallMarioEnabled() ? 200.f * scale : 200.f) &&
+                                ((PlayerActorHakoniwa*)playerBase)->mDimensionKeeper->mIs2D == curInfo->is2D) {
                                 if (!PlayerFunction::isPlayerDeadStatus(playerBase)) {
                                     GameDataFunction::killPlayer(GameDataHolderWriter(this));
                                     playerBase->startDemoPuppetable();

@@ -383,11 +383,11 @@ void StageSceneStateServerConfig::initGameplayMenu(const al::LayoutInitInfo& ini
 
     sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
     optionsList[MENU_GAMEPLAY]->startLoopActionAll("Loop", "Loop");
-    RollPartsData* dataColPlayer = new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                                                     (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), false);
-    RollPartsData* dataColCap = new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                                                  (sCapCollisionEnabled + (sCapBounceEnabled << 1)), false);
-    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
+    RollPartsData* dataColPlayer = new RollPartsData(
+        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" }, (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), false);
+    RollPartsData* dataColCap = new RollPartsData(
+        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" }, (sCapCollisionEnabled + (sCapBounceEnabled << 1)), false);
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t* [] { u"" });
     optionsList[MENU_GAMEPLAY]->setRollPartsData(new RollPartsData[]{*dataColPlayer, *dataColCap, *dataEmpty, *dataEmpty, *dataEmpty});
 
     optionsList[MENU_GAMEPLAY]->addStringData(msgList[MENU_GAMEPLAY]->mBuffer, "TxtContent");
@@ -604,10 +604,14 @@ void StageSceneStateServerConfig::initTwistsMenu(const al::LayoutInitInfo& initI
     menuList[MENU_TWISTS] = new SimpleLayoutMenu("TwistsMenu", "OptionModCheck", initInfo, 0, false);
     optionsList[MENU_TWISTS] = new CommonVerticalList(menuList[MENU_TWISTS], initInfo, true);
     al::setPaneString(menuList[MENU_TWISTS], "TxtOption", u"Twists & Modifiers", 0);
+
+    // THIS must use the updated count of 4
     optionsList[MENU_TWISTS]->initDataNoResetSelected(mTwistsMenuOptionsCount);
 
+    // indices are now 1, 2, 3, 4 — all valid with count=4
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_DISABLECAP + 1]);
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_ICEPHYSICS + 1]);
+    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_SMALLMARIO + 1]);
     setMenuItemBase(optionsList[MENU_TWISTS]->mListPartsArr[TW_MORESOON + 1]);
 
     optionsList[MENU_TWISTS]->addStringData(msgList[MENU_TWISTS]->mBuffer, "TxtContent");
@@ -620,6 +624,9 @@ void StageSceneStateServerConfig::updateTwistsOptions() {
 
     msgList[MENU_TWISTS]->mBuffer[TW_ICEPHYSICS].copy(u"Ice Physics");
     al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_ICEPHYSICS + 1], TwistsConfig::isIcePhysicsEnabled() ? "On" : "Off", "State");
+
+    msgList[MENU_TWISTS]->mBuffer[TW_SMALLMARIO].copy(u"Small Mario");
+    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_SMALLMARIO + 1], TwistsConfig::isSmallMarioEnabled() ? "On" : "Off", "State");
 
     msgList[MENU_TWISTS]->mBuffer[TW_MORESOON].copy(u"More twists coming soon...");
 }
@@ -640,6 +647,9 @@ void StageSceneStateServerConfig::exeTwistsSettings() {
             break;
         case TW_ICEPHYSICS:
             TwistsConfig::toggleIcePhysics();
+            break;
+        case TW_SMALLMARIO:
+            TwistsConfig::toggleSmallMario();
             break;
         }
 

@@ -32,6 +32,7 @@
 
 #include <cstddef>
 
+#include "../src/smallMarioHooks.hpp"
 #include "algorithms/CaptureTypes.h"
 #include "helpers.hpp"
 #include "logger.hpp"
@@ -45,6 +46,7 @@
 #include "server/shine-thief/ShineThiefInfo.h"
 #include "server/shine-thief/ShineThiefMode.hpp"
 #include "server/snh/SardineMode.hpp"
+#include "TwistsConfig.hpp"
 #include "Util/SensorMsgFunction.h"
 
 static const char* subActorNames[] = {
@@ -111,10 +113,14 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
         mHitSensorKeeper->clear();
     }
 
+    float sensorScale = TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f;
+
     initHitSensor(3);
-    al::addHitSensor(this, initInfo, "Body", static_cast<u32>(al::HitSensorType::Npc), 50.0f, 16, sead::Vector3f(0.0f, 75.0f, 0.0f));
-    al::addHitSensor(this, initInfo, "Head", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 16, sead::Vector3f(0.0f, 110.0f, 0.0f));
-    al::addHitSensor(this, initInfo, "Foot", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 1, sead::Vector3f(0.0f, 40.0f, 0.0f));
+    al::addHitSensor(this, initInfo, "Body", static_cast<u32>(al::HitSensorType::Npc), 50.0f * sensorScale, 16,
+                     sead::Vector3f(0.0f, 75.0f * sensorScale, 0.0f));
+    al::addHitSensor(this, initInfo, "Head", static_cast<u32>(al::HitSensorType::Npc), 40.0f * sensorScale, 16,
+                     sead::Vector3f(0.0f, 110.0f * sensorScale, 0.0f));
+    al::addHitSensor(this, initInfo, "Foot", static_cast<u32>(al::HitSensorType::Npc), 40.0f * sensorScale, 1, sead::Vector3f(0.0f, 40.0f * sensorScale, 0.0f));
 
     al::validateClipping(normalModel);
     al::validateClipping(normal2DModel);
@@ -159,7 +165,7 @@ void PuppetActor::movement() {
         bool shouldMoveBlock = mInfo->isShineThiefHolder && mInfo->isConnected && mInfo->isInSameStage;
         if (shouldMoveBlock && al::isAlive(mShineThiefPlayerBlock)) {
             sead::Vector3f offsetPos = mInfo->playerPos;
-            offsetPos.y += 275.f;
+            offsetPos.y += TwistsConfig::isSmallMarioEnabled() ? 275.f * ::scale : 275.f;
             al::setTrans(mShineThiefPlayerBlock, offsetPos);
         }
     }
@@ -298,6 +304,10 @@ void PuppetActor::control() {
         // Sub-Actor Updating
 
         mPuppetCap->update();
+
+        // Small Mario Scaling
+
+        al::setScaleAll(curModel, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
 
         // Syncing
 

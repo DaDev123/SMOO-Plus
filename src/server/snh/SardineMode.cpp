@@ -17,6 +17,7 @@
 
 #include <heap/seadHeap.h>
 
+#include "../src/smallMarioHooks.hpp"
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "imgui.h"
@@ -29,6 +30,7 @@
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
 #include "System/GameDataHolderAccessor.h"
+#include "TwistsConfig.hpp"
 
 SardineMode::SardineMode(const char* name) : GameModeBase(name) {}
 
@@ -157,7 +159,8 @@ void SardineMode::update() {
             if (curInfo->isIt)
                 isAnyIt = true;
 
-            if (curInfo->isConnected && curInfo->isInSameStage && curInfo->isIt && !mInfo->mIsIt && !isYukimaru && pupDist < 300.f) {
+            if (curInfo->isConnected && curInfo->isInSameStage && curInfo->isIt && !mInfo->mIsIt && !isYukimaru &&
+                pupDist < (TwistsConfig::isSmallMarioEnabled() ? 300.f * scale : 300.f)) {
                 if (((PlayerActorHakoniwa*)playerBase)->mDimensionKeeper->mIs2D == curInfo->is2D && !PlayerFunction::isPlayerDeadStatus(playerBase)) {
                     mInfo->mIsIt = true;
                     mModeTimer->enableTimer();

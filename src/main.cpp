@@ -58,6 +58,7 @@
 #include <cstring>
 #include <math.h>
 
+#include "../src/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
 #include "factoryPatches.h"
 #include "gfx/seadColor.h"
@@ -81,6 +82,7 @@
 #include "Settings/SmooSettings.hpp"
 #include "Settings/StageWarper.hpp"
 #include "speedboot/BootHooks.hpp"
+#include "states/CustomPlayerConst.h"
 #include "System/GameSystem.h"
 #include "TwistsConfig.hpp"
 #include "Util/AchievementUtil.h"
@@ -240,6 +242,27 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
     updatePlayerInfo(GameDataHolderWriter(stageScene), playerBase, isYukimaru);
 
     TwistsConfig::updateCappyProximity(player, stageScene);
+
+    if (TwistsConfig::isSmallMarioEnabled())
+        smallMario::installHooks();
+
+    // ===== SMALL MARIO SCALING =====
+    if (TwistsConfig::isSmallMarioEnabled() && player && !isYukimaru) {
+        if (al::getScale(player).x != 0.3f)
+            al::setScaleAll(player, 0.3f);
+
+        if (player->mHackCap && al::getScale(player->mHackCap).x != 0.3f)
+            al::setScaleAll(player->mHackCap, 0.3f);
+
+        if (player->mHackKeeper && player->mHackKeeper->mHackActor) {
+            auto* hack = player->mHackKeeper->mHackActor;
+            if (al::getScale(hack).x != 0.3f)
+                al::setScaleAll(hack, 0.3f);
+        }
+
+        if (player->mConst)
+            CustomPlayerConst::setSmallMarioConst(player->mConst);
+    }
 
     if (SpeedrunIcon::sInstance) {
         if (StageSceneStateServerConfig::isSpeedrunModeEnabled()) {
@@ -849,6 +872,9 @@ extern "C" void hkMain() {
 
     // Twists
     icePhysicsHook.installAtSym<"_ZN2al11isFloorCodeERKNS_8TriangleEPKc">();  // Enables Ice Physics
+
+    // Small Mario
+    smallMario::initHooks();
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
     hk::gfx::DebugRenderer::instance()->installHooks();

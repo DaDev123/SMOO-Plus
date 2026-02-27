@@ -1,6 +1,5 @@
 #pragma once
 
-// Forward declarations
 class PlayerActorHakoniwa;
 class StageScene;
 
@@ -10,20 +9,19 @@ class Triangle;
 
 class TwistsConfig {
 public:
-    // Twist toggle states
     static bool sCappyForceEnabled;
-    static bool sIcePhysicsEnabled;  // Declare here (no extern!)
+    static bool sIcePhysicsEnabled;
+    static bool sSmallMarioEnabled;
 
-    // Getters
     static bool isCappyDisableEnabled();
     static bool isIcePhysicsEnabled() { return sIcePhysicsEnabled; }
+    static bool isSmallMarioEnabled() { return sSmallMarioEnabled; }
     static bool shouldUseIcePhysics(bool originalFloorCheck);
 
-    // Setters
     static void toggleCappyDisable();
     static void toggleIcePhysics() { sIcePhysicsEnabled = !sIcePhysicsEnabled; }
+    static void toggleSmallMario();
 
-    // Update functions
     static void updateCappyProximity(PlayerActorHakoniwa* player, StageScene* stageScene);
     static void handleStageInit();
 
@@ -33,6 +31,4 @@ private:
     static float cappyThreshold;
 };
 
-// Your patch function that combines original check with toggle
-// Changed from pointer (*) to reference (&)
 bool icePhysicsPatch(const al::Triangle& triangle, const char* floorCode);

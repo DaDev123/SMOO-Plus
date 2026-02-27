@@ -13,11 +13,13 @@
 #include "game/Player/PlayerRecoverySafetyPoint.h"
 #include "game/Util/ObjUtil.h"
 
+#include "../src/smallMarioHooks.hpp"
 #include "cameras/CameraPoserActorSpectate.h"
 #include "helpers.hpp"
 #include "logger.hpp"
 #include "puppets/PuppetInfo.h"
 #include "server/shine-thief/ShineThiefMode.hpp"
+#include "TwistsConfig.hpp"
 
 void ShineThiefMode::updateIntroCamera() {
     PlayerActorHakoniwa* player = getPlayerActorHakoniwa();
@@ -203,7 +205,7 @@ bool ShineThiefMode::trySetPlayerHolderState(bool hasShine) {
     sendShineThiefPacket(ShineThiefUpdateType::PLAYER);
 
     sead::Vector3f sPos = al::getTrans(getPlayerActorHakoniwa());
-    sPos.y += 100;
+    sPos.y += TwistsConfig::isSmallMarioEnabled() ? 100.f * ::scale : 100.f;
     setShinePos(sPos);
 
     return true;

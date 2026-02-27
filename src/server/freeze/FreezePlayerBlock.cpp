@@ -13,8 +13,10 @@
 #include "al/Library/Math/MathUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
 
+#include "../src/smallMarioHooks.hpp"
 #include "Library/Camera/CameraTicket.h"
 #include "Library/LiveActor/ActorSceneInfo.h"
+#include "TwistsConfig.hpp"
 
 FreezePlayerBlock::FreezePlayerBlock(const char* name) : al::LiveActor(name) {}
 
@@ -60,10 +62,10 @@ void FreezePlayerBlock::end() {
 void FreezePlayerBlock::exeAppear() {
     if (al::isFirstStep(this)) {
         al::startAction(this, "Appear");
-        al::setScaleAll(this, 1.f);
+        al::setScaleAll(this, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
     }
 
-    mDitheringOffset = -420.f;  // Resets the dithering offset to slightly beyond the fully opaque value
+    mDitheringOffset = -420.f;
     al::setDitherAnimSphereRadius(this, 0.f);
 
     if (al::isActionEnd(this))
@@ -73,6 +75,7 @@ void FreezePlayerBlock::exeAppear() {
 void FreezePlayerBlock::exeWait() {
     if (al::isFirstStep(this))
         al::startAction(this, "Wait");
+    al::setScaleAll(this, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
 
     // Start by updating the lerp on the dithering offset
     mDitheringOffset = al::lerpValue(mDitheringOffset, -65.f, 0.02f);

@@ -13,8 +13,10 @@
 
 #include "game/Player/PlayerHackKeeper.h"
 
+#include "../src/smallMarioHooks.hpp"
 #include "math/seadQuat.h"
 #include "math/seadVector.h"
+#include "TwistsConfig.hpp"
 
 GameModeHintArrow::GameModeHintArrow(const char* name) : al::LiveActor(name) {}
 
@@ -67,10 +69,10 @@ void GameModeHintArrow::exeWait() {
     }
 
     *mArrowTrans = al::getTrans(mPlayer);
-    mArrowTrans->y += 200.f;
+    mArrowTrans->y += TwistsConfig::isSmallMarioEnabled() ? 200.f * ::scale : 200.f;
 
-    // Update size based on active & visible bools
-    mSize = al::lerpValue(mSize, mIsActive && mIsVisible ? 1.f : 0.f, 0.2f);
+    float targetSize = TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f;
+    mSize = al::lerpValue(mSize, mIsActive && mIsVisible ? targetSize : 0.f, 0.2f);
     al::setScaleAll(this, mSize);
 
     if (!mIsActive)

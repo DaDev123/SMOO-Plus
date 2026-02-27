@@ -17,6 +17,7 @@
 #include "game/Util/ActorDimensionKeeper.h"
 #include "game/Util/ObjUtil.h"
 
+#include "../src/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
 #include "imgui.h"
 #include "Library/LiveActor/LiveActor.h"
@@ -32,6 +33,7 @@
 #include "System/GameDataFunction.h"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
+#include "TwistsConfig.hpp"
 
 ShineThiefMode::ShineThiefMode(const char* name) : GameModeBase(name) {}
 
@@ -289,11 +291,14 @@ void ShineThiefMode::update() {
 
             // Check if we can steal from this puppet
             sead::Vector3f puppetShinePos = al::getTrans(curPup);
-            puppetShinePos.y += 275.f;
+            puppetShinePos.y += TwistsConfig::isSmallMarioEnabled() ? 275.f * ::scale : 275.f;
             sead::Vector3f diff = al::getTrans(player) - puppetShinePos;
             float shineDist = diff.length();
 
-            if (!mInfo->mIsPlayerHolder && (pupDist < 200.f || shineDist < 200.f) && isP2D == curInfo->is2D && !isPDead && curInfo->isShineThiefHolder) {
+            float stealDist = TwistsConfig::isSmallMarioEnabled() ? 200.f * scale : 200.f;
+
+            if (!mInfo->mIsPlayerHolder && (pupDist < stealDist || shineDist < stealDist) && isP2D == curInfo->is2D && !isPDead &&
+                curInfo->isShineThiefHolder) {
                 bool canSteal = true;
 
                 // Apply team restrictions
@@ -321,8 +326,8 @@ void ShineThiefMode::update() {
         // If no one is holding the shine, check if player can pick it up from ground
         if (!stoleFromPlayer && !anyoneHoldingShine) {
             float shineDist = al::calcDistance(player, mInfo->shinePos);
-            if (shineDist < 200.f && !isPDead) {
-                // When shine is on ground, anyone can pick it up regardless of team
+            float groundPickupDist = TwistsConfig::isSmallMarioEnabled() ? 200.f * scale : 200.f;
+            if (shineDist < groundPickupDist && !isPDead) {
                 tryStealShine();
             }
         }
@@ -368,10 +373,9 @@ void ShineThiefMode::update() {
             mMainPlayerCaptureBlock->appear();
 
         sead::Vector3f offsetPos = al::getTrans(player);
-        offsetPos.y += 275.f;
+        offsetPos.y += TwistsConfig::isSmallMarioEnabled() ? 275.f * ::scale : 275.f;
         setShinePos(offsetPos);
         al::setTrans(mMainPlayerCaptureBlock, getShinePos());
-        al::setQuat(mMainPlayerCaptureBlock, al::getQuat(player));
     } else {
         if (al::isAlive(mMainPlayerCaptureBlock) && mMainPlayerCaptureBlock->mIsLocked)
             al::setTrans(mMainPlayerCaptureBlock, getShinePos());

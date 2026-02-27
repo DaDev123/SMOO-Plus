@@ -11,9 +11,11 @@
 #include "game/Player/PlayerFunction.h"
 #include "game/Util/SensorMsgFunction.h"
 
+#include "../src/smallMarioHooks.hpp"
 #include "helpers.hpp"
 #include "Project/HitSensor/HitSensor.h"
 #include "Scene/StageSceneStateServerConfig.hpp"
+#include "TwistsConfig.hpp"
 
 PuppetCapActor::PuppetCapActor(const char* name) : al::LiveActor(name) {}
 
@@ -23,9 +25,11 @@ void PuppetCapActor::init(al::ActorInitInfo const& initInfo) {
     PlayerFunction::createCapModelName(&capModelName, tryGetPuppetCapName(mInfo));
     PlayerFunction::initCapModelActorDemo(this, initInfo, capModelName.cstr());
 
+    float sensorScale = TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f;
+
     initHitSensor(2);
-    al::addHitSensor(this, initInfo, "Push", (u32)al::HitSensorType::MapObjSimple, 60.0f, 8, sead::Vector3f::zero);
-    al::addHitSensor(this, initInfo, "Attack", (u32)al::HitSensorType::EnemyAttack, 300.0f, 8, sead::Vector3f::zero);
+    al::addHitSensor(this, initInfo, "Push", (u32)al::HitSensorType::MapObjSimple, 60.0f * sensorScale, 8, sead::Vector3f::zero);
+    al::addHitSensor(this, initInfo, "Attack", (u32)al::HitSensorType::EnemyAttack, 300.0f * sensorScale, 8, sead::Vector3f::zero);
 
     al::hideSilhouetteModelIfShow(this);
     al::initExecutorModelUpdate(this, initInfo);
@@ -60,6 +64,10 @@ void PuppetCapActor::control() {
     mJointKeeper->mJointRot.y = mInfo->capRot.y;
     mJointKeeper->mJointRot.z = mInfo->capRot.z;
     mJointKeeper->mSkew = mInfo->capRot.w;
+
+    // Small Mario Scaling
+
+    al::setScaleAll(this, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
 }
 
 void PuppetCapActor::update() {

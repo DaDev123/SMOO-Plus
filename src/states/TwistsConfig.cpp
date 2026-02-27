@@ -6,13 +6,16 @@
 #include "game/MapObj/ShineTowerRocket.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Scene/StageScene.h"
+#include "game/Sequence/ChangeStageInfo.h"
 #include "game/System/GameDataFile.h"
 #include "game/System/GameDataFunction.h"
 #include "game/System/GameDataHolderAccessor.h"
 #include "game/System/GameDataHolderWriter.h"
 #include "game/Util/DemoUtil.h"
 
+#include "../src/smallMarioHooks.hpp"
 #include "logger.hpp"
+#include "server/Client.hpp"
 
 // Initialize static variables
 bool TwistsConfig::sCappyForceEnabled = true;  // Changed to true so Cappy is enabled by default
@@ -21,6 +24,7 @@ bool TwistsConfig::needsCappyDisable = false;  // Changed to false since we don'
 float TwistsConfig::cappyThreshold = 500.0f;   // Adjust as needed
 
 bool TwistsConfig::sIcePhysicsEnabled = false;
+bool TwistsConfig::sSmallMarioEnabled = false;
 
 // Getters
 bool TwistsConfig::isCappyDisableEnabled() {
@@ -100,4 +104,17 @@ void TwistsConfig::handleStageInit() {
     cappyDisabled = false;                               // Changed: Cappy starts enabled
     needsCappyDisable = false;                           // Changed: We don't need to disable it
     Logger::log("Stage init: Cappy will be enabled\n");  // Updated log message
+}
+
+void TwistsConfig::toggleSmallMario() {
+    sSmallMarioEnabled = !sSmallMarioEnabled;
+    if (sSmallMarioEnabled)
+        smallMario::installHooks();
+    else
+        smallMario::uninstallHooks();
+
+    ChangeStageInfo info =
+        ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),
+                        GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1, ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO);
+    Client::get()->getHolder()->changeNextStage(&info, 0);
 }

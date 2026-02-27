@@ -177,8 +177,8 @@ private:
     void initTwistsMenu(const al::LayoutInitInfo& initInfo);
     void updateTwistsOptions();
 
-    enum TwistsMenuOptions { TW_DISABLECAP, TW_ICEPHYSICS, TW_MORESOON };
-    static constexpr int mTwistsMenuOptionsCount = 3;
+    enum TwistsMenuOptions { TW_DISABLECAP, TW_ICEPHYSICS, TW_SMALLMARIO, TW_MORESOON };
+    static constexpr int mTwistsMenuOptionsCount = 4;
 
     //@ ============= Misc Menu =============
     void initMiscMenu(const al::LayoutInitInfo& initInfo);

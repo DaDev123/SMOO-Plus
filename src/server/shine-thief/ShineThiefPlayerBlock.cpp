@@ -19,12 +19,18 @@
 
 #include "game/Util/ActorDimensionKeeper.h"
 
+#include "../src/smallMarioHooks.hpp"
 #include "Library/Camera/CameraTicket.h"
 #include "Library/LiveActor/ActorSceneInfo.h"
 #include "server/DeltaTime.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/shine-thief/ShineThiefInfo.h"
 #include "server/shine-thief/ShineThiefMode.hpp"
+#include "TwistsConfig.hpp"
+
+static float getBlockTargetScale() {
+    return TwistsConfig::isSmallMarioEnabled() ? 0.6f * ::scale : 0.6f;
+}
 
 ShineThiefPlayerBlock::ShineThiefPlayerBlock(const char* name) : al::LiveActor(name) {}
 
@@ -185,13 +191,14 @@ void ShineThiefPlayerBlock::exeAppear() {
     updateRotation();
     updateMaterials();
 
-    float scale = al::lerpValue(al::getScaleX(this), 0.6f, 0.2f);
-    al::setScaleAll(this, scale);
+    float targetScale = getBlockTargetScale();
+    float s = al::lerpValue(al::getScaleX(this), targetScale, 0.2f);
+    al::setScaleAll(this, s);
 
     mDitheringOffset = -420.f;
     al::setDitherAnimSphereRadius(this, 0.f);
 
-    if (al::isNearZero(scale - 0.6f, 0.05f))
+    if (al::isNearZero(s - targetScale, 0.05f))
         al::setNerve(this, &NrvShineThiefPlayerBlock.Wait);
 }
 
@@ -199,6 +206,7 @@ void ShineThiefPlayerBlock::exeWait() {
     if (al::isFirstStep(this)) {
         al::startAction(this, "Wait");
     }
+    al::setScaleAll(this, getBlockTargetScale());
 
     updateRotation();
     updateMaterials();
