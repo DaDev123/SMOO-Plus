@@ -12,8 +12,10 @@
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Screen/ScreenFunction.h"
 
+#include "../src/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
 #include "server/gamemode/GameModeManager.hpp"
+#include "TwistsConfig.hpp"
 
 NameTag::NameTag(PuppetActor* pupActor, const al::LayoutInitInfo& initInfo, float startDist, float endDist, const char* playerName)
     : al::LayoutActor("PNameTag"), mPuppet(pupActor), mStartDist(startDist), mEndDist(endDist) {
@@ -66,7 +68,7 @@ void NameTag::control() {
 void NameTag::updateTrans() {
     sead::Vector2f newTrans = sead::Vector2f::zero;
 
-    sead::Vector3f targetOffset(0, 130, 0);
+    sead::Vector3f targetOffset(0, TwistsConfig::isSmallMarioEnabled() ? 130.f * ::scale : 130.f, 0);
 
     al::LiveActor* puppetModel = mPuppet->getCurrentModel();
 

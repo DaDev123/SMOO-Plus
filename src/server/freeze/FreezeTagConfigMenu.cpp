@@ -21,13 +21,21 @@ FreezeTagConfigMenu::FreezeTagConfigMenu() : GameModeConfigMenu() {
 }
 
 void FreezeTagConfigMenu::initMenu() {
-    StageSceneStateServerConfig::setMenuItemBase(mList->mListPartsArr[1]);
+    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[1]);
     StageSceneStateServerConfig::setMenuItemBase(mList->mListPartsArr[2]);
+    StageSceneStateServerConfig::setMenuItemBase(mList->mListPartsArr[3]);
 }
 
 const sead::WFixedSafeString<0x200>* FreezeTagConfigMenu::getStringData() {
-    mItems[0].copy(u"Set Score");
-    mItems[1].copy(u"Config Host Controls");
+    FreezeTagInfo* info = GameModeManager::instance()->getInfo<FreezeTagInfo>();
+
+    mItems[0].copy(u"Host");
+    mItems[1].copy(u"Set Score");
+    mItems[2].copy(u"Config Host Controls");
+
+    if (info) {
+        al::startAction(mList->mListPartsArr[1], info->mIsHostMode ? "On" : "Off", "State");
+    }
 
     return mItems.mBuffer;
 }
@@ -41,6 +49,15 @@ GameModeConfigMenu::UpdateAction FreezeTagConfigMenu::updateMenu(int selectIndex
 
     switch (selectIndex) {
     case 0: {
+        FreezeTagInfo* info = GameModeManager::instance()->getInfo<FreezeTagInfo>();
+        if (info) {
+            info->mIsHostMode = !info->mIsHostMode;
+            al::startAction(mList->mListPartsArr[1], info->mIsHostMode ? "On" : "Off", "State");
+        }
+        return GameModeConfigMenu::UpdateAction::REFRESH;
+    }
+    case 1: {
+        // Set Score
         if (mScoreKeyboard) {
             uint16_t oldScore = curMode->mPlayerTagScore.mScore;
 
@@ -55,26 +72,23 @@ GameModeConfigMenu::UpdateAction FreezeTagConfigMenu::updateMenu(int selectIndex
                 config.inputFormMode = nn::swkbd::InputFormMode::OneLine;
             });
 
-            while (!mScoreKeyboard->isThreadDone()) {
+            while (!mScoreKeyboard->isThreadDone())
                 nn::os::YieldThread();
-            }
 
             if (!mScoreKeyboard->isKeyboardCancelled()) {
                 const char* result = mScoreKeyboard->getResult();
                 if (result && result[0] != '\0') {
                     int newScore = atoi(result);
-                    if (newScore >= 0 && newScore <= 65535) {
+                    if (newScore >= 0 && newScore <= 65535)
                         curMode->mPlayerTagScore.mScore = (uint16_t)newScore;
-                    }
                 }
             }
         }
         return GameModeConfigMenu::UpdateAction::NOOP;
     }
-    case 1: {
+    case 2: {
+        // Config Host Controls
         if (mRoundKeyboard) {
-            curMode->mIsHostMode = true;
-
             uint8_t oldTime = curMode->mRoundLength;
 
             char buf[4];
@@ -88,17 +102,15 @@ GameModeConfigMenu::UpdateAction FreezeTagConfigMenu::updateMenu(int selectIndex
                 config.inputFormMode = nn::swkbd::InputFormMode::OneLine;
             });
 
-            while (!mRoundKeyboard->isThreadDone()) {
+            while (!mRoundKeyboard->isThreadDone())
                 nn::os::YieldThread();
-            }
 
             if (!mRoundKeyboard->isKeyboardCancelled()) {
                 const char* result = mRoundKeyboard->getResult();
                 if (result && result[0] != '\0') {
                     int newTime = atoi(result);
-                    if (newTime >= 2 && newTime <= 60) {
+                    if (newTime >= 2 && newTime <= 60)
                         curMode->mRoundLength = (uint8_t)newTime;
-                    }
                 }
             }
         }
