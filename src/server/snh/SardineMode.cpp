@@ -221,7 +221,7 @@ void SardineMode::update() {
         }
     }
 
-    if (al::isPadTriggerUp(-1) && !al::isPadHoldZL(-1)) {
+    if (al::isPadTriggerUp(-1) && !al::isPadHoldZL(-1) && !al::isPadHoldL(-1)) {
         if (!mInfo->mIsIt && !isAnyIt) {
             mInfo->mIsIt = true;
             mModeTimer->enableTimer();

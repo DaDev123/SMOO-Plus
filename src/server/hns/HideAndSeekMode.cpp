@@ -284,7 +284,7 @@ void HideAndSeekMode::update() {
     }
 
     // Manual role toggle
-    if (al::isPadTriggerUp(-1) && !al::isPadHoldR(-1)) {
+    if (al::isPadTriggerUp(-1) && !al::isPadHoldR(-1) && !al::isPadHoldL(-1)) {
         mInfo->mIsPlayerIt = !mInfo->mIsPlayerIt;
 
         mModeTimer->toggleTimer();

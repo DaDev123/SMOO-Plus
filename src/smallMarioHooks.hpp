@@ -63,7 +63,7 @@ inline float followDistHook() {
     static bool toggled = false;
     static bool wasComboPressed = false;
 
-    bool comboPressed = al::isPadHoldL(-1) && al::isPadTriggerDown(-1);
+    bool comboPressed = al::isPadHoldL(-1) && al::isPadTriggerUp(-1);
     if (comboPressed && !wasComboPressed)
         toggled = !toggled;
     wasComboPressed = comboPressed;
