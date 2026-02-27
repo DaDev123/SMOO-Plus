@@ -263,6 +263,9 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
             CustomPlayerConst::setSmallMarioConst(player->mConst);
     }
 
+    if (TwistsConfig::isSmallMarioEnabled() && player && !isYukimaru)
+        smallMario::sPlayerIs2D = rs::isPlayer2D((al::LiveActor*)player);
+
     if (SpeedrunIcon::sInstance) {
         if (StageSceneStateServerConfig::isSpeedrunModeEnabled()) {
             SpeedrunIcon::sInstance->tryStart();

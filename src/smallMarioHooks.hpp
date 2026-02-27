@@ -24,14 +24,21 @@
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/LiveActor/ActorSensorUtil.h"
 #include "al/Library/LiveActor/LiveActor.h"
+#include "al/Library/Player/PlayerUtil.h"
+#include "al/Library/Scene/SceneUtil.h"
 #include "al/Library/Yaml/ByamlUtil.h"
 #include "al/Project/Action/ActionEffectCtrl.h"
 
 #include "game/Player/PlayerActorHakoniwa.h"
+#include "game/Util/PlayerUtil.h"
 
 #include "Imgui.hpp"
 #include "Project/HitSensor/HitSensor.h"
 #include "TwistsConfig.hpp"
+
+namespace smallMario {
+static bool sPlayerIs2D = false;
+}
 
 static constexpr float scale = 0.3f;
 
@@ -67,6 +74,9 @@ inline float followDistHook() {
     if (comboPressed && !wasComboPressed)
         toggled = !toggled;
     wasComboPressed = comboPressed;
+
+    if (smallMario::sPlayerIs2D)
+        return 1800.f;
 
     return toggled ? 700.f : 270.f;
 }
