@@ -248,17 +248,16 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
 
     // ===== SMALL MARIO SCALING =====
     if (TwistsConfig::isSmallMarioEnabled() && player && !isYukimaru) {
-        if (al::getScale(player).x != 0.3f)
-            al::setScaleAll(player, 0.3f);
+        al::setScaleAll(player, scale);
+        al::LiveActor* model2D = player->mModelHolder->tryFindModelActor("Normal2D");
+        if (model2D)
+            al::setScaleAll(model2D, scale);
 
-        if (player->mHackCap && al::getScale(player->mHackCap).x != 0.3f)
-            al::setScaleAll(player->mHackCap, 0.3f);
+        if (player->mHackCap)
+            al::setScaleAll(player->mHackCap, scale);
 
-        if (player->mHackKeeper && player->mHackKeeper->mHackActor) {
-            auto* hack = player->mHackKeeper->mHackActor;
-            if (al::getScale(hack).x != 0.3f)
-                al::setScaleAll(hack, 0.3f);
-        }
+        if (player->mHackKeeper && player->mHackKeeper->mHackActor)
+            al::setScaleAll(player->mHackKeeper->mHackActor, scale);
 
         if (player->mConst)
             CustomPlayerConst::setSmallMarioConst(player->mConst);
