@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "Scene/StageSceneStateServerConfig.hpp"
+#include "Scene/StageSceneStateModConfig.hpp"
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/gamemode/GameModeManager.hpp"
 
@@ -21,9 +21,9 @@ FreezeTagConfigMenu::FreezeTagConfigMenu() : GameModeConfigMenu() {
 }
 
 void FreezeTagConfigMenu::initMenu() {
-    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[1]);
-    StageSceneStateServerConfig::setMenuItemBase(mList->mListPartsArr[2]);
-    StageSceneStateServerConfig::setMenuItemBase(mList->mListPartsArr[3]);
+    StageSceneStateModConfig::setMenuItemCheck(mList->mListPartsArr[1]);
+    StageSceneStateModConfig::setMenuItemBase(mList->mListPartsArr[2]);
+    StageSceneStateModConfig::setMenuItemBase(mList->mListPartsArr[3]);
 }
 
 const sead::WFixedSafeString<0x200>* FreezeTagConfigMenu::getStringData() {

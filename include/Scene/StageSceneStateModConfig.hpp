@@ -43,12 +43,12 @@ struct ServerBrowser {
 // Main Configuration State Class
 // ============================================================================
 
-class StageSceneStateServerConfig : public al::HostStateBase<al::Scene>, public al::IUseMessageSystem {
+class StageSceneStateModConfig : public al::HostStateBase<al::Scene>, public al::IUseMessageSystem {
 public:
-    StageSceneStateServerConfig(const char* name, al::Scene* scene, const al::LayoutInitInfo& initInfo, FooterParts* footerParts, GameDataHolder* dataHolder,
-                                bool unused);
+    StageSceneStateModConfig(const char* name, al::Scene* scene, const al::LayoutInitInfo& initInfo, FooterParts* footerParts, GameDataHolder* dataHolder,
+                             bool unused);
 
-    ~StageSceneStateServerConfig();
+    ~StageSceneStateModConfig();
 
     // Lifecycle methods
     virtual void init() override;
@@ -177,8 +177,8 @@ private:
     void initTwistsMenu(const al::LayoutInitInfo& initInfo);
     void updateTwistsOptions();
 
-    enum TwistsMenuOptions { TW_DISABLECAP, TW_ICEPHYSICS, TW_SMALLMARIO, TW_MORESOON };
-    static constexpr int mTwistsMenuOptionsCount = 4;
+    enum TwistsMenuOptions { TW_DISABLECAP, TW_ICEPHYSICS, TW_SMALLMARIO, TW_DARKNESS, TW_TIMEWARP, TW_MORESOON };
+    static constexpr int mTwistsMenuOptionsCount = 5;
 
     //@ ============= Misc Menu =============
     void initMiscMenu(const al::LayoutInitInfo& initInfo);
@@ -243,20 +243,20 @@ private:
 // ============================================================================
 
 namespace {
-NERVE_IMPL(StageSceneStateServerConfig, MainMenu)
-NERVE_IMPL(StageSceneStateServerConfig, NetworkSettings)
-NERVE_IMPL(StageSceneStateServerConfig, ServerBrowserSelect)
-NERVE_IMPL(StageSceneStateServerConfig, OpenKeyboardIP)
-NERVE_IMPL(StageSceneStateServerConfig, OpenKeyboardPort)
-NERVE_IMPL(StageSceneStateServerConfig, GameplaySettings)
-NERVE_IMPL(StageSceneStateServerConfig, GameModeSettings)
-NERVE_IMPL(StageSceneStateServerConfig, GameModeConfig)
-NERVE_IMPL(StageSceneStateServerConfig, GameModeSelect)
-NERVE_IMPL(StageSceneStateServerConfig, TwistsSettings)
-NERVE_IMPL(StageSceneStateServerConfig, MiscSettings)
-NERVE_IMPL(StageSceneStateServerConfig, SpeedrunConfig)
-NERVE_IMPL(StageSceneStateServerConfig, SaveData)
+NERVE_IMPL(StageSceneStateModConfig, MainMenu)
+NERVE_IMPL(StageSceneStateModConfig, NetworkSettings)
+NERVE_IMPL(StageSceneStateModConfig, ServerBrowserSelect)
+NERVE_IMPL(StageSceneStateModConfig, OpenKeyboardIP)
+NERVE_IMPL(StageSceneStateModConfig, OpenKeyboardPort)
+NERVE_IMPL(StageSceneStateModConfig, GameplaySettings)
+NERVE_IMPL(StageSceneStateModConfig, GameModeSettings)
+NERVE_IMPL(StageSceneStateModConfig, GameModeConfig)
+NERVE_IMPL(StageSceneStateModConfig, GameModeSelect)
+NERVE_IMPL(StageSceneStateModConfig, TwistsSettings)
+NERVE_IMPL(StageSceneStateModConfig, MiscSettings)
+NERVE_IMPL(StageSceneStateModConfig, SpeedrunConfig)
+NERVE_IMPL(StageSceneStateModConfig, SaveData)
 
-NERVES_MAKE_STRUCT(StageSceneStateServerConfig, MainMenu, NetworkSettings, ServerBrowserSelect, OpenKeyboardIP, OpenKeyboardPort, GameplaySettings,
+NERVES_MAKE_STRUCT(StageSceneStateModConfig, MainMenu, NetworkSettings, ServerBrowserSelect, OpenKeyboardIP, OpenKeyboardPort, GameplaySettings,
                    GameModeSettings, GameModeConfig, GameModeSelect, TwistsSettings, MiscSettings, SpeedrunConfig, SaveData)
 }  // namespace

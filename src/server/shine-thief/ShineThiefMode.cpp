@@ -17,7 +17,7 @@
 #include "game/Util/ActorDimensionKeeper.h"
 #include "game/Util/ObjUtil.h"
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
 #include "imgui.h"
 #include "Library/LiveActor/LiveActor.h"
@@ -25,6 +25,7 @@
 #include "logger.hpp"
 #include "packets/ShineThiefInf.h"
 #include "puppets/PuppetInfo.h"
+#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "server/gamemode/GameModeManager.hpp"
@@ -33,7 +34,6 @@
 #include "System/GameDataFunction.h"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
-#include "TwistsConfig.hpp"
 
 ShineThiefMode::ShineThiefMode(const char* name) : GameModeBase(name) {}
 

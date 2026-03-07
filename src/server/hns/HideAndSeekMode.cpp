@@ -18,19 +18,19 @@
 
 #include <heap/seadHeap.h>
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "helpers.hpp"
 #include "imgui.h"
 #include "layouts/HideAndSeekIcon.h"
 #include "logger.hpp"
 #include "rs/util.hpp"
+#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
-#include "TwistsConfig.hpp"
 
 HideAndSeekMode::HideAndSeekMode(const char* name) : GameModeBase(name) {}
 

@@ -37,14 +37,14 @@
 #include "Library/Nerve/Nerve.h"
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
 #include "Scene/StageScene.h"
-#include "Scene/StageSceneStateServerConfig.hpp"
+#include "Scene/StageSceneStateModConfig.hpp"
+#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/Client.hpp"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/shine-thief/ShineThiefMode.hpp"
 #include "System/GameDataHolder.h"
-#include "TwistsConfig.hpp"
 
 static HkReplace<bool, al::IUseSceneObjHolder*> comboBtnHook = hk::hook::replace([](al::IUseSceneObjHolder* holder) -> bool {
     // only switch to combo if freezetag or shinethief is active
@@ -65,12 +65,12 @@ static HkTrampoline<void, GameConfigData*, al::ByamlWriter*> saveWriteHook = hk:
     const char* serverIP = Client::getCurrentIP();
     const int serverPort = Client::getCurrentPort();
     const bool serverHidden = Client::isServerHidden();
-    const bool capCollision = StageSceneStateServerConfig::isCapCollisionEnabled();
-    const bool capBounce = StageSceneStateServerConfig::isCapBounceEnabled();
-    const bool playerCollision = StageSceneStateServerConfig::isPuppetCollisionEnabled();
-    const bool playerBounce = StageSceneStateServerConfig::isPuppetBounceEnabled();
-    const bool costumeDoorsUnlocked = StageSceneStateServerConfig::isCostumeDoorsUnlocked();
-    const bool lowLatency = StageSceneStateServerConfig::isLowLatencyEnabled();
+    const bool capCollision = StageSceneStateModConfig::isCapCollisionEnabled();
+    const bool capBounce = StageSceneStateModConfig::isCapBounceEnabled();
+    const bool playerCollision = StageSceneStateModConfig::isPuppetCollisionEnabled();
+    const bool playerBounce = StageSceneStateModConfig::isPuppetBounceEnabled();
+    const bool costumeDoorsUnlocked = StageSceneStateModConfig::isCostumeDoorsUnlocked();
+    const bool lowLatency = StageSceneStateModConfig::isLowLatencyEnabled();
     const bool music = !Client::isMusicDisabled();
 
     writer->pushHash("SMOOData");
@@ -128,22 +128,22 @@ static HkTrampoline<void, GameConfigData*, const al::ByamlIter&> saveReadHook =
         }
 
         if (al::tryGetByamlBool(&capCollision, iterIntern, "CapCollision")) {
-            StageSceneStateServerConfig::setCapCollisionEnabled(capCollision);
+            StageSceneStateModConfig::setCapCollisionEnabled(capCollision);
         }
         if (al::tryGetByamlBool(&capBounce, iterIntern, "CapBounce")) {
-            StageSceneStateServerConfig::setCapBounceEnabled(capBounce);
+            StageSceneStateModConfig::setCapBounceEnabled(capBounce);
         }
         if (al::tryGetByamlBool(&playerCollision, iterIntern, "PlayerCollision")) {
-            StageSceneStateServerConfig::setPuppetCollisionEnabled(playerCollision);
+            StageSceneStateModConfig::setPuppetCollisionEnabled(playerCollision);
         }
         if (al::tryGetByamlBool(&playerBounce, iterIntern, "PlayerBounce")) {
-            StageSceneStateServerConfig::setPuppetBounceEnabled(playerBounce);
+            StageSceneStateModConfig::setPuppetBounceEnabled(playerBounce);
         }
         if (al::tryGetByamlBool(&costumeDoorsUnlocked, iterIntern, "CostumeDoorsUnlocked")) {
-            StageSceneStateServerConfig::setCostumeDoorsUnlocked(costumeDoorsUnlocked);
+            StageSceneStateModConfig::setCostumeDoorsUnlocked(costumeDoorsUnlocked);
         }
         if (al::tryGetByamlBool(&lowLatency, iterIntern, "LowLatency")) {
-            StageSceneStateServerConfig::setLowLatencyEnabled(lowLatency);
+            StageSceneStateModConfig::setLowLatencyEnabled(lowLatency);
         }
         if (al::tryGetByamlBool(&music, iterIntern, "Music")) {
             if (Client::isMusicDisabled() != !music) {
@@ -171,17 +171,17 @@ static HkTrampoline<void, CoinCollect2D*> registerCoinCollect2DToListHook = hk::
 
 static HkReplace<void, StageSceneStatePauseMenu*> overrideHelpFadeNerve = hk::hook::replace([](StageSceneStatePauseMenu* state) -> void {
     // Set label in menu inside LocalizedData/${lang}/MessageData/LayoutMessage.szs/Menu.msbt/Menu_Help
-    state->exeServerConfig();
-    al::setNerve(state, &NrvStageSceneStatePauseMenu.ServerConfig);
+    state->exeModConfig();
+    al::setNerve(state, &NrvStageSceneStatePauseMenu.ModConfig);
 });
 
-static StageSceneStateServerConfig* sceneStateServerConfig = nullptr;
+static StageSceneStateModConfig* sceneStateModConfig = nullptr;
 
 static HkTrampoline<void, StageSceneStateOption*, const char*, al::Scene*, const al::LayoutInitInfo&, FooterParts*, GameDataHolder*, bool> initStateHook =
     hk::hook::trampoline([](StageSceneStateOption* thisPtr, const char* stateName, al::Scene* host, const al::LayoutInitInfo& initInfo, FooterParts* footer,
                             GameDataHolder* data, bool unkBool) -> void {
         initStateHook.orig(thisPtr, stateName, host, initInfo, footer, data, unkBool);
-        sceneStateServerConfig = new StageSceneStateServerConfig("ServerConfig", host, initInfo, footer, data, unkBool);
+        sceneStateModConfig = new StageSceneStateModConfig("ModConfig", host, initInfo, footer, data, unkBool);
     });
 
 static HkTrampoline<void, StageSceneStatePauseMenu*, const char*, al::Scene*, al::SimpleLayoutAppearWaitEnd*, GameDataHolder*, const al::SceneInitInfo&,
@@ -193,7 +193,7 @@ static HkTrampoline<void, StageSceneStatePauseMenu*, const char*, al::Scene*, al
         initNerveStateHook.orig(state, name, host, menuLayout, gameDataHolder, sceneInitInfo, actorInitInfo, layoutInitInfo, windowConfirm, stageSceneLayout,
                                 isTitle, sceneAudioSystemPauseController);
 
-        al::initNerveState(state, sceneStateServerConfig, &NrvStageSceneStatePauseMenu.ServerConfig, "CustomNerveOverride");
+        al::initNerveState(state, sceneStateModConfig, &NrvStageSceneStatePauseMenu.ModConfig, "CustomNerveOverride");
     });
 
 // skips starting both coin counters
@@ -317,13 +317,13 @@ static HkTrampoline<void, al::ExecuteDirector*, const al::ExecuteSystemInitInfo&
 
 static HkTrampoline<bool, al::IUseStageSwitch*, const char*, const al::FunctorBase&> unlockCostumeDoorsHook =
     hk::hook::trampoline([](al::IUseStageSwitch* user, const char* eventName, const al::FunctorBase& action) -> bool {
-        if (strcmp(eventName, "OpenKeySwitch") == 0 && StageSceneStateServerConfig::isCostumeDoorsUnlocked())
+        if (strcmp(eventName, "OpenKeySwitch") == 0 && StageSceneStateModConfig::isCostumeDoorsUnlocked())
             return false;
         return unlockCostumeDoorsHook.orig(user, eventName, action);
     });
 
 static bool unlockCostumeDoorMetroHook(const char* str1, const char* str2) {
-    if (StageSceneStateServerConfig::isCostumeDoorsUnlocked())
+    if (StageSceneStateModConfig::isCostumeDoorsUnlocked())
         return true;
     return al::isEqualString(str1, str2);
 }
@@ -354,7 +354,7 @@ static HkTrampoline<void, AppearSwitchTimer*, const al::ActorInitInfo&, const al
     disableAppearSwitchCameraHook = hk::hook::trampoline([](AppearSwitchTimer* timer, const al::ActorInitInfo& initInofo, const al::IUseAudioKeeper* audio,
                                                             al::IUseStageSwitch* stageSwitch, al::IUseCamera* camera, al::LiveActor* actor) -> void {
         disableAppearSwitchCameraHook.orig(timer, initInofo, audio, stageSwitch, camera, actor);
-        if (!StageSceneStateServerConfig::isSpeedrunModeEnabled())
+        if (!StageSceneStateModConfig::isSpeedrunModeEnabled())
             timer->mDemoCameraFrame = 0;
     });
 

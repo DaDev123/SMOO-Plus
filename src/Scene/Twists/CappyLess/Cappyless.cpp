@@ -1,4 +1,4 @@
-#include "TwistsConfig.hpp"
+#include "Scene/Twists/Cappyless/Cappyless.hpp"
 
 #include "al/Library/LiveActor/ActorMovementFunction.h"
 #include "al/Library/LiveActor/LiveActor.h"
@@ -6,39 +6,29 @@
 #include "game/MapObj/ShineTowerRocket.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Scene/StageScene.h"
-#include "game/Sequence/ChangeStageInfo.h"
-#include "game/System/GameDataFile.h"
 #include "game/System/GameDataFunction.h"
 #include "game/System/GameDataHolderAccessor.h"
 #include "game/System/GameDataHolderWriter.h"
 #include "game/Util/DemoUtil.h"
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "logger.hpp"
-#include "server/Client.hpp"
 
-// Initialize static variables
-bool TwistsConfig::sCappyForceEnabled = true;  // Changed to true so Cappy is enabled by default
-bool TwistsConfig::cappyDisabled = false;      // Changed to false since Cappy starts enabled
-bool TwistsConfig::needsCappyDisable = false;  // Changed to false since we don't need to disable
-float TwistsConfig::cappyThreshold = 500.0f;   // Adjust as needed
+bool Cappyless::sCappyForceEnabled = true;  // Cappy is enabled by default
+bool Cappyless::cappyDisabled = false;      // Cappy starts enabled
+bool Cappyless::needsCappyDisable = false;  // No need to disable on start
+float Cappyless::cappyThreshold = 500.0f;
 
-bool TwistsConfig::sIcePhysicsEnabled = false;
-bool TwistsConfig::sSmallMarioEnabled = false;
-
-// Getters
-bool TwistsConfig::isCappyDisableEnabled() {
+bool Cappyless::isCappyDisableEnabled() {
     return sCappyForceEnabled;
 }
 
-// Setters
-void TwistsConfig::toggleCappyDisable() {
+void Cappyless::toggleCappyDisable() {
     sCappyForceEnabled = !sCappyForceEnabled;
 }
 
 static bool weDisabledCappy = false;
 
-void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene* stageScene) {
+void Cappyless::updateCappyProximity(PlayerActorHakoniwa* player, StageScene* stageScene) {
     if (!player || !stageScene)
         return;
 
@@ -47,7 +37,6 @@ void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene*
         return;
 
     GameDataHolderWriter writer(stageScene);
-
     GameDataHolderAccessor accessor(stageScene);
     bool isCappyCurrentlyEnabled = GameDataFunction::isEnableCap(accessor);
 
@@ -83,7 +72,6 @@ void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene*
     }
 
     // Toggle is ON - force enable, but only if we're not in a naturally capless area
-
     if (!isCappyCurrentlyEnabled) {
         // Cappy is disabled. Was it us who disabled it, or the game naturally?
         if (weDisabledCappy || cappyDisabled) {
@@ -100,17 +88,8 @@ void TwistsConfig::updateCappyProximity(PlayerActorHakoniwa* player, StageScene*
     // If Cappy is already enabled, no need to do anything
 }
 
-void TwistsConfig::handleStageInit() {
-    cappyDisabled = false;                               // Changed: Cappy starts enabled
-    needsCappyDisable = false;                           // Changed: We don't need to disable it
-    Logger::log("Stage init: Cappy will be enabled\n");  // Updated log message
-}
-
-void TwistsConfig::toggleSmallMario() {
-    sSmallMarioEnabled = !sSmallMarioEnabled;
-
-    ChangeStageInfo info =
-        ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),
-                        GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1, ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO);
-    Client::get()->getHolder()->changeNextStage(&info, 0);
+void Cappyless::handleStageInit() {
+    cappyDisabled = false;
+    needsCappyDisable = false;
+    Logger::log("Stage init: Cappy will be enabled\n");
 }

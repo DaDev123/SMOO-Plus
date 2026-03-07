@@ -11,11 +11,11 @@
 #include "game/Player/PlayerFunction.h"
 #include "game/Util/SensorMsgFunction.h"
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "helpers.hpp"
 #include "Project/HitSensor/HitSensor.h"
-#include "Scene/StageSceneStateServerConfig.hpp"
-#include "TwistsConfig.hpp"
+#include "Scene/StageSceneStateModConfig.hpp"
+#include "Scene/Twists/TwistsConfig.hpp"
 
 PuppetCapActor::PuppetCapActor(const char* name) : al::LiveActor(name) {}
 
@@ -76,7 +76,7 @@ void PuppetCapActor::update() {
 }
 
 void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver) {
-    if (!StageSceneStateServerConfig::isCapCollisionEnabled()) {
+    if (!StageSceneStateModConfig::isCapCollisionEnabled()) {
         return;
     }
 
@@ -86,7 +86,7 @@ void PuppetCapActor::attackSensor(al::HitSensor* sender, al::HitSensor* receiver
 }
 
 bool PuppetCapActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* sender, al::HitSensor* receiver) {
-    if (!StageSceneStateServerConfig::isCapBounceEnabled()) {
+    if (!StageSceneStateModConfig::isCapBounceEnabled()) {
         return false;
     }
 

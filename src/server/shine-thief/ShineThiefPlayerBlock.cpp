@@ -19,14 +19,14 @@
 
 #include "game/Util/ActorDimensionKeeper.h"
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "Library/Camera/CameraTicket.h"
 #include "Library/LiveActor/ActorSceneInfo.h"
+#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/DeltaTime.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/shine-thief/ShineThiefInfo.h"
 #include "server/shine-thief/ShineThiefMode.hpp"
-#include "TwistsConfig.hpp"
 
 static float getBlockTargetScale() {
     return TwistsConfig::isSmallMarioEnabled() ? 0.6f * ::scale : 0.6f;

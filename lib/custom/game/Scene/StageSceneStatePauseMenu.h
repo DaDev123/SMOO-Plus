@@ -72,7 +72,7 @@ public:
     void exeConfirmNewGame(void);
     void exeNotExistEmptyFile(void);
 
-    void exeServerConfig(void);
+    void exeModConfig(void);
 
     al::SimpleLayoutAppearWaitEnd* field_0x20;  // 0x20
     al::SimpleLayoutAppearWaitEnd* mMenuGuide;  // 0x28
@@ -114,8 +114,8 @@ NERVE_IMPL(StageSceneStatePauseMenu, Save)
 NERVE_IMPL(StageSceneStatePauseMenu, ConfirmNewGame)
 NERVE_IMPL(StageSceneStatePauseMenu, NotExistEmptyFile)
 // custom nerves
-NERVE_IMPL(StageSceneStatePauseMenu, ServerConfig)
+NERVE_IMPL(StageSceneStatePauseMenu, ModConfig)
 
 NERVES_MAKE_STRUCT(StageSceneStatePauseMenu, Appear, Wait, FadeBeforeHelp, StartHelp, WaitDraw, End, StartSeparatePlay, EndSeparatePlay, Option, Save,
-                   ConfirmNewGame, NotExistEmptyFile, ServerConfig)
+                   ConfirmNewGame, NotExistEmptyFile, ModConfig)
 }  // namespace

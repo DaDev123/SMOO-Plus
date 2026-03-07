@@ -2,7 +2,7 @@
 
 #include "Library/Layout/LayoutActionFunction.h"
 #include "logger.hpp"
-#include "Scene/StageSceneStateServerConfig.hpp"
+#include "Scene/StageSceneStateModConfig.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 
@@ -20,7 +20,7 @@ const sead::WFixedSafeString<0x200>* HideAndSeekConfigMenu::getStringData() {
 }
 
 void HideAndSeekConfigMenu::initMenu() {
-    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[1]);
+    StageSceneStateModConfig::setMenuItemCheck(mList->mListPartsArr[1]);
 }
 
 GameModeConfigMenu::UpdateAction HideAndSeekConfigMenu::updateMenu(int selectIndex) {

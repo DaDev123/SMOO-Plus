@@ -13,10 +13,10 @@
 #include "al/Library/Math/MathUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "Library/Camera/CameraTicket.h"
 #include "Library/LiveActor/ActorSceneInfo.h"
-#include "TwistsConfig.hpp"
+#include "Scene/Twists/TwistsConfig.hpp"
 
 FreezePlayerBlock::FreezePlayerBlock(const char* name) : al::LiveActor(name) {}
 

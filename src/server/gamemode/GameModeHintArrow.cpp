@@ -13,10 +13,10 @@
 
 #include "game/Player/PlayerHackKeeper.h"
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "math/seadQuat.h"
 #include "math/seadVector.h"
-#include "TwistsConfig.hpp"
+#include "Scene/Twists/TwistsConfig.hpp"
 
 GameModeHintArrow::GameModeHintArrow(const char* name) : al::LiveActor(name) {}
 

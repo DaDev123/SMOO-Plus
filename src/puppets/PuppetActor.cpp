@@ -32,13 +32,14 @@
 
 #include <cstddef>
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "algorithms/CaptureTypes.h"
 #include "helpers.hpp"
 #include "logger.hpp"
 #include "math/seadQuat.h"
 #include "Project/HitSensor/HitSensor.h"
-#include "Scene/StageSceneStateServerConfig.hpp"
+#include "Scene/StageSceneStateModConfig.hpp"
+#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/DeltaTime.hpp"
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/gamemode/GameModeManager.hpp"
@@ -46,7 +47,6 @@
 #include "server/shine-thief/ShineThiefInfo.h"
 #include "server/shine-thief/ShineThiefMode.hpp"
 #include "server/snh/SardineMode.hpp"
-#include "TwistsConfig.hpp"
 #include "Util/SensorMsgFunction.h"
 
 static const char* subActorNames[] = {
@@ -196,7 +196,7 @@ void PuppetActor::control() {
         // Position & Rotation Handling
 
         // Use smooth movement if low latency is enabled, otherwise snap directly
-        if (StageSceneStateServerConfig::isLowLatencyEnabled()) {
+        if (StageSceneStateModConfig::isLowLatencyEnabled()) {
             sead::Vector3f* pPos = al::getTransPtr(this);
             sead::Quatf* pQuat = al::getQuatPtr(this);
 
@@ -352,7 +352,7 @@ void PuppetActor::makeActorDead() {
 }
 
 void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
-    if (!StageSceneStateServerConfig::isPuppetCollisionEnabled()) {
+    if (!StageSceneStateModConfig::isPuppetCollisionEnabled()) {
         return;
     }
 
@@ -362,7 +362,7 @@ void PuppetActor::attackSensor(al::HitSensor* source, al::HitSensor* target) {
 }
 
 bool PuppetActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* source, al::HitSensor* target) {
-    if (!StageSceneStateServerConfig::isPuppetBounceEnabled()) {
+    if (!StageSceneStateModConfig::isPuppetBounceEnabled()) {
         return false;
     }
 

@@ -1,9 +1,9 @@
 #include "Settings/SmooSettings.hpp"
 
 #include "imgui.h"
+#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/Client.hpp"
 #include "Settings/StageWarper.hpp"
-#include "TwistsConfig.hpp"
 
 namespace SmooSettings {
 bool HAS_KEYBOARD = false;

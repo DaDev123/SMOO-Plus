@@ -1,9 +1,4 @@
-/**
- * @file CustomPlayerConst.cpp
- * @brief Custom player constants for Small Mario
- */
-
-#include "CustomPlayerConst.h"
+#include "Scene/Twists/SmallMario/CustomPlayerConst.h"
 
 void CustomPlayerConst::setSmallMarioConst(PlayerConst* playerConst) {
     playerConst->mAdditionalSpeedLimit = 9.00000f;

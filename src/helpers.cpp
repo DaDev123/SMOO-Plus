@@ -14,7 +14,7 @@
 #include "game/System/GameSystem.h"
 
 #include "logger.hpp"
-#include "Scene/StageSceneStateServerConfig.hpp"
+#include "Scene/StageSceneStateModConfig.hpp"
 #include "System/GameDataHolderWriter.h"
 
 bool isPartOf(const char* w1, const char* w2) {
@@ -130,8 +130,8 @@ const char* tryConvertName(const char* className) {
 
 // Main SmoothMove function - now checks the actual config setting
 float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
-    // Check the ACTUAL setting from StageSceneStateServerConfig
-    bool useLowLatency = StageSceneStateServerConfig::isLowLatencyEnabled();
+    // Check the ACTUAL setting from StageSceneStateModConfig
+    bool useLowLatency = StageSceneStateModConfig::isLowLatencyEnabled();
 
     if (useLowLatency) {
         return SmoothMove_LowLatency(moveTransform, targetTransform, timeDelta, closingSpeed, maxAngularSpeed);

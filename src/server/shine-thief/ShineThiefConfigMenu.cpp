@@ -7,7 +7,7 @@
 #include "Library/Layout/LayoutActionFunction.h"
 #include "Library/Memory/HeapUtil.h"
 #include "Library/Play/Layout/RollParts.h"
-#include "Scene/StageSceneStateServerConfig.hpp"
+#include "Scene/StageSceneStateModConfig.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/shine-thief/ShineThiefInfo.h"
 #include "server/shine-thief/ShineThiefMode.hpp"
@@ -28,10 +28,10 @@ ShineThiefConfigMenu::ShineThiefConfigMenu() : GameModeConfigMenu() {
 
 void ShineThiefConfigMenu::initMenu() {
     ShineThiefInfo* curMode = GameModeManager::instance()->getInfo<ShineThiefInfo>();
-    StageSceneStateServerConfig::setMenuItemBase(mList->mListPartsArr[1]);
-    StageSceneStateServerConfig::setMenuItemBase(mList->mListPartsArr[2]);
-    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[3]);
-    StageSceneStateServerConfig::setMenuItemRoll(mList->mListPartsArr[4]);
+    StageSceneStateModConfig::setMenuItemBase(mList->mListPartsArr[1]);
+    StageSceneStateModConfig::setMenuItemBase(mList->mListPartsArr[2]);
+    StageSceneStateModConfig::setMenuItemCheck(mList->mListPartsArr[3]);
+    StageSceneStateModConfig::setMenuItemRoll(mList->mListPartsArr[4]);
     sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
     RollPartsData* empty = new RollPartsData(0, new const char16_t* [] { u"" });
     RollPartsData* teams = new RollPartsData(2, new const char16_t* [] { u"Team 1", u"Team 2" }, 0, false);

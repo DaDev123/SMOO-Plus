@@ -9,7 +9,7 @@
 
 #include "logger.hpp"
 
-void StageSceneStatePauseMenu::exeServerConfig(void) {
+void StageSceneStatePauseMenu::exeModConfig(void) {
     if (al::isFirstStep(this)) {
         Logger::log("Start Server Config Nerve.\n");
     }

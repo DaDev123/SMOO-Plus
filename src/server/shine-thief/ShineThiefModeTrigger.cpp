@@ -13,13 +13,13 @@
 #include "game/Player/PlayerRecoverySafetyPoint.h"
 #include "game/Util/ObjUtil.h"
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "cameras/CameraPoserActorSpectate.h"
 #include "helpers.hpp"
 #include "logger.hpp"
 #include "puppets/PuppetInfo.h"
+#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/shine-thief/ShineThiefMode.hpp"
-#include "TwistsConfig.hpp"
 
 void ShineThiefMode::updateIntroCamera() {
     PlayerActorHakoniwa* player = getPlayerActorHakoniwa();

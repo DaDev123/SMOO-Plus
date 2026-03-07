@@ -16,12 +16,13 @@
 #include "game/System/GameDataFunction.h"
 #include "game/Util/ActorDimensionKeeper.h"
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "basis/seadNew.h"
 #include "imgui.h"
 #include "layouts/FreezeTagIcon.h"
 #include "logger.hpp"
 #include "puppets/PuppetInfo.h"
+#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "server/freeze/FreezeHintArrow.h"
@@ -32,7 +33,6 @@
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
 #include "System/PlayerHitPointData.h"
-#include "TwistsConfig.hpp"
 
 FreezeTagMode::FreezeTagMode(const char* name) : GameModeBase(name) {}
 

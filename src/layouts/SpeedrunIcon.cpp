@@ -5,7 +5,7 @@
 #include "al/Library/Nerve/NerveUtil.h"
 
 #include "helpers.hpp"
-#include "Scene/StageSceneStateServerConfig.hpp"
+#include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeConfigMenuFactory.hpp"
 #include "System/GameDataFile.h"
@@ -59,7 +59,7 @@ void SpeedrunIcon::exeWait() {
     updateSpeedrunText();
     updateShineCount();
 
-    if (StageSceneStateServerConfig::isSpeedrunNonStopEnabled()) {
+    if (StageSceneStateModConfig::isSpeedrunNonStopEnabled()) {
         al::hidePane(this, "TxtNonstop");
     } else {
         al::hidePane(this, "TxtNonstop");

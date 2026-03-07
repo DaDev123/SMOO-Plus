@@ -33,7 +33,7 @@
 #include "game/Util/PlayerUtil.h"
 
 #include "Project/HitSensor/HitSensor.h"
-#include "TwistsConfig.hpp"
+#include "Scene/Twists/TwistsConfig.hpp"
 
 namespace smallMario {
 static bool sPlayerIs2D = false;

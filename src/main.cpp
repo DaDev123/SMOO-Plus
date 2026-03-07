@@ -58,7 +58,7 @@
 #include <cstring>
 #include <math.h>
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
 #include "factoryPatches.h"
 #include "gfx/seadColor.h"
@@ -72,6 +72,10 @@
 #include "logger.hpp"
 #include "puppetHooks.hpp"
 #include "puppets/PuppetInfo.h"
+#include "Scene/Twists/Darkness/Darkness.hpp"
+#include "Scene/Twists/SmallMario/CustomPlayerConst.h"
+#include "Scene/Twists/Timewarp/Timewarp.hpp"
+#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "server/freeze/FreezeTagMode.hpp"
@@ -82,9 +86,7 @@
 #include "Settings/SmooSettings.hpp"
 #include "Settings/StageWarper.hpp"
 #include "speedboot/BootHooks.hpp"
-#include "states/SmallMario/CustomPlayerConst.h"
 #include "System/GameSystem.h"
-#include "TwistsConfig.hpp"
 #include "Util/AchievementUtil.h"
 
 // ===== GLOBAL VARIABLES =====
@@ -217,6 +219,7 @@ HkTrampoline<void, al::ActorInitInfo*, al::Scene*, al::PlacementInfo*, al::Layou
 
             Client::sendGameInfPacket(initInfo->actorSceneInfo.sceneObjHolder);
             TwistsConfig::handleStageInit();
+            TimeWarpTwist::onStageInit((StageScene*)scene);
         });
 
 HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampoline([](HakoniwaSequence* sequence) -> void {
@@ -233,6 +236,9 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
     bool isYukimaru = !playerBase->getPlayerInfo();
 
     isInGame = !stageScene->isPause();
+
+    if (!stageScene->isPause())
+        TimeWarpTwist::update(player);
 
     GameModeManager::instance()->setPaused(stageScene->isPause());
     Client::setStageInfo(GameDataHolderWriter(stageScene));
@@ -272,7 +278,7 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
     }
 
     if (SpeedrunIcon::sInstance) {
-        if (StageSceneStateServerConfig::isSpeedrunModeEnabled()) {
+        if (StageSceneStateModConfig::isSpeedrunModeEnabled()) {
             SpeedrunIcon::sInstance->tryStart();
             speedrun::uninstallHooks();
         } else {
@@ -317,7 +323,7 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
             }
         }
     } else if (al::isPadHoldL(-1)) {
-        if (al::isPadTriggerLeft(-1) && !StageSceneStateServerConfig::isSpeedrunModeEnabled()) {
+        if (al::isPadTriggerLeft(-1) && !StageSceneStateModConfig::isSpeedrunModeEnabled()) {
             GameModeManager::instance()->toggleActive();
         }
     }
@@ -497,6 +503,19 @@ void drawMain(al::Sequence* curSequence) {
                 // then draw text
                 renderer->drawString(pos, displayMessages[i].text.cstr(), coloru32);
                 displayIndex++;
+            }
+        }
+
+        // ===== TIMEWARP TRAIL =====
+        if (curScene && isInGame && TimeWarpTwist::isTimeWarpEnabled()) {
+            sead::LookAtCamera* cam = &const_cast<sead::LookAtCamera&>(al::getLookAtCamera(curScene, 0));
+            sead::Projection* projection = cam ? &const_cast<sead::Projection&>(al::getProjectionSead(curScene, 0)) : nullptr;
+            if (cam && projection) {
+                sead::PrimitiveRenderer* renderer = sead::PrimitiveRenderer::instance();
+                renderer->mDrawer.setDrawContext(Application::instance()->mDrawSystemInfo->drawContext);
+                renderer->setCamera(*cam);
+                renderer->setProjection(*projection);
+                TimeWarpTwist::drawTrail(curScene, renderer);
             }
         }
 
@@ -839,7 +858,7 @@ extern "C" void hkMain() {
     initNerveStateHook.installAtSym<"R_ZN24StageSceneStatePauseMenuC1">();                                  // inits options nerve state and server config state
     pauseMenuWaitHook.installAtSym<"_ZN24StageSceneStatePauseMenu7exeWaitEv">();                            // Change Action Guide Text + Onine Indicator
 
-    // inits StageSceneStateOption and StageSceneStateServerConfig
+    // inits StageSceneStateOption and StageSceneStateModConfig
     initStateHook.installAtSym<"_ZN21StageSceneStateOptionC1EPKcPN2al5SceneERKNS2_14LayoutInitInfoEP11FooterPartsP14GameDataHolderb">();
     overrideHelpFadeNerve.installAtSym<"_ZN24StageSceneStatePauseMenu17exeFadeBeforeHelpEv">();
 
@@ -879,9 +898,9 @@ extern "C" void hkMain() {
 
     // Twists
     icePhysicsHook.installAtSym<"_ZN2al11isFloorCodeERKNS_8TriangleEPKc">();  // Enables Ice Physics
-
-    // Small Mario
     smallMario::initHooks();
+    DarknessTwist::initHooks();
+    TimeWarpTwist::init();
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
     hk::gfx::DebugRenderer::instance()->installHooks();

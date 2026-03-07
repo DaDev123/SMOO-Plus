@@ -17,20 +17,20 @@
 
 #include <heap/seadHeap.h>
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "imgui.h"
 #include "logger.hpp"
 #include "math/seadVector.h"
 #include "rs/util.hpp"
+#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/Client.hpp"
 #include "server/gamemode/GameModeBase.hpp"
 #include "server/gamemode/GameModeFactory.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/gamemode/GameModeTimer.hpp"
 #include "System/GameDataHolderAccessor.h"
-#include "TwistsConfig.hpp"
 
 SardineMode::SardineMode(const char* name) : GameModeBase(name) {}
 

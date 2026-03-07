@@ -1,7 +1,7 @@
 #include "server/snh/SardineConfigMenu.hpp"
 
 #include "logger.hpp"
-#include "Scene/StageSceneStateServerConfig.hpp"
+#include "Scene/StageSceneStateModConfig.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/snh/SardineMode.hpp"
 
@@ -19,9 +19,9 @@ const sead::WFixedSafeString<0x200>* SardineConfigMenu::getStringData() {
 }
 
 void SardineConfigMenu::initMenu() {
-    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[1]);
-    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[2]);
-    StageSceneStateServerConfig::setMenuItemCheck(mList->mListPartsArr[3]);
+    StageSceneStateModConfig::setMenuItemCheck(mList->mListPartsArr[1]);
+    StageSceneStateModConfig::setMenuItemCheck(mList->mListPartsArr[2]);
+    StageSceneStateModConfig::setMenuItemCheck(mList->mListPartsArr[3]);
 }
 
 GameModeConfigMenu::UpdateAction SardineConfigMenu::updateMenu(int selectIndex) {

@@ -12,10 +12,10 @@
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Screen/ScreenFunction.h"
 
-#include "../src/states/SmallMario/smallMarioHooks.hpp"
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
+#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/gamemode/GameModeManager.hpp"
-#include "TwistsConfig.hpp"
 
 NameTag::NameTag(PuppetActor* pupActor, const al::LayoutInitInfo& initInfo, float startDist, float endDist, const char* playerName)
     : al::LayoutActor("PNameTag"), mPuppet(pupActor), mStartDist(startDist), mEndDist(endDist) {
