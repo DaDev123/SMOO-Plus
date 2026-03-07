@@ -34,25 +34,24 @@
 #include "rs/util.hpp"
 
 static HkTrampoline<bool> reduceOxygenForceHook = hk::hook::trampoline([]() -> bool {
-    if (!TimeWarpTwist::sTimeWarpEnabled || !TimeWarpTwist::isOnCooldown())
-        return reduceOxygenForceHook.orig();
-    return TimeWarpTwist::isOnCooldown();
+    bool orig = reduceOxygenForceHook.orig();
+    if (TimeWarpTwist::sTimeWarpEnabled && TimeWarpTwist::isOnCooldown())
+        return true;
+    return orig;
 });
 
 static HkTrampoline<void, PlayerOxygen*> oxygenReduceHook = hk::hook::trampoline([](PlayerOxygen* thisPtr) -> void {
-    if (!TimeWarpTwist::sTimeWarpEnabled || !TimeWarpTwist::isOnCooldown()) {
-        oxygenReduceHook.orig(thisPtr);
-        return;
-    }
+    oxygenReduceHook.orig(thisPtr);
 
-    float oxygenRingCalc = TimeWarpTwist::calcCooldownPercent();
+    if (!TimeWarpTwist::sTimeWarpEnabled || !TimeWarpTwist::isOnCooldown())
+        return;
 
     if (thisPtr->mFramesReducing == 0)
         thisPtr->mFramesReducing = thisPtr->mOxygenNoReduceFrame;
     if (thisPtr->mFramesReducing >= thisPtr->mOxygenReduceFrame)
         thisPtr->mFramesReducing = thisPtr->mOxygenReduceFrame - 1;
 
-    thisPtr->mOxygenLevel = oxygenRingCalc;
+    thisPtr->mOxygenLevel = TimeWarpTwist::calcCooldownPercent();
 });
 
 bool TimeWarpTwist::sTimeWarpEnabled = false;
