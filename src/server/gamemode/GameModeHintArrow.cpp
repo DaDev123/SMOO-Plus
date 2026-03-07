@@ -13,7 +13,7 @@
 
 #include "game/Player/PlayerHackKeeper.h"
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "math/seadQuat.h"
 #include "math/seadVector.h"
 #include "TwistsConfig.hpp"

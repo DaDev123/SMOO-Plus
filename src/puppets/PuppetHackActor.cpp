@@ -9,7 +9,7 @@
 #include "al/Library/LiveActor/ActorModelFunction.h"
 #include "al/Library/LiveActor/ActorSensorUtil.h"
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "TwistsConfig.hpp"
 
 PuppetHackActor::PuppetHackActor(const char* name) : al::LiveActor(name) {}

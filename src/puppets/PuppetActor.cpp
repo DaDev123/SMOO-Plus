@@ -32,7 +32,7 @@
 
 #include <cstddef>
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "algorithms/CaptureTypes.h"
 #include "helpers.hpp"
 #include "logger.hpp"

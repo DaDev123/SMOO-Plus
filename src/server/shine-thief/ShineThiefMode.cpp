@@ -17,7 +17,7 @@
 #include "game/Util/ActorDimensionKeeper.h"
 #include "game/Util/ObjUtil.h"
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
 #include "imgui.h"
 #include "Library/LiveActor/LiveActor.h"

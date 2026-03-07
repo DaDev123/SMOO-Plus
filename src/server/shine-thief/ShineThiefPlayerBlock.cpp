@@ -19,7 +19,7 @@
 
 #include "game/Util/ActorDimensionKeeper.h"
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "Library/Camera/CameraTicket.h"
 #include "Library/LiveActor/ActorSceneInfo.h"
 #include "server/DeltaTime.hpp"

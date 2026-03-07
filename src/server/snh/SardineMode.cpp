@@ -17,7 +17,7 @@
 
 #include <heap/seadHeap.h>
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "imgui.h"

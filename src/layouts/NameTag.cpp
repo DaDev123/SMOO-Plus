@@ -12,7 +12,7 @@
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Screen/ScreenFunction.h"
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
 #include "server/gamemode/GameModeManager.hpp"
 #include "TwistsConfig.hpp"

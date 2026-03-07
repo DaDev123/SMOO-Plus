@@ -32,7 +32,6 @@
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Util/PlayerUtil.h"
 
-#include "Imgui.hpp"
 #include "Project/HitSensor/HitSensor.h"
 #include "TwistsConfig.hpp"
 
@@ -107,6 +106,7 @@ inline const char* offsetOverideHook(al::ByamlIter const& iter, char const* key)
 namespace smallMario {
 
 static bool isHooksCreated = false;
+static bool isInstalled = false;
 static bool effectHookInstalled = false;
 
 // ---------------------------------------------------------------------------
@@ -193,6 +193,11 @@ static void initHooks() {
 }
 
 static void installHooks() {
+    if (isInstalled)
+        return;
+
+    isInstalled = true;
+
     auto* mainModule = hk::ro::getMainModule();
 
     // Apply RO patches
@@ -208,6 +213,11 @@ static void installHooks() {
 }
 
 static void uninstallHooks() {
+    if (!isHooksCreated || !isInstalled)
+        return;
+
+    isInstalled = false;
+
     auto* mainModule = hk::ro::getMainModule();
 
     // Restore RO patches

@@ -11,7 +11,7 @@
 #include "game/Player/PlayerFunction.h"
 #include "game/Util/SensorMsgFunction.h"
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "helpers.hpp"
 #include "Project/HitSensor/HitSensor.h"
 #include "Scene/StageSceneStateServerConfig.hpp"

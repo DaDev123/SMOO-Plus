@@ -13,7 +13,7 @@
 #include "game/System/GameDataHolderWriter.h"
 #include "game/Util/DemoUtil.h"
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "logger.hpp"
 #include "server/Client.hpp"
 
@@ -108,10 +108,6 @@ void TwistsConfig::handleStageInit() {
 
 void TwistsConfig::toggleSmallMario() {
     sSmallMarioEnabled = !sSmallMarioEnabled;
-    if (sSmallMarioEnabled)
-        smallMario::installHooks();
-    else
-        smallMario::uninstallHooks();
 
     ChangeStageInfo info =
         ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),

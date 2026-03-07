@@ -16,7 +16,7 @@
 #include "game/System/GameDataFunction.h"
 #include "game/Util/ActorDimensionKeeper.h"
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "basis/seadNew.h"
 #include "imgui.h"
 #include "layouts/FreezeTagIcon.h"

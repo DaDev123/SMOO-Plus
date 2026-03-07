@@ -58,7 +58,7 @@
 #include <cstring>
 #include <math.h>
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
 #include "factoryPatches.h"
 #include "gfx/seadColor.h"
@@ -82,7 +82,7 @@
 #include "Settings/SmooSettings.hpp"
 #include "Settings/StageWarper.hpp"
 #include "speedboot/BootHooks.hpp"
-#include "states/CustomPlayerConst.h"
+#include "states/SmallMario/CustomPlayerConst.h"
 #include "System/GameSystem.h"
 #include "TwistsConfig.hpp"
 #include "Util/AchievementUtil.h"
@@ -243,12 +243,16 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
 
     TwistsConfig::updateCappyProximity(player, stageScene);
 
-    if (TwistsConfig::isSmallMarioEnabled())
+    if (TwistsConfig::isSmallMarioEnabled()) {
         smallMario::installHooks();
+    } else {
+        smallMario::uninstallHooks();
+    }
 
     // ===== SMALL MARIO SCALING =====
     if (TwistsConfig::isSmallMarioEnabled() && player && !isYukimaru) {
         al::setScaleAll(player, scale);
+
         al::LiveActor* model2D = player->mModelHolder->tryFindModelActor("Normal2D");
         if (model2D)
             al::setScaleAll(model2D, scale);
@@ -261,10 +265,11 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
 
         if (player->mConst)
             CustomPlayerConst::setSmallMarioConst(player->mConst);
-    }
 
-    if (TwistsConfig::isSmallMarioEnabled() && player && !isYukimaru)
         smallMario::sPlayerIs2D = rs::isPlayer2D((al::LiveActor*)player);
+    } else {
+        smallMario::sPlayerIs2D = false;
+    }
 
     if (SpeedrunIcon::sInstance) {
         if (StageSceneStateServerConfig::isSpeedrunModeEnabled()) {

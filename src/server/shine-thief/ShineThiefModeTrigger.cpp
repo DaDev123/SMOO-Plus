@@ -13,7 +13,7 @@
 #include "game/Player/PlayerRecoverySafetyPoint.h"
 #include "game/Util/ObjUtil.h"
 
-#include "../src/smallMarioHooks.hpp"
+#include "../src/states/SmallMario/smallMarioHooks.hpp"
 #include "cameras/CameraPoserActorSpectate.h"
 #include "helpers.hpp"
 #include "logger.hpp"
