@@ -321,6 +321,8 @@ void PuppetActor::control() {
                     mFludd->connect(curModel);
                     mFludd->activate();
                     al::setSklAnimFrame(mFludd, 0, 0);
+                    // Scale puppet FLUDD to match small mario
+                    al::setScaleAll(mFludd, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
                 } else {
                     al::hideModel(mFludd);
                 }

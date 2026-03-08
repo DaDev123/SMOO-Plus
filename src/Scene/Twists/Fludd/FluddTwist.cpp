@@ -26,6 +26,7 @@
 #include "game/Util/PlayerUtil.h"
 #include "game/Util/SensorMsgFunction.h"
 
+#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "rs/util.hpp"
 
 // ============================================================
@@ -84,6 +85,11 @@ void FluddTwist::init(al::ActorInitInfo const& info) {
 
     sTurbo = new ca::FluddTurbo("Turbo");
     sTurbo->init(info);
+
+    al::hideModel(sBase);
+    al::hideModel(sHover);
+    al::hideModel(sRocket);
+    al::hideModel(sTurbo);
 }
 
 void FluddTwist::onStageInit(StageScene* scene) {
@@ -212,12 +218,19 @@ void FluddTwist::updateModels() {
             al::showModel(sBase);
             firstTimeSetup();
             sDoOnce = false;
-            sWasEverShown = true;  // models are now in a valid shown/hidden state
+            sWasEverShown = true;
         }
         sBase->connect(sMarioModel);
         sHover->connect(sBase);
         sRocket->connect(sBase);
         sTurbo->connect(sBase);
+
+        // Scale FLUDD to match small mario if enabled
+        float fluddScale = TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f;
+        al::setScaleAll(sBase, fluddScale);
+        al::setScaleAll(sHover, fluddScale);
+        al::setScaleAll(sRocket, fluddScale);
+        al::setScaleAll(sTurbo, fluddScale);
     }
 }
 
@@ -398,6 +411,10 @@ void FluddTwist::activateFludd() {
             else {
                 sTurbo->activate(false);
                 al::tryEmitEffect(sMario->mModelHolder->findModelActor("Normal"), "StateIce", al::getTransPtr(sMario));
+                if (TwistsConfig::isSmallMarioEnabled()) {
+                    sead::Vector3f effScale(::scale, ::scale, ::scale);
+                    al::setEffectAllScale(sMario->mModelHolder->findModelActor("Normal"), "StateIce", effScale);
+                }
             }
             sTank -= sFluddDischarge / 2.f;
         } else if (sIsPGrounded) {
