@@ -223,6 +223,7 @@ HkTrampoline<void, al::ActorInitInfo*, al::Scene*, al::PlacementInfo*, al::Layou
             TwistsConfig::handleStageInit();
             TimeWarpTwist::onStageInit((StageScene*)scene);
             FluddTwist::init(*initInfo);
+            FluddTwist::onStageInit((StageScene*)scene);
         });
 
 HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampoline([](HakoniwaSequence* sequence) -> void {

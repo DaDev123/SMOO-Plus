@@ -76,5 +76,6 @@ private:
     static bool sSetNrvGrounded;
     static bool sDoOnce;
     static bool sIsFirstBoost;
+    static bool sWasEverShown;  // guards hideModel calls before first showModel
     static int sDoubleBoostFrames;
 };

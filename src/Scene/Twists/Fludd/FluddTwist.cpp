@@ -65,6 +65,7 @@ bool FluddTwist::sStickActive = false;
 bool FluddTwist::sSetNrvGrounded = false;
 bool FluddTwist::sDoOnce = false;
 bool FluddTwist::sIsFirstBoost = true;
+bool FluddTwist::sWasEverShown = false;  // guards hideModel calls on first stage load
 int FluddTwist::sDoubleBoostFrames = 0;
 
 // ============================================================
@@ -72,9 +73,6 @@ int FluddTwist::sDoubleBoostFrames = 0;
 // ============================================================
 
 void FluddTwist::init(al::ActorInitInfo const& info) {
-    if (sBase)  // already initialized, don't recreate actors on stage reload
-        return;
-
     sBase = new FluddBase("Fludd");
     sBase->init(info);
 
@@ -95,7 +93,7 @@ void FluddTwist::onStageInit(StageScene* scene) {
     sRecharging = false;
     sTStopValueSet = false;
     sDoOnce = true;
-    if (sBase) {
+    if (sBase && sWasEverShown) {
         al::hideModel(sBase);
         al::hideModel(sHover);
         al::hideModel(sRocket);
@@ -214,6 +212,7 @@ void FluddTwist::updateModels() {
             al::showModel(sBase);
             firstTimeSetup();
             sDoOnce = false;
+            sWasEverShown = true;  // models are now in a valid shown/hidden state
         }
         sBase->connect(sMarioModel);
         sHover->connect(sBase);

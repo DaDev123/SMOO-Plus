@@ -261,7 +261,7 @@ static HkTrampoline<void, StageScene*, al::SceneInitInfo*> stageSceneInitHook =
                 mode->setCameraTicket(spectateCamera);
             }
         }
-        FluddTwist::onStageInit(curScene);
+        // FluddTwist::onStageInit(curScene);
     });
 
 static HkTrampoline<void, WorldEndBorderKeeper*> borderPullBackHook = hk::hook::trampoline([](WorldEndBorderKeeper* keeper) -> void {
