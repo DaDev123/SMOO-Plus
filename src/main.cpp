@@ -68,6 +68,7 @@
 #include "imgui.h"
 #include "Imgui.hpp"
 #include "layouts/ConnectionStatus.h"
+#include "layouts/FluddIcon.hpp"
 #include "layouts/SpeedrunIcon.h"
 #include "logger.hpp"
 #include "puppetHooks.hpp"
@@ -194,6 +195,7 @@ HkTrampoline<void, HakoniwaSequence*, al::SequenceInitInfo*> hakoniwaSequenceIni
 
         ConnectionStatus::sInstance = new ConnectionStatus("Status", lytInfo);
         SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", lytInfo);
+        FluddIcon::sInstance = new FluddIcon("FluddIcon", lytInfo);
     });
 
 HkTrampoline<void, al::ActorInitInfo*, al::Scene*, al::PlacementInfo*, al::LayoutInitInfo*, al::ActorFactory*, al::SceneMsgCtrl*, al::GameDataHolderBase*>
@@ -220,6 +222,7 @@ HkTrampoline<void, al::ActorInitInfo*, al::Scene*, al::PlacementInfo*, al::Layou
             Client::sendGameInfPacket(initInfo->actorSceneInfo.sceneObjHolder);
             TwistsConfig::handleStageInit();
             TimeWarpTwist::onStageInit((StageScene*)scene);
+            FluddTwist::init(*initInfo);
         });
 
 HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampoline([](HakoniwaSequence* sequence) -> void {
@@ -239,6 +242,8 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
 
     if (!stageScene->isPause())
         TimeWarpTwist::update(player);
+    if (!stageScene->isPause() && !isYukimaru && FluddTwist::sFluddEnabled)
+        FluddTwist::update(player);
 
     GameModeManager::instance()->setPaused(stageScene->isPause());
     Client::setStageInfo(GameDataHolderWriter(stageScene));
@@ -248,6 +253,7 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
     updatePlayerInfo(GameDataHolderWriter(stageScene), playerBase, isYukimaru);
 
     TwistsConfig::updateCappyProximity(player, stageScene);
+    TwoDTwist::update(stageScene, player, isFirstStep);
 
     if (TwistsConfig::isSmallMarioEnabled()) {
         smallMario::installHooks();
@@ -285,6 +291,13 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
             SpeedrunIcon::sInstance->tryEnd();
             speedrun::installHooks();
         }
+    }
+
+    if (FluddIcon::sInstance && !stageScene->isPause()) {
+        if (FluddTwist::sFluddEnabled)
+            FluddIcon::sInstance->tryStart();
+        else
+            FluddIcon::sInstance->tryEnd();
     }
 
     stageScene->stageSceneLayout->updateCounterParts();
@@ -901,6 +914,7 @@ extern "C" void hkMain() {
     smallMario::initHooks();
     DarknessTwist::initHooks();
     TimeWarpTwist::init();
+    TwoDTwist::initHooks();
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
     hk::gfx::DebugRenderer::instance()->installHooks();

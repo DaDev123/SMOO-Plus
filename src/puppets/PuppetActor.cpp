@@ -39,7 +39,6 @@
 #include "math/seadQuat.h"
 #include "Project/HitSensor/HitSensor.h"
 #include "Scene/StageSceneStateModConfig.hpp"
-#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/DeltaTime.hpp"
 #include "server/freeze/FreezeTagInfo.h"
 #include "server/gamemode/GameModeManager.hpp"
@@ -133,6 +132,10 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
     if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
         mShineThiefPlayerBlock = GameModeManager::instance()->getMode<ShineThiefMode>()->getShineBlock();
     }
+
+    mFludd = new FluddBase("PuppetFludd");
+    mFludd->init(initInfo);
+    al::hideModel(mFludd);
 }
 
 void PuppetActor::initAfterPlacement() {
@@ -308,6 +311,23 @@ void PuppetActor::control() {
         // Small Mario Scaling
 
         al::setScaleAll(curModel, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
+
+        // FLUDD
+
+        if (mFludd) {
+            if (FluddTwist::sFluddEnabled && !mInfo->is2D && mInfo->isConnected && mInfo->isInSameStage) {
+                if (!mIsCaptureModel) {
+                    al::showModel(mFludd);
+                    mFludd->connect(curModel);
+                    mFludd->activate();
+                    al::setSklAnimFrame(mFludd, 0, 0);
+                } else {
+                    al::hideModel(mFludd);
+                }
+            } else {
+                al::hideModel(mFludd);
+            }
+        }
 
         // Syncing
 

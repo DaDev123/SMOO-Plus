@@ -600,12 +600,6 @@ void StageSceneStateModConfig::exeGameModeSelect() {
 // Twists Menu
 // ============================================================================
 
-// ============================================================================
-// Twists Menu — replace initTwistsMenu, updateTwistsOptions, exeTwistsSettings
-// Also add at the top of StageSceneStateModConfig.cpp:
-//   #include "Scene/Twists/TimeWarp/TimeWarp.hpp"
-// ============================================================================
-
 void StageSceneStateModConfig::initTwistsMenu(const al::LayoutInitInfo& initInfo) {
     menuList[MENU_TWISTS] = new SimpleLayoutMenu("TwistsMenu", "OptionModCheck", initInfo, 0, false);
     optionsList[MENU_TWISTS] = new CommonVerticalList(menuList[MENU_TWISTS], initInfo, true);
@@ -618,6 +612,8 @@ void StageSceneStateModConfig::initTwistsMenu(const al::LayoutInitInfo& initInfo
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_SMALLMARIO + 1]);
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_DARKNESS + 1]);
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_TIMEWARP + 1]);
+    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_TWOD + 1]);
+    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_FLUDD + 1]);
 
     optionsList[MENU_TWISTS]->addStringData(msgList[MENU_TWISTS]->mBuffer, "TxtContent");
     updateTwistsOptions();
@@ -636,8 +632,14 @@ void StageSceneStateModConfig::updateTwistsOptions() {
     msgList[MENU_TWISTS]->mBuffer[TW_DARKNESS].copy(u"Darkness");
     al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_DARKNESS + 1], TwistsConfig::isDarknessEnabled() ? "On" : "Off", "State");
 
-    msgList[MENU_TWISTS]->mBuffer[TW_TIMEWARP].copy(u"Time Warp");
+    msgList[MENU_TWISTS]->mBuffer[TW_TIMEWARP].copy(u"Time Travel");
     al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_TIMEWARP + 1], TwistsConfig::isTimeWarpEnabled() ? "On" : "Off", "State");
+
+    msgList[MENU_TWISTS]->mBuffer[TW_TWOD].copy(u"2D in 3D");
+    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_TWOD + 1], TwistsConfig::isTwoDEnabled() ? "On" : "Off", "State");
+
+    msgList[MENU_TWISTS]->mBuffer[TW_FLUDD].copy(u"F.L.U.D.D.");
+    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_FLUDD + 1], TwistsConfig::isFluddEnabled() ? "On" : "Off", "State");
 }
 
 void StageSceneStateModConfig::exeTwistsSettings() {
@@ -665,6 +667,12 @@ void StageSceneStateModConfig::exeTwistsSettings() {
             break;
         case TW_TIMEWARP:
             TwistsConfig::toggleTimeWarp();
+            break;
+        case TW_TWOD:
+            TwistsConfig::toggleTwoD();
+            break;
+        case TW_FLUDD:
+            TwistsConfig::toggleFludd();
             break;
         }
 

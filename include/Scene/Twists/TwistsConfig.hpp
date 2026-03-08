@@ -2,9 +2,11 @@
 
 #include "Scene/Twists/Cappyless/Cappyless.hpp"
 #include "Scene/Twists/Darkness/Darkness.hpp"
+#include "Scene/Twists/Fludd/FluddTwist.hpp"
 #include "Scene/Twists/IcePhysics/IcePhysics.hpp"
 #include "Scene/Twists/SmallMario/SmallMario.hpp"
 #include "Scene/Twists/Timewarp/Timewarp.hpp"
+#include "Scene/Twists/TwoD/TwoD.hpp"
 
 class PlayerActorHakoniwa;
 class StageScene;
@@ -37,4 +39,12 @@ public:
     // --- Time Warp ---
     static bool isTimeWarpEnabled() { return TimeWarpTwist::isTimeWarpEnabled(); }
     static void toggleTimeWarp() { TimeWarpTwist::toggleTimeWarp(); }
+
+    // --- 2D in 3D ---
+    static bool isTwoDEnabled() { return TwoDTwist::isTwoDEnabled(); }
+    static void toggleTwoD() { TwoDTwist::toggleTwoD(); }
+
+    // --- FLUDD ---
+    static bool isFluddEnabled() { return FluddTwist::sFluddEnabled; }
+    static void toggleFludd() { FluddTwist::toggle(); }
 };
