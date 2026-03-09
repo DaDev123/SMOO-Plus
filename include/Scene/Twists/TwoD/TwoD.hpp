@@ -1,7 +1,7 @@
 /**
  * @file TwoD.hpp
  * @brief Forces Mario into 2D mode, with R+Up triggering a timed 3D swap.
- *        Ported from 2Dyssey DimensionPatcher.
+ *        Ported from 2Dyssey DimensionPatcher. - Amethyst-SZS
  */
 
 #pragma once

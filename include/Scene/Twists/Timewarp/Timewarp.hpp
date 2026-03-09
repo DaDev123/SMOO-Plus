@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hk/ro/RoUtil.h"
+#include "hk/types.h"
 
 #include "sead/container/seadPtrArray.h"
 #include "sead/gfx/seadColor.h"
@@ -100,4 +101,8 @@ private:
     static void emptyFrameInfo();
     static void resetCooldown();
     static bool isInvalidCapture(const char* curName);
+
+    static void initTriggerRHook();
+    static u32 sTriggerROriginal;
+    static bool sHookInited;
 };

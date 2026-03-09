@@ -1,4 +1,4 @@
-#include "Scene/Twists/SmallMario/CustomPlayerConst.h"
+#include "Scene/Twists/CustomPlayerConst.h"
 
 void CustomPlayerConst::setSmallMarioConst(PlayerConst* playerConst) {
     playerConst->mAdditionalSpeedLimit = 9.00000f;
@@ -382,4 +382,43 @@ void CustomPlayerConst::setNormalMarioConst(PlayerConst* playerConst) {
     playerConst->mWallJumpGravity = 0.950000f;
     playerConst->mWallJumpHSpeed = 8.600000f;
     playerConst->mWallJumpPower = 23.000000f;
+}
+
+void CustomPlayerConst::setMoonGravityConst(PlayerConst* playerConst) {
+    playerConst->mAnimFrameRateSpeedMax = 3.50000f;  // AnimFrameRateMaxDash
+    playerConst->mAnimFrameRateSpeedMin = 3.00000f;  // AnimFrameRateMaxRun
+    playerConst->mCapCatchPopGravity = 0.60000f;
+    playerConst->mCapHeadSpringJumpGravity = 0.80000f;
+    playerConst->mCapHeadSpringJumpGravityHigh = 0.60000f;
+    playerConst->mCapLeapFrogJumpGravity = 0.40000f;
+    playerConst->mCapLeapFrogJumpPower = 30.00000f;
+    playerConst->mCapLeapFrogJumpPowerAir = 25.00000f;
+    playerConst->mGrabCeilLeaveSpeedMin = 0.60000f;  // GrabCeilLeavePopGravity
+    playerConst->mGravityAir = 1.00000f;
+    playerConst->mGravityDamage = 0.70000f;
+    playerConst->mGravityWallSlide = 0.20000f;
+    playerConst->mHeadSlidingGravityAir = 0.80000f;
+    playerConst->mHeadSlidingJump = 17.00000f;
+    playerConst->mHeadSlidingSpeed = 18.00000f;
+    playerConst->mHipDropGravity = 1.50000f;
+    playerConst->mHipDropSpeed = 0.00000f;
+    playerConst->mJumpGravity = 0.40000f;
+    playerConst->mJumpGravity2nd = 0.40000f;
+    playerConst->mJumpGravity3rd = 0.30000f;
+    playerConst->mJumpGravityCapCatch = 0.60000f;
+    playerConst->mJumpGravityForceRun = 0.35000f;
+    playerConst->mJumpHipDropPower = 32.00000f;
+    playerConst->mLongJumpGravity = 0.20000f;
+    playerConst->mSpinFlowerJumpDownFallInitSpeed = 0.00000f;
+    playerConst->mSpinFlowerJumpDownFallPower = 1.50000f;
+    playerConst->mSpinJumpDownFallInitSpeed = 0.00000f;
+    playerConst->mSpinJumpGravity = 0.18000f;
+    playerConst->mSquatJumpGravity = 0.45000f;
+    playerConst->mTrampleGravity = 0.50000f;
+    playerConst->mTrampleHighGravity = 0.40000f;
+    playerConst->mTrampleHighJumpPower = 27.00000f;  // TrampleHighJumpPower2D
+    playerConst->mTrampleHipDropGravity = 0.40000f;
+    playerConst->mTrampleHipDropJumpPower = 30.00000f;
+    playerConst->mTurnJumpGravity = 0.45000f;
+    playerConst->mWallJumpGravity = 0.30000f;
 }

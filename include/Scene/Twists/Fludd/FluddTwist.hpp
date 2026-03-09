@@ -1,5 +1,7 @@
 #pragma once
 
+#include "hk/types.h"
+
 #include "al/Library/LiveActor/ActorInitInfo.h"
 #include "al/Library/LiveActor/LiveActor.h"
 
@@ -31,6 +33,7 @@ public:
     static bool sFluddEnabled;
 
 private:
+    static void initTriggerRHook();
     static void setRefs();
     static void firstTimeSetup();
     static void updateModels();
@@ -78,4 +81,7 @@ private:
     static bool sIsFirstBoost;
     static bool sWasEverShown;  // guards hideModel calls before first showModel
     static int sDoubleBoostFrames;
+
+    static u32 sTriggerROriginal;
+    static bool sHookInited;
 };

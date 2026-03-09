@@ -73,8 +73,8 @@
 #include "logger.hpp"
 #include "puppetHooks.hpp"
 #include "puppets/PuppetInfo.h"
+#include "Scene/Twists/CustomPlayerConst.h"
 #include "Scene/Twists/Darkness/Darkness.hpp"
-#include "Scene/Twists/SmallMario/CustomPlayerConst.h"
 #include "Scene/Twists/Timewarp/Timewarp.hpp"
 #include "Scene/Twists/TwistsConfig.hpp"
 #include "server/Client.hpp"
@@ -245,6 +245,8 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
         TimeWarpTwist::update(player);
     if (!stageScene->isPause() && !isYukimaru && FluddTwist::sFluddEnabled)
         FluddTwist::update(player);
+
+    MoonGravityTwist::update(player);
 
     GameModeManager::instance()->setPaused(stageScene->isPause());
     Client::setStageInfo(GameDataHolderWriter(stageScene));

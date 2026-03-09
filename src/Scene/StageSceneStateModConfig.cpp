@@ -293,11 +293,9 @@ void StageSceneStateModConfig::exeOpenKeyboardIP() {
         bool isSave = Client::openKeyboardIP();
 
         if (isSave) {
-            // Save directly without transitioning through SaveData nerve
             SaveDataAccessFunction::startSaveDataWrite(mGameDataHolder);
         }
 
-        // Re-activate the network menu immediately
         al::startHitReaction(mCurrentMenu, "リセット", 0);
         mCurrentList->activate();
         mCurrentList->appearCursor();
@@ -313,11 +311,9 @@ void StageSceneStateModConfig::exeOpenKeyboardPort() {
         bool isSave = Client::openKeyboardPort();
 
         if (isSave) {
-            // Save directly without transitioning through SaveData nerve
             SaveDataAccessFunction::startSaveDataWrite(mGameDataHolder);
         }
 
-        // Re-activate the network menu immediately
         al::startHitReaction(mCurrentMenu, "リセット", 0);
         mCurrentList->activate();
         mCurrentList->appearCursor();
@@ -417,7 +413,6 @@ void StageSceneStateModConfig::exeGameplaySettings() {
     subMenuUpdate();
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
-        // Toggle settings
         switch (mCurrentList->mCurSelected) {
         case GP_COSTUMEDOORS:
             sCostumeDoorsUnlocked = !sCostumeDoorsUnlocked;
@@ -502,7 +497,7 @@ void StageSceneStateModConfig::updateGameModeSettingsOptions() {
 void StageSceneStateModConfig::exeGameModeSettings() {
     if (mShouldHideMessage) {
         mMessageHideTimer++;
-        if (mMessageHideTimer >= 60) {  // 1 seconds at 60fps
+        if (mMessageHideTimer >= 60) {
             Client::hideUIMessage();
             mShouldHideMessage = false;
             mMessageHideTimer = 0;
@@ -574,13 +569,6 @@ void StageSceneStateModConfig::exeGameModeSelect() {
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
         GameMode selectedMode = static_cast<GameMode>(mCurrentList->mCurSelected);
 
-        // Show warning message for Shine Thief mode
-        // if (selectedMode == GameMode::SHINETHIEF) {
-        //     Client::showUIMessage(u"Enabling Shine Thief mode. Game will freeze for a few seconds...");
-        //     mShouldHideMessage = true;
-        //     mMessageHideTimer = 0;
-        // }
-
         GameModeManager::instance()->setMode(selectedMode);
 
         ChangeStageInfo info =
@@ -614,6 +602,7 @@ void StageSceneStateModConfig::initTwistsMenu(const al::LayoutInitInfo& initInfo
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_TIMEWARP + 1]);
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_TWOD + 1]);
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_FLUDD + 1]);
+    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_MOONGRAVITY + 1]);
 
     optionsList[MENU_TWISTS]->addStringData(msgList[MENU_TWISTS]->mBuffer, "TxtContent");
     updateTwistsOptions();
@@ -640,6 +629,9 @@ void StageSceneStateModConfig::updateTwistsOptions() {
 
     msgList[MENU_TWISTS]->mBuffer[TW_FLUDD].copy(u"F.L.U.D.D.");
     al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_FLUDD + 1], TwistsConfig::isFluddEnabled() ? "On" : "Off", "State");
+
+    msgList[MENU_TWISTS]->mBuffer[TW_MOONGRAVITY].copy(u"Moon Gravity");
+    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_MOONGRAVITY + 1], TwistsConfig::isMoonGravityEnabled() ? "On" : "Off", "State");
 }
 
 void StageSceneStateModConfig::exeTwistsSettings() {
@@ -673,6 +665,9 @@ void StageSceneStateModConfig::exeTwistsSettings() {
             break;
         case TW_FLUDD:
             TwistsConfig::toggleFludd();
+            break;
+        case TW_MOONGRAVITY:
+            TwistsConfig::toggleMoonGravity();
             break;
         }
 
@@ -759,20 +754,11 @@ void StageSceneStateModConfig::initSpeedrunConfigMenu(const al::LayoutInitInfo& 
 
     optionsList[MENU_SPEEDRUN_CONFIG]->addStringData(msgList[MENU_SPEEDRUN_CONFIG]->mBuffer, "TxtContent");
     updateSpeedrunConfigOptions();
-
-    // sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
-    // optionsList[MENU_SPEEDRUN_CONFIG]->startLoopActionAll("Loop", "Loop");
-    // RollPartsData* b = new RollPartsData(0, new const char16_t*[]{u""});
-    // RollPartsData* c = new RollPartsData(4, new const char16_t*[]{u"1", u"2", u"3", u"4"});
-    // RollPartsData* d = new RollPartsData(5, new const char16_t*[]{u"Hi", u"This", u"Is", u"SOOOOOO", u"Cool"});
-    // optionsList[MENU_SPEEDRUN_CONFIG]->setRollPartsData(new RollPartsData[]{*b, *c, *d});
 }
 
 void StageSceneStateModConfig::updateSpeedrunConfigOptions() {
     msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_NONSTOP].copy(u"Non-Stop (WIP)");
     al::startAction(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_NONSTOP + 1], sSpeedrunNonStopEnabled ? "On" : "Off", "State");
-    // msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_NONSTOP + 1].copy(u"testing");
-    // msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_NONSTOP + 2].copy(u"testing2");
 }
 
 void StageSceneStateModConfig::exeSpeedrunConfig() {
@@ -788,7 +774,6 @@ void StageSceneStateModConfig::exeSpeedrunConfig() {
         switch (mCurrentList->mCurSelected) {
         case SPEEDRUN_NONSTOP:
             sSpeedrunNonStopEnabled = !sSpeedrunNonStopEnabled;
-            // TODO: Implement non-stop
             break;
         }
 
@@ -835,7 +820,6 @@ void StageSceneStateModConfig::exeSaveData() {
     if (SaveDataAccessFunction::updateSaveDataAccess(mGameDataHolder, false)) {
         al::startHitReaction(mCurrentMenu, "リセット", 0);
 
-        // Return to Network Settings after saving from keyboard input
         mCurrentList->activate();
         mCurrentList->appearCursor();
         al::setNerve(this, &NrvStageSceneStateModConfig.NetworkSettings);
@@ -884,7 +868,6 @@ void StageSceneStateModConfig::subMenuUpdate() {
     handleMenuInput();
 
     if (rs::isTriggerUiCancel(mHost) && !mIsDecideConfig) {
-        // Hide UI message if leaving gamemode menu
         if (mCurrentMenu == menuList[MENU_GAMEMODE] && mShouldHideMessage) {
             Client::hideUIMessage();
             mShouldHideMessage = false;
@@ -893,7 +876,6 @@ void StageSceneStateModConfig::subMenuUpdate() {
 
         updateDataFromRollParts();
 
-        // Determine parent menu
         if (mCurrentMenu == menuList[MENU_SERVERBROWSER]) {
             endSubMenuToParent(menuList[MENU_NETWORK], optionsList[MENU_NETWORK]);
         } else if (mCurrentMenu == menuList[MENU_GAMEMODE_MODESEL] || mCurrentMenu == menuList[MENU_TWISTS]) {
@@ -909,7 +891,6 @@ void StageSceneStateModConfig::subMenuUpdate() {
 }
 
 void StageSceneStateModConfig::endSubMenu() {
-    // Hide UI message if leaving gamemode menu
     if (mCurrentMenu == menuList[MENU_GAMEMODE] && mShouldHideMessage) {
         Client::hideUIMessage();
         mShouldHideMessage = false;
@@ -926,7 +907,6 @@ void StageSceneStateModConfig::endSubMenu() {
 }
 
 void StageSceneStateModConfig::endSubMenuToParent(SimpleLayoutMenu* parentMenu, CommonVerticalList* parentList) {
-    // Hide UI message if leaving gamemode menu
     if (mCurrentMenu == menuList[MENU_GAMEMODE] && mShouldHideMessage) {
         Client::hideUIMessage();
         mShouldHideMessage = false;
@@ -940,7 +920,6 @@ void StageSceneStateModConfig::endSubMenuToParent(SimpleLayoutMenu* parentMenu, 
     activateInput();
     mIsDecideConfig = false;
 
-    // Set appropriate nerve based on parent menu
     if (parentMenu == menuList[MENU_GAMEPLAY]) {
         al::setNerve(this, &NrvStageSceneStateModConfig.GameplaySettings);
     } else if (parentMenu == menuList[MENU_NETWORK]) {

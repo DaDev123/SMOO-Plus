@@ -4,6 +4,7 @@
 #include "Scene/Twists/Darkness/Darkness.hpp"
 #include "Scene/Twists/Fludd/FluddTwist.hpp"
 #include "Scene/Twists/IcePhysics/IcePhysics.hpp"
+#include "Scene/Twists/MoonGravity/MoonGravityTwist.hpp"
 #include "Scene/Twists/SmallMario/SmallMario.hpp"
 #include "Scene/Twists/Timewarp/Timewarp.hpp"
 #include "Scene/Twists/TwoD/TwoD.hpp"
@@ -47,4 +48,8 @@ public:
     // --- FLUDD ---
     static bool isFluddEnabled() { return FluddTwist::sFluddEnabled; }
     static void toggleFludd() { FluddTwist::toggle(); }
+
+    // --- Moon Gravity ---
+    static bool isMoonGravityEnabled() { return MoonGravityTwist::sMoonGravityEnabled; }
+    static void toggleMoonGravity() { MoonGravityTwist::toggle(); }
 };

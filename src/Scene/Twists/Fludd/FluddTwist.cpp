@@ -1,15 +1,12 @@
 #include "Scene/Twists/Fludd/FluddTwist.hpp"
 
-#include "al/Library/Camera/CameraUtil.h"
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/Effect/EffectSystemInfo.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorAnimFunction.h"
 #include "al/Library/LiveActor/ActorModelFunction.h"
 #include "al/Library/LiveActor/ActorMovementFunction.h"
-#include "al/Library/LiveActor/ActorPoseKeeper.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
-#include "al/Library/LiveActor/ActorSensorUtil.h"
 #include "al/Library/Math/MathUtil.h"
 #include "al/Library/Nature/NatureUtil.h"
 #include "al/Library/Player/PlayerUtil.h"
@@ -24,14 +21,9 @@
 #include "game/Util/ActorDimensionKeeper.h"
 #include "game/Util/DemoUtil.h"
 #include "game/Util/PlayerUtil.h"
-#include "game/Util/SensorMsgFunction.h"
 
 #include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "rs/util.hpp"
-
-// ============================================================
-//  Static member definitions
-// ============================================================
 
 bool FluddTwist::sFluddEnabled = false;
 
@@ -66,12 +58,23 @@ bool FluddTwist::sStickActive = false;
 bool FluddTwist::sSetNrvGrounded = false;
 bool FluddTwist::sDoOnce = false;
 bool FluddTwist::sIsFirstBoost = true;
-bool FluddTwist::sWasEverShown = false;  // guards hideModel calls on first stage load
+bool FluddTwist::sWasEverShown = false;
 int FluddTwist::sDoubleBoostFrames = 0;
 
-// ============================================================
-//  Public lifecycle
-// ============================================================
+u32 FluddTwist::sTriggerROriginal = 0;
+bool FluddTwist::sHookInited = false;
+
+static bool triggerR(int port) {
+    return false;
+}
+
+void FluddTwist::initTriggerRHook() {
+    if (sHookInited)
+        return;
+    uintptr_t base = hk::ro::getMainModule()->range().start();
+    sTriggerROriginal = *reinterpret_cast<u32*>(base + 0x85C710);
+    sHookInited = true;
+}
 
 void FluddTwist::init(al::ActorInitInfo const& info) {
     sBase = new FluddBase("Fludd");
@@ -113,13 +116,24 @@ void FluddTwist::onStageDeath() {
 }
 
 void FluddTwist::toggle() {
+    initTriggerRHook();  // no-op after first call
+
     sFluddEnabled = !sFluddEnabled;
-    if (!sFluddEnabled && sBase) {
-        al::hideModel(sBase);
-        al::hideModel(sHover);
-        al::hideModel(sRocket);
-        al::hideModel(sTurbo);
-        sDoOnce = true;
+
+    auto* mod = hk::ro::getMainModule();
+
+    if (sFluddEnabled) {
+        hk::hook::writeBranchAtMainOffset(0x85C710, triggerR);
+    } else {
+        mod->writeRo(0x85C710, sTriggerROriginal);
+
+        if (sBase) {
+            al::hideModel(sBase);
+            al::hideModel(sHover);
+            al::hideModel(sRocket);
+            al::hideModel(sTurbo);
+            sDoOnce = true;
+        }
     }
 }
 
@@ -162,10 +176,6 @@ void FluddTwist::update(PlayerActorHakoniwa* p1) {
     }
 }
 
-// ============================================================
-//  Public accessors
-// ============================================================
-
 int FluddTwist::getFluddMode() {
     return sFluddMode;
 }
@@ -184,10 +194,6 @@ bool FluddTwist::isRecharging() {
 bool FluddTwist::isStickActive() {
     return sStickActive;
 }
-
-// ============================================================
-//  Private helpers
-// ============================================================
 
 void FluddTwist::setRefs() {
     sIsHack = sMario->mHackKeeper->mHackActor != nullptr;
@@ -225,7 +231,6 @@ void FluddTwist::updateModels() {
         sRocket->connect(sBase);
         sTurbo->connect(sBase);
 
-        // Scale FLUDD to match small mario if enabled
         float fluddScale = TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f;
         al::setScaleAll(sBase, fluddScale);
         al::setScaleAll(sHover, fluddScale);

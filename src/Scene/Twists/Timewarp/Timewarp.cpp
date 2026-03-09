@@ -7,14 +7,12 @@
 
 #include "al/Library/Base/StringUtil.h"
 #include "al/Library/Controller/InputFunction.h"
-#include "al/Library/Effect/EffectKeeper.h"
 #include "al/Library/Effect/EffectSystemInfo.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorAnimFunction.h"
 #include "al/Library/LiveActor/ActorMovementFunction.h"
 #include "al/Library/LiveActor/ActorPoseKeeper.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
-#include "al/Library/LiveActor/ActorSensorUtil.h"
 #include "al/Library/Memory/HeapUtil.h"
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Scene/SceneUtil.h"
@@ -54,6 +52,18 @@ static HkTrampoline<void, PlayerOxygen*> oxygenReduceHook = hk::hook::trampoline
     thisPtr->mOxygenLevel = TimeWarpTwist::calcCooldownPercent();
 });
 
+static bool triggerR(int port) {
+    return false;
+}
+
+void TimeWarpTwist::initTriggerRHook() {
+    if (sHookInited)
+        return;
+    uintptr_t base = hk::ro::getMainModule()->range().start();
+    sTriggerROriginal = *reinterpret_cast<u32*>(base + 0x85C710);
+    sHookInited = true;
+}
+
 bool TimeWarpTwist::sTimeWarpEnabled = false;
 
 bool TimeWarpTwist::sIsRewinding = false;
@@ -76,6 +86,9 @@ float TimeWarpTwist::sCooldownCharge = 0.f;
 
 StageScene* TimeWarpTwist::sStageScene = nullptr;
 
+u32 TimeWarpTwist::sTriggerROriginal = 0;
+bool TimeWarpTwist::sHookInited = false;
+
 void TimeWarpTwist::init() {
     sTimeFrames.allocBuffer(maxFrames, nullptr);
     sSceneInactiveTime = 60;
@@ -88,7 +101,17 @@ void TimeWarpTwist::initHooks() {
 }
 
 void TimeWarpTwist::toggleTimeWarp() {
+    initTriggerRHook();  // no-op after first call
+
     sTimeWarpEnabled = !sTimeWarpEnabled;
+
+    auto* mod = hk::ro::getMainModule();
+
+    if (sTimeWarpEnabled) {
+        hk::hook::writeBranchAtMainOffset(0x85C710, triggerR);
+    } else {
+        mod->writeRo(0x85C710, sTriggerROriginal);
+    }
 }
 
 void TimeWarpTwist::onStageInit(StageScene* scene) {

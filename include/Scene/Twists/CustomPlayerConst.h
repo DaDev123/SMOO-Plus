@@ -5,4 +5,5 @@
 namespace CustomPlayerConst {
 void setSmallMarioConst(PlayerConst* playerConst);
 void setNormalMarioConst(PlayerConst* playerConst);
+void setMoonGravityConst(PlayerConst* playerConst);
 }  // namespace CustomPlayerConst
