@@ -400,7 +400,7 @@ void StageSceneStateModConfig::updateGameplaySettingsOptions() {
     al::startAction(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_LATENCY + 1], sLowLatencyEnabled ? "On" : "Off", "State");
 
     msgList[MENU_GAMEPLAY]->mBuffer[GP_MUSIC].copy(u"In-Game Music");
-    al::startAction(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_MUSIC + 1], Client::isMusicDisabled() ? "On" : "Off", "State");
+    al::startAction(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_MUSIC + 1], Client::isMusicDisabled() ? "Off" : "On", "State");
 }
 
 void StageSceneStateModConfig::exeGameplaySettings() {
