@@ -93,6 +93,8 @@ Client::Client() {
 
     mCoinCollect2DArray.allocBuffer(25, nullptr);
 
+    mPendingCoinCollectCount = 0;
+
     nn::account::GetLastOpenedUser(&mUserID);
 
     nn::account::Nickname playerName;
@@ -151,8 +153,8 @@ bool Client::startThread() {
         return false;
     }
 }
+
 void Client::restartConnection() {
-    // Just close the socket without sending disconnect packet
     if (!sInstance->mIsAllowReconnect)
         return;
 
@@ -185,14 +187,12 @@ void Client::restartConnection() {
     nn::os::SleepThread(nn::TimeSpan::FromMilliSeconds(10));  // BAD
 
     if (sInstance->lastGameInfPacket != sInstance->emptyGameInfPacket) {
-        // Assume game packets are empty from first connection
         if (sInstance->lastGameInfPacket.mUserID != sInstance->mUserID) {
             sInstance->lastGameInfPacket.mUserID = sInstance->mUserID;
         }
         sInstance->mSocket->send(&sInstance->lastGameInfPacket);
     }
 
-    // No need to send player/costume packets if they're empty
     if (sInstance->lastPlayerInfPacket.mUserID == sInstance->mUserID) {
         sInstance->mSocket->send(&sInstance->lastPlayerInfPacket);
     }
@@ -205,6 +205,7 @@ void Client::restartConnection() {
         sInstance->mSocket->send(&sInstance->lastCaptureInfPacket);
     }
 }
+
 /**
  * @brief starts a connection using client's TCP socket class, pulling up the software keyboard for
  * user inputted IP if save file does not have one saved.
@@ -243,7 +244,6 @@ bool Client::startConnection() {
         Logger::log("Sucessful Connection. Waiting to recieve init packet.\n");
 
         bool waitingForInitPacket = true;
-        // wait for client init packet
 
         while (waitingForInitPacket == true) {
             Packet* curPacket = mSocket->tryGetPacket();
@@ -291,7 +291,6 @@ bool Client::openKeyboardIP() {
         return false;
     }
 
-    // opens swkbd with the initial text set to the last saved IP
     sInstance->mKeyboard->openKeyboard(sInstance->mServerIP.cstr(), [](nn::swkbd::KeyboardConfig& config) {
         config.keyboardMode = nn::swkbd::KeyboardMode::ModeASCII;
         config.textMaxLength = MAX_HOSTNAME_LENGTH;
@@ -308,7 +307,7 @@ bool Client::openKeyboardIP() {
                 sInstance->mServerIP = sInstance->mKeyboard->getResult();
             break;
         }
-        nn::os::YieldThread();  // allow other threads to run
+        nn::os::YieldThread();
     }
 
     bool isFirstConnect = prevIp != sInstance->mServerIP;
@@ -328,7 +327,6 @@ bool Client::openKeyboardPort() {
         return false;
     }
 
-    // opens swkbd with the initial text set to the last saved port
     char buf[6];
     nn::util::SNPrintf(buf, 6, "%u", sInstance->mServerPort);
 
@@ -348,7 +346,7 @@ bool Client::openKeyboardPort() {
                 sInstance->mServerPort = ::atoi(sInstance->mKeyboard->getResult());
             break;
         }
-        nn::os::YieldThread();  // allow other threads to run
+        nn::os::YieldThread();
     }
 
     bool isFirstConnect = prevPort != sInstance->mServerPort;
@@ -426,8 +424,7 @@ void Client::readFunc() {
     Logger::log("Starting Client read thread\n");
 
     if (waitForGameInit) {
-        nn::os::YieldThread();  // sleep the thread for the first thing we do so that game init can
-                                // finish
+        nn::os::YieldThread();
         nn::os::SleepThread(nn::TimeSpan::FromSeconds(2));
         waitForGameInit = false;
     }
@@ -439,21 +436,19 @@ void Client::readFunc() {
     if (!startConnection()) {
         Logger::log("Failed to Connect to Server.\n");
 
-        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(250000000));  // sleep active thread for 0.25 seconds
+        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(250000000));
 
         mConnectStatus->end();
 
         return;
     }
 
-    nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500000000));  // sleep for 0.5 seconds to let connection layout fully show
-                                                                    // (probably should find a better way to do this)
+    nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500000000));
 
     mConnectStatus->end();
 
     while (mIsConnectionActive) {
-        Packet* curPacket = mSocket->tryGetPacket();  // will block until a packet has been
-                                                      // recieved, or socket disconnected
+        Packet* curPacket = mSocket->tryGetPacket();
 
         if (curPacket) {
             switch (curPacket->mType) {
@@ -472,17 +467,13 @@ void Client::readFunc() {
             case PacketType::PLAYERCON:
                 updatePlayerConnect((PlayerConnect*)curPacket);
 
-                // Send relevant info packets when another client is connected
-
                 if (lastGameInfPacket != emptyGameInfPacket) {
-                    // Assume game packets are empty from first connection
                     if (lastGameInfPacket.mUserID != mUserID) {
                         lastGameInfPacket.mUserID = mUserID;
                     }
                     mSocket->send(&lastGameInfPacket);
                 }
 
-                // No need to send player/costume packets if they're empty
                 if (lastPlayerInfPacket.mUserID == mUserID) {
                     mSocket->send(&lastPlayerInfPacket);
                 }
@@ -573,8 +564,7 @@ void Client::readFunc() {
 
             free(curPacket);
 
-        } else {  // if false, socket has errored or disconnected, so close the socket and end this
-                  // thread.
+        } else {
             Logger::log("Client Socket Encountered an Error! Errno: 0x%x\n", mSocket->socket_errno);
         }
     }
@@ -666,7 +656,6 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
 
     bool isFlying = hackCap->isFlying();
 
-    // if cap is in flying state, send packet as often as this function is called
     if (isFlying) {
         HackCapInf* packet = new HackCapInf();
         packet->mUserID = sInstance->mUserID;
@@ -674,7 +663,6 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
 
         packet->isCapVisible = isFlying;
 
-        // Joint rotations, skew & quat
         packet->capQuat.x = hackCap->mJointKeeper->mJointRot.x;
         packet->capQuat.y = hackCap->mJointKeeper->mJointRot.y;
         packet->capQuat.z = hackCap->mJointKeeper->mJointRot.z;
@@ -687,9 +675,7 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
 
         sInstance->isSentHackInf = true;
 
-    } else if (sInstance->isSentHackInf) {  // if cap is not flying, check to see if previous
-                                            // function call sent a packet, and if so, send one
-                                            // final packet resetting cap data.
+    } else if (sInstance->isSentHackInf) {
         HackCapInf* packet = new HackCapInf();
         packet->mUserID = sInstance->mUserID;
         packet->isCapVisible = false;
@@ -702,8 +688,7 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
 }
 
 /**
- * @brief
- * Sends both stage info and player 2D info to the server.
+ * @brief Sends both stage info and player 2D info to the server.
  * @param player
  * @param holder
  */
@@ -735,12 +720,12 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
         sInstance->lastGameInfPacket = *packet;
         sInstance->mSocket->queuePacket(packet);
     } else {
-        sInstance->mHeap->free(packet);  // free packet if we're not using it
+        sInstance->mHeap->free(packet);
     }
 }
+
 /**
- * @brief
- * Sends only stage info to the server.
+ * @brief Sends only stage info to the server.
  * @param holder
  */
 void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
@@ -769,8 +754,7 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
 }
 
 /**
- * @brief
- *
+ * @brief Sends tag info packet for H&S or Sardine modes.
  */
 void Client::sendTagInfPacket() {
     if (!sInstance) {
@@ -839,7 +823,6 @@ void Client::sendFreezeInfPacket() {
 
     FreezeUpdateType updateType = frMode->getNextUpdateType();
 
-    // Send round packet for round-related updates
     if (updateType == FreezeUpdateType::ROUNDSTART || updateType == FreezeUpdateType::ROUNDCANCEL) {
         FreezeInfRoundPacket* packet = new FreezeInfRoundPacket();
 
@@ -847,13 +830,11 @@ void Client::sendFreezeInfPacket() {
         packet->updateType = updateType;
 
         if (updateType == FreezeUpdateType::ROUNDSTART) {
-            packet->roundTime = frInfo->mRoundLength;  // Make sure this field exists in FreezeTagInfo
+            packet->roundTime = frInfo->mRoundLength;
         }
 
         sInstance->mSocket->queuePacket(packet);
-    }
-    // Send regular packet for player updates
-    else {
+    } else {
         FreezeInf* packet = new FreezeInf();
 
         packet->mUserID = sInstance->mUserID;
@@ -887,7 +868,6 @@ void Client::sendShineThiefInfPacket() {
 
     ShineThiefUpdateType updateType = stMode->getNextUpdateType();
 
-    // Round packets
     if (updateType == ShineThiefUpdateType::ROUNDSTART || updateType == ShineThiefUpdateType::ROUNDCANCEL) {
         ShineThiefInfRoundPacket* packet = new ShineThiefInfRoundPacket();
 
@@ -901,9 +881,7 @@ void Client::sendShineThiefInfPacket() {
         }
 
         sInstance->mSocket->queuePacket(packet);
-    }
-    // Regular player update packets
-    else {
+    } else {
         ShineThiefInf* packet = new ShineThiefInf();
 
         packet->mUserID = sInstance->mUserID;
@@ -913,7 +891,6 @@ void Client::sendShineThiefInfPacket() {
         packet->score = stInfo->mPlayerTagScore.mScore;
         packet->shinePos = stMode->getShinePos();
 
-        // Set team explicitly
         switch (stInfo->mPlayerTeam) {
         case ShineThiefTeam::TEAM_1:
             packet->team = 1;
@@ -931,8 +908,7 @@ void Client::sendShineThiefInfPacket() {
 }
 
 /**
- * @brief
- *
+ * @brief Sends costume info packet.
  * @param body
  * @param cap
  */
@@ -951,8 +927,7 @@ void Client::sendCostumeInfPacket(const char* body, const char* cap) {
 }
 
 /**
- * @brief
- *
+ * @brief Sends capture info packet.
  * @param player
  */
 void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
@@ -979,8 +954,7 @@ void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
 }
 
 /**
- * @brief
- *
+ * @brief Sends shine collect packet.
  * @param shineID
  */
 void Client::sendShineCollectPacket(int shineID) {
@@ -1003,8 +977,7 @@ void Client::sendShineCollectPacket(int shineID) {
 }
 
 /**
- * @brief
- *
+ * @brief Sends coin collect packet.
  * @param placeID
  * @param worldID
  * @param stage
@@ -1027,8 +1000,7 @@ void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, cons
 }
 
 /**
- * @brief
- *
+ * @brief Updates player info from packet.
  * @param packet
  */
 void Client::updatePlayerInfo(PlayerInf* packet) {
@@ -1044,7 +1016,6 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
 
     curInfo->playerPos = packet->playerPos;
 
-    // check if rotation is larger than zero and less than or equal to 1
     if (abs(packet->playerRot.x) > 0.f || abs(packet->playerRot.y) > 0.f || abs(packet->playerRot.z) > 0.f || abs(packet->playerRot.w) > 0.f) {
         if (abs(packet->playerRot.x) <= 1.f || abs(packet->playerRot.y) <= 1.f || abs(packet->playerRot.z) <= 1.f || abs(packet->playerRot.w) <= 1.f) {
             curInfo->playerRot = packet->playerRot;
@@ -1071,13 +1042,10 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
     curInfo->curSubAnim = packet->subActName;
 
     for (size_t i = 0; i < 6; i++) {
-        // weights can only be between 0 and 1
         if (packet->animBlendWeights[i] >= 0.f && packet->animBlendWeights[i] <= 1.f) {
             curInfo->blendWeights[i] = packet->animBlendWeights[i];
         }
     }
-
-    // TEMP
 
     if (!curInfo->isCapThrow) {
         curInfo->capPos = packet->playerPos;
@@ -1085,8 +1053,7 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
 }
 
 /**
- * @brief
- *
+ * @brief Updates hack cap info from packet.
  * @param packet
  */
 void Client::updateHackCapInfo(HackCapInf* packet) {
@@ -1104,8 +1071,7 @@ void Client::updateHackCapInfo(HackCapInf* packet) {
 }
 
 /**
- * @brief
- *
+ * @brief Updates capture info from packet.
  * @param packet
  */
 void Client::updateCaptureInfo(CaptureInf* packet) {
@@ -1123,8 +1089,7 @@ void Client::updateCaptureInfo(CaptureInf* packet) {
 }
 
 /**
- * @brief
- *
+ * @brief Updates costume info from packet.
  * @param packet
  */
 void Client::updateCostumeInfo(CostumeInf* packet) {
@@ -1139,8 +1104,7 @@ void Client::updateCostumeInfo(CostumeInf* packet) {
 }
 
 /**
- * @brief
- *
+ * @brief Stores shine ID from packet for later processing on the game thread.
  * @param packet
  */
 void Client::updateShineInfo(ShineCollect* packet) {
@@ -1151,8 +1115,7 @@ void Client::updateShineInfo(ShineCollect* packet) {
 }
 
 /**
- * @brief
- *
+ * @brief Updates player connect info from packet.
  * @param packet
  */
 void Client::updatePlayerConnect(PlayerConnect* packet) {
@@ -1177,6 +1140,7 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
         mConnectCount++;
     }
 }
+
 const struct {
     const char* stage;
     s32 index;
@@ -1200,6 +1164,7 @@ const struct {
                                 {"PeachWorldHomeStage", 13},
                                 {"Special1WorldHomeStage", 14},
                                 {"Special2WorldHomeStage", 15}};
+
 static s32 findWorldIdFromStageName(const char* stageName) {
     for (s32 i = 0; i < hk::util::arraySize(stageListForScenarioSync); i++) {
         if (al::isEqualString(stageListForScenarioSync[i].stage, stageName)) {
@@ -1208,6 +1173,7 @@ static s32 findWorldIdFromStageName(const char* stageName) {
     }
     return -1;
 }
+
 static const char* findWarpStageFromStageName(const char* stageName) {
     for (s32 i = 0; i < hk::util::arraySize(stageListForScenarioSync); i++) {
         if (al::isEqualString(stageListForScenarioSync[i].stage, stageName)) {
@@ -1218,8 +1184,7 @@ static const char* findWarpStageFromStageName(const char* stageName) {
 }
 
 /**
- * @brief
- *
+ * @brief Updates game info from packet, and handles scenario sync.
  * @param packet
  */
 void Client::updateGameInfo(GameInf* packet) {
@@ -1239,13 +1204,13 @@ void Client::updateGameInfo(GameInf* packet) {
         curInfo->is2D = packet->is2D;
         curInfo->gameMode = packet->gameMode;
     }
+
     if (findWorldIdFromStageName(packet->stageName) == -1)
         return;
+
     int scenario = Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr()[findWorldIdFromStageName(packet->stageName)];
-    // int mainscenario = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr()[findWorldIdFromStageName(packet->stageName)];
     if (packet->scenarioNo < 15 && packet->scenarioNo > scenario) {
         Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr()[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
-        // Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr()[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
         if (findWarpStageFromStageName(packet->stageName) &&
             strcmp(GameDataFunction::getCurrentStageName(Client::getHolder()), findWarpStageFromStageName(packet->stageName)) == 0) {
             ChangeStageInfo info(Client::getHolder(), "start", findWarpStageFromStageName(packet->stageName), false, packet->scenarioNo);
@@ -1255,8 +1220,7 @@ void Client::updateGameInfo(GameInf* packet) {
 }
 
 /**
- * @brief
- *
+ * @brief Queues a message packet for the game thread to consume.
  * @param packet
  */
 void Client::updateMessages(MessagePacket* packet) {
@@ -1272,15 +1236,13 @@ void Client::updateMessages(MessagePacket* packet) {
 }
 
 /**
- * @brief
- *
+ * @brief Updates tag info from packet for H&S, Sardine, Freeze Tag, and Shine Thief modes.
  * @param packet
  */
 void Client::updateTagInfo(TagInf* packet) {
     GameMode mode = GameModeManager::instance()->getGameMode();
 
     if (mode == GameMode::HIDEANDSEEK || mode == GameMode::SARDINE) {
-        // if the packet is for our player, edit info for our player
         if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
             HideAndSeekMode* mMode = GameModeManager::instance()->getMode<HideAndSeekMode>();
             HideAndSeekInfo* curInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
@@ -1327,7 +1289,6 @@ void Client::updateTagInfo(TagInf* packet) {
     if (mode == GameMode::FREEZETAG) {
         FreezeInf* freezePak = (FreezeInf*)packet;
 
-        // Handle round packets first
         if (freezePak->updateType == FreezeUpdateType::ROUNDSTART || freezePak->updateType == FreezeUpdateType::ROUNDCANCEL) {
             FreezeInfRoundPacket* roundPak = (FreezeInfRoundPacket*)packet;
             FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
@@ -1341,10 +1302,9 @@ void Client::updateTagInfo(TagInf* packet) {
                     mMode->endRound(true);
                 }
             }
-            return;  // Don't process as regular freeze packet
+            return;
         }
 
-        // Handle regular freeze packets
         if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
             FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
             FreezeTagInfo* curInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
@@ -1384,7 +1344,6 @@ void Client::updateTagInfo(TagInf* packet) {
     if (mode == GameMode::SHINETHIEF) {
         ShineThiefInf* shinePak = (ShineThiefInf*)packet;
 
-        // Handle round packets
         if (GameModeManager::instance()->isActive() &&
             (shinePak->updateType == ShineThiefUpdateType::ROUNDSTART || shinePak->updateType == ShineThiefUpdateType::ROUNDCANCEL)) {
             ShineThiefInfRoundPacket* roundPak = (ShineThiefInfRoundPacket*)packet;
@@ -1403,7 +1362,6 @@ void Client::updateTagInfo(TagInf* packet) {
             return;
         }
 
-        // Ignore own packets
         if (packet->mUserID == mUserID)
             return;
 
@@ -1414,7 +1372,6 @@ void Client::updateTagInfo(TagInf* packet) {
         bool puppetIsNowHolder = shinePak->isHolder;
         bool puppetWasHolder = curPupInfo->isShineThiefHolder;
 
-        // Update if mode inactive
         if (!GameModeManager::instance()->isActive()) {
             curPupInfo->isShineThiefHolder = puppetIsNowHolder;
             curPupInfo->shineThiefScore = shinePak->score;
@@ -1424,11 +1381,9 @@ void Client::updateTagInfo(TagInf* packet) {
 
         ShineThiefMode* mMode = GameModeManager::instance()->getMode<ShineThiefMode>();
 
-        // Enforce single holder
         if (mMode && puppetIsNowHolder && !puppetWasHolder && mMode->isPlayerHolder())
             mMode->forceDropShine();
 
-        // Score events
         if (mMode && mMode->isScoreEventsEnabled()) {
             if (!puppetWasHolder && puppetIsNowHolder && !mMode->isPlayerHolder())
                 mMode->tryScoreEvent(shinePak, curPupInfo);
@@ -1436,12 +1391,10 @@ void Client::updateTagInfo(TagInf* packet) {
                 mMode->tryScoreEvent(shinePak, curPupInfo);
         }
 
-        // Update puppet state
         curPupInfo->isShineThiefHolder = puppetIsNowHolder;
         curPupInfo->shineThiefScore = shinePak->score;
         curPupInfo->shineThiefTeam = shinePak->team;
 
-        // Handle FALLOFF
         if (shinePak->updateType == ShineThiefUpdateType::FALLOFF) {
             curPupInfo->isShineThiefFallenOff = true;
             curPupInfo->isShineThiefHolder = false;
@@ -1456,7 +1409,6 @@ void Client::updateTagInfo(TagInf* packet) {
             }
         }
 
-        // Update shine position when puppet is holding it
         if (puppetIsNowHolder && shinePak->updateType != ShineThiefUpdateType::FALLOFF) {
             sead::Vector3f offset{0, 100, 0};
             if (mMode) {
@@ -1467,8 +1419,7 @@ void Client::updateTagInfo(TagInf* packet) {
 }
 
 /**
- * @brief
- *
+ * @brief Sends the player to a new stage as directed by a ChangeStagePacket.
  * @param packet
  */
 void Client::sendToStage(ChangeStagePacket* packet) {
@@ -1485,8 +1436,7 @@ void Client::sendToStage(ChangeStagePacket* packet) {
 }
 
 /**
- * @brief
- *
+ * @brief Handles a player disconnect packet.
  * @param packet
  */
 void Client::disconnectPlayer(PlayerDC* packet) {
@@ -1506,11 +1456,8 @@ void Client::disconnectPlayer(PlayerDC* packet) {
 }
 
 /**
- * @brief
- *
+ * @brief Checks if a shine has already been collected this session.
  * @param shineId
- * @return true
- * @return false
  */
 bool Client::isShineCollected(int shineId) {
     for (size_t i = 0; i < curCollectedShines.size(); i++) {
@@ -1525,10 +1472,9 @@ bool Client::isShineCollected(int shineId) {
 }
 
 /**
- * @brief
- *
+ * @brief Finds a PuppetInfo slot by user ID.
  * @param id
- * @return int
+ * @param isFindAvailable if true, returns first free slot when no match found
  */
 PuppetInfo* Client::findPuppetInfo(const nn::account::Uid& id, bool isFindAvailable) {
     PuppetInfo* firstAvailable = nullptr;
@@ -1552,26 +1498,18 @@ PuppetInfo* Client::findPuppetInfo(const nn::account::Uid& id, bool isFindAvaila
 }
 
 /**
- * @brief
- *
+ * @brief Sets the current stage name and scenario number, and updates the puppet holder.
  * @param holder
  */
 void Client::setStageInfo(GameDataHolderAccessor holder) {
     if (sInstance) {
         sInstance->mStageName = GameDataFunction::getCurrentStageName(holder);
-        sInstance->mScenario = holder.mData->getGameDataFile()->getScenarioNo();  // holder.mData->mGameDataFile->getMainScenarioNoCurrent();
+        sInstance->mScenario = holder.mData->getGameDataFile()->getScenarioNo();
 
         sInstance->mPuppetHolder->setStageInfo(sInstance->mStageName.cstr(), sInstance->mScenario);
     }
 }
 
-/**
- * @brief
- *
- * @param puppet
- * @return true
- * @return false
- */
 bool Client::tryAddPuppet(PuppetActor* puppet) {
     if (sInstance) {
         return sInstance->mPuppetHolder->tryRegisterPuppet(puppet);
@@ -1580,13 +1518,6 @@ bool Client::tryAddPuppet(PuppetActor* puppet) {
     }
 }
 
-/**
- * @brief
- *
- * @param puppet
- * @return true
- * @return false
- */
 bool Client::tryAddDebugPuppet(PuppetActor* puppet) {
     if (sInstance) {
         return sInstance->mPuppetHolder->tryRegisterDebugPuppet(puppet);
@@ -1595,12 +1526,6 @@ bool Client::tryAddDebugPuppet(PuppetActor* puppet) {
     }
 }
 
-/**
- * @brief
- *
- * @param idx
- * @return PuppetActor*
- */
 PuppetActor* Client::getPuppet(int idx) {
     if (sInstance) {
         return sInstance->mPuppetHolder->getPuppetActor(idx);
@@ -1609,11 +1534,6 @@ PuppetActor* Client::getPuppet(int idx) {
     }
 }
 
-/**
- * @brief
- *
- * @return PuppetInfo*
- */
 PuppetInfo* Client::getLatestInfo() {
     if (sInstance) {
         return Client::getPuppetInfo(sInstance->mPuppetHolder->getSize() - 1);
@@ -1622,15 +1542,8 @@ PuppetInfo* Client::getLatestInfo() {
     }
 }
 
-/**
- * @brief
- *
- * @param idx
- * @return PuppetInfo*
- */
 PuppetInfo* Client::getPuppetInfo(int idx) {
     if (sInstance) {
-        // unsafe get
         PuppetInfo* curInfo = sInstance->mPuppetInfoArr[idx];
 
         if (!curInfo) {
@@ -1644,20 +1557,11 @@ PuppetInfo* Client::getPuppetInfo(int idx) {
     }
 }
 
-/**
- * @brief
- *
- */
 void Client::resetCollectedShines() {
     collectedShineCount = 0;
     curCollectedShines.fill(-1);
 }
 
-/**
- * @brief
- *
- * @param shineId
- */
 void Client::removeShine(int shineId) {
     for (size_t i = 0; i < curCollectedShines.size(); i++) {
         if (curCollectedShines[i] == shineId) {
@@ -1667,23 +1571,22 @@ void Client::removeShine(int shineId) {
     }
 }
 
-/**
- * @brief
- *
- * @return true
- * @return false
- */
 bool Client::isNeedUpdateShines() {
     return sInstance ? sInstance->collectedShineCount > 0 : false;
 }
 
 /**
- * @brief
- *
+ * @brief Processes all pending collected shines on the game thread.
+ *        Must only be called when mCurStageScene is valid.
  */
 void Client::updateShines() {
     if (!sInstance) {
         Logger::log("Client Null!\n");
+        return;
+    }
+
+    if (!sInstance->mCurStageScene) {
+        Logger::log("updateShines: scene not ready, skipping\n");
         return;
     }
 
@@ -1731,12 +1634,77 @@ void Client::updateShines() {
 
     sInstance->resetCollectedShines();
     sInstance->mCurStageScene->stageSceneLayout->startShineCountAnim(false);
-    sInstance->mCurStageScene->stageSceneLayout->updateCounterParts();  // updates shine chip layout to (maybe) prevent softlocks
+    sInstance->mCurStageScene->stageSceneLayout->updateCounterParts();
 }
 
 /**
- * @brief
+ * @brief Core logic for applying a received coin collect to game state and killing the actor.
+ *        Called from updateCoinCollects() when the scene is ready, or from update() when
+ *        draining the pending queue.
  *
+ * @param placeID placement ID string of the coin collect
+ * @param worldID world ID
+ * @param stage   stage name string
+ */
+void Client::applyOneCoinCollect(const char* placeID, int worldID, const char* stage) {
+    al::PlacementId pid(placeID, nullptr, nullptr);
+    GameDataFile* gdf = GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile();
+    if (!gdf) {
+        Logger::log("applyOneCoinCollect: GameDataFile null, dropping\n");
+        return;
+    }
+
+    gdf->customAddCoinCollect(&pid, worldID, stage);
+
+    if (gdf->isGotCoinCollect(&pid)) {
+        for (int i = 0; i < sInstance->mCoinCollectArray.size(); i++) {
+            if (sInstance->mCoinCollectArray[i]->mPlacementId->isEqual(pid)) {
+                sInstance->mCoinCollectArray[i]->makeActorDead();
+                return;
+            }
+        }
+        for (int i = 0; i < sInstance->mCoinCollect2DArray.size(); i++) {
+            al::StringTmp<128> placeIDString;
+            sInstance->mCoinCollect2DArray[i]->mPlacementId->makeString(&placeIDString);
+            if (placeIDString.isEqual(placeID)) {
+                sInstance->mCoinCollect2DArray[i]->makeActorDead();
+                return;
+            }
+        }
+    }
+}
+
+/**
+ * @brief Receives a coin collect packet from the read thread.
+ *        If the scene is ready, applies immediately. Otherwise queues it for update().
+ *
+ * @param packet
+ */
+void Client::updateCoinCollects(CoinCollectCollect* packet) {
+    if (!sInstance) {
+        return;
+    }
+
+    if (!sInstance->mCurStageScene) {
+        // Scene not ready — queue for later processing in update()
+        if (sInstance->mPendingCoinCollectCount < sMaxPendingCoinCollects) {
+            PendingCoinCollect& pending = sInstance->mPendingCoinCollects[sInstance->mPendingCoinCollectCount++];
+            strcpy(pending.placeID, packet->placeID);
+            pending.worldID = packet->worldID;
+            strcpy(pending.stage, packet->stage);
+            Logger::log("updateCoinCollects: scene not ready, queued (total pending: %d)\n", sInstance->mPendingCoinCollectCount);
+        } else {
+            Logger::log("updateCoinCollects: pending queue full, dropping packet\n");
+        }
+        return;
+    }
+
+    applyOneCoinCollect(packet->placeID, packet->worldID, packet->stage);
+}
+
+/**
+ * @brief Main per-frame update. Runs on the game thread.
+ *        Drains any coin collects that arrived before the scene was ready.
  */
 void Client::update() {
     if (sInstance) {
@@ -1746,13 +1714,22 @@ void Client::update() {
             updateShines();
         }
 
+        // Drain coin collects that arrived while the scene was loading
+        if (sInstance->mCurStageScene && sInstance->mPendingCoinCollectCount > 0) {
+            Logger::log("update: draining %d pending coin collect(s)\n", sInstance->mPendingCoinCollectCount);
+            for (int i = 0; i < sInstance->mPendingCoinCollectCount; i++) {
+                PendingCoinCollect& p = sInstance->mPendingCoinCollects[i];
+                applyOneCoinCollect(p.placeID, p.worldID, p.stage);
+            }
+            sInstance->mPendingCoinCollectCount = 0;
+        }
+
         GameModeManager::instance()->update();
     }
 }
 
 /**
- * @brief
- *
+ * @brief Clears puppet, shine, and coin collect arrays. Called on scene exit.
  */
 void Client::clearArrays() {
     if (sInstance) {
@@ -1763,10 +1740,6 @@ void Client::clearArrays() {
     }
 }
 
-/**
- * @brief
- *
- */
 sead::FixedSafeString<MESSAGESIZE>* Client::tryGetMessage() {
     sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
 
@@ -1791,10 +1764,6 @@ void Client::setNeedUpdateHealthCoins(bool value) {
     sInstance->mNeedsUpdateHealthCoins = value;
 }
 
-/**
- * @brief
- *
- */
 void Client::updateHealthCoins(HealthCoins* packet) {
     if (!sInstance) {
         return;
@@ -1806,36 +1775,6 @@ void Client::updateHealthCoins(HealthCoins* packet) {
     sInstance->mNeedsUpdateHealthCoins = true;
 }
 
-/**
- * @brief
- *
- */
-void Client::updateCoinCollects(CoinCollectCollect* packet) {
-    al::PlacementId placeID(packet->placeID, nullptr, nullptr);
-    GameDataFile* gdf = GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile();
-    gdf->customAddCoinCollect(&placeID, packet->worldID, packet->stage);
-    if (gdf->isGotCoinCollect(&placeID)) {
-        for (int i = 0; i < sInstance->mCoinCollectArray.size(); i++) {
-            if (sInstance->mCoinCollectArray[i]->mPlacementId->isEqual(placeID)) {
-                sInstance->mCoinCollectArray[i]->makeActorDead();
-                return;
-            }
-        }
-        for (int i = 0; i < sInstance->mCoinCollect2DArray.size(); i++) {
-            al::StringTmp<128> placeIDString;
-            sInstance->mCoinCollect2DArray[i]->mPlacementId->makeString(&placeIDString);
-            if (placeIDString.isEqual(packet->placeID)) {
-                sInstance->mCoinCollect2DArray[i]->makeActorDead();
-                return;
-            }
-        }
-    }
-}
-
-/**
- * @brief
- *
- */
 void Client::setServerVersion(const char* serverVersion) {
     if (!sInstance) {
         return;
@@ -1852,11 +1791,6 @@ const char* Client::getServerVersion() {
     return sInstance->mServerVersion.cstr();
 }
 
-/**
- * @brief
- *
- * @return PuppetInfo*
- */
 PuppetInfo* Client::getDebugPuppetInfo() {
     if (sInstance) {
         return &sInstance->mDebugPuppetInfo;
@@ -1865,11 +1799,6 @@ PuppetInfo* Client::getDebugPuppetInfo() {
     }
 }
 
-/**
- * @brief
- *
- * @return PuppetActor*
- */
 PuppetActor* Client::getDebugPuppet() {
     if (sInstance) {
         return sInstance->mPuppetHolder->getDebugPuppet();
@@ -1878,11 +1807,6 @@ PuppetActor* Client::getDebugPuppet() {
     }
 }
 
-/**
- * @brief
- *
- * @return Keyboard*
- */
 Keyboard* Client::getKeyboard() {
     if (sInstance) {
         return sInstance->mKeyboard;
@@ -1890,11 +1814,6 @@ Keyboard* Client::getKeyboard() {
     return nullptr;
 }
 
-/**
- * @brief
- *
- * @return const char*
- */
 const char* Client::getCurrentIP() {
     if (sInstance) {
         return sInstance->mServerIP.cstr();
@@ -1902,11 +1821,6 @@ const char* Client::getCurrentIP() {
     return nullptr;
 }
 
-/**
- * @brief
- *
- * @return const int
- */
 const int Client::getCurrentPort() {
     if (sInstance) {
         return sInstance->mServerPort;
@@ -1914,11 +1828,6 @@ const int Client::getCurrentPort() {
     return -1;
 }
 
-/**
- * @brief
- *
- * @return const bool
- */
 const bool Client::hasServerChanged() {
     if (!sInstance) {
         return false;
@@ -1926,23 +1835,12 @@ const bool Client::hasServerChanged() {
     return (getCurrentPort() != sInstance->mSocket->getPort() || strcmp(getCurrentIP(), sInstance->mSocket->getIP()) != 0);
 }
 
-/**
- * @brief sets server IP to supplied string, used specifically for loading IP from the save file.
- *
- * @param ip
- */
 void Client::setLastUsedIP(const char* ip) {
     if (sInstance) {
         sInstance->mServerIP = ip;
     }
 }
 
-/**
- * @brief sets server port to supplied string, used specifically for loading port from the save
- * file.
- *
- * @param port
- */
 void Client::setLastUsedPort(const int port) {
     if (sInstance) {
         sInstance->mServerPort = port;
@@ -1950,8 +1848,9 @@ void Client::setLastUsedPort(const int port) {
 }
 
 /**
- * @brief creates new scene info and copies supplied info to the new info, as well as stores a const
- * ptr to the current stage scene.
+ * @brief Creates new scene info from initInfo and stores a pointer to the current stage scene.
+ *        Also clears mCurStageScene first so that any in-flight packets on the read thread
+ *        will queue rather than touch a half-initialized scene.
  *
  * @param initInfo
  * @param stageScene
@@ -1962,21 +1861,15 @@ void Client::setSceneInfo(const al::ActorInitInfo& initInfo, const StageScene* s
         return;
     }
 
-    sInstance->mSceneInfo = new al::ActorSceneInfo();
+    // Clear the scene pointer first so the read thread queues packets during the transition
+    sInstance->mCurStageScene = nullptr;
 
+    sInstance->mSceneInfo = new al::ActorSceneInfo();
     memcpy(sInstance->mSceneInfo, &initInfo.actorSceneInfo, sizeof(al::ActorSceneInfo));
 
     sInstance->mCurStageScene = stageScene;
 }
 
-/**
- * @brief stores shine pointer supplied into a ptr array if space is available, and shine is not
- * collected.
- *
- * @param shine
- * @return true if shine was able to be successfully stored
- * @return false if shine is already collected, or ptr array is full
- */
 bool Client::tryRegisterShine(Shine* shine) {
     if (sInstance) {
         if (!sInstance->mShineArray.isFull()) {
@@ -1989,11 +1882,6 @@ bool Client::tryRegisterShine(Shine* shine) {
     return false;
 }
 
-/**
- * @brief stores CoinCollect pointer supplied into a ptr array if space is available.
- *
- * @param coin
- */
 void Client::tryRegisterCoinCollect(CoinCollect* coin) {
     if (sInstance) {
         if (!sInstance->mCoinCollectArray.isFull()) {
@@ -2002,11 +1890,6 @@ void Client::tryRegisterCoinCollect(CoinCollect* coin) {
     }
 }
 
-/**
- * @brief stores CoinCollect2D pointer supplied into a ptr array if space is available.
- *
- * @param coin
- */
 void Client::tryRegisterCoinCollect2D(CoinCollect2D* coin) {
     if (sInstance) {
         if (!sInstance->mCoinCollect2DArray.isFull()) {
@@ -2015,12 +1898,6 @@ void Client::tryRegisterCoinCollect2D(CoinCollect2D* coin) {
     }
 }
 
-/**
- * @brief finds the actor pointer stored in the shine ptr array based off shine ID
- *
- * @param shineID Unique ID used for shine actor
- * @return Shine* if shine ptr array contains actor with supplied shine ID.
- */
 Shine* Client::findStageShine(int shineID) {
     if (sInstance) {
         for (int i = 0; i < sInstance->mShineArray.size(); i++) {
@@ -2044,7 +1921,7 @@ void Client::showConnectError(const char16_t* msg) {
 
     sInstance->mUIMessage->setTxtMessageConfirm(msg);
 
-    al::hidePane(sInstance->mUIMessage, "Page01");  // hide A button prompt
+    al::hidePane(sInstance->mUIMessage, "Page01");
 
     if (!sInstance->mUIMessage->mIsAlive) {
         sInstance->mUIMessage->appear();

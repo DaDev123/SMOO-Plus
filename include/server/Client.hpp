@@ -67,6 +67,16 @@ struct UIDIndexNode {
     int puppetIndex;
 };
 
+/**
+ * @brief Holds coin collect data that arrived before the scene was ready.
+ *        Drained each frame in Client::update() once mCurStageScene is valid.
+ */
+struct PendingCoinCollect {
+    char placeID[64];
+    int worldID;
+    char stage[64];
+};
+
 // ===== MAIN CLASS =====
 class Client {
     SEAD_SINGLETON_DISPOSER(Client)
@@ -256,6 +266,13 @@ private:
     // ===== UTILITY METHODS =====
     PuppetInfo* findPuppetInfo(const nn::account::Uid& id, bool isFindAvailable);
 
+    /**
+     * @brief Core logic for applying a coin collect to game state and killing the actor.
+     *        Called both from updateCoinCollects (when scene is ready) and from update()
+     *        when draining mPendingCoinCollects.
+     */
+    static void applyOneCoinCollect(const char* placeID, int worldID, const char* stage);
+
     // ===== CONNECTION MEMBERS =====
     al::AsyncFunctorThread* mReadThread = nullptr;
     int mConnectCount = 0;
@@ -282,6 +299,13 @@ private:
     sead::SafeArray<int, 128> curCollectedShines;
     int collectedShineCount = 0;
     int lastCollectedShine = -1;
+
+    // ===== COIN COLLECT PENDING QUEUE =====
+    // Coin collect packets that arrived while mCurStageScene was null are stored here
+    // and applied in update() once the scene becomes available.
+    static constexpr int sMaxPendingCoinCollects = 50;
+    PendingCoinCollect mPendingCoinCollects[sMaxPendingCoinCollects];
+    int mPendingCoinCollectCount = 0;
 
     // ===== MESSAGE MEMBERS =====
     static const int sMaxMsgCount = 100;
@@ -323,7 +347,6 @@ private:
     PuppetHolder* mPuppetHolder = nullptr;
     PuppetInfo mDebugPuppetInfo;
 
-    // --- Capture Sync Stuff ---
-
+    // ===== SEQUENCE =====
     al::Sequence* mSequence = nullptr;  // current sequence, used for debug menu
 };

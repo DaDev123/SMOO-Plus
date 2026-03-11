@@ -209,6 +209,7 @@ private:
 
     // Update Helpers
     void updateDataFromRollParts();
+    bool currentMenuHasRollParts() const;
 
     // ========================================================================
     // Static Configuration

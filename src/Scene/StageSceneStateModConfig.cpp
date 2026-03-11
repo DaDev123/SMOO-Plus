@@ -133,6 +133,23 @@ static std::vector<ServerBrowser> loadServersFromFile() {
 }
 
 // ============================================================================
+// Helper: does the current menu have roll parts on the selected item?
+// ============================================================================
+
+bool StageSceneStateModConfig::currentMenuHasRollParts() const {
+    if (mCurrentMenu == menuList[MENU_GAMEPLAY])
+        return true;
+    if (mGamemodeConfigMenu && mCurrentMenu == mGamemodeConfigMenu->mMenu)
+        return true;
+    if (mCurrentMenu == menuList[MENU_SPEEDRUN_CONFIG]) {
+        // Only the first item (SPEEDRUN_NONSTOP) is a check; item at index 2 is roll
+        // Guard: only allow roll input when the selected row actually is a roll part
+        return (mCurrentList->mCurSelected == 2);
+    }
+    return false;
+}
+
+// ============================================================================
 // Constructor
 // ============================================================================
 
@@ -198,8 +215,13 @@ void StageSceneStateModConfig::updateMainMenuOptions() {
 }
 
 void StageSceneStateModConfig::exeMainMenu() {
-    if (al::isFirstStep(this))
+    // Always set current list/menu on first step so mCurrentList is never null
+    // when handleMenuInput() is called, regardless of how this nerve was entered.
+    if (al::isFirstStep(this)) {
+        mCurrentList = optionsList[MENU_MAIN];
+        mCurrentMenu = menuList[MENU_MAIN];
         activateInput();
+    }
 
     handleMenuInput();
 
@@ -217,9 +239,9 @@ void StageSceneStateModConfig::exeMainMenu() {
             al::setNerve(this, &NrvStageSceneStateModConfig.GameplaySettings);
             break;
         case MAIN_GAMEMODE_SETTINGS:
-            if (!sSpeedrunModeEnabled)
+            if (!sSpeedrunModeEnabled) {
                 al::setNerve(this, &NrvStageSceneStateModConfig.GameModeSettings);
-            else {
+            } else {
                 al::setNerve(this, &NrvStageSceneStateModConfig.MainMenu);
                 Client::showUIMessage(u"You cannot use Gamemodes in Speedrun Mode");
                 Client::hideUIMessage();
@@ -530,7 +552,7 @@ void StageSceneStateModConfig::exeGameModeSettings() {
 void StageSceneStateModConfig::exeGameModeConfig() {
     if (al::isFirstStep(this)) {
         int mode = GameModeManager::instance()->getGameMode();
-        if (mode < 0 || mode >= mGamemodeConfigMenus.size()) {
+        if (mode < 0 || mode >= (int)mGamemodeConfigMenus.size()) {
             endSubMenuToParent(menuList[MENU_GAMEMODE], optionsList[MENU_GAMEMODE]);
             return;
         }
@@ -846,11 +868,16 @@ void StageSceneStateModConfig::handleMenuInput() {
         mCurrentList->down();
     }
 
-    if (mInput->isTriggerUiLeft()) {
-        mCurrentList->rollLeft();
-    }
-    if (mInput->isTriggerUiRight()) {
-        mCurrentList->rollRight();
+    // Only forward left/right to menus (and rows) that actually have roll parts.
+    // Calling rollLeft/rollRight on a non-roll item casts to al::RollParts* through
+    // a garbage vtable and asserts.
+    if (mInput->isTriggerUiLeft() || mInput->isTriggerUiRight()) {
+        if (currentMenuHasRollParts()) {
+            if (mInput->isTriggerUiLeft())
+                mCurrentList->rollLeft();
+            if (mInput->isTriggerUiRight())
+                mCurrentList->rollRight();
+        }
     }
 
     if (rs::isTriggerUiDecide(mHost))
@@ -874,6 +901,8 @@ void StageSceneStateModConfig::subMenuUpdate() {
             mMessageHideTimer = 0;
         }
 
+        // Commit roll parts state only when leaving the menu that owns them,
+        // never on arbitrary cancel presses from other menus.
         updateDataFromRollParts();
 
         if (mCurrentMenu == menuList[MENU_SERVERBROWSER]) {
@@ -946,15 +975,19 @@ void StageSceneStateModConfig::deactivateInput() {
 }
 
 void StageSceneStateModConfig::updateDataFromRollParts() {
-    if (mGamemodeConfigMenu) {
+    // Only commit gamemode config roll parts when actually in that menu
+    if (mGamemodeConfigMenu && mCurrentMenu == mGamemodeConfigMenu->mMenu) {
         mGamemodeConfigMenu->updateDataFromRollParts();
     }
 
-    int playerColType = ((al::RollParts*)optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_PLAYERCOL + 1])->mSelectedIdx;
-    sPuppetBounceEnabled = (playerColType >> 1) & 1;
-    sPuppetCollisionEnabled = playerColType & 1;
+    // Only commit gameplay roll parts when actually in the gameplay menu
+    if (mCurrentMenu == menuList[MENU_GAMEPLAY]) {
+        int playerColType = ((al::RollParts*)optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_PLAYERCOL + 1])->mSelectedIdx;
+        sPuppetBounceEnabled = (playerColType >> 1) & 1;
+        sPuppetCollisionEnabled = playerColType & 1;
 
-    int capColType = ((al::RollParts*)optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_CAPCOL + 1])->mSelectedIdx;
-    sCapBounceEnabled = (capColType >> 1) & 1;
-    sCapCollisionEnabled = capColType & 1;
+        int capColType = ((al::RollParts*)optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_CAPCOL + 1])->mSelectedIdx;
+        sCapBounceEnabled = (capColType >> 1) & 1;
+        sCapCollisionEnabled = capColType & 1;
+    }
 }
