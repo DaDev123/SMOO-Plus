@@ -1947,3 +1947,30 @@ void Client::hideConnect() {
 
     sInstance->mUIMessage->tryEnd();
 }
+
+/**
+ * @brief sends a message packet to the server
+ *
+ * @param message the message to send
+ * @param messageType type of message (0 for chat)
+ */
+void Client::sendMessagePacket(const char* message, int messageType) {
+    if (!sInstance) {
+        Logger::log("Static Instance is Null!\n");
+        return;
+    }
+
+    if (!message || strlen(message) == 0) {
+        return;
+    }
+
+    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
+
+    MessagePacket* packet = new MessagePacket();
+    packet->mUserID = sInstance->mUserID;
+    packet->senderId = sInstance->mUserID;
+    packet->messageType = messageType;
+    strcpy(packet->message, message);
+
+    sInstance->mSocket->queuePacket(packet);
+}

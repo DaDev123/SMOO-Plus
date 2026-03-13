@@ -97,6 +97,7 @@ static int debugPuppetIndex = 0;
 static int debugCaptureIndex = 0;
 static int pageIndex = 0;
 static const int maxPages = 4;
+static char chatInput[256] = "";
 
 al::SequenceInitInfo* initInfo;
 
@@ -121,8 +122,8 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
 
     gameSystemInit.orig(gameSystem);
 
-    // nn::hid::InitializeMouse();
-    // nn::hid::InitializeKeyboard();
+    nn::hid::InitializeMouse();
+    nn::hid::InitializeKeyboard();
 });
 
 HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSystem* gameSystem) -> void {
@@ -132,7 +133,7 @@ HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSys
 
     /* ImGui */
 
-    // imgui::updateImGuiInput();
+    imgui::updateImGuiInput();
 
     ImGui::NewFrame();
     drawMain(gameSystem->mSequence);
@@ -540,6 +541,21 @@ void drawMain(al::Sequence* curSequence) {
         isInGame = false;
 
         return;
+    }
+
+    // ===== CHAT WINDOW (always visible when connected) =====
+    if (isConnected && isInGame) {
+        ImGui::Begin("Chat", nullptr,
+                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+                         ImGuiWindowFlags_NoNavFocus);
+        ImGui::SetWindowPos(ImVec2(0, dispHeight - 200), ImGuiCond_FirstUseEver);
+        ImGui::SetWindowSize(ImVec2(400, 150));
+        ImGui::Text("Chat:");
+        if (ImGui::InputText("##chat", chatInput, IM_ARRAYSIZE(chatInput), ImGuiInputTextFlags_EnterReturnsTrue)) {
+            Client::sendMessagePacket(chatInput, 0);
+            chatInput[0] = '\0';  // Clear the input
+        }
+        ImGui::End();
     }
 
     // ===== NON-DEBUG MODE EXIT =====

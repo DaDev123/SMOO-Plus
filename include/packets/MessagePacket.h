@@ -8,7 +8,9 @@ struct PACKED MessagePacket : Packet {
         mPacketSize = sizeof(MessagePacket) - sizeof(Packet);
     };
 
-    uint senderId = 0;    // Changed from short to uint (4 bytes)
-    int messageType = 0;  // Changed from short to int (4 bytes)
+    nn::account::Uid senderId = nn::account::Uid();  // User ID of the message sender
+    int messageType = 0;                             // Changed from short to int (4 bytes)
     char message[MESSAGESIZE] = {};
 };
+
+enum MessageType : int { CHAT = 0, SYSTEM = 1, PRIVATE = 2 };

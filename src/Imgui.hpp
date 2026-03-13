@@ -17,6 +17,7 @@
 namespace imgui {
 
 static sead::Heap* sImGuiHeap = nullptr;
+static const float displayHeight = 720.f, displayWidth = 1280.f;
 
 static void setupFont() {
     FsHelper::LoadData loadData = {.path = "content:/DebugData/Font/ChironHeiHK-Regular.ttf"};
@@ -58,7 +59,7 @@ static void updateImGuiInput() {
     ImGuiIO& io = ImGui::GetIO();
 
     // Mouse position
-    io.AddMousePosEvent(mouseState.mX / 1280.f * io.DisplaySize.x, mouseState.mY / 720.f * io.DisplaySize.y);
+    io.AddMousePosEvent(mouseState.mX / displayWidth * io.DisplaySize.x, mouseState.mY / displayHeight * io.DisplaySize.y);
 
     // Mouse buttons
     constexpr std::pair<nn::hid::MouseButton, ImGuiMouseButton> buttonMap[] = {{nn::hid::MouseButton::Left, ImGuiMouseButton_Left},
@@ -126,6 +127,32 @@ static void updateImGuiInput() {
         {nn::hid::KeyboardKey::D8, ImGuiKey_8},
         {nn::hid::KeyboardKey::D9, ImGuiKey_9},
 
+        // Digits numpad
+        {nn::hid::KeyboardKey::NumPad0, ImGuiKey_Keypad0},
+        {nn::hid::KeyboardKey::NumPad1, ImGuiKey_Keypad1},
+        {nn::hid::KeyboardKey::NumPad2, ImGuiKey_Keypad2},
+        {nn::hid::KeyboardKey::NumPad3, ImGuiKey_Keypad3},
+        {nn::hid::KeyboardKey::NumPad4, ImGuiKey_Keypad4},
+        {nn::hid::KeyboardKey::NumPad5, ImGuiKey_Keypad5},
+        {nn::hid::KeyboardKey::NumPad6, ImGuiKey_Keypad6},
+        {nn::hid::KeyboardKey::NumPad7, ImGuiKey_Keypad7},
+        {nn::hid::KeyboardKey::NumPad8, ImGuiKey_Keypad8},
+        {nn::hid::KeyboardKey::NumPad9, ImGuiKey_Keypad9},
+
+        // Function keys
+        {nn::hid::KeyboardKey::F1, ImGuiKey_F1},
+        {nn::hid::KeyboardKey::F2, ImGuiKey_F2},
+        {nn::hid::KeyboardKey::F3, ImGuiKey_F3},
+        {nn::hid::KeyboardKey::F4, ImGuiKey_F4},
+        {nn::hid::KeyboardKey::F5, ImGuiKey_F5},
+        {nn::hid::KeyboardKey::F6, ImGuiKey_F6},
+        {nn::hid::KeyboardKey::F7, ImGuiKey_F7},
+        {nn::hid::KeyboardKey::F8, ImGuiKey_F8},
+        {nn::hid::KeyboardKey::F9, ImGuiKey_F9},
+        {nn::hid::KeyboardKey::F10, ImGuiKey_F10},
+        {nn::hid::KeyboardKey::F11, ImGuiKey_F11},
+        {nn::hid::KeyboardKey::F12, ImGuiKey_F12},
+
         // Navigation
         {nn::hid::KeyboardKey::LeftArrow, ImGuiKey_LeftArrow},
         {nn::hid::KeyboardKey::RightArrow, ImGuiKey_RightArrow},
@@ -137,7 +164,7 @@ static void updateImGuiInput() {
         {nn::hid::KeyboardKey::Tab, ImGuiKey_Tab},
         {nn::hid::KeyboardKey::Backspace, ImGuiKey_Backspace},
         {nn::hid::KeyboardKey::Return, ImGuiKey_Enter},
-        {nn::hid::KeyboardKey::NumPadEnter, ImGuiKey_Enter}};
+        {nn::hid::KeyboardKey::NumPadEnter, ImGuiKey_Enter}};  // looks like ImGui doesn't understand numPadEnter
 
     for (auto&& [hidKey, imguiKey] : keyMap) {
         bool was = lastKeyboardState.mKeys.Test(int(hidKey));
@@ -176,12 +203,50 @@ static void updateImGuiInput() {
 
             char utf8[2] = {c, 0};
             io.AddInputCharactersUTF8(utf8);
+        } else if (imguiKey >= ImGuiKey_0 && imguiKey <= ImGuiKey_9) {
+            int idx = imguiKey - ImGuiKey_0;
+
+            if (!io.KeyShift) {
+                const char normal[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+                io.AddInputCharacter(normal[idx]);
+            } else {
+                switch (idx) {
+                case 1:
+                    io.AddInputCharacter('!');
+                    break;
+                case 2:
+                    io.AddInputCharactersUTF8("\"");
+                    break;
+                case 3:
+                    io.AddInputCharactersUTF8("§");
+                    break;
+                case 4:
+                    io.AddInputCharacter('$');
+                    break;
+                case 5:
+                    io.AddInputCharacter('%');
+                    break;
+                case 6:
+                    io.AddInputCharacter('&');
+                    break;
+                case 7:
+                    io.AddInputCharacter('/');
+                    break;
+                case 8:
+                    io.AddInputCharacter('(');
+                    break;
+                case 9:
+                    io.AddInputCharacter(')');
+                    break;
+                case 0:
+                    io.AddInputCharacter('=');
+                    break;
+                }
+            }
         }
 
-        if (imguiKey >= ImGuiKey_0 && imguiKey <= ImGuiKey_9) {
-            char c = char('0' + (imguiKey - ImGuiKey_0));
-            char utf8[2] = {c, 0};
-            io.AddInputCharactersUTF8(utf8);
+        else if (imguiKey == ImGuiKey_Space) {
+            io.AddInputCharacter(' ');
         }
     }
 
