@@ -401,11 +401,11 @@ void StageSceneStateModConfig::initGameplayMenu(const al::LayoutInitInfo& initIn
 
     sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
     optionsList[MENU_GAMEPLAY]->startLoopActionAll("Loop", "Loop");
-    RollPartsData* dataColPlayer = new RollPartsData(
-        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" }, (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), false);
-    RollPartsData* dataColCap = new RollPartsData(
-        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" }, (sCapCollisionEnabled + (sCapBounceEnabled << 1)), false);
-    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t* [] { u"" });
+    RollPartsData* dataColPlayer = new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
+                                                     (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), false);
+    RollPartsData* dataColCap = new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
+                                                  (sCapCollisionEnabled + (sCapBounceEnabled << 1)), false);
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
     optionsList[MENU_GAMEPLAY]->setRollPartsData(new RollPartsData[]{*dataColPlayer, *dataColCap, *dataEmpty, *dataEmpty, *dataEmpty});
 
     optionsList[MENU_GAMEPLAY]->addStringData(msgList[MENU_GAMEPLAY]->mBuffer, "TxtContent");

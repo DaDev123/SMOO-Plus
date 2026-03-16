@@ -33,8 +33,8 @@ void ShineThiefConfigMenu::initMenu() {
     StageSceneStateModConfig::setMenuItemCheck(mList->mListPartsArr[3]);
     StageSceneStateModConfig::setMenuItemRoll(mList->mListPartsArr[4]);
     sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
-    RollPartsData* empty = new RollPartsData(0, new const char16_t* [] { u"" });
-    RollPartsData* teams = new RollPartsData(2, new const char16_t* [] { u"Team 1", u"Team 2" }, 0, false);
+    RollPartsData* empty = new RollPartsData(0, new const char16_t*[]{u""});
+    RollPartsData* teams = new RollPartsData(2, new const char16_t*[]{u"Team 1", u"Team 2"}, 0, false);
     mList->startLoopActionAll("Loop", "Loop");
     mList->setRollPartsData(new RollPartsData[]{*empty, *empty, *empty, *teams});
 }
