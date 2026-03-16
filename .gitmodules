@@ -1,6 +1,3 @@
-[submodule "include/include"]
-	path = include/include
-	url = https://github.com/MonsterDruide1/OdysseyHeaders.git
 [submodule "sys"]
 	path = sys
 	url = https://github.com/fruityloops1/LibHakkun
