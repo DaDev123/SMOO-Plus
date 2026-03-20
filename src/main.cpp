@@ -38,7 +38,7 @@
 
 #include "agl/common/aglDrawContext.h"
 
-#include "game/Info/ShineInfo.h"
+#include "game/Item/ShineInfo.h"
 #include "game/Player/HackCap.h"
 #include "game/Player/PlayerActorBase.h"
 #include "game/Player/PlayerActorHakoniwa.h"
@@ -153,7 +153,7 @@ HkTrampoline<void, GameDataHolderWriter, ShineInfo*> sendShinePacketHook = hk::h
     if (!GameDataFunction::isGotShine(writer, info)) {
         for (int x = 0; x < 0x400; x++) {
             GameDataFile::HintInfo* curInfo = &writer->getGameDataFile()->getHintList()[x];
-            if (info->stageName == curInfo->stageName && info->objectId == curInfo->objId) {
+            if (info->mStageName == curInfo->stageName && info->mObjId == curInfo->objId) {
                 Client::sendShineCollectPacket(curInfo->uniqueId);
             }
         }
