@@ -77,6 +77,10 @@ struct PendingCoinCollect {
     char stage[64];
 };
 
+struct PendingCheckpoint {
+    char objId[64];
+};
+
 // ===== MAIN CLASS =====
 class Client {
     SEAD_SINGLETON_DISPOSER(Client)
@@ -138,6 +142,7 @@ public:
     static void sendShineThiefInfPacket();
     static void sendPuppetPosInfoPacket();
     static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
+    static void sendCheckpointGetPacket(const char* objId);
     static void sendScenarioSyncPacket(const char* changeStageName, s32 scenario);
     static void sendMessagePacket(const char* message, int messageType = 0);
 
@@ -263,6 +268,7 @@ private:
     void updateMessages(MessagePacket* packet);
     void updateHealthCoins(HealthCoins* packet);
     void updateCoinCollects(CoinCollectCollect* packet);
+    void updateCheckpoints(CheckpointGet* packet);
 
     // ===== UTILITY METHODS =====
     PuppetInfo* findPuppetInfo(const nn::account::Uid& id, bool isFindAvailable);
@@ -273,6 +279,7 @@ private:
      *        when draining mPendingCoinCollects.
      */
     static void applyOneCoinCollect(const char* placeID, int worldID, const char* stage);
+    static void getOneCheckpoint(const char* objId);
 
     // ===== CONNECTION MEMBERS =====
     al::AsyncFunctorThread* mReadThread = nullptr;
@@ -304,9 +311,16 @@ private:
     // ===== COIN COLLECT PENDING QUEUE =====
     // Coin collect packets that arrived while mCurStageScene was null are stored here
     // and applied in update() once the scene becomes available.
-    static constexpr int sMaxPendingCoinCollects = 50;
+    static constexpr s32 sMaxPendingCoinCollects = 50;
     PendingCoinCollect mPendingCoinCollects[sMaxPendingCoinCollects];
-    int mPendingCoinCollectCount = 0;
+    s32 mPendingCoinCollectCount = 0;
+
+    // ===== CHECKPOINT PENDING QUEUE =====
+    // Checkpoint get packets that arrived while mCurStageScene was null are stored here
+    // and applied in update() once the scene becomes available.
+    static constexpr s32 sMaxPendingCheckpoints = 10;
+    PendingCheckpoint mPendingCheckpoints[sMaxPendingCheckpoints];
+    s32 mPendingCheckpointCount = 0;
 
     // ===== MESSAGE MEMBERS =====
     static const int sMaxMsgCount = 100;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "al/Library/Placement/PlacementId.h"
-
 #include <basis/seadTypes.h>
 #include <container/seadPtrArray.h>
 #include <math/seadVector.h>
@@ -9,8 +7,11 @@
 #include <prim/seadSafeString.h>
 #include <stream/seadStream.h>
 
+#include "Library/Base/StringUtil.h"
+#include "Library/Placement/PlacementId.h"
 #include "Npc/SessionEventProgress.h"
 #include "Npc/SessionMusicianType.h"
+#include "server/CheckpointMasterList.h"
 #include "System/UniqObjInfo.h"
 #include "Util/ScenePrepoFunction.h"
 
@@ -99,9 +100,13 @@ public:
     static_assert(sizeof(GrowFlower) == 0x140);
 
     struct CollectBgmInfo {
-        const char* name;
-        const char* situationName;
-        bool isCollected;
+        const char* name = nullptr;
+        const char* situationName = nullptr;
+        bool isCollected = false;
+
+        CollectBgmInfo() = default;
+
+        CollectBgmInfo(const char* name, const char* situationName) : name(name), situationName(situationName) {}
     };
 
     static_assert(sizeof(CollectBgmInfo) == 0x18);
@@ -122,10 +127,7 @@ public:
         sead::FixedSafeString<64> objectName;
         sead::Vector3f trans;
         sead::Vector3f originalTrans;
-        s64 _1a8 = 0;
-        s64 _1b0 = 0;
-        s64 _1b8 = 0;
-        s64 _1c0 = 0;
+        s64 _1a8[4] = {};
         s32 mainScenarioNo;
         s32 worldId;
         bool isMoonRock;
@@ -168,6 +170,7 @@ public:
 
     static_assert(sizeof(CheckpointInfo) == 0x148);
 
+    // NOTE: no bounds check done for any operations
     template <typename T, s32 Size>
     class FixedHeapArray {
     public:
@@ -731,11 +734,59 @@ public:
     // get the total shine count, only including unique shines (no more than 1 shop shine per kingdom)
     s32 getTotalUniqueShineNum() {
         int shines = 0;
-        for (int i = 0; i < sNumWorlds; i++) {
+        for (s32 i = 0; i < sNumWorlds; i++) {
             shines += mShineNum[i];                       // all shines including shop
             shines -= std::max(mShopShineNum[i] - 1, 0);  // subtract shop moons except for 1 per kingdom
         }
         return shines;
+    }
+
+    // these three functions are custom impls of checkpoint functions from 0b-0f's decomp of GameDataFile and they are used for checkpoint sync
+    UniqObjInfo* customSetCheckpointId(const al::PlacementId* placement_id) {
+        UniqObjInfo* result;
+        al::StringTmp<128> obj_id;
+        placement_id->makeString(&obj_id);
+        if (CheckpointInfo* info = tryFindCheckpointInfoImpl(mCheckpointTable.begin(), mCurrentStageName.cstr(), obj_id.cstr())) {
+            info->isGet = true;
+            if (UniqObjInfo* got_info = addGotCheckpoint(mGotCheckpoint.begin(), info->objInfo.getStageName(), info->objInfo.getObjId())) {
+                got_info->setStageName(info->objInfo.getStageName());
+                got_info->mObjId.format("%s", info->objInfo.getObjId());
+                mGotCheckpointNum++;
+                result = got_info;
+            }
+        } else {
+            CheckpointMasterList::CheckpointData data = CheckpointMasterList::getCheckpointDataFromMasterList(obj_id.cstr());
+            if (UniqObjInfo* got_info = addGotCheckpoint(mGotCheckpoint.begin(), data.stageName, data.objId)) {
+                got_info->setStageName(data.stageName);
+                got_info->mObjId.format("%s", data.objId);
+                mGotCheckpointNum++;
+                result = got_info;
+            }
+        }
+        al::copyString(mCheckpointName.getBuffer(), obj_id.cstr(), 128);
+        _290.format("%s", mCurrentStageName.cstr());
+        _908.clear();
+        mPlayerStartId.clear();
+        _160.clear();
+        return result;
+    }
+
+    static UniqObjInfo* addGotCheckpoint(UniqObjInfo* list, const char* stage_name, const char* obj_id) {
+        for (s32 i = 0; i < 320; i++) {
+            if (list[i].mStageName.isEmpty() && list[i].mObjId.isEmpty())
+                return &list[i];
+            if (al::isEqualString(list[i].getStageName(), stage_name) && al::isEqualString(list[i].getObjId(), obj_id))
+                break;
+        }
+        return nullptr;
+    }
+
+    static CheckpointInfo* tryFindCheckpointInfoImpl(CheckpointInfo** table, const char* stage_name, const char* obj_id) {
+        for (s32 i = 0; i < sNumWorlds; i++)
+            for (s32 j = 0; j < 16; j++)
+                if (al::isEqualString(stage_name, table[i][j].objInfo.mStageName) && al::isEqualString(obj_id, table[i][j].objInfo.getObjId()))
+                    return &table[i][j];
+        return nullptr;
     }
 
     // some getters/setters for private member variables
@@ -743,8 +794,10 @@ public:
     bool& getIsEnableCap() { return mIsEnableCap; }
     GameDataHolder* getGameDataHolder() { return mGameDataHolder; }
     sead::FixedSafeString<128> getPlayerStartId() { return mPlayerStartId; }
-    FixedHeapArray<s32, sNumWorlds> getScenarioNumArr() { return mScenarioNo; };
-    FixedHeapArray<s32, sNumWorlds> getMainScenarioNumArr() { return mMainScenarioNo; };
+    FixedHeapArray<s32, sNumWorlds> getScenarioNumArr() { return mScenarioNo; }
+    FixedHeapArray<s32, sNumWorlds> getMainScenarioNumArr() { return mMainScenarioNo; }
+    FixedHeapArray<CheckpointInfo*, sNumWorlds>& getCheckpointTable() { return mCheckpointTable; }
+    FixedHeapArray<UniqObjInfo, 320>& getGotCheckpointTable() { return mGotCheckpoint; }
 
     // end custom methods
 

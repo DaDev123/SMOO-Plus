@@ -71,6 +71,7 @@
 #include "layouts/FluddIcon.hpp"
 #include "layouts/SpeedrunIcon.h"
 #include "logger.hpp"
+#include "MapObj/CheckpointFlag.h"
 #include "puppetHooks.hpp"
 #include "puppets/PuppetInfo.h"
 #include "Scene/Twists/CustomPlayerConst.h"
@@ -180,6 +181,12 @@ HkTrampoline<void, GameDataFile*, al::PlacementId*> sendCoinCollectCollectPacket
         Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(), file->getStageNameCurrent());
         sendCoinCollectCollectPacketHook.orig(file, placeID);
     });
+
+HkTrampoline<void, CheckpointFlag*> sendCheckpointGetPacketHook = hk::hook::trampoline([](CheckpointFlag* checkpoint) -> void {
+    if (al::isFirstStep(checkpoint))
+        Client::sendCheckpointGetPacket(al::makeStringPlacementId(checkpoint->getPlacementId()).cstr());
+    sendCheckpointGetPacketHook.orig(checkpoint);
+});
 
 HkTrampoline<void, HakoniwaSequence*, al::SequenceInitInfo*> hakoniwaSequenceInitHook =
     hk::hook::trampoline([](HakoniwaSequence* sequence, al::SequenceInitInfo* initInfo) -> void {
@@ -857,6 +864,10 @@ extern "C" void hkMain() {
     sendCoinCollectCollectPacketHook.installAtSym<"_ZN12GameDataFile14addCoinCollectEPKN2al11PlacementIdE">();
     registerCoinCollectToListHook.installAtSym<"_ZN11CoinCollect18initAfterPlacementEv">();
     registerCoinCollect2DToListHook.installAtSym<"_ZN13CoinCollect2D18initAfterPlacementEv">();
+
+    // CheckpointFlag Syncing
+    sendCheckpointGetPacketHook.installAtSym<"_ZN14CheckpointFlag6exeGetEv">();
+    isGotCheckpointInWorldHook.installAtSym<"_ZNK12GameDataFile22isGotCheckpointInWorldEi">();
 
     // Amiibo Button Disabling
     hk::hook::replace([]() -> void { return; }).installAtSym<"_ZN2rs16isHoldAmiiboModeEPKN2al18IUseSceneObjHolderE">();

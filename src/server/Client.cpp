@@ -13,6 +13,8 @@
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
 
+#include "game/MapObj/CheckpointFlag.h"
+#include "game/MapObj/CheckpointFlagWatcher.h"
 #include "game/Player/HackCap.h"
 #include "game/Player/PlayerAnimator.h"
 #include "game/Player/PlayerAnimFrameCtrl.h"
@@ -45,6 +47,7 @@
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
 #include "System/GameDataHolderWriter.h"
+#include "System/UniqObjInfo.h"
 #include "thread/seadMessageQueue.h"
 #include "types.h"
 #include "Util/AchievementUtil.h"
@@ -94,6 +97,8 @@ Client::Client() {
     mCoinCollect2DArray.allocBuffer(25, nullptr);
 
     mPendingCoinCollectCount = 0;
+
+    mPendingCheckpointCount = 0;
 
     nn::account::GetLastOpenedUser(&mUserID);
 
@@ -541,6 +546,9 @@ void Client::readFunc() {
                 break;
             case PacketType::COINCOLLECTCOLL:
                 updateCoinCollects((CoinCollectCollect*)curPacket);
+                break;
+            case PacketType::CHECKPOINTGET:
+                updateCheckpoints((CheckpointGet*)curPacket);
                 break;
 
             case PacketType::CLIENTINIT: {
@@ -995,6 +1003,25 @@ void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, cons
     strcpy(packet->placeID, placeID);
     packet->worldID = worldID;
     strcpy(packet->stage, stage);
+
+    sInstance->mSocket->queuePacket(packet);
+}
+
+/**
+ * @brief Sends checkpoint get packet.
+ * @param objId
+ */
+void Client::sendCheckpointGetPacket(const char* objId) {
+    if (!sInstance) {
+        Logger::log("Static Instance is Null!\n");
+        return;
+    }
+
+    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
+
+    CheckpointGet* packet = new CheckpointGet();
+    packet->mUserID = sInstance->mUserID;
+    strcpy(packet->objId, objId);
 
     sInstance->mSocket->queuePacket(packet);
 }
@@ -1703,6 +1730,56 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
 }
 
 /**
+ * @brief Core logic for marking a checkpoint as collected and warpable when a checkpoint get packet is received from the read thread.
+ *
+ * @param objId
+ */
+void Client::getOneCheckpoint(const char* objId) {
+    GameDataFile* gdf = GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile();
+
+    if (!gdf) {
+        Logger::log("updateCheckpoints: GameDataFile null, dropping\n");
+        return;
+    }
+
+    al::PlacementId placeId(objId, nullptr, nullptr);
+    UniqObjInfo* info = gdf->customSetCheckpointId(&placeId);
+    if (al::isEqualString(info->getStageName(), sInstance->mStageName.cstr())) {
+        CheckpointFlag* checkpoint = rs::tryFindCheckpointFlag(sInstance->mCurStageScene, objId);
+        if (checkpoint) {
+            al::startHitReaction(checkpoint, "取得");
+            al::startAction(checkpoint, "Get");
+            rs::requestHideCheckpointFlagBalloon(checkpoint);
+            checkpoint->getCheckpoint();
+            checkpoint->setAfter();
+        }
+    }
+}
+
+/**
+ * @brief Receives a checkpoint get packet from the read thread.
+ *
+ * @param packet
+ */
+void Client::updateCheckpoints(CheckpointGet* packet) {
+    if (!sInstance)
+        return;
+
+    if (!sInstance->mCurStageScene) {
+        if (sInstance->mPendingCheckpointCount < sMaxPendingCheckpoints) {
+            PendingCheckpoint& pending = sInstance->mPendingCheckpoints[sInstance->mPendingCheckpointCount++];
+            strcpy(pending.objId, packet->objId);
+            Logger::log("updateCheckpoints: scene not ready, queued (total pending: %d)\n", sInstance->mPendingCoinCollectCount);
+        } else {
+            Logger::log("updateCheckpoints: pending queue full, dropping packet\n");
+        }
+        return;
+    }
+
+    getOneCheckpoint(packet->objId);
+}
+
+/**
  * @brief Main per-frame update. Runs on the game thread.
  *        Drains any coin collects that arrived before the scene was ready.
  */
@@ -1714,14 +1791,24 @@ void Client::update() {
             updateShines();
         }
 
-        // Drain coin collects that arrived while the scene was loading
-        if (sInstance->mCurStageScene && sInstance->mPendingCoinCollectCount > 0) {
-            Logger::log("update: draining %d pending coin collect(s)\n", sInstance->mPendingCoinCollectCount);
-            for (int i = 0; i < sInstance->mPendingCoinCollectCount; i++) {
-                PendingCoinCollect& p = sInstance->mPendingCoinCollects[i];
-                applyOneCoinCollect(p.placeID, p.worldID, p.stage);
+        if (sInstance->mCurStageScene) {
+            // Drain coin collects that arrived while the scene was loading
+            if (sInstance->mPendingCoinCollectCount > 0) {
+                Logger::log("update: draining %d pending coin collect(s)\n", sInstance->mPendingCoinCollectCount);
+                for (s32 i = 0; i < sInstance->mPendingCoinCollectCount; i++) {
+                    PendingCoinCollect& p = sInstance->mPendingCoinCollects[i];
+                    applyOneCoinCollect(p.placeID, p.worldID, p.stage);
+                }
+                sInstance->mPendingCoinCollectCount = 0;
             }
-            sInstance->mPendingCoinCollectCount = 0;
+
+            // Drain checkpoints that arrived while the scene was loading
+            if (sInstance->mPendingCheckpointCount > 0) {
+                Logger::log("update: draining %d pending checkpoint(s)\n", sInstance->mPendingCheckpointCount);
+                for (s32 i = 0; i < sInstance->mPendingCheckpointCount; i++) {
+                    PendingCheckpoint& c = sInstance->mPendingCheckpoints[i];
+                }
+            }
         }
 
         GameModeManager::instance()->update();

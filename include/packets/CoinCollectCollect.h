@@ -8,6 +8,6 @@ struct PACKED CoinCollectCollect : Packet {
         mPacketSize = sizeof(CoinCollectCollect) - sizeof(Packet);
     };
     char placeID[64] = {};
-    int worldID;
+    int worldID = 0;
     char stage[64] = {};
 };

@@ -1,4 +1,5 @@
 #include "hk/hook/a64/Assembler.h"
+#include "hk/hook/Replace.h"
 #include "hk/hook/Trampoline.h"
 #include "hk/util/Math.h"
 
@@ -36,15 +37,20 @@
 #include "Library/Collision/CollisionPartsTriangle.h"
 #include "Library/Nerve/Nerve.h"
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
+#include "Library/Scene/SceneObjUtil.h"
 #include "Scene/StageScene.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "Scene/Twists/TwistsConfig.hpp"
+#include "server/CheckpointMasterList.h"
 #include "server/Client.hpp"
 #include "server/freeze/FreezeTagMode.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 #include "server/hns/HideAndSeekMode.hpp"
 #include "server/shine-thief/ShineThiefMode.hpp"
+#include "System/GameDataFile.h"
 #include "System/GameDataHolder.h"
+#include "System/GameDataHolderAccessor.h"
+#include "System/UniqObjInfo.h"
 
 static HkReplace<bool, al::IUseSceneObjHolder*> comboBtnHook = hk::hook::replace([](al::IUseSceneObjHolder* holder) -> bool {
     // only switch to combo if freezetag or shinethief is active
@@ -169,6 +175,20 @@ static HkTrampoline<void, CoinCollect2D*> registerCoinCollect2DToListHook = hk::
     Client::tryRegisterCoinCollect2D(coin);
 });
 
+static HkReplace<bool, GameDataFile*, s32> isGotCheckpointInWorldHook = hk::hook::replace([](GameDataFile* gdf, s32 index) -> bool {
+    s32 index2 = gdf->calcCheckpointIndexInScenario(index);
+    if (index2 < 0)
+        return false;
+    const char* checkpointName = gdf->getCheckpointTable()[gdf->getCurrentWorldIdNoDevelop()][index2].objInfo.getObjId();
+    for (s32 i = 0; i < CheckpointMasterList::sNumCheckpoints; i++) {
+        UniqObjInfo info = gdf->getGotCheckpointTable()[i];
+        if (al::isEqualString(checkpointName, info.getObjId())) {
+            return true;
+        }
+    }
+    return false;
+});
+
 static HkReplace<void, StageSceneStatePauseMenu*> overrideHelpFadeNerve = hk::hook::replace([](StageSceneStatePauseMenu* state) -> void {
     // Set label in menu inside LocalizedData/${lang}/MessageData/LayoutMessage.szs/Menu.msbt/Menu_Help
     state->exeModConfig();
@@ -237,7 +257,6 @@ static HkTrampoline<void, StageScene*, al::SceneInitInfo*> stageSceneInitHook =
                 }
             }
         }
-
         if (GameModeManager::instance()->isMode(GameMode::FREEZETAG) || GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
             al::CameraDirector* director = curScene->getCameraDirector();
             if (director && director->mPoserFactory) {
