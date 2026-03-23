@@ -764,10 +764,6 @@ public:
             }
         }
         al::copyString(mCheckpointName.getBuffer(), obj_id.cstr(), 128);
-        _290.format("%s", mCurrentStageName.cstr());
-        _908.clear();
-        mPlayerStartId.clear();
-        _160.clear();
         return result;
     }
 
