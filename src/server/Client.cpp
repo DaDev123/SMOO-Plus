@@ -1807,6 +1807,7 @@ void Client::update() {
                 Logger::log("update: draining %d pending checkpoint(s)\n", sInstance->mPendingCheckpointCount);
                 for (s32 i = 0; i < sInstance->mPendingCheckpointCount; i++) {
                     PendingCheckpoint& c = sInstance->mPendingCheckpoints[i];
+                    getOneCheckpoint(c.objId);
                 }
             }
         }
