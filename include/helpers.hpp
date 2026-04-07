@@ -133,20 +133,7 @@ struct Transform {
 // From Boss Room Unity Example
 class VisualUtils {
 public:
-    /*
-     * @brief Smoothly interpolates towards the parent transform.
-     * @param moveTransform The transform to interpolate
-     * @param targetTransform The transform to interpolate towards.
-     * @param timeDelta Time in seconds that has elapsed, for purposes of interpolation.
-     * @param closingSpeed The closing speed in m/s. This is updated by SmoothMove every time it is
-     * called, and will drop to 0 whenever the moveTransform has "caught up".
-     * @param maxAngularSpeed The max angular speed to to rotate at, in degrees/s.
-     */
     static float SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed);
-
-    // Ultra-smooth exponential version (recommended for best visual quality)
-    static float SmoothMove_LowLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed);
-    static float SmoothMove_RegularLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed);
 
     constexpr static const float k_MinSmoothSpeed = 0.1f;
     constexpr static const float k_TargetCatchupTime = 0.2f;

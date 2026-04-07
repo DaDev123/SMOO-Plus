@@ -198,13 +198,12 @@ void PuppetActor::control() {
 
         // Position & Rotation Handling
 
-        // Use smooth movement if low latency is enabled, otherwise snap directly
-        if (StageSceneStateModConfig::isLowLatencyEnabled()) {
+        // Use smooth movement if low latency is disabled, otherwise snap directly
+        if (!StageSceneStateModConfig::isLowLatencyEnabled()) {
             sead::Vector3f* pPos = al::getTransPtr(this);
             sead::Quatf* pQuat = al::getQuatPtr(this);
 
-            mClosingSpeed =
-                VisualUtils::SmoothMove_RegularLatency({pPos, pQuat}, {&mInfo->playerPos, &mInfo->playerRot}, Time::deltaTime, mClosingSpeed, 1440.0f);
+            mClosingSpeed = VisualUtils::SmoothMove({pPos, pQuat}, {&mInfo->playerPos, &mInfo->playerRot}, Time::deltaTime, mClosingSpeed, 1440.0f);
         } else {
             al::setTrans(this, mInfo->playerPos);
             al::setQuat(this, mInfo->playerRot);

@@ -1171,26 +1171,31 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
 const struct {
     const char* stage;
     s32 index;
-    const char* warpStage = stage;
-} stageListForScenarioSync[] = {{"CapWorldHomeStage", 0},
-                                {"WaterfallWorldHomeStage", 1},
-                                {"SandWorldHomeStage", 2},
-                                {"SandWorldUnderground001Stage", 2, "SandWorldHomeStage"},
-                                {"ForestWorldHomeStage", 3},
-                                {"ForestWorldBossStage", 3, "ForestWorldHomeStage"},
-                                {"LakeWorldHomeStage", 4},
-                                {"CloudWorldHomeStage", 5},
-                                {"ClashWorldHomeStage", 6},
-                                {"CityWorldHomeStage", 7},
-                                {"SeaWorldHomeStage", 8},
-                                {"SnowWorldHomeStage", 9},
-                                {"SnowWorldLobby001Stage", 9, "SnowWorldHomeStage"},
-                                {"LavaWorldHomeStage", 10},
-                                {"BossRaidWorldHomeStage", 11},
-                                {"SkyWorldHomeStage", 12},
-                                {"PeachWorldHomeStage", 13},
-                                {"Special1WorldHomeStage", 14},
-                                {"Special2WorldHomeStage", 15}};
+    const char* warpStage;
+    int possibleScenarios[5];
+
+} stageListForScenarioSync[] = {
+    // {"CapWorldHomeStage", 0, "CapWorldHomeStage", {1, 2, 3, 4, 0}},
+    {"WaterfallWorldHomeStage", 1, "WaterfallWorldHomeStage", {1, 2, 3, 4, 0}},
+    {"SandWorldHomeStage", 2, "SandWorldHomeStage", {1, 2, 3, 4, 5}},
+    {"SandWorldUnderground001Stage", 2, "SandWorldHomeStage", {1, 2, 3, 4, 5}},
+    {"ForestWorldHomeStage", 3, "ForestWorldHomeStage", {1, 2, 3, 4, 5}},
+    {"ForestWorldBossStage", 3, "ForestWorldHomeStage", {1, 2, 3, 4, 5}},
+    {"LakeWorldHomeStage", 4, "LakeWorldHomeStage", {1, 2, 3, 4, 0}},
+    // {"CloudWorldHomeStage", 5, "CloudWorldHomeStage", {1, 3, 4, 0, 0}},
+    {"ClashWorldHomeStage", 6, "ClashWorldHomeStage", {1, 2, 3, 4, 0}},
+    {"CityWorldHomeStage", 7, "CityWorldHomeStage", {1, 2, 4, 5, 8}},
+    {"SeaWorldHomeStage", 8, "SeaWorldHomeStage", {1, 2, 3, 4, 0}},
+    {"SnowWorldHomeStage", 9, "SnowWorldHomeStage", {1, 2, 3, 4, 0}},
+    {"SnowWorldLobby001Stage", 9, "SnowWorldHomeStage", {1, 2, 3, 4, 0}},
+    {"LavaWorldHomeStage", 10, "LavaWorldHomeStage", {1, 2, 3, 4, 8}},
+    {"BossRaidWorldHomeStage", 11, "BossRaidWorldHomeStage", {1, 2, 3, 4, 0}},
+    {"SkyWorldHomeStage", 12, "SkyWorldHomeStage", {1, 2, 3, 4, 0}},
+    {"MoonWorldHomeStage", 13, "MoonWorldHomeStage", {1, 2, 3, 0, 0}},
+    {"PeachWorldHomeStage", 14, "PeachWorldHomeStage", {2, 0, 0, 0, 0}},
+    {"Special1WorldHomeStage", 15, "Special1WorldHomeStage", {1, 2, 0, 0, 0}},
+    {"Special2WorldHomeStage", 16, "Special2WorldHomeStage", {1, 2, 0, 0, 0}},
+};
 
 static s32 findWorldIdFromStageName(const char* stageName) {
     for (s32 i = 0; i < hk::util::arraySize(stageListForScenarioSync); i++) {
@@ -1199,6 +1204,18 @@ static s32 findWorldIdFromStageName(const char* stageName) {
         }
     }
     return -1;
+}
+
+static bool validateScenarioFromStageName(const char* stageName, s32 scenario) {
+    for (s32 i = 0; i < hk::util::arraySize(stageListForScenarioSync); i++) {
+        if (al::isEqualString(stageListForScenarioSync[i].stage, stageName)) {
+            for (s32 j = 0; j < hk::util::arraySize(stageListForScenarioSync[i].possibleScenarios); j++) {
+                if (stageListForScenarioSync[i].possibleScenarios[j] == scenario)
+                    return true;
+            }
+        }
+    }
+    return false;
 }
 
 static const char* findWarpStageFromStageName(const char* stageName) {
@@ -1234,13 +1251,14 @@ void Client::updateGameInfo(GameInf* packet) {
 
     if (findWorldIdFromStageName(packet->stageName) == -1)
         return;
+    GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
 
-    int scenario = Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr()[findWorldIdFromStageName(packet->stageName)];
-    if (packet->scenarioNo < 15 && packet->scenarioNo > scenario) {
-        Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr()[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
-        if (findWarpStageFromStageName(packet->stageName) &&
-            strcmp(GameDataFunction::getCurrentStageName(Client::getHolder()), findWarpStageFromStageName(packet->stageName)) == 0) {
-            ChangeStageInfo info(Client::getHolder(), "start", findWarpStageFromStageName(packet->stageName), false, packet->scenarioNo);
+    int curScen = scenNumArr[findWorldIdFromStageName(packet->stageName)];
+    if (packet->scenarioNo < 15 && packet->scenarioNo > curScen && validateScenarioFromStageName(packet->stageName, packet->scenarioNo)) {
+        scenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
+        const char* warpStage = findWarpStageFromStageName(packet->stageName);
+        if (warpStage && strcmp(GameDataFunction::getCurrentStageName(Client::getHolder()), warpStage) == 0) {
+            ChangeStageInfo info(Client::getHolder(), "start", warpStage, false, packet->scenarioNo);
             Client::getHolder()->changeNextStage(&info);
         }
     }

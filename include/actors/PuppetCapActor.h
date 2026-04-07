@@ -23,8 +23,9 @@ public:
     void update();
 
     // Public access for direct manipulation
-    HackCapJointControlKeeper* mJointKeeper;
+    HackCapJointControlKeeper* mJointKeeper = nullptr;
 
 private:
-    PuppetInfo* mInfo;
+    PuppetInfo* mInfo = nullptr;
+    float mClosingSpeed = 0;
 };

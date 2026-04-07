@@ -13,6 +13,9 @@
 
 #include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "helpers.hpp"
+#include "Library/Math/MathUtil.h"
+#include "math/seadQuat.h"
+#include "math/seadVectorFwd.h"
 #include "Project/HitSensor/HitSensor.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "Scene/Twists/TwistsConfig.hpp"
@@ -57,7 +60,12 @@ void PuppetCapActor::control() {
         startAction(mInfo->capAnim);
     }
 
-    al::setTrans(this, mInfo->capPos);
+    if (!StageSceneStateModConfig::isLowLatencyEnabled()) {
+        sead::Vector3f* trans = al::getTransPtr(this);
+        al::lerpVec(trans, *trans, mInfo->capPos, 0.45);
+    } else {
+        al::setTrans(this, mInfo->capPos);
+    }
     al::setQuat(this, mInfo->capQuat);
 
     mJointKeeper->mJointRot.x = mInfo->capRot.x;

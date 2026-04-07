@@ -14,7 +14,6 @@
 #include "game/System/GameSystem.h"
 
 #include "logger.hpp"
-#include "Scene/StageSceneStateModConfig.hpp"
 #include "System/GameDataHolderWriter.h"
 
 bool isPartOf(const char* w1, const char* w2) {
@@ -127,67 +126,8 @@ const char* tryConvertName(const char* className) {
 }
 
 // Unity Classes
-
-// Main SmoothMove function - now checks the actual config setting
-float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
-    // Check the ACTUAL setting from StageSceneStateModConfig
-    bool useLowLatency = StageSceneStateModConfig::isLowLatencyEnabled();
-
-    if (useLowLatency) {
-        return SmoothMove_LowLatency(moveTransform, targetTransform, timeDelta, closingSpeed, maxAngularSpeed);
-    } else {
-        return SmoothMove_RegularLatency(moveTransform, targetTransform, timeDelta, closingSpeed, maxAngularSpeed);
-    }
-}
-
-float VisualUtils::SmoothMove_LowLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
-    // Position
-
-    sead::Vector3f posDiff = *targetTransform.position - *moveTransform.position;
-
-    float posDiffMag = posDiff.dot(posDiff);
-
-    if (posDiffMag > 0) {
-        float diffSpeed = sead::Mathf::max(k_MinSmoothSpeed, posDiffMag / k_TargetCatchupTime);
-
-        closingSpeed = sead::Mathf::max(closingSpeed, diffSpeed);
-
-        float maxMove = timeDelta * closingSpeed;
-        float moveDist = sead::Mathf::min(maxMove, posDiffMag);
-        posDiff *= (moveDist / posDiffMag);
-
-        moveTransform.position->x += posDiff.x;
-        moveTransform.position->y += posDiff.y;
-        moveTransform.position->z += posDiff.z;
-
-        if (moveDist == posDiffMag) {
-            // we capped the move, meaning we exactly reached our target transform. Time to reset
-            // our velocity.
-            closingSpeed = 0;
-        }
-    } else {
-        closingSpeed = 0;
-    }
-
-    // Rotation
-
-    if (moveTransform.rotation) {
-        float angleDiff = quatAngle(*targetTransform.rotation, *moveTransform.rotation);
-
-        // if rotation is over 150 degrees, snap to new rotation instead of interpolating to it
-        if (angleDiff > 0) {
-            float maxAngleMove = timeDelta * maxAngularSpeed;
-            float angleMove = sead::Mathf::min(maxAngleMove, angleDiff);
-            float t = angleMove / angleDiff;
-            sead::QuatCalcCommon<float>::slerpTo(*moveTransform.rotation, *moveTransform.rotation, *targetTransform.rotation, t);
-        }
-    }
-
-    return closingSpeed;
-}
-
 // Ultra-smooth exponential interpolation
-float VisualUtils::SmoothMove_RegularLatency(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
+float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
     // Very responsive with minimal smoothing
     const float positionSmoothTime = 0.02f;
     const float rotationSmoothTime = 0.02f;

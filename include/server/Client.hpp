@@ -143,7 +143,6 @@ public:
     static void sendPuppetPosInfoPacket();
     static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
     static void sendCheckpointGetPacket(const char* objId);
-    static void sendScenarioSyncPacket(const char* changeStageName, s32 scenario);
     static void sendMessagePacket(const char* message, int messageType = 0);
 
     // ===== PUPPET MANAGEMENT =====

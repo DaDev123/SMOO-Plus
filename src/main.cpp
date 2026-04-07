@@ -74,6 +74,7 @@
 #include "MapObj/CheckpointFlag.h"
 #include "puppetHooks.hpp"
 #include "puppets/PuppetInfo.h"
+#include "Scene/StageSceneStateModConfig.hpp"
 #include "Scene/Twists/CustomPlayerConst.h"
 #include "Scene/Twists/Darkness/Darkness.hpp"
 #include "Scene/Twists/Timewarp/Timewarp.hpp"
