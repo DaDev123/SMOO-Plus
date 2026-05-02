@@ -1,6 +1,6 @@
 #include "Scene/Twists/SmallMario/SmallMario.hpp"
 
-#include "game/Sequence/ChangeStageInfo.h"
+#include "game/MapObj/ChangeStageInfo.h"
 #include "game/System/GameDataFunction.h"
 
 #include "server/Client.hpp"

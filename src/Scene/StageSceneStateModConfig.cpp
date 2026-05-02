@@ -14,7 +14,7 @@
 #include "game/Layout/CommonVerticalList.h"
 #include "game/Layout/FooterParts.h"
 #include "game/Layout/SimpleLayoutMenu.h"
-#include "game/Sequence/ChangeStageInfo.h"
+#include "game/MapObj/ChangeStageInfo.h"
 #include "game/System/GameDataFile.h"
 #include "game/System/GameDataFunction.h"
 #include "game/System/GameDataHolderAccessor.h"

@@ -3,8 +3,8 @@
 #include "al/Library/Base/StringUtil.h"
 #include "al/Library/Sequence/Sequence.h"
 
+#include "game/MapObj/ChangeStageInfo.h"
 #include "game/Scene/StageScene.h"
-#include "game/Sequence/ChangeStageInfo.h"
 #include "game/Sequence/HakoniwaSequence.h"
 #include "game/System/GameDataFunction.h"
 #include "game/System/GameDataHolderAccessor.h"

@@ -5,7 +5,7 @@
 #include "al/Library/Base/StringUtil.h"
 #include "al/Library/Scene/Scene.h"
 
-#include "game/Sequence/ChangeStageInfo.h"
+#include "game/MapObj/ChangeStageInfo.h"
 #include "game/System/GameDataFunction.h"
 
 #include "server/Client.hpp"
