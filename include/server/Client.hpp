@@ -202,6 +202,12 @@ public:
         }
     }
 
+    // ===== RUMBLE =====
+    static bool shouldStopRumble() { return sInstance ? sInstance->mShouldStopRumble : false; }
+    static void clearStopRumble() {
+        if (sInstance)
+            sInstance->mShouldStopRumble = false;
+    }
     // ===== UTILITY METHODS =====
     static void update();
     static void clearArrays();
@@ -283,6 +289,7 @@ private:
     // ===== CONNECTION MEMBERS =====
     al::AsyncFunctorThread* mReadThread = nullptr;
     int mConnectCount = 0;
+    bool mShouldStopRumble = false;
     nn::account::Uid mUserID;
     sead::FixedSafeString<0x20> mUsername;
     bool mIsConnectionActive = false;

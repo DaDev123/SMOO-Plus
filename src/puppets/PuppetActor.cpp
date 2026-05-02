@@ -32,7 +32,6 @@
 
 #include <cstddef>
 
-#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "algorithms/CaptureTypes.h"
 #include "helpers.hpp"
 #include "logger.hpp"
@@ -80,7 +79,7 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
 
     mCostumeInfo = initMarioModelPuppet(normalModel, initInfo, bodyName, capName, 0, nullptr);
 
-    // normalModel->mActionKeeper->mPadAndCameraCtrl->mRumbleCount = 0;
+    normalModel->mActionKeeper->mPadAndCameraCtrl->mRumbleCount = 0;
 
     mModelHolder->registerModel(normalModel, "Normal");
 

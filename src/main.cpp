@@ -24,6 +24,8 @@
 #include "al/Library/Bgm/BgmLineFunction.h"
 #include "al/Library/Camera/CameraUtil.h"
 #include "al/Library/Controller/InputFunction.h"
+#include "al/Library/Controller/PadRumbleDirector.h"
+#include "al/Library/Controller/PadRumbleFunction.h"
 #include "al/Library/Framework/GameFrameworkNx.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorPoseKeeper.h"
@@ -246,6 +248,11 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
     PlayerActorBase* playerBase = (PlayerActorBase*)al::tryGetPlayerActor(pHolder, 0);
     auto* player = (PlayerActorHakoniwa*)al::tryGetPlayerActor(pHolder, 0);
 
+    if (!playerBase) {
+        hakoniwaSequenceHook.orig(sequence);
+        return;
+    }
+
     bool isYukimaru = !playerBase->getPlayerInfo();
 
     isInGame = !stageScene->isPause();
@@ -261,6 +268,13 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
     Client::setStageInfo(GameDataHolderWriter(stageScene));
 
     Client::update();
+
+    if (Client::shouldStopRumble() && player && !isYukimaru) {
+        auto* rumbleDirector = alPadRumbleFunction::getPadRumbleDirector(player);
+        if (rumbleDirector)
+            rumbleDirector->stopAllRumble();
+        Client::clearStopRumble();
+    }
 
     updatePlayerInfo(GameDataHolderWriter(stageScene), playerBase, isYukimaru);
 

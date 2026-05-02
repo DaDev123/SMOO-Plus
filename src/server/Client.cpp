@@ -1,6 +1,5 @@
 #include "server/Client.hpp"
 
-#include "hk/types.h"
 #include "hk/util/Math.h"
 
 #include "nn/os.h"
@@ -33,8 +32,6 @@
 
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
-#include "Item/CoinCollect.h"
-#include "Item/CoinCollect2D.h"
 #include "Library/Base/StringUtil.h"
 #include "Library/LiveActor/LiveActor.h"
 #include "logger.hpp"
@@ -204,13 +201,13 @@ void Client::restartConnection() {
         sInstance->mSocket->send(&sInstance->lastPlayerInfPacket);
     }
 
-    if (sInstance->lastCostumeInfPacket.mUserID == sInstance->mUserID) {
+    if (sInstance->lastCostumeInfPacket.bodyModel[0] != '\0') {
+        sInstance->lastCostumeInfPacket.mUserID = sInstance->mUserID;
         sInstance->mSocket->send(&sInstance->lastCostumeInfPacket);
     }
 
-    if (sInstance->lastCaptureInfPacket.mUserID == sInstance->mUserID) {
-        sInstance->mSocket->send(&sInstance->lastCaptureInfPacket);
-    }
+    sInstance->lastCaptureInfPacket.mUserID = sInstance->mUserID;
+    sInstance->mSocket->send(&sInstance->lastCaptureInfPacket);
 }
 
 /**
@@ -484,13 +481,13 @@ void Client::readFunc() {
                 if (lastPlayerInfPacket.mUserID == mUserID) {
                     mSocket->send(&lastPlayerInfPacket);
                 }
-                if (lastCostumeInfPacket.mUserID == mUserID) {
+                if (lastCostumeInfPacket.bodyModel[0] != '\0') {
+                    lastCostumeInfPacket.mUserID = mUserID;
                     mSocket->send(&lastCostumeInfPacket);
                 }
 
-                if (lastCaptureInfPacket.mUserID == mUserID) {
-                    mSocket->send(&lastCaptureInfPacket);
-                }
+                lastCaptureInfPacket.mUserID = mUserID;
+                mSocket->send(&lastCaptureInfPacket);
 
                 if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
                     ShineThiefInfo* stInfo = GameModeManager::instance()->getInfo<ShineThiefInfo>();
@@ -1520,6 +1517,7 @@ void Client::disconnectPlayer(PlayerDC* packet) {
     curInfo->isInSameStage = false;
 
     mConnectCount--;
+    mShouldStopRumble = true;
 }
 
 /**

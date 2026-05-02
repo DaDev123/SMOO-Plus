@@ -13,7 +13,6 @@
 #include "puppets/HackModelHolder.hpp"
 #include "puppets/PuppetInfo.h"
 #include "Scene/Twists/Fludd/actors/FluddBase.hpp"
-#include "Scene/Twists/Fludd/FluddTwist.hpp"
 #include "server/freeze/FreezePlayerBlock.h"
 #include "server/shine-thief/ShineThiefPlayerBlock.h"
 
