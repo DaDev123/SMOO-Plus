@@ -18,6 +18,7 @@
 
 #include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "basis/seadNew.h"
+#include "helpers.hpp"
 #include "imgui.h"
 #include "layouts/FreezeTagIcon.h"
 #include "logger.hpp"
@@ -206,14 +207,13 @@ void FreezeTagMode::update() {
                     continue;
 
                 // Check for freeze
-                if (!mInfo->mIsPlayerFreeze && pupDist < (TwistsConfig::isSmallMarioEnabled() ? 250.f * scale : 250.f) && isP2D == curInfo->is2D && !isPDead &&
-                    !curInfo->isFreezeTagRunner)
+                if (!mInfo->mIsPlayerFreeze && pupDist < 250.f * ::getScale() && isP2D == curInfo->is2D && !isPDead && !curInfo->isFreezeTagRunner)
                     trySetPlayerRunnerState(FreezeState::FREEZE);
 
                 // Check for unfreeze
                 float freezeMinTime = al::clamp(3.f + (mInfo->mFreezeCount * 0.5f), 3.f, 7.f);
-                if (mInvulnTime >= freezeMinTime && mInfo->mIsPlayerFreeze && pupDist < (TwistsConfig::isSmallMarioEnabled() ? 200.f * scale : 200.f) &&
-                    isP2D == curInfo->is2D && !isPDead && curInfo->isFreezeTagRunner && !curInfo->isFreezeTagFreeze) {
+                if (mInvulnTime >= freezeMinTime && mInfo->mIsPlayerFreeze && pupDist < 200.f * ::getScale() && isP2D == curInfo->is2D && !isPDead &&
+                    curInfo->isFreezeTagRunner && !curInfo->isFreezeTagFreeze) {
                     trySetPlayerRunnerState(FreezeState::ALIVE);
                 }
             }

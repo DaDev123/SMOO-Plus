@@ -23,6 +23,7 @@
 #include "game/Util/PlayerUtil.h"
 
 #include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
+#include "helpers.hpp"
 #include "rs/util.hpp"
 
 bool FluddTwist::sFluddEnabled = false;
@@ -231,7 +232,7 @@ void FluddTwist::updateModels() {
         sRocket->connect(sBase);
         sTurbo->connect(sBase);
 
-        float fluddScale = TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f;
+        float fluddScale = ::getScale();
         al::setScaleAll(sBase, fluddScale);
         al::setScaleAll(sHover, fluddScale);
         al::setScaleAll(sRocket, fluddScale);
@@ -416,10 +417,7 @@ void FluddTwist::activateFludd() {
             else {
                 sTurbo->activate(false);
                 al::tryEmitEffect(sMario->mModelHolder->findModelActor("Normal"), "StateIce", al::getTransPtr(sMario));
-                if (TwistsConfig::isSmallMarioEnabled()) {
-                    sead::Vector3f effScale(::scale, ::scale, ::scale);
-                    al::setEffectAllScale(sMario->mModelHolder->findModelActor("Normal"), "StateIce", effScale);
-                }
+                al::setEffectAllScale(sMario->mModelHolder->findModelActor("Normal"), "StateIce", {::getScale(), ::getScale(), ::getScale()});
             }
             sTank -= sFluddDischarge / 2.f;
         } else if (sIsPGrounded) {

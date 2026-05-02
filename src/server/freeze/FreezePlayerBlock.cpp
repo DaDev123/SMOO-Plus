@@ -14,6 +14,7 @@
 #include "al/Library/Nerve/NerveUtil.h"
 
 #include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
+#include "helpers.hpp"
 #include "Library/Camera/CameraTicket.h"
 #include "Library/LiveActor/ActorSceneInfo.h"
 #include "Scene/Twists/TwistsConfig.hpp"
@@ -62,7 +63,7 @@ void FreezePlayerBlock::end() {
 void FreezePlayerBlock::exeAppear() {
     if (al::isFirstStep(this)) {
         al::startAction(this, "Appear");
-        al::setScaleAll(this, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
+        al::setScaleAll(this, ::getScale());
     }
 
     mDitheringOffset = -420.f;
@@ -75,7 +76,7 @@ void FreezePlayerBlock::exeAppear() {
 void FreezePlayerBlock::exeWait() {
     if (al::isFirstStep(this))
         al::startAction(this, "Wait");
-    al::setScaleAll(this, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
+    al::setScaleAll(this, ::getScale());
 
     // Start by updating the lerp on the dithering offset
     mDitheringOffset = al::lerpValue(mDitheringOffset, -65.f, 0.02f);

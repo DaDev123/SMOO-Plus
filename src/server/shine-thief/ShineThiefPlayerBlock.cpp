@@ -20,6 +20,7 @@
 #include "game/Util/ActorDimensionKeeper.h"
 
 #include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
+#include "helpers.hpp"
 #include "Library/Camera/CameraTicket.h"
 #include "Library/LiveActor/ActorSceneInfo.h"
 #include "Scene/Twists/TwistsConfig.hpp"
@@ -29,7 +30,7 @@
 #include "server/shine-thief/ShineThiefMode.hpp"
 
 static float getBlockTargetScale() {
-    return TwistsConfig::isSmallMarioEnabled() ? 0.6f * ::scale : 0.6f;
+    return 0.6f * ::getScale();
 }
 
 ShineThiefPlayerBlock::ShineThiefPlayerBlock(const char* name) : al::LiveActor(name) {}

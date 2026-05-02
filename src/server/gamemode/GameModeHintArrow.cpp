@@ -14,6 +14,7 @@
 #include "game/Player/PlayerHackKeeper.h"
 
 #include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
+#include "helpers.hpp"
 #include "math/seadQuat.h"
 #include "math/seadVector.h"
 #include "Scene/Twists/TwistsConfig.hpp"
@@ -69,9 +70,9 @@ void GameModeHintArrow::exeWait() {
     }
 
     *mArrowTrans = al::getTrans(mPlayer);
-    mArrowTrans->y += TwistsConfig::isSmallMarioEnabled() ? 200.f * ::scale : 200.f;
+    mArrowTrans->y += 200.f * ::getScale();
 
-    float targetSize = TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f;
+    float targetSize = ::getScale();
     mSize = al::lerpValue(mSize, mIsActive && mIsVisible ? targetSize : 0.f, 0.2f);
     al::setScaleAll(this, mSize);
 

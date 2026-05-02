@@ -10,6 +10,7 @@
 #include "al/Library/LiveActor/ActorSensorUtil.h"
 
 #include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
+#include "helpers.hpp"
 #include "Scene/Twists/TwistsConfig.hpp"
 
 PuppetHackActor::PuppetHackActor(const char* name) : al::LiveActor(name) {}
@@ -61,7 +62,7 @@ void PuppetHackActor::movement() {
 
 void PuppetHackActor::control() {
     // Small Mario Scaling
-    al::setScaleAll(this, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
+    al::setScaleAll(this, ::getScale());
 }
 
 void PuppetHackActor::startAction(const char* actName) {

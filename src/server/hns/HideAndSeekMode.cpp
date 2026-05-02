@@ -199,8 +199,7 @@ void HideAndSeekMode::update() {
                                                                                // sensors to determine this
 
                         if (!isYukimaru) {
-                            if (pupDist < (TwistsConfig::isSmallMarioEnabled() ? 200.f * scale : 200.f) &&
-                                ((PlayerActorHakoniwa*)playerBase)->mDimensionKeeper->mIs2D == curInfo->is2D) {
+                            if (pupDist < 200.f * ::getScale() && ((PlayerActorHakoniwa*)playerBase)->mDimensionKeeper->mIs2D == curInfo->is2D) {
                                 if (!PlayerFunction::isPlayerDeadStatus(playerBase)) {
                                     GameDataFunction::killPlayer(GameDataHolderWriter(this));
                                     playerBase->startDemoPuppetable();

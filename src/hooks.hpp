@@ -268,16 +268,10 @@ static HkTrampoline<void, StageScene*, al::SceneInitInfo*> stageSceneInitHook =
                 } else if (GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
                     HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
                     mode->setCameraTicket(spectateCamera);
+                } else if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
+                    ShineThiefMode* mode = GameModeManager::instance()->getMode<ShineThiefMode>();
+                    mode->setCameraTicket(spectateCamera);
                 }
-            }
-        }
-        if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
-            al::CameraDirector* director = curScene->getCameraDirector();
-            if (director && director->mPoserFactory) {
-                al::CameraTicket* spectateCamera = director->createCameraFromFactory("CameraPoserActorSpectate", nullptr, 0, 5, sead::Matrix34f::ident);
-
-                ShineThiefMode* mode = GameModeManager::instance()->getMode<ShineThiefMode>();
-                mode->setCameraTicket(spectateCamera);
             }
         }
     });

@@ -80,7 +80,7 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
 
     mCostumeInfo = initMarioModelPuppet(normalModel, initInfo, bodyName, capName, 0, nullptr);
 
-    normalModel->mActionKeeper->mPadAndCameraCtrl->mRumbleCount = 0;
+    // normalModel->mActionKeeper->mPadAndCameraCtrl->mRumbleCount = 0;
 
     mModelHolder->registerModel(normalModel, "Normal");
 
@@ -112,7 +112,7 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
         mHitSensorKeeper->clear();
     }
 
-    float sensorScale = TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f;
+    float sensorScale = ::getScale();
 
     initHitSensor(3);
     al::addHitSensor(this, initInfo, "Body", static_cast<u32>(al::HitSensorType::Npc), 50.0f * sensorScale, 16,
@@ -168,7 +168,7 @@ void PuppetActor::movement() {
         bool shouldMoveBlock = mInfo->isShineThiefHolder && mInfo->isConnected && mInfo->isInSameStage;
         if (shouldMoveBlock && al::isAlive(mShineThiefPlayerBlock)) {
             sead::Vector3f offsetPos = mInfo->playerPos;
-            offsetPos.y += TwistsConfig::isSmallMarioEnabled() ? 275.f * ::scale : 275.f;
+            offsetPos.y += 275.f * ::getScale();
             al::setTrans(mShineThiefPlayerBlock, offsetPos);
         }
     }
@@ -309,7 +309,7 @@ void PuppetActor::control() {
 
         // Small Mario Scaling
 
-        al::setScaleAll(curModel, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
+        al::setScaleAll(curModel, ::getScale());
 
         // FLUDD
 
@@ -321,7 +321,7 @@ void PuppetActor::control() {
                     mFludd->activate();
                     al::setSklAnimFrame(mFludd, 0, 0);
                     // Scale puppet FLUDD to match small mario
-                    al::setScaleAll(mFludd, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
+                    al::setScaleAll(mFludd, ::getScale());
                 } else {
                     al::hideModel(mFludd);
                 }

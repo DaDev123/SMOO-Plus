@@ -578,7 +578,7 @@ void drawMain(al::Sequence* curSequence) {
     ImGui::SetWindowSize(ImVec2(al::getLayoutDisplayWidth() / 3.f, dispHeight - (dispHeight / 4.f)));
     // ===== DEBUG MODE RENDERING =====
 
-    ImGui::Text("FPS: %d\n", static_cast<int>(round(Application::sInstance->mGameFramework->calcFps())));
+    ImGui::Text("FPS: %.1f\n", Application::sInstance->mGameFramework->calcFps());
     // Server info
     if (Client::isServerHidden()) {
         ImGui::Text(isConnected ? "Server: <hidden> | %d/%d Players\n" : "Server: <hidden>\n", isConnected ? Client::getConnectCount() + 1 : 0,
@@ -590,24 +590,24 @@ void drawMain(al::Sequence* curSequence) {
     ImGui::Text("Your TCP status: %s\n", socket->getStateChar());
 
     // Heap info
-    sead::Heap* clientHeap = Client::getClientHeap();
-    if (clientHeap) {
-        sead::Heap* gmHeap = gmm->getHeap();
-        if (gmHeap && clientHeap->getSize() > 0 && gmHeap->getSize() > 0) {
-            float clientUsed = clientHeap->getSize() - clientHeap->getFreeSize();
-            float clientTotal = clientHeap->getSize();
-            float gmUsed = gmHeap->getSize() - gmHeap->getFreeSize();
-            float gmTotal = gmHeap->getSize();
-            float ImguiUsed = imgui::sImGuiHeap->getSize() - imgui::sImGuiHeap->getFreeSize();
-            float ImguiTotal = imgui::sImGuiHeap->getSize();
+    // sead::Heap* clientHeap = Client::getClientHeap();
+    // if (clientHeap) {
+    //     sead::Heap* gmHeap = gmm->getHeap();
+    //     if (gmHeap && clientHeap->getSize() > 0 && gmHeap->getSize() > 0) {
+    //         float clientUsed = clientHeap->getSize() - clientHeap->getFreeSize();
+    //         float clientTotal = clientHeap->getSize();
+    //         float gmUsed = gmHeap->getSize() - gmHeap->getFreeSize();
+    //         float gmTotal = gmHeap->getSize();
+    //         float ImguiUsed = imgui::sImGuiHeap->getSize() - imgui::sImGuiHeap->getFreeSize();
+    //         float ImguiTotal = imgui::sImGuiHeap->getSize();
 
-            ImGui::Text("Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode)\n", clientUsed / 1_KB, clientTotal / 1_KB, gmUsed / 1_KB, gmTotal / 1_KB);
-        } else {
-            ImGui::Text("Heap Use: Invalid heap sizes\n");
-        }
-    } else {
-        ImGui::Text("Heap Use: Client heap unavailable\n");
-    }
+    //         ImGui::Text("Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode)\n", clientUsed / 1_KB, clientTotal / 1_KB, gmUsed / 1_KB, gmTotal / 1_KB);
+    //     } else {
+    //         ImGui::Text("Heap Use: Invalid heap sizes\n");
+    //     }
+    // } else {
+    //     ImGui::Text("Heap Use: Client heap unavailable\n");
+    // }
 
     // Queue info
     ImGui::Text("Queue Count: %d/%d (Send) %d/%d (Receive) %d/%d (Msg)\n", socket->getSendCount(), socket->getSendMaxCount(), socket->getRecvCount(),

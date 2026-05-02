@@ -159,8 +159,7 @@ void SardineMode::update() {
             if (curInfo->isIt)
                 isAnyIt = true;
 
-            if (curInfo->isConnected && curInfo->isInSameStage && curInfo->isIt && !mInfo->mIsIt && !isYukimaru &&
-                pupDist < (TwistsConfig::isSmallMarioEnabled() ? 300.f * scale : 300.f)) {
+            if (curInfo->isConnected && curInfo->isInSameStage && curInfo->isIt && !mInfo->mIsIt && !isYukimaru && pupDist < 300.f * ::getScale()) {
                 if (((PlayerActorHakoniwa*)playerBase)->mDimensionKeeper->mIs2D == curInfo->is2D && !PlayerFunction::isPlayerDeadStatus(playerBase)) {
                     mInfo->mIsIt = true;
                     mModeTimer->enableTimer();

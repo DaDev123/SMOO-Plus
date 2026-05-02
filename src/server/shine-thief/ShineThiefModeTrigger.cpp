@@ -205,7 +205,7 @@ bool ShineThiefMode::trySetPlayerHolderState(bool hasShine) {
     sendShineThiefPacket(ShineThiefUpdateType::PLAYER);
 
     sead::Vector3f sPos = al::getTrans(getPlayerActorHakoniwa());
-    sPos.y += TwistsConfig::isSmallMarioEnabled() ? 100.f * ::scale : 100.f;
+    sPos.y += 100.f * ::getScale();
     setShinePos(sPos);
 
     return true;

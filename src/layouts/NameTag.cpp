@@ -14,6 +14,7 @@
 
 #include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
+#include "helpers.hpp"
 #include "Scene/Twists/TwistsConfig.hpp"
 #include "server/gamemode/GameModeManager.hpp"
 
@@ -68,7 +69,7 @@ void NameTag::control() {
 void NameTag::updateTrans() {
     sead::Vector2f newTrans = sead::Vector2f::zero;
 
-    sead::Vector3f targetOffset(0, TwistsConfig::isSmallMarioEnabled() ? 130.f * ::scale : 130.f, 0);
+    sead::Vector3f targetOffset(0, 130 * ::getScale(), 0);
 
     al::LiveActor* puppetModel = mPuppet->getCurrentModel();
 

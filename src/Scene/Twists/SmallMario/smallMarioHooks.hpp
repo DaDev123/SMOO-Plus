@@ -32,6 +32,7 @@
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Util/PlayerUtil.h"
 
+#include "helpers.hpp"
 #include "Project/HitSensor/HitSensor.h"
 #include "Scene/Twists/TwistsConfig.hpp"
 
@@ -81,7 +82,7 @@ inline float followDistHook() {
 }
 
 inline float fpHook() {
-    return TwistsConfig::isSmallMarioEnabled() ? 3000.0f * scale : 3000.0f;
+    return 3000 * ::getScale();
 }
 
 inline float fpScaleHook() {
@@ -93,13 +94,12 @@ inline void capVelScaleHook(al::LiveActor* hackCap, sead::Vector3f const& additi
         al::setVelocity(hackCap, addition);
         return;
     }
-    sead::Vector3f newVelocity(addition.x * 0.45f, addition.y * 0.45f, addition.z * 0.45f);
-    al::setVelocity(hackCap, newVelocity);
+    al::setVelocity(hackCap, addition * 0.45f);
 }
 
 inline const char* offsetOverideHook(al::ByamlIter const& iter, char const* key) {
     if (!TwistsConfig::isSmallMarioEnabled())
-        return nullptr;
+        return al::tryGetByamlKeyStringOrNULL(iter, key);
     return "Y0.5m";
 }
 
@@ -118,17 +118,17 @@ struct RoPatch {
     u32 originalValue;
 };
 
-static RoPatch roPatches[] = {
-    {0x435E88, 0x1E261008, 0},  // fmov s8, #16.0  - body collider radius
-    {0x435E80, 0x1E267000, 0},  // fmov s0, #19.0  - body sphere shape
-    {0x435ED8, 0x1E27D00A, 0},  // fmov s10, #30.0 - height
-    {0x41B7F4, 0x1E249000, 0},  // fmov s0, #10.0  - dither anim sphere
-    {0x3FF3F4, 0x1E2703F1, 0},  // fmov s17, #51.0 - cap throw height
-    {0x48DFC8, 0x52800000, 0},  // mov w0, #0
-    {0x4018D4, 0x52800041, 0},  // mov w1, #2
-    {0x4464BC, 0x1E27D008, 0},  // fmov s8, #30.0
-    {0x4406A0, 0x52800000, 0},  // tryEmitRollingEffect: mov w0, #0
-    {0x4406A4, 0xD65F03C0, 0},  // tryEmitRollingEffect: ret
+static constexpr RoPatch roPatches[] = {
+    {0x435E88, 0x1E261008, 0x08ad40bd},  // fmov s8, #16.0  - body collider radius
+    {0x435E80, 0x1E267000, 0x00094dbd},  // fmov s0, #19.0  - body sphere shape
+    {0x435ED8, 0x1E27D00A, 0x0aed4dbd},  // fmov s10, #30.0 - height
+    {0x41B7F4, 0x1E249000, 0x00e94cbd},  // fmov s0, #10.0  - dither anim sphere
+    {0x3FF3F4, 0x1E2703F1, 0x110140bd},  // fmov s17, #51.0 - cap throw height
+    {0x48DFC8, 0x52800000, 0x05e7fe97},  // mov w0, #0
+    {0x4018D4, 0x52800041, 0x617e42b9},  // mov w1, #2
+    {0x4464BC, 0x1E27D008, 0x08b94cbd},  // fmov s8, #30.0
+    {0x4406A0, 0x52800000, 0x080440f9},  // tryEmitRollingEffect: mov w0, #0
+    {0x4406A4, 0xD65F03C0, 0x080940f9},  // tryEmitRollingEffect: ret
 };
 
 static constexpr int roPatchCount = hk::util::arraySize(roPatches);
@@ -136,38 +136,25 @@ static constexpr int roPatchCount = hk::util::arraySize(roPatches);
 // ---------------------------------------------------------------------------
 // NOP patches
 // ---------------------------------------------------------------------------
-static constexpr u32 nopOffsets[] = {
-    0x470908,  // hipdropland
-    0x47BCB8,  // restartRolling
-    0x47B12C,  // rollingBoostStart
-    0x47AE80,  // rollingControl
-    0x44038C,  // tryStartRunEffectRun
-    0x4402AC,  // tryStartRunEffectRunStart
-    0x44046C,  // tryStartRunEffectDash
-    0x44054C,  // tryStartRunEffectDashFast
-    0x44062C,  // tryStartRunEffectDashWaterSurface
+static constexpr RoPatch nopPatches[] = {
+    {0x470908, 0xD503201F, 0xfbcc0394},  // hipdropland
+    {0x47BCB8, 0xD503201F, 0xea5e1194},  // restartRolling
+    {0x47B12C, 0xD503201F, 0xcd611194},  // rollingBoostStart
+    {0x47AE80, 0xD503201F, 0x78621194},  // rollingControl
+    {0x44038C, 0xD503201F, 0x161e1194},  // tryStartRunEffectRun
+    {0x4402AC, 0xD503201F, 0x4e1e1194},  // tryStartRunEffectRunStart
+    {0x44046C, 0xD503201F, 0xde1d1194},  // tryStartRunEffectDash
+    {0x44054C, 0xD503201F, 0xa61d1194},  // tryStartRunEffectDashFast
+    {0x44062C, 0xD503201F, 0x6e1d1194},  // tryStartRunEffectDashWaterSurface
 };
 
-static constexpr int nopCount = hk::util::arraySize(nopOffsets);
-static u32 nopOriginals[nopCount];
-static u32 followDistOriginal = 0;
+static constexpr int nopCount = hk::util::arraySize(nopPatches);
+
+static u32 followDistOriginal = 0xff0301d1;  // sub sp,sp,#0x40
 
 static void initHooks() {
     if (isHooksCreated)
         return;
-
-    uintptr_t base = hk::ro::getMainModule()->range().start();
-
-    // Save RO patch originals
-    for (int i = 0; i < roPatchCount; i++)
-        roPatches[i].originalValue = *reinterpret_cast<u32*>(base + roPatches[i].offset);
-
-    // Save NOP originals
-    for (int i = 0; i < nopCount; i++)
-        nopOriginals[i] = *reinterpret_cast<u32*>(base + nopOffsets[i]);
-
-    // Save followDist original
-    followDistOriginal = *reinterpret_cast<u32*>(base + 0xC8B9C);
 
     // Branch-link hooks
     hk::hook::writeBranchLinkAtMainOffset(0x4464F4, sensorHook);
@@ -206,7 +193,7 @@ static void installHooks() {
 
     // Apply NOP patches
     for (int i = 0; i < nopCount; i++)
-        mainModule->writeRo(nopOffsets[i], 0xD503201F);
+        mainModule->writeRo(nopPatches[i].offset, nopPatches[i].patchValue);
 
     // Install followDist branch
     hk::hook::writeBranchAtMainOffset(0xC8B9C, followDistHook);
@@ -226,7 +213,7 @@ static void uninstallHooks() {
 
     // Restore NOP patches
     for (int i = 0; i < nopCount; i++)
-        mainModule->writeRo(nopOffsets[i], nopOriginals[i]);
+        mainModule->writeRo(nopPatches[i].offset, nopPatches[i].originalValue);
 
     // Restore followDist original instruction
     mainModule->writeRo(0xC8B9C, followDistOriginal);

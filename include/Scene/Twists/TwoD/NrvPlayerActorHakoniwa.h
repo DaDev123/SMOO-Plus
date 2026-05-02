@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 const uintptr_t nrvPlayerActorHakoniwaAbyss = 0x01d789f0;
 const uintptr_t nrvPlayerActorHakoniwaBind = 0x01d789e0;
 const uintptr_t nrvPlayerActorHakoniwaCamera = 0x01d789e8;

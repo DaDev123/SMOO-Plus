@@ -28,7 +28,7 @@ void PuppetCapActor::init(al::ActorInitInfo const& initInfo) {
     PlayerFunction::createCapModelName(&capModelName, tryGetPuppetCapName(mInfo));
     PlayerFunction::initCapModelActorDemo(this, initInfo, capModelName.cstr());
 
-    float sensorScale = TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f;
+    float sensorScale = ::getScale();
 
     initHitSensor(2);
     al::addHitSensor(this, initInfo, "Push", (u32)al::HitSensorType::MapObjSimple, 60.0f * sensorScale, 8, sead::Vector3f::zero);
@@ -75,7 +75,7 @@ void PuppetCapActor::control() {
 
     // Small Mario Scaling
 
-    al::setScaleAll(this, TwistsConfig::isSmallMarioEnabled() ? ::scale : 1.0f);
+    al::setScaleAll(this, ::getScale());
 }
 
 void PuppetCapActor::update() {
