@@ -9,7 +9,7 @@ struct PACKED HackCapInf : Packet {
     };
     sead::Vector3f capPos;
     sead::Quatf capQuat;
-    sead::Quatf capRotQuat;
     bool1 isCapVisible = false;
     char capAnim[PACKBUFSIZE] = {};
+    sead::Quatf capRotQuat;
 };

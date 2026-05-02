@@ -33,6 +33,7 @@
 
 #include "helpers.hpp"
 #include "Imgui.hpp"
+#include "Item/CoinCollect.h"
 #include "layouts/ConnectionStatus.h"
 #include "Library/Collision/CollisionPartsTriangle.h"
 #include "Library/Nerve/Nerve.h"
@@ -164,16 +165,18 @@ static HkTrampoline<void, Shine*> registerShineToListHook = hk::hook::trampoline
         Client::tryRegisterShine(shine);
     }
 });
+class CoinCollectHolder;
+static HkTrampoline<void, CoinCollectHolder*, CoinCollect*> registerCoinCollectToListHook =
+    hk::hook::trampoline([](CoinCollectHolder* h, CoinCollect* coin) -> void {
+        registerCoinCollectToListHook.orig(h, coin);
+        Client::tryRegisterCoinCollect(coin);
+    });
 
-static HkTrampoline<void, CoinCollect*> registerCoinCollectToListHook = hk::hook::trampoline([](CoinCollect* coin) -> void {
-    registerCoinCollectToListHook.orig(coin);
-    Client::tryRegisterCoinCollect(coin);
-});
-
-static HkTrampoline<void, CoinCollect2D*> registerCoinCollect2DToListHook = hk::hook::trampoline([](CoinCollect2D* coin) -> void {
-    registerCoinCollect2DToListHook.orig(coin);
-    Client::tryRegisterCoinCollect2D(coin);
-});
+static HkTrampoline<void, CoinCollectHolder*, CoinCollect2D*> registerCoinCollect2DToListHook =
+    hk::hook::trampoline([](CoinCollectHolder* h, CoinCollect2D* coin) -> void {
+        registerCoinCollect2DToListHook.orig(h, coin);
+        Client::tryRegisterCoinCollect2D(coin);
+    });
 
 static HkReplace<bool, GameDataFile*, s32> isGotCheckpointInWorldHook = hk::hook::replace([](GameDataFile* gdf, s32 index) -> bool {
     s32 index2 = gdf->calcCheckpointIndexInScenario(index);

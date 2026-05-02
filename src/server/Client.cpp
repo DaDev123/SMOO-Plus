@@ -33,6 +33,8 @@
 
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
+#include "Item/CoinCollect.h"
+#include "Item/CoinCollect2D.h"
 #include "Library/Base/StringUtil.h"
 #include "Library/LiveActor/LiveActor.h"
 #include "logger.hpp"
@@ -1085,14 +1087,28 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
  */
 void Client::updateHackCapInfo(HackCapInf* packet) {
     PuppetInfo* curInfo = findPuppetInfo(packet->mUserID, false);
+    if (!curInfo)
+        return;
+    bool isOldPacket = packet->mPacketSize == (sizeof(HackCapInf) - sizeof(Packet) - sizeof(sead::Quatf));
 
-    if (curInfo) {
-        curInfo->capPos = packet->capPos;
+    curInfo->capPos = packet->capPos;
+
+    if (isOldPacket) {
+        struct PACKED OldHackCapInf {
+            sead::Vector3f capPos;
+            sead::Quatf capQuat;
+            bool1 isCapVisible;
+            char capAnim[PACKBUFSIZE];
+        };
+        auto* old = reinterpret_cast<OldHackCapInf*>(&packet->capPos);
+        curInfo->capRot = old->capQuat;
+        curInfo->capQuat = {0.f, 0.f, 0.f, 0.f};
+        curInfo->isCapThrow = old->isCapVisible;
+        strcpy(curInfo->capAnim, old->capAnim);
+    } else {
         curInfo->capRot = packet->capQuat;
         curInfo->capQuat = packet->capRotQuat;
-
         curInfo->isCapThrow = packet->isCapVisible;
-
         strcpy(curInfo->capAnim, packet->capAnim);
     }
 }
@@ -1173,16 +1189,17 @@ const struct {
     s32 index;
     const char* warpStage;
     int possibleScenarios[5];
+    int noSyncScen = -1;
 
 } stageListForScenarioSync[] = {
-    // {"CapWorldHomeStage", 0, "CapWorldHomeStage", {1, 2, 3, 4, 0}},
+    {"CapWorldHomeStage", 0, "CapWorldHomeStage", {1, 2, 3, 4, 0}, 1},
     {"WaterfallWorldHomeStage", 1, "WaterfallWorldHomeStage", {1, 2, 3, 4, 0}},
     {"SandWorldHomeStage", 2, "SandWorldHomeStage", {1, 2, 3, 4, 5}},
     {"SandWorldUnderground001Stage", 2, "SandWorldHomeStage", {1, 2, 3, 4, 5}},
     {"ForestWorldHomeStage", 3, "ForestWorldHomeStage", {1, 2, 3, 4, 5}},
     {"ForestWorldBossStage", 3, "ForestWorldHomeStage", {1, 2, 3, 4, 5}},
     {"LakeWorldHomeStage", 4, "LakeWorldHomeStage", {1, 2, 3, 4, 0}},
-    // {"CloudWorldHomeStage", 5, "CloudWorldHomeStage", {1, 3, 4, 0, 0}},
+    {"CloudWorldHomeStage", 5, "CloudWorldHomeStage", {1, 3, 4, 0, 0}, 1},
     {"ClashWorldHomeStage", 6, "ClashWorldHomeStage", {1, 2, 3, 4, 0}},
     {"CityWorldHomeStage", 7, "CityWorldHomeStage", {1, 2, 4, 5, 8}},
     {"SeaWorldHomeStage", 8, "SeaWorldHomeStage", {1, 2, 3, 4, 0}},
@@ -1206,9 +1223,12 @@ static s32 findWorldIdFromStageName(const char* stageName) {
     return -1;
 }
 
-static bool validateScenarioFromStageName(const char* stageName, s32 scenario) {
+static bool validateScenarioFromStageName(const char* stageName, s32 scenario, s32 curscen) {
     for (s32 i = 0; i < hk::util::arraySize(stageListForScenarioSync); i++) {
         if (al::isEqualString(stageListForScenarioSync[i].stage, stageName)) {
+            if (curscen == stageListForScenarioSync[i].noSyncScen)
+                return false;
+
             for (s32 j = 0; j < hk::util::arraySize(stageListForScenarioSync[i].possibleScenarios); j++) {
                 if (stageListForScenarioSync[i].possibleScenarios[j] == scenario)
                     return true;
@@ -1252,10 +1272,12 @@ void Client::updateGameInfo(GameInf* packet) {
     if (findWorldIdFromStageName(packet->stageName) == -1)
         return;
     GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
+    GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
 
     int curScen = scenNumArr[findWorldIdFromStageName(packet->stageName)];
-    if (packet->scenarioNo < 15 && packet->scenarioNo > curScen && validateScenarioFromStageName(packet->stageName, packet->scenarioNo)) {
+    if (packet->scenarioNo < 15 && packet->scenarioNo > curScen && validateScenarioFromStageName(packet->stageName, packet->scenarioNo, curScen)) {
         scenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
+        mainSenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
         const char* warpStage = findWarpStageFromStageName(packet->stageName);
         if (warpStage && strcmp(GameDataFunction::getCurrentStageName(Client::getHolder()), warpStage) == 0) {
             ChangeStageInfo info(Client::getHolder(), "start", warpStage, false, packet->scenarioNo);
@@ -1701,22 +1723,24 @@ void Client::applyOneCoinCollect(const char* placeID, int worldID, const char* s
 
     gdf->customAddCoinCollect(&pid, worldID, stage);
 
-    if (gdf->isGotCoinCollect(&pid)) {
-        for (int i = 0; i < sInstance->mCoinCollectArray.size(); i++) {
-            if (sInstance->mCoinCollectArray[i]->mPlacementId->isEqual(pid)) {
-                sInstance->mCoinCollectArray[i]->makeActorDead();
-                return;
-            }
-        }
-        for (int i = 0; i < sInstance->mCoinCollect2DArray.size(); i++) {
-            al::StringTmp<128> placeIDString;
-            sInstance->mCoinCollect2DArray[i]->mPlacementId->makeString(&placeIDString);
-            if (placeIDString.isEqual(placeID)) {
-                sInstance->mCoinCollect2DArray[i]->makeActorDead();
-                return;
-            }
-        }
-    }
+    // if (gdf->isGotCoinCollect(&pid)) {
+    //     for (int i = 0; i < sInstance->mCoinCollectArray.size(); i++) {
+    //         al::StringTmp<128> placeIDString;
+    //         sInstance->mCoinCollect2DArray[i]->mPlacementId->makeString(&placeIDString);
+    //         if (strcmp(placeIDString.cstr(), placeID) == 0) {
+    //             sInstance->mCoinCollectArray[i]->makeActorDead();
+    //             return;
+    //         }
+    //     }
+    //     for (int i = 0; i < sInstance->mCoinCollect2DArray.size(); i++) {
+    //         al::StringTmp<128> placeIDString;
+    //         sInstance->mCoinCollect2DArray[i]->mPlacementId->makeString(&placeIDString);
+    //         if (placeIDString.isEqual(placeID)) {
+    //             sInstance->mCoinCollect2DArray[i]->makeActorDead();
+    //             return;
+    //         }
+    //     }
+    // }
 }
 
 /**

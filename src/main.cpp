@@ -552,19 +552,19 @@ void drawMain(al::Sequence* curSequence) {
     }
 
     // ===== CHAT WINDOW (always visible when connected) =====
-    if (isConnected && isInGame) {
-        ImGui::Begin("Chat", nullptr,
-                     ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-                         ImGuiWindowFlags_NoNavFocus);
-        ImGui::SetWindowPos(ImVec2(0, dispHeight - 200), ImGuiCond_FirstUseEver);
-        ImGui::SetWindowSize(ImVec2(400, 150));
-        ImGui::Text("Chat:");
-        if (ImGui::InputText("##chat", chatInput, IM_ARRAYSIZE(chatInput), ImGuiInputTextFlags_EnterReturnsTrue)) {
-            Client::sendMessagePacket(chatInput, 0);
-            chatInput[0] = '\0';  // Clear the input
-        }
-        ImGui::End();
-    }
+    // if (isConnected && isInGame) {
+    //     ImGui::Begin("Chat", nullptr,
+    //                  ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+    //                      ImGuiWindowFlags_NoNavFocus);
+    //     ImGui::SetWindowPos(ImVec2(0, dispHeight - 200), ImGuiCond_FirstUseEver);
+    //     ImGui::SetWindowSize(ImVec2(400, 150));
+    //     ImGui::Text("Chat:");
+    //     if (ImGui::InputText("##chat", chatInput, IM_ARRAYSIZE(chatInput), ImGuiInputTextFlags_EnterReturnsTrue)) {
+    //         Client::sendMessagePacket(chatInput, 0);
+    //         chatInput[0] = '\0';  // Clear the input
+    //     }
+    //     ImGui::End();
+    // }
 
     // ===== NON-DEBUG MODE EXIT =====
     if (!debugMode)
@@ -863,8 +863,8 @@ extern "C" void hkMain() {
 
     // CoinCollect Syncing
     sendCoinCollectCollectPacketHook.installAtSym<"_ZN12GameDataFile14addCoinCollectEPKN2al11PlacementIdE">();
-    registerCoinCollectToListHook.installAtSym<"_ZN11CoinCollect18initAfterPlacementEv">();
-    registerCoinCollect2DToListHook.installAtSym<"_ZN13CoinCollect2D18initAfterPlacementEv">();
+    registerCoinCollectToListHook.installAtSym<"_ZN17CoinCollectHolder19registerCoinCollectEP11CoinCollect">();
+    registerCoinCollect2DToListHook.installAtSym<"_ZN17CoinCollectHolder21registerCoinCollect2DEP13CoinCollect2D">();
 
     // CheckpointFlag Syncing
     sendCheckpointGetPacketHook.installAtSym<"_ZN14CheckpointFlag6exeGetEv">();
