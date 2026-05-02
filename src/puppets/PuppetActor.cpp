@@ -131,10 +131,6 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
     if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
         mShineThiefPlayerBlock = GameModeManager::instance()->getMode<ShineThiefMode>()->getShineBlock();
     }
-
-    mFludd = new FluddBase("PuppetFludd");
-    mFludd->init(initInfo);
-    al::hideModel(mFludd);
 }
 
 void PuppetActor::initAfterPlacement() {
@@ -309,25 +305,6 @@ void PuppetActor::control() {
         // Small Mario Scaling
 
         al::setScaleAll(curModel, ::getScale());
-
-        // FLUDD
-
-        if (mFludd) {
-            if (FluddTwist::sFluddEnabled && !mInfo->is2D && mInfo->isConnected && mInfo->isInSameStage) {
-                if (!mIsCaptureModel) {
-                    al::showModel(mFludd);
-                    mFludd->connect(curModel);
-                    mFludd->activate();
-                    al::setSklAnimFrame(mFludd, 0, 0);
-                    // Scale puppet FLUDD to match small mario
-                    al::setScaleAll(mFludd, ::getScale());
-                } else {
-                    al::hideModel(mFludd);
-                }
-            } else {
-                al::hideModel(mFludd);
-            }
-        }
 
         // Syncing
 

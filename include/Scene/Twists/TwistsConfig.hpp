@@ -2,7 +2,6 @@
 
 #include "Scene/Twists/Cappyless/Cappyless.hpp"
 #include "Scene/Twists/Darkness/Darkness.hpp"
-#include "Scene/Twists/Fludd/FluddTwist.hpp"
 #include "Scene/Twists/IcePhysics/IcePhysics.hpp"
 #include "Scene/Twists/MoonGravity/MoonGravityTwist.hpp"
 #include "Scene/Twists/SmallMario/SmallMario.hpp"
@@ -44,10 +43,6 @@ public:
     // --- 2D in 3D ---
     static bool isTwoDEnabled() { return TwoDTwist::isTwoDEnabled(); }
     static void toggleTwoD() { TwoDTwist::toggleTwoD(); }
-
-    // --- FLUDD ---
-    static bool isFluddEnabled() { return FluddTwist::sFluddEnabled; }
-    static void toggleFludd() { FluddTwist::toggle(); }
 
     // --- Moon Gravity ---
     static bool isMoonGravityEnabled() { return MoonGravityTwist::sMoonGravityEnabled; }

@@ -623,7 +623,6 @@ void StageSceneStateModConfig::initTwistsMenu(const al::LayoutInitInfo& initInfo
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_DARKNESS + 1]);
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_TIMEWARP + 1]);
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_TWOD + 1]);
-    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_FLUDD + 1]);
     setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_MOONGRAVITY + 1]);
 
     optionsList[MENU_TWISTS]->addStringData(msgList[MENU_TWISTS]->mBuffer, "TxtContent");
@@ -648,9 +647,6 @@ void StageSceneStateModConfig::updateTwistsOptions() {
 
     msgList[MENU_TWISTS]->mBuffer[TW_TWOD].copy(u"2D in 3D");
     al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_TWOD + 1], TwistsConfig::isTwoDEnabled() ? "On" : "Off", "State");
-
-    msgList[MENU_TWISTS]->mBuffer[TW_FLUDD].copy(u"F.L.U.D.D.");
-    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_FLUDD + 1], TwistsConfig::isFluddEnabled() ? "On" : "Off", "State");
 
     msgList[MENU_TWISTS]->mBuffer[TW_MOONGRAVITY].copy(u"Moon Gravity");
     al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_MOONGRAVITY + 1], TwistsConfig::isMoonGravityEnabled() ? "On" : "Off", "State");
@@ -684,9 +680,6 @@ void StageSceneStateModConfig::exeTwistsSettings() {
             break;
         case TW_TWOD:
             TwistsConfig::toggleTwoD();
-            break;
-        case TW_FLUDD:
-            TwistsConfig::toggleFludd();
             break;
         case TW_MOONGRAVITY:
             TwistsConfig::toggleMoonGravity();

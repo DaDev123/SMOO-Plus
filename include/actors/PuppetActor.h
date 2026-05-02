@@ -12,7 +12,6 @@
 #include "layouts/NameTag.h"
 #include "puppets/HackModelHolder.hpp"
 #include "puppets/PuppetInfo.h"
-#include "Scene/Twists/Fludd/actors/FluddBase.hpp"
 #include "server/freeze/FreezePlayerBlock.h"
 #include "server/shine-thief/ShineThiefPlayerBlock.h"
 
@@ -76,7 +75,6 @@ private:
     PlayerModelHolder* mModelHolder = nullptr;
     HackModelHolder* mCaptures = nullptr;
     NameTag* mNameTag = nullptr;
-    FluddBase* mFludd = nullptr;
 
     CaptureTypes::Type mCurCapture = CaptureTypes::Type::Unknown;
 

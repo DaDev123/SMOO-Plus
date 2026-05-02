@@ -70,7 +70,6 @@
 #include "imgui.h"
 #include "Imgui.hpp"
 #include "layouts/ConnectionStatus.h"
-#include "layouts/FluddIcon.hpp"
 #include "layouts/SpeedrunIcon.h"
 #include "logger.hpp"
 #include "MapObj/CheckpointFlag.h"
@@ -206,7 +205,6 @@ HkTrampoline<void, HakoniwaSequence*, al::SequenceInitInfo*> hakoniwaSequenceIni
 
         ConnectionStatus::sInstance = new ConnectionStatus("Status", lytInfo);
         SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", lytInfo);
-        FluddIcon::sInstance = new FluddIcon("FluddIcon", lytInfo);
     });
 
 HkTrampoline<void, al::ActorInitInfo*, al::Scene*, al::PlacementInfo*, al::LayoutInitInfo*, al::ActorFactory*, al::SceneMsgCtrl*, al::GameDataHolderBase*>
@@ -233,8 +231,6 @@ HkTrampoline<void, al::ActorInitInfo*, al::Scene*, al::PlacementInfo*, al::Layou
             Client::sendGameInfPacket(initInfo->actorSceneInfo.sceneObjHolder);
             TwistsConfig::handleStageInit();
             TimeWarpTwist::onStageInit((StageScene*)scene);
-            FluddTwist::init(*initInfo);
-            FluddTwist::onStageInit((StageScene*)scene);
         });
 
 HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampoline([](HakoniwaSequence* sequence) -> void {
@@ -259,8 +255,6 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
 
     if (!stageScene->isPause())
         TimeWarpTwist::update(player);
-    if (!stageScene->isPause() && !isYukimaru && FluddTwist::sFluddEnabled)
-        FluddTwist::update(player);
 
     MoonGravityTwist::update(player);
 
@@ -317,13 +311,6 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
             SpeedrunIcon::sInstance->tryEnd();
             speedrun::installHooks();
         }
-    }
-
-    if (FluddIcon::sInstance && !stageScene->isPause()) {
-        if (FluddTwist::sFluddEnabled)
-            FluddIcon::sInstance->tryStart();
-        else
-            FluddIcon::sInstance->tryEnd();
     }
 
     stageScene->stageSceneLayout->updateCounterParts();

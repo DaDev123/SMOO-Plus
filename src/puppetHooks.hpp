@@ -8,7 +8,6 @@
 #include "actors/PuppetActor.h"
 #include "helpers.hpp"
 #include "Library/Scene/SceneUtil.h"
-#include "logger.hpp"
 #include "puppets/PuppetMain.hpp"
 #include "server/captureSync.hpp"
 #include "server/Client.hpp"
