@@ -7,7 +7,7 @@
 #include "heap/seadHeap.h"
 #include "packets/Packet.h"
 #include "SocketBase.hpp"
-#include "syssocket/sockdefines.h"
+#include "sys/socket.h"
 #include "thread/seadMessageQueue.h"
 #include "thread/seadMutex.h"
 #include "types.h"

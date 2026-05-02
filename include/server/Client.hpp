@@ -50,7 +50,6 @@
 #include "puppets/PuppetHolder.hpp"
 #include "puppets/PuppetInfo.h"
 #include "server/SocketClient.hpp"
-#include "syssocket/sockdefines.h"
 #include "thread/seadMessageQueue.h"
 #include "types.h"
 
@@ -141,8 +140,6 @@ public:
     static void sendFreezeInfPacket();
     static void sendShineThiefInfPacket();
     static void sendPuppetPosInfoPacket();
-    static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
-    static void sendCheckpointGetPacket(const char* objId);
     static void sendMessagePacket(const char* message, int messageType = 0);
 
     // ===== PUPPET MANAGEMENT =====
@@ -272,19 +269,9 @@ private:
     void disconnectPlayer(PlayerDC* packet);
     void updateMessages(MessagePacket* packet);
     void updateHealthCoins(HealthCoins* packet);
-    void updateCoinCollects(CoinCollectCollect* packet);
-    void updateCheckpoints(CheckpointGet* packet);
 
     // ===== UTILITY METHODS =====
     PuppetInfo* findPuppetInfo(const nn::account::Uid& id, bool isFindAvailable);
-
-    /**
-     * @brief Core logic for applying a coin collect to game state and killing the actor.
-     *        Called both from updateCoinCollects (when scene is ready) and from update()
-     *        when draining mPendingCoinCollects.
-     */
-    static void applyOneCoinCollect(const char* placeID, int worldID, const char* stage);
-    static void getOneCheckpoint(const char* objId);
 
     // ===== CONNECTION MEMBERS =====
     al::AsyncFunctorThread* mReadThread = nullptr;

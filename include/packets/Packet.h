@@ -34,16 +34,31 @@ enum PacketType : short {
     HOLEPUNCH,
     EXTRA,
     HEALTHCOINS,
-    COINCOLLECTCOLL,
-    CHECKPOINTGET,
+
     End  // end of enum for bounds checking
 };
 
-constexpr static const char* packetNames[] = {"Unknown", "Client Initialization", "Player Info", "Player Cap Info", "Game Info", "Tag Info",
-                                              //"Freeze Info",
-                                              "Player Connect", "Player Disconnect", "Costume Info", "Moon Collection", "Capture Info", "Change Stage",
-                                              "Server Command", "Message", "UDP Initialization", "UDP Hole Punch", "Extra", "Health and Coins",
-                                              "Purple Coin Collection", "Checkpoint Get"};
+constexpr static const char* packetNames[] = {
+    "Unknown",
+    "Client Initialization",
+    "Player Info",
+    "Player Cap Info",
+    "Game Info",
+    "Tag Info",
+    //"Freeze Info",
+    "Player Connect",
+    "Player Disconnect",
+    "Costume Info",
+    "Moon Collection",
+    "Capture Info",
+    "Change Stage",
+    "Server Command",
+    "Message",
+    "UDP Initialization",
+    "UDP Hole Punch",
+    "Extra",
+    "Health and Coins",
+};
 
 enum SenderType { SERVER, CLIENT };
 
@@ -68,8 +83,6 @@ struct PACKED Packet {
 // IWYU pragma: begin_keep
 #include "packets/CaptureInf.h"
 #include "packets/ChangeStagePacket.h"
-#include "packets/CheckpointGet.h"
-#include "packets/CoinCollectCollect.h"
 #include "packets/CostumeInf.h"
 #include "packets/FreezeInf.h"
 #include "packets/GameInf.h"

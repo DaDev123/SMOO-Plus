@@ -12,13 +12,12 @@
 
 #include <cstring>
 #include <netinet/in.h>
-#include <sys/socket.h>
+#include <netinet/tcp.h>
 
 #include "heap/seadHeapMgr.h"
 #include "logger.hpp"
 #include "packets/Packet.h"
 #include "server/Client.hpp"
-#include "syssocket/sockdefines.h"
 #include "thread/seadThread.h"
 #include "types.h"
 

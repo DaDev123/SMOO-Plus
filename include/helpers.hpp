@@ -5,7 +5,6 @@
 #include <cstring>
 
 #include "puppets/PuppetInfo.h"
-#include "Scene/Twists/TwistsConfig.hpp"
 
 bool isPartOf(const char* w1, const char* w2);
 
@@ -143,7 +142,3 @@ public:
 class StageScene;
 
 StageScene* getStageScene();
-
-static float getScale() {
-    return TwistsConfig::isSmallMarioEnabled() ? 0.3f : 1.f;
-}

@@ -11,7 +11,6 @@
 #include "Library/Placement/PlacementId.h"
 #include "Npc/SessionEventProgress.h"
 #include "Npc/SessionMusicianType.h"
-#include "server/CheckpointMasterList.h"
 #include "System/UniqObjInfo.h"
 #include "Util/ScenePrepoFunction.h"
 
@@ -708,80 +707,6 @@ public:
                 return curInfo;
             }
         }
-        return nullptr;
-    }
-
-    // custom impl of addCoinCollect that uses a provided stage and world instead of your current ones
-    void customAddCoinCollect(const al::PlacementId* placeID, int worldID, const char* stage) {
-        if (customIsGotCoinCollect(placeID, stage))
-            return;
-        al::StringTmp<128> objID;
-        placeID->makeString(&objID);
-        if (GameDataFile::CoinCollectInfo* info = tryFindCoinCollectInfo(stage, objID.cstr())) {
-            info->isGet = true;
-            mCoinCollectGotNum[worldID]++;
-        }
-    }
-
-    // custom impl of isGotCoinCollect that uses a provided stage instead of your current one
-    bool customIsGotCoinCollect(const al::PlacementId* placeID, const char* stage) const {
-        al::StringTmp<128> objID;
-        placeID->makeString(&objID);
-        const CoinCollectInfo* info = tryFindCoinCollectInfo(stage, objID.cstr());
-        return info && info->isGet;
-    }
-
-    // get the total shine count, only including unique shines (no more than 1 shop shine per kingdom)
-    s32 getTotalUniqueShineNum() {
-        int shines = 0;
-        for (s32 i = 0; i < sNumWorlds; i++) {
-            shines += mShineNum[i];                       // all shines including shop
-            shines -= std::max(mShopShineNum[i] - 1, 0);  // subtract shop moons except for 1 per kingdom
-        }
-        return shines;
-    }
-
-    // these three functions are custom impls of checkpoint functions from 0b-0f's decomp of GameDataFile and they are used for checkpoint sync
-    UniqObjInfo* customSetCheckpointId(const al::PlacementId* placement_id) {
-        UniqObjInfo* result;
-        al::StringTmp<128> obj_id;
-        placement_id->makeString(&obj_id);
-        if (CheckpointInfo* info = tryFindCheckpointInfoImpl(mCheckpointTable.begin(), mCurrentStageName.cstr(), obj_id.cstr())) {
-            info->isGet = true;
-            if (UniqObjInfo* got_info = addGotCheckpoint(mGotCheckpoint.begin(), info->objInfo.getStageName(), info->objInfo.getObjId())) {
-                got_info->setStageName(info->objInfo.getStageName());
-                got_info->mObjId.format("%s", info->objInfo.getObjId());
-                mGotCheckpointNum++;
-                result = got_info;
-            }
-        } else {
-            CheckpointMasterList::CheckpointData data = CheckpointMasterList::getCheckpointDataFromMasterList(obj_id.cstr());
-            if (UniqObjInfo* got_info = addGotCheckpoint(mGotCheckpoint.begin(), data.stageName, data.objId)) {
-                got_info->setStageName(data.stageName);
-                got_info->mObjId.format("%s", data.objId);
-                mGotCheckpointNum++;
-                result = got_info;
-            }
-        }
-        al::copyString(mCheckpointName.getBuffer(), obj_id.cstr(), 128);
-        return result;
-    }
-
-    static UniqObjInfo* addGotCheckpoint(UniqObjInfo* list, const char* stage_name, const char* obj_id) {
-        for (s32 i = 0; i < 320; i++) {
-            if (list[i].mStageName.isEmpty() && list[i].mObjId.isEmpty())
-                return &list[i];
-            if (al::isEqualString(list[i].getStageName(), stage_name) && al::isEqualString(list[i].getObjId(), obj_id))
-                break;
-        }
-        return nullptr;
-    }
-
-    static CheckpointInfo* tryFindCheckpointInfoImpl(CheckpointInfo** table, const char* stage_name, const char* obj_id) {
-        for (s32 i = 0; i < sNumWorlds; i++)
-            for (s32 j = 0; j < 16; j++)
-                if (al::isEqualString(stage_name, table[i][j].objInfo.mStageName) && al::isEqualString(obj_id, table[i][j].objInfo.getObjId()))
-                    return &table[i][j];
         return nullptr;
     }
 

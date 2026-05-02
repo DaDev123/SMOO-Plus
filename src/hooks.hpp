@@ -1,7 +1,6 @@
-#include "hk/hook/a64/Assembler.h"
+
 #include "hk/hook/Replace.h"
 #include "hk/hook/Trampoline.h"
-#include "hk/util/Math.h"
 
 #include "al/Library/Camera/CameraDirector.h"
 #include "al/Library/Controller/InputFunction.h"
@@ -20,51 +19,28 @@
 #include "al/Library/Yaml/ByamlUtil.h"
 #include "al/Library/Yaml/Writer/ByamlWriter.h"
 
-#include "game/Actors/WorldndBorderKeeper.h"
 #include "game/Item/Shine.h"
 #include "game/Layout/CoinCounter.h"
 #include "game/MapObj/AppearSwitchTimer.h"
-#include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Scene/StageSceneStateOption.h"
 #include "game/Scene/StageSceneStatePauseMenu.h"
 
 #include <cstring>
 #include <sys/types.h>
 
-#include "helpers.hpp"
-#include "Imgui.hpp"
-#include "Item/CoinCollect.h"
-#include "layouts/ConnectionStatus.h"
 #include "Library/Collision/CollisionPartsTriangle.h"
 #include "Library/Nerve/Nerve.h"
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
 #include "Library/Scene/SceneObjUtil.h"
 #include "Scene/StageScene.h"
 #include "Scene/StageSceneStateModConfig.hpp"
-#include "Scene/Twists/TwistsConfig.hpp"
-#include "server/CheckpointMasterList.h"
 #include "server/Client.hpp"
-#include "server/freeze/FreezeTagMode.hpp"
-#include "server/gamemode/GameModeManager.hpp"
-#include "server/hns/HideAndSeekMode.hpp"
-#include "server/shine-thief/ShineThiefMode.hpp"
 #include "System/GameDataFile.h"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
-#include "System/UniqObjInfo.h"
 
-static HkReplace<bool, al::IUseSceneObjHolder*> comboBtnHook = hk::hook::replace([](al::IUseSceneObjHolder* holder) -> bool {
-    // only switch to combo if freezetag or shinethief is active
-    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) || GameModeManager::instance()->isModeAndActive(GameMode::SHINETHIEF))
-        return false;
-
-    // only if the gamemode wants it
-    if (GameModeManager::instance()->isActive()) {  // only switch to combo if any gamemode is active
-        return !al::isPadHoldL(-1) && al::isPadTriggerDown(-1);
-    } else {
-        return al::isPadTriggerDown(-1);
-    }
-});
+static HkReplace<bool, al::IUseSceneObjHolder*> comboBtnHook =
+    hk::hook::replace([](al::IUseSceneObjHolder* holder) -> bool { return al::isPadTriggerDown(-1); });
 
 static HkTrampoline<void, GameConfigData*, al::ByamlWriter*> saveWriteHook = hk::hook::trampoline([](GameConfigData* cfgData, al::ByamlWriter* writer) -> void {
     saveWriteHook.orig(cfgData, writer);
@@ -165,32 +141,6 @@ static HkTrampoline<void, Shine*> registerShineToListHook = hk::hook::trampoline
         Client::tryRegisterShine(shine);
     }
 });
-class CoinCollectHolder;
-static HkTrampoline<void, CoinCollectHolder*, CoinCollect*> registerCoinCollectToListHook =
-    hk::hook::trampoline([](CoinCollectHolder* h, CoinCollect* coin) -> void {
-        registerCoinCollectToListHook.orig(h, coin);
-        Client::tryRegisterCoinCollect(coin);
-    });
-
-static HkTrampoline<void, CoinCollectHolder*, CoinCollect2D*> registerCoinCollect2DToListHook =
-    hk::hook::trampoline([](CoinCollectHolder* h, CoinCollect2D* coin) -> void {
-        registerCoinCollect2DToListHook.orig(h, coin);
-        Client::tryRegisterCoinCollect2D(coin);
-    });
-
-static HkReplace<bool, GameDataFile*, s32> isGotCheckpointInWorldHook = hk::hook::replace([](GameDataFile* gdf, s32 index) -> bool {
-    s32 index2 = gdf->calcCheckpointIndexInScenario(index);
-    if (index2 < 0)
-        return false;
-    const char* checkpointName = gdf->getCheckpointTable()[gdf->getCurrentWorldIdNoDevelop()][index2].objInfo.getObjId();
-    for (s32 i = 0; i < CheckpointMasterList::sNumCheckpoints; i++) {
-        UniqObjInfo info = gdf->getGotCheckpointTable()[i];
-        if (al::isEqualString(checkpointName, info.getObjId())) {
-            return true;
-        }
-    }
-    return false;
-});
 
 static HkReplace<void, StageSceneStatePauseMenu*> overrideHelpFadeNerve = hk::hook::replace([](StageSceneStatePauseMenu* state) -> void {
     // Set label in menu inside LocalizedData/${lang}/MessageData/LayoutMessage.szs/Menu.msbt/Menu_Help
@@ -219,78 +169,11 @@ static HkTrampoline<void, StageSceneStatePauseMenu*, const char*, al::Scene*, al
         al::initNerveState(state, sceneStateModConfig, &NrvStageSceneStatePauseMenu.ModConfig, "CustomNerveOverride");
     });
 
-// skips starting both coin counters
-static HkTrampoline<void, CoinCounter*> startCoinCounterHook = hk::hook::trampoline([](CoinCounter* counter) -> void {
-    if (!GameModeManager::instance()->isModeRequireUI()) {
-        startCoinCounterHook.orig(counter);
-    }
-});
-
-// Simple hook that can be used to override isModeE3 checks to enable/disable certain behaviors
-static bool modeE3Hook() {
-    return GameModeManager::instance()->isModeRequireUI();
-}
-
 // Gravity Hooks
 
 static void initHackCapHook(al::LiveActor* cappy) {
     al::initActorPoseTQGSV(cappy);
 }
-
-// Skips ending the play guide layout if a mode is active, since the mode would have already ended
-// it
-static void playGuideEndHook(al::SimpleLayoutAppearWaitEnd* thisPtr) {
-    if (!GameModeManager::instance()->isModeRequireUI()) {
-        thisPtr->end();
-    }
-}
-
-static HkTrampoline<void, StageScene*, al::SceneInitInfo*> stageSceneInitHook =
-    hk::hook::trampoline([](StageScene* curScene, al::SceneInitInfo* initInfo) -> void {
-        stageSceneInitHook.orig(curScene, initInfo);
-        if (GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
-            al::CameraDirector* director = curScene->getCameraDirector();
-            if (director) {
-                if (director->mPoserFactory) {
-                    al::CameraTicket* gravityCamera = director->createCameraFromFactory("CameraPoserCustom", nullptr, 0, 5, sead::Matrix34f::ident);
-
-                    HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-
-                    mode->setCameraTicket(gravityCamera);
-                }
-            }
-        }
-        if (GameModeManager::instance()->isMode(GameMode::FREEZETAG) || GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
-            al::CameraDirector* director = curScene->getCameraDirector();
-            if (director && director->mPoserFactory) {
-                al::CameraTicket* spectateCamera = director->createCameraFromFactory("CameraPoserActorSpectate", nullptr, 0, 5, sead::Matrix34f::ident);
-
-                if (GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
-                    FreezeTagMode* mode = GameModeManager::instance()->getMode<FreezeTagMode>();
-                    mode->setCameraTicket(spectateCamera);
-                } else if (GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
-                    HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-                    mode->setCameraTicket(spectateCamera);
-                } else if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
-                    ShineThiefMode* mode = GameModeManager::instance()->getMode<ShineThiefMode>();
-                    mode->setCameraTicket(spectateCamera);
-                }
-            }
-        }
-    });
-
-static HkTrampoline<void, WorldEndBorderKeeper*> borderPullBackHook = hk::hook::trampoline([](WorldEndBorderKeeper* keeper) -> void {
-    if (al::isFirstStep(keeper) && GameModeManager::instance()->isActive()) {
-        if (GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK)) {
-            HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-
-            if (mode->isUseGravity()) {
-                killMainPlayer(keeper->mActor);
-            }
-        }
-    }
-    borderPullBackHook.orig(keeper);
-});
 
 constexpr static al::ExecuteTable DrawTableCustom[] = {
     createDrawTable("OnlineDrawExecutors", "PuppetActor", "ActorModelDrawDeferred", "PuppetActor", "ActorModelDrawDeferred")};
@@ -344,71 +227,22 @@ static bool unlockCostumeDoorMetroHook(const char* str1, const char* str2) {
     return al::isEqualString(str1, str2);
 }
 
-static HkTrampoline<bool, al::Triangle&, char*> icePhysicsHook = hk::hook::trampoline([](al::Triangle& triangle, char* floorCode) -> bool {
-    if (strcmp(floorCode, "Skate") != 0)
-        return icePhysicsHook.orig(triangle, floorCode);
-
-    bool isNaturalIce = icePhysicsHook.orig(triangle, floorCode);
-
-    return isNaturalIce ? true : TwistsConfig::isIcePhysicsEnabled();
-});
-
 static HkTrampoline<void, StageSceneStatePauseMenu*> pauseMenuWaitHook = hk::hook::trampoline([](StageSceneStatePauseMenu* menu) -> void {
     if (al::isFirstStep(menu))
         menu->mSelectParts->setSelectMessage(2, u"Mod Menu");
 
     pauseMenuWaitHook.orig(menu);
-
-    if (!menu->isDrawLayout()) {
-        ConnectionStatus::sInstance->tryStart();
-    } else {
-        ConnectionStatus::sInstance->tryEnd();
-    }
 });
 
 static HkTrampoline<void, AppearSwitchTimer*, const al::ActorInitInfo&, const al::IUseAudioKeeper*, al::IUseStageSwitch*, al::IUseCamera*, al::LiveActor*>
     disableAppearSwitchCameraHook = hk::hook::trampoline([](AppearSwitchTimer* timer, const al::ActorInitInfo& initInofo, const al::IUseAudioKeeper* audio,
                                                             al::IUseStageSwitch* stageSwitch, al::IUseCamera* camera, al::LiveActor* actor) -> void {
         disableAppearSwitchCameraHook.orig(timer, initInofo, audio, stageSwitch, camera, actor);
-        if (!StageSceneStateModConfig::isSpeedrunModeEnabled())
-            timer->mDemoCameraFrame = 0;
+
+        timer->mDemoCameraFrame = 0;
     });
 
 static HkTrampoline<bool, al::WindowConfirmWait*> windowConfirmWaitHook = hk::hook::trampoline([](al::WindowConfirmWait* win) -> bool {
     al::setNerve(win, (al::Nerve*)(hk::ro::getMainModule()->range().start() + 0x1e05be8));
     return true;
 });
-
-namespace speedrun {
-
-static bool isHooksCreated = false;
-
-static constexpr u32 listPtrNop[] = {
-    0x4DB934,
-    0x2D250C,
-};
-
-static hk::hook::a64::AsmBlock<true, 1>* listNop[hk::util::arraySize(listPtrNop)];
-
-static void uninstallHooks() {
-    for (int i = 0; i < hk::util::arraySize(listPtrNop); i++) {
-        listNop[i]->uninstall();
-    }
-}
-
-static void createHooks() {
-    if (!isHooksCreated) {
-        for (int i = 0; i < hk::util::arraySize(listPtrNop); i++) {
-            listNop[i] = new (imgui::sImGuiHeap) hk::hook::a64::AsmBlock<true, 1>(hk::hook::a64::assemble<"nop", true>());
-        }
-        isHooksCreated = true;
-    }
-}
-
-static void installHooks() {
-    for (int i = 0; i < hk::util::arraySize(listPtrNop); i++) {
-        listNop[i]->installAtMainOffset(listPtrNop[i]);
-    }
-}
-
-}  // namespace speedrun

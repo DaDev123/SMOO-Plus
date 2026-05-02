@@ -39,12 +39,6 @@
 #include "Project/HitSensor/HitSensor.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/DeltaTime.hpp"
-#include "server/freeze/FreezeTagInfo.h"
-#include "server/gamemode/GameModeManager.hpp"
-#include "server/hns/HideAndSeekMode.hpp"
-#include "server/shine-thief/ShineThiefInfo.h"
-#include "server/shine-thief/ShineThiefMode.hpp"
-#include "server/snh/SardineMode.hpp"
 #include "Util/SensorMsgFunction.h"
 
 static const char* subActorNames[] = {
@@ -111,26 +105,13 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
         mHitSensorKeeper->clear();
     }
 
-    float sensorScale = ::getScale();
-
     initHitSensor(3);
-    al::addHitSensor(this, initInfo, "Body", static_cast<u32>(al::HitSensorType::Npc), 50.0f * sensorScale, 16,
-                     sead::Vector3f(0.0f, 75.0f * sensorScale, 0.0f));
-    al::addHitSensor(this, initInfo, "Head", static_cast<u32>(al::HitSensorType::Npc), 40.0f * sensorScale, 16,
-                     sead::Vector3f(0.0f, 110.0f * sensorScale, 0.0f));
-    al::addHitSensor(this, initInfo, "Foot", static_cast<u32>(al::HitSensorType::Npc), 40.0f * sensorScale, 1, sead::Vector3f(0.0f, 40.0f * sensorScale, 0.0f));
+    al::addHitSensor(this, initInfo, "Body", static_cast<u32>(al::HitSensorType::Npc), 50.0f, 16, sead::Vector3f(0.0f, 75.0f, 0.0f));
+    al::addHitSensor(this, initInfo, "Head", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 16, sead::Vector3f(0.0f, 110.0f, 0.0f));
+    al::addHitSensor(this, initInfo, "Foot", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 1, sead::Vector3f(0.0f, 40.0f, 0.0f));
 
     al::validateClipping(normalModel);
     al::validateClipping(normal2DModel);
-
-    if (GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
-        mFreezeTagIceBlock = new FreezePlayerBlock("PuppetIceBlock");
-        mFreezeTagIceBlock->init(initInfo);
-    }
-
-    if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
-        mShineThiefPlayerBlock = GameModeManager::instance()->getMode<ShineThiefMode>()->getShineBlock();
-    }
 }
 
 void PuppetActor::initAfterPlacement() {
@@ -145,28 +126,6 @@ void PuppetActor::initOnline(PuppetInfo* pupInfo) {
 
 void PuppetActor::movement() {
     al::LiveActor::movement();
-
-    if (mFreezeTagIceBlock) {
-        if (mInfo->isFreezeTagFreeze && mInfo->isConnected && mInfo->isInSameStage && !al::isAlive(mFreezeTagIceBlock))
-            mFreezeTagIceBlock->appear();
-
-        if ((!mInfo->isFreezeTagFreeze || !mInfo->isConnected || !mInfo->isInSameStage) && al::isAlive(mFreezeTagIceBlock) &&
-            !al::isNerve(mFreezeTagIceBlock, &NrvFreezePlayerBlock.Disappear)) {
-            mFreezeTagIceBlock->end();
-        }
-
-        al::setTrans(mFreezeTagIceBlock, mInfo->playerPos);
-        al::setQuat(mFreezeTagIceBlock, mInfo->playerRot);
-    }
-
-    if (mShineThiefPlayerBlock) {
-        bool shouldMoveBlock = mInfo->isShineThiefHolder && mInfo->isConnected && mInfo->isInSameStage;
-        if (shouldMoveBlock && al::isAlive(mShineThiefPlayerBlock)) {
-            sead::Vector3f offsetPos = mInfo->playerPos;
-            offsetPos.y += 275.f * ::getScale();
-            al::setTrans(mShineThiefPlayerBlock, offsetPos);
-        }
-    }
 }
 
 void PuppetActor::calcAnim() {
@@ -251,60 +210,17 @@ void PuppetActor::control() {
             }
         }
 
-        if (mNameTag && !GameModeManager::instance()->isActive())
+        if (mNameTag)
             if (!mNameTag->mIsAlive)
                 mNameTag->appear();
 
         // Nametag visibility logic for active game modes
-
-        if (mNameTag && GameModeManager::instance()->isActive()) {
-            GameMode curMode = GameModeManager::instance()->getGameMode();
-            switch (curMode) {
-            case GameMode::HIDEANDSEEK:
-                mNameTag->mIsAlive = GameModeManager::instance()->getMode<HideAndSeekMode>()->isPlayerIt() && mInfo->isIt;
-                break;
-            case GameMode::SARDINE:
-                mNameTag->mIsAlive = GameModeManager::instance()->getMode<SardineMode>()->isPlayerIt() && mInfo->isIt;
-                break;
-            case GameMode::FREEZETAG: {
-                bool isRun = GameModeManager::instance()->getInfo<FreezeTagInfo>()->mIsPlayerRunner;
-                mNameTag->mIsAlive = (isRun && mInfo->isFreezeTagRunner) || (!isRun && !mInfo->isFreezeTagRunner);
-                break;
-            }
-            case GameMode::SHINETHIEF: {
-                ShineThiefInfo* stInfo = GameModeManager::instance()->getInfo<ShineThiefInfo>();
-
-                // In team mode, show nametags for all team members
-                if (stInfo->mIsTeamMode) {
-                    ShineThiefTeam localTeam = stInfo->mPlayerTeam;
-                    ShineThiefTeam puppetTeam = static_cast<ShineThiefTeam>(mInfo->shineThiefTeam);
-
-                    // Show nametag if puppet is on the same team as local player
-                    mNameTag->mIsAlive = (localTeam != ShineThiefTeam::NONE && puppetTeam != ShineThiefTeam::NONE && localTeam == puppetTeam);
-                } else {
-                    // Original behavior for non-team mode
-                    bool isLocalPlayerHolder = stInfo->mIsPlayerHolder;
-                    if (isLocalPlayerHolder) {
-                        mNameTag->mIsAlive = false;
-                    } else {
-                        mNameTag->mIsAlive = !mInfo->isShineThiefHolder;
-                    }
-                }
-                break;
-            }
-            default:
-                Logger::log("Name tag display failed due to unknown active game mode!\n");
-                break;
-            };
-        }
+        if (mNameTag)
+            mNameTag->mIsAlive = true;
 
         // Sub-Actor Updating
 
         mPuppetCap->update();
-
-        // Small Mario Scaling
-
-        al::setScaleAll(curModel, ::getScale());
 
         // Syncing
 
