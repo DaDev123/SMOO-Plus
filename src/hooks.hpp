@@ -143,7 +143,6 @@ static HkTrampoline<void, Shine*> registerShineToListHook = hk::hook::trampoline
 });
 
 static HkReplace<void, StageSceneStatePauseMenu*> overrideHelpFadeNerve = hk::hook::replace([](StageSceneStatePauseMenu* state) -> void {
-    // Set label in menu inside LocalizedData/${lang}/MessageData/LayoutMessage.szs/Menu.msbt/Menu_Help
     state->exeModConfig();
     al::setNerve(state, &NrvStageSceneStatePauseMenu.ModConfig);
 });

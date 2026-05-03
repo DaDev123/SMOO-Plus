@@ -78,53 +78,53 @@ ServerBrowser& ServerBrowser::operator=(const ServerBrowser& other) {
 // Server List Loader
 // ============================================================================
 
-static std::vector<ServerBrowser> loadServersFromFile() {
-    std::vector<ServerBrowser> servers;
-    FsHelper::LoadData dat{.path = "OnlineData/ServerList.txt"};
-    FsHelper::loadFileFromPath(dat);
-
-    if (!dat.buffer) {
-        servers.push_back(ServerBrowser("ERROR: OnlineData/ServerList.txt not found", "", 0));
-        return servers;
-    }
-
-    char* buffer = reinterpret_cast<char*>(dat.buffer);
-    char* savePtr = nullptr;
-    char* line = strtok_r(buffer, "\n\r", &savePtr);
-
-    while (line) {
-        // Skip whitespace and comments
-        while (*line == ' ' || *line == '\t')
-            line++;
-        if (*line == '\0' || *line == '#') {
-            line = strtok_r(nullptr, "\n\r", &savePtr);
-            continue;
-        }
-
-        // Parse "Name|IP|Port"
-        char* savePtr2 = nullptr;
-        char* name = strtok_r(line, "|", &savePtr2);
-        char* ip = strtok_r(nullptr, "|", &savePtr2);
-        char* portStr = strtok_r(nullptr, "|", &savePtr2);
-
-        if (name && ip && portStr) {
-            int port = atoi(portStr);
-            if (port > 0 && port < 65536) {
-                servers.push_back(ServerBrowser(name, ip, port));
-            }
-        }
-
-        line = strtok_r(nullptr, "\n\r", &savePtr);
-    }
-
-    free(dat.buffer);
-
-    if (servers.empty()) {
-        servers.push_back(ServerBrowser("ERROR: Empty or Invalid File", "", 0));
-    }
-
-    return servers;
-}
+//static std::vector<ServerBrowser> loadServersFromFile() {
+//    std::vector<ServerBrowser> servers;
+//    FsHelper::LoadData dat{.path = "OnlineData/ServerList.txt"};
+//    FsHelper::loadFileFromPath(dat);
+//
+//    if (!dat.buffer) {
+//        servers.push_back(ServerBrowser("ERROR: OnlineData/ServerList.txt not found", "", 0));
+//        return servers;
+//    }
+//
+//    char* buffer = reinterpret_cast<char*>(dat.buffer);
+//    char* savePtr = nullptr;
+//    char* line = strtok_r(buffer, "\n\r", &savePtr);
+//
+//    while (line) {
+//        // Skip whitespace and comments
+//        while (*line == ' ' || *line == '\t')
+//            line++;
+//        if (*line == '\0' || *line == '#') {
+//            line = strtok_r(nullptr, "\n\r", &savePtr);
+//            continue;
+//        }
+//
+//        // Parse "Name|IP|Port"
+//        char* savePtr2 = nullptr;
+//        char* name = strtok_r(line, "|", &savePtr2);
+//        char* ip = strtok_r(nullptr, "|", &savePtr2);
+//        char* portStr = strtok_r(nullptr, "|", &savePtr2);
+//
+//        if (name && ip && portStr) {
+//            int port = atoi(portStr);
+//            if (port > 0 && port < 65536) {
+//                servers.push_back(ServerBrowser(name, ip, port));
+//            }
+//        }
+//
+//        line = strtok_r(nullptr, "\n\r", &savePtr);
+//    }
+//
+//    free(dat.buffer);
+//
+//    if (servers.empty()) {
+//        servers.push_back(ServerBrowser("ERROR: Empty or Invalid File", "", 0));
+//    }
+//
+//    return servers;
+//}
 
 // ============================================================================
 // Helper: does the current menu have roll parts on the selected item?
@@ -149,8 +149,8 @@ StageSceneStateModConfig::StageSceneStateModConfig(const char* name, al::Scene* 
     mInput = new InputSeparator(mHost, true);
 
     // Load server list
-    mServerBrowserServers = loadServersFromFile();
-    mServerBrowserCount = mServerBrowserServers.size();
+    //mServerBrowserServers = loadServersFromFile();
+    //mServerBrowserCount = mServerBrowserServers.size();
 
     for (int i = 0; i < menuCount; i++) {
         msgList[i] = new sead::SafeArray<sead::WFixedSafeString<0x200>, maxMsgCount>();
@@ -370,11 +370,11 @@ void StageSceneStateModConfig::initGameplayMenu(const al::LayoutInitInfo& initIn
 
     sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
     optionsList[MENU_GAMEPLAY]->startLoopActionAll("Loop", "Loop");
-    RollPartsData* dataColPlayer = new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                                                     (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), false);
-    RollPartsData* dataColCap = new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                                                  (sCapCollisionEnabled + (sCapBounceEnabled << 1)), false);
-    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
+    RollPartsData* dataColPlayer = new RollPartsData(
+        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" }, (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), false);
+    RollPartsData* dataColCap = new RollPartsData(
+        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" }, (sCapCollisionEnabled + (sCapBounceEnabled << 1)), false);
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t* [] { u"" });
     optionsList[MENU_GAMEPLAY]->setRollPartsData(new RollPartsData[]{*dataColPlayer, *dataColCap, *dataEmpty, *dataEmpty, *dataEmpty});
 
     optionsList[MENU_GAMEPLAY]->addStringData(msgList[MENU_GAMEPLAY]->mBuffer, "TxtContent");
