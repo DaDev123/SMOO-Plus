@@ -60,13 +60,11 @@
 #include <cstring>
 #include <math.h>
 
-#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
 #include "factoryPatches.h"
 #include "gfx/seadColor.h"
 #include "helpers.hpp"
 #include "hooks.hpp"
-#include "hooksFreezeTag.hpp"
 #include "imgui.h"
 #include "Imgui.hpp"
 #include "layouts/ConnectionStatus.h"
@@ -76,19 +74,8 @@
 #include "puppetHooks.hpp"
 #include "puppets/PuppetInfo.h"
 #include "Scene/StageSceneStateModConfig.hpp"
-#include "Scene/Twists/CustomPlayerConst.h"
-#include "Scene/Twists/Darkness/Darkness.hpp"
-#include "Scene/Twists/Timewarp/Timewarp.hpp"
-#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
-#include "server/freeze/FreezeTagMode.hpp"
-#include "server/gamemode/GameModeBase.hpp"
-#include "server/gamemode/GameModeFactory.hpp"
-#include "server/gamemode/GameModeManager.hpp"
-#include "server/shine-thief/ShineThiefMode.hpp"
-#include "Settings/SmooSettings.hpp"
-#include "Settings/StageWarper.hpp"
 #include "speedboot/BootHooks.hpp"
 #include "System/GameSystem.h"
 #include "Util/AchievementUtil.h"
@@ -121,7 +108,6 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
 #endif
 
     Client::createInstance(al::getCurrentHeap());
-    GameModeManager::createInstance(al::getCurrentHeap());
 
     gameSystemInit.orig(gameSystem);
 
@@ -140,7 +126,7 @@ HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSys
 
     ImGui::NewFrame();
     drawMain(gameSystem->mSequence);
-    StageWarper::ShowSearchWindow();
+
     ImGui::Render();
 
     hk::gfx::ImGuiBackendNvn::instance()->draw(ImGui::GetDrawData(), drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
@@ -221,16 +207,7 @@ HkTrampoline<void, al::ActorInitInfo*, al::Scene*, al::PlacementInfo*, al::Layou
 
             Client::setSceneInfo(*initInfo, (StageScene*)scene);
 
-            if (GameModeManager::instance()->getGameMode() != NONE) {
-                GameModeInitInfo initModeInfo(initInfo, scene);
-                initModeInfo.initServerInfo(GameModeManager::instance()->getGameMode(), Client::getPuppetHolder());
-
-                GameModeManager::instance()->initScene(initModeInfo);
-            }
-
             Client::sendGameInfPacket(initInfo->actorSceneInfo.sceneObjHolder);
-            TwistsConfig::handleStageInit();
-            TimeWarpTwist::onStageInit((StageScene*)scene);
         });
 
 HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampoline([](HakoniwaSequence* sequence) -> void {
@@ -253,12 +230,6 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
 
     isInGame = !stageScene->isPause();
 
-    if (!stageScene->isPause())
-        TimeWarpTwist::update(player);
-
-    MoonGravityTwist::update(player);
-
-    GameModeManager::instance()->setPaused(stageScene->isPause());
     Client::setStageInfo(GameDataHolderWriter(stageScene));
 
     Client::update();
@@ -271,37 +242,6 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
     }
 
     updatePlayerInfo(GameDataHolderWriter(stageScene), playerBase, isYukimaru);
-
-    TwistsConfig::updateCappyProximity(player, stageScene);
-    TwoDTwist::update(stageScene, player, isFirstStep);
-
-    if (TwistsConfig::isSmallMarioEnabled()) {
-        smallMario::installHooks();
-    } else {
-        smallMario::uninstallHooks();
-    }
-
-    // ===== SMALL MARIO SCALING =====
-    if (TwistsConfig::isSmallMarioEnabled() && player && !isYukimaru) {
-        al::setScaleAll(player, scale);
-
-        al::LiveActor* model2D = player->mModelHolder->tryFindModelActor("Normal2D");
-        if (model2D)
-            al::setScaleAll(model2D, scale);
-
-        if (player->mHackCap)
-            al::setScaleAll(player->mHackCap, scale);
-
-        if (player->mHackKeeper && player->mHackKeeper->mHackActor)
-            al::setScaleAll(player->mHackKeeper->mHackActor, scale);
-
-        if (player->mConst)
-            CustomPlayerConst::setSmallMarioConst(player->mConst);
-
-        smallMario::sPlayerIs2D = rs::isPlayer2D((al::LiveActor*)player);
-    } else {
-        smallMario::sPlayerIs2D = false;
-    }
 
     if (SpeedrunIcon::sInstance) {
         if (StageSceneStateModConfig::isSpeedrunModeEnabled()) {
@@ -348,24 +288,10 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
                 }
             }
         }
-    } else if (al::isPadHoldL(-1)) {
-        if (al::isPadTriggerLeft(-1) && !StageSceneStateModConfig::isSpeedrunModeEnabled()) {
-            GameModeManager::instance()->toggleActive();
-        }
     }
-
     if (Client::isMusicDisabled()) {
         if (al::isPlayingBgm(stageScene)) {
             al::stopAllBgm(stageScene, 0);
-        }
-    }
-
-    // Set WipeHolder for both FreezeTag and ShineThief modes
-    if (isFirstStep) {
-        if (GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
-            GameModeManager::instance()->getMode<FreezeTagMode>()->setWipeHolder(sequence->mWipeHolder);
-        } else if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
-            GameModeManager::instance()->getMode<ShineThiefMode>()->setWipeHolder(sequence->mWipeHolder);
         }
     }
 
@@ -409,29 +335,9 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
 }
 
 // ===== MAIN DRAW HOOK =====
-static int msgCount = 0;
-
-struct DisplayMessage {
-    sead::FixedSafeString<MESSAGESIZE> text;
-    float displayTimer;
-    bool active;
-};
-
-static const int maxDisplayMsgCount = 5;
-static const float messageDisplayDuration = 10.0f;
-static DisplayMessage displayMessages[maxDisplayMsgCount] = {};
 
 void drawMain(al::Sequence* curSequence) {
-    GameModeManager* gmm = GameModeManager::instance();
-    GameModeBase* mode = gmm->getMode<GameModeBase>();
-
-    // Freeze tag and Shine Thief need the delta time to not update while the game is paused
-    if (gmm->isMode(GameMode::FREEZETAG) || gmm->isMode(GameMode::SHINETHIEF)) {
-        if (!gmm->isPaused())
-            Time::calcTime();
-    } else {
-        Time::calcTime();
-    }
+    Time::calcTime();
 
     int dispHeight = al::getLayoutDisplayHeight();
 
@@ -440,7 +346,6 @@ void drawMain(al::Sequence* curSequence) {
     Client* client = Client::instance();
     SocketClient* socket = client->mSocket;
     bool isConnected = socket->isConnected();
-    bool isPaused = gmm->isPaused();
 
     // Check authorization
     const char* currentUser = Client::getClientName();
@@ -456,96 +361,10 @@ void drawMain(al::Sequence* curSequence) {
         float baseY = (dispHeight * 7.f / 10.f) + 95.f - 5.f;
         float lineHeight = 30.f;
 
-        // Update display timer and active state
-        for (int i = 0; i < maxDisplayMsgCount; i++) {
-            if (displayMessages[i].active) {
-                displayMessages[i].displayTimer -= deltaTime;
-                if (displayMessages[i].displayTimer <= 0.0f) {
-                    displayMessages[i].active = false;
-                    msgCount--;
-                }
-            }
-        }
+        // renderer->begin(drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
+        // renderer->clear();
 
-        // Add new messages from the queue if there's space
-        while (msgCount < maxDisplayMsgCount && Client::get()->getMsgCount() > 0) {
-            sead::FixedSafeString<MESSAGESIZE>* msg = Client::get()->tryGetMessage();
-            if (msg) {
-                // Find an empty slot
-                for (int i = 0; i < maxDisplayMsgCount; i++) {
-                    if (!displayMessages[i].active) {
-                        displayMessages[i].text = *msg;
-                        displayMessages[i].displayTimer = messageDisplayDuration;
-                        displayMessages[i].active = true;
-                        msgCount++;
-                        break;
-                    }
-                }
-                Client::getClientHeap()->free(msg);
-            }
-        }
-
-        renderer->begin(drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
-        renderer->clear();
-
-        if (msgCount > 0) {
-            float charWidth = 15.f;
-            int maxCharCount = 0;
-            for (int i = 0; i < maxDisplayMsgCount; i++) {
-                if (displayMessages[i].active) {
-                    int len = displayMessages[i].text.calcLength();
-                    if (len > maxCharCount) {
-                        maxCharCount = len;
-                    }
-                }
-            }
-            float lineWidth = 10.f + charWidth * maxCharCount + 3.f;
-
-            hk::gfx::Vertex bl = {{0, baseY + lineHeight + 10}, {0, 1.0}, 0xef000000};
-            hk::gfx::Vertex tl = {{0, baseY - (msgCount - 1) * lineHeight - 10}, {0, 0}, 0xef000000};
-            hk::gfx::Vertex tr = {{lineWidth, baseY - (msgCount - 1) * lineHeight - 10}, {1.0, 0}, 0xef000000};
-            hk::gfx::Vertex br = {{lineWidth, baseY + lineHeight + 10}, {1.0, 1.0}, 0xef000000};
-
-            renderer->drawQuad(tl, tr, br, bl);
-        }
-
-        // Draw all active messages
-
-        // TODO: Fix Outline
-        int displayIndex = 0;
-        for (int i = 0; i < maxDisplayMsgCount; i++) {
-            if (displayMessages[i].active) {
-                float yPos = baseY - (lineHeight * displayIndex);
-                hk::util::Vector2f pos(10.f, yPos);
-                hk::util::Vector2f shadowPos = pos + hk::util::Vector2f(2.f, 2.f);
-                sead::Color4f color(255, 255, 255, 255);
-                u32 coloru32 = hk::gfx::rgba(color.a, color.g, color.b, color.a);
-                u8 shadowAlpha = fmax(0.0f, color.a - 25);
-                u32 shadowColor = hk::gfx::rgba(0, 0, 0, shadowAlpha);
-                renderer->setGlyphHeight(30.f);
-
-                renderer->drawString(shadowPos, displayMessages[i].text.cstr(), shadowColor);
-
-                // then draw text
-                renderer->drawString(pos, displayMessages[i].text.cstr(), coloru32);
-                displayIndex++;
-            }
-        }
-
-        // ===== TIMEWARP TRAIL =====
-        if (curScene && isInGame && TimeWarpTwist::isTimeWarpEnabled()) {
-            sead::LookAtCamera* cam = &const_cast<sead::LookAtCamera&>(al::getLookAtCamera(curScene, 0));
-            sead::Projection* projection = cam ? &const_cast<sead::Projection&>(al::getProjectionSead(curScene, 0)) : nullptr;
-            if (cam && projection) {
-                sead::PrimitiveRenderer* renderer = sead::PrimitiveRenderer::instance();
-                renderer->mDrawer.setDrawContext(Application::instance()->mDrawSystemInfo->drawContext);
-                renderer->setCamera(*cam);
-                renderer->setProjection(*projection);
-                TimeWarpTwist::drawTrail(curScene, renderer);
-            }
-        }
-
-        renderer->end();
+        // renderer->end();
 
         isInGame = false;
 
@@ -611,30 +430,17 @@ void drawMain(al::Sequence* curSequence) {
     // }
 
     // Queue info
-    ImGui::Text("Queue Count: %d/%d (Send) %d/%d (Receive) %d/%d (Msg)\n", socket->getSendCount(), socket->getSendMaxCount(), socket->getRecvCount(),
-                socket->getRecvMaxCount(), Client::get()->getMsgCount(), Client::get()->getMaxMsgCount());
+    ImGui::Text("Queue Count: %d/%d (Send) %d/%d (Receive)\n", socket->getSendCount(), socket->getSendMaxCount(), socket->getRecvCount(),
+                socket->getRecvMaxCount());
 
     ImGui::Text("Framework: Hakkun");
     ImGui::Text("Mod version: %s\n", TOSTRING(BUILDVERSTR));
     ImGui::Text("Server is running version: %s\n", Client::getServerVersion());
 
-    static bool showSettingsWindow = false;
-
     // ===== AUTHORIZED USER ONLY CONTENT =====
     if (!isAuthorizedUser) {
-        if (gmm->getMode<GameModeBase>()) {
-            ImGui::Text("\n------------------- Controls --------------------\n");
-            gmm->getMode<GameModeBase>()->debugMenuControls();
-        }
         ImGui::End();
         return;
-    }
-    if (showSettingsWindow) {
-        SmooSettings::showSmooSettingsWindow(&showSettingsWindow);
-    }
-
-    if (ImGui::Button("SMOO+ Settings")) {
-        showSettingsWindow = true;
     }
 
     // ===== 3D DEBUG RENDERING (Authorized users only) =====
@@ -656,9 +462,6 @@ void drawMain(al::Sequence* curSequence) {
             renderer->setCamera(*cam);
             renderer->setProjection(*projection);
 
-            GameMode gameMode = gmm->getGameMode();
-            GameModeBase* gameModeBase = gmm->getMode<GameModeBase>();
-
             ImGui::Text("(ZR ←)------------ Page %d/%d -------------(ZR →)\n", pageIndex + 1, maxPages);
 
             switch (pageIndex) {
@@ -669,7 +472,6 @@ void drawMain(al::Sequence* curSequence) {
                 if (debugPuppetIndex == 0) {
                     ImGui::Text("Player Name: %s\n", Client::getClientName());
                     ImGui::Text("Connection Status: %s\n", isConnected ? "Online" : "Offline");
-                    ImGui::Text("Game mode: %i | %s\n", gameMode, GameModeFactory::getModeName(gameMode));
                     ImGui::Text("Is in same Stage: Yes\n");
                     ImGui::Text("Stage: %s\n", client->getLastGameInfPacket()->stageName);
                     ImGui::Text("Scenario: %u\n", client->getLastGameInfPacket()->scenarioNo);
@@ -693,7 +495,6 @@ void drawMain(al::Sequence* curSequence) {
                         ImGui::Text("Player Name: %s\n", curPupInfo->puppetName);
                         ImGui::Text("Connection Status: %s\n", curPupInfo->isConnected ? "Online" : "Offline");
                         GameMode puppetGameMode = static_cast<GameMode>(curPupInfo->gameMode);
-                        ImGui::Text("Game mode: %i | %s\n", curPupInfo->gameMode, GameModeFactory::getModeName(puppetGameMode));
                         ImGui::Text("Is in same Stage: %s\n", curPupInfo->isInSameStage ? "Yes" : "No");
                         ImGui::Text("Stage: %s\n", curPupInfo->stageName);
                         ImGui::Text("Scenario: %u\n", curPupInfo->scenarioNo);
@@ -776,7 +577,6 @@ void drawMain(al::Sequence* curSequence) {
                 };
 
                 displayHeapInfo(Client::getClientHeap(), "Client", true);
-                displayHeapInfo(GameModeManager::sInstance->getHeap(), "GameMode", true);
                 displayHeapInfo(imgui::sImGuiHeap, "ImGui");
                 displayHeapInfo(al::getStationedHeap(), "Stationed");
                 displayHeapInfo(al::getSequenceHeap(), "Sequence");
@@ -789,9 +589,6 @@ void drawMain(al::Sequence* curSequence) {
             case 3: {
                 ImGui::Text("------------------- Controls --------------------\n\n");
 
-                if (gameModeBase) {
-                    gameModeBase->debugMenuControls();
-                }
                 ImGui::Text("\n- ZR + ↑ | Open/close this debug menu\n");
                 break;
             }
@@ -817,10 +614,6 @@ void drawMain(al::Sequence* curSequence) {
         return;
     }
 
-    if (gmm->getMode<GameModeBase>()) {
-        ImGui::Text("\n------------------- Controls --------------------\n");
-        gmm->getMode<GameModeBase>()->debugMenuControls();
-    }
     ImGui::End();
 }
 
@@ -875,9 +668,6 @@ extern "C" void hkMain() {
     hk::hook::replace([]() -> void { return; }).installAtSym<"_ZN2rs16isHoldAmiiboModeEPKN2al18IUseSceneObjHolderE">();
     hk::hook::replace([]() -> void { return; }).installAtSym<"_ZN2rs19isTriggerAmiiboModeEPKN2al18IUseSceneObjHolderE">();
 
-    // Remap Snapshot to !L + Down, disables snapshot mode in freeze tag
-    comboBtnHook.installAtSym<"_ZN2rs21isTriggerSnapShotModeEPKN2al18IUseSceneObjHolderE">();
-
     // Capture Syncing
     initObjHook.installAtSym<"_ZN2al31createPlacementActorFromFactoryERKNS_13ActorInitInfoEPKNS_13PlacementInfoE">();
 
@@ -888,15 +678,6 @@ extern "C" void hkMain() {
     // WindowConfirm Edits (Forces logic to ignore current nerve)
     windowConfirmWaitHook.installAtSym<"_ZN2al17WindowConfirmWait6tryEndEv">();
 
-    // Coin Counter Changes
-    startCoinCounterHook.installAtSym<"_ZN11CoinCounter8tryStartEv">();
-
-    // Other HUD Changes
-    hk::hook::writeBranchLinkAtMainOffset(0x20cb4c, modeE3Hook);  // PlayGuideMenuLyt at StageSceneStateLayout::start+140
-    hk::hook::writeBranchLinkAtMainOffset(0x20ca5c, modeE3Hook);  // MapMini::appearSlideIn at StageSceneStateLayout::start+50
-    hk::hook::writeBranchLinkAtMainOffset(0x20d160, modeE3Hook);  // MapMini::end at StageSceneStateLayout::exeEnd+8C
-    hk::hook::writeBranchLinkAtMainOffset(0x20d154, playGuideEndHook);
-
     // Pause Menu Changes
 
     hk::hook::a64::assemble<"mov w2, #5">().installAtSym<"R_ZN24StageSceneStatePauseMenuNrvStateCount">();  // increase nerve state count to 5
@@ -906,22 +687,6 @@ extern "C" void hkMain() {
     // inits StageSceneStateOption and StageSceneStateModConfig
     initStateHook.installAtSym<"_ZN21StageSceneStateOptionC1EPKcPN2al5SceneERKNS2_14LayoutInitInfoEP11FooterPartsP14GameDataHolderb">();
     overrideHelpFadeNerve.installAtSym<"_ZN24StageSceneStatePauseMenu17exeFadeBeforeHelpEv">();
-
-    // Gravity hooks
-    hk::hook::trampoline([]() -> void { return; }).installAtSym<"_ZN28PlayerJointControlGroundPose6updateEffffb">();
-    hk::hook::writeBranchLinkAtSym<"R_hackCapTQGSV">(initHackCapHook);
-    stageSceneInitHook.installAtSym<"_ZN10StageScene4initERKN2al13SceneInitInfoE">();  // create custom gravity camera ticket
-    borderPullBackHook.installAtSym<"_ZN20WorldEndBorderKeeper11exePullBackEv">();     // hooks WorldEndBorderKeeper to kill the
-                                                                                       // player if they reach the map border
-
-    // Freeze tag hooks
-    isCheckpointWarpAllowedHook.installAtSym<"_ZNK9MapLayout22isEnableCheckpointWarpEv">();  // always allow warping except in freeze tag
-    freezeDeathAreaHook.installAtSym<"_ZN2al13isInDeathAreaEPKNS_9LiveActorE">();            // Replaces functionality of death areas in freeze tag
-    playerHitPointDamageHook.installAtSym<"_ZN18PlayerHitPointData6damageEv">();             // disables the damage function in Freeze Tag
-    isEnableRescuePlayerHook.installAtSym<"_ZNK7HackCap20isEnableRescuePlayerEv">();         // Forces kids mode to be enabled during Freeze Tag
-    hackCapStartRescuePlayerHook.installAtSym<"_ZN7HackCap17startRescuePlayerEv">();         // Checks if the player is currently Rescued
-    // freezeMoonHitboxHook.installAtSym<"_ZN5Shine14makeActorAliveEv">();                      // When mode enabled, disable moon
-    // hitboxes to avoid softlocks
 
     // custom bootscreen hooks
     hk::hook::writeBranchLinkAtSym<"R_hakoniwaSetNerveSetup">(speedboot::hakoniwaSetNerveSetup);
@@ -938,15 +703,8 @@ extern "C" void hkMain() {
     // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);  // Removes Assist Mode Ledge Grabs
 
     // World Resource Heap stuff
-    hk::ro::getMainModule()->writeRo(0x5145c8, 0x7107D29F);  // cmp w20, #500
-    hk::hook::a64::assemble<"ret">().installAtMainOffset(0x514710);
-
-    // Twists
-    icePhysicsHook.installAtSym<"_ZN2al11isFloorCodeERKNS_8TriangleEPKc">();  // Enables Ice Physics
-    smallMario::initHooks();
-    DarknessTwist::initHooks();
-    TimeWarpTwist::init();
-    TwoDTwist::initHooks();
+    // hk::ro::getMainModule()->writeRo(0x5145c8, 0x7107D29F);  // cmp w20, #500
+    // hk::hook::a64::assemble<"ret">().installAtMainOffset(0x514710);
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
     hk::gfx::DebugRenderer::instance()->installHooks();

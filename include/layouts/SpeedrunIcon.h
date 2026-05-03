@@ -4,9 +4,7 @@
 #include "al/Library/Layout/LayoutInitInfo.h"
 #include "al/Library/Nerve/NerveSetupUtil.h"
 
-#include "container/seadPtrArray.h"
-#include "layouts/GameModePlayerSlot.h"
-
+#include "Scene/StageScene.h"
 // TODO: kill layout if going through loading zone or paused
 
 class SpeedrunIcon : public al::LayoutActor {
@@ -24,19 +22,11 @@ public:
     void updateSpeedrunText();
     void updateShineCount();
 
-    void setCurScene(StageScene* scene) {
-        mCurScene = scene;
-        // Update all player slots with the scene
-        for (int i = 0; i < mMaxPlayers; i++) {
-            mPlayerSlots.at(i)->setScene(scene);
-        }
-    }
+    void setCurScene(StageScene* scene) { mCurScene = scene; }
 
     static SpeedrunIcon* sInstance;
 
 private:
-    sead::PtrArray<GameModePlayerSlot> mPlayerSlots;
-    static constexpr int mMaxPlayers = 16;
     StageScene* mCurScene = nullptr;
 };
 

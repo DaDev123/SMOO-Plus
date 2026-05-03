@@ -7,7 +7,6 @@
 #include "helpers.hpp"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
-#include "server/gamemode/GameModeConfigMenuFactory.hpp"
 #include "System/GameDataFile.h"
 
 SpeedrunIcon* SpeedrunIcon::sInstance = nullptr;

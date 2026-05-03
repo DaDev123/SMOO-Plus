@@ -3,6 +3,7 @@
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Layout/LayoutActor.h"
 #include "al/Library/Layout/LayoutActorUtil.h"
+#include "al/Library/Layout/LayoutInitInfo.h"
 #include "al/Library/LiveActor/ActorClippingFunction.h"
 #include "al/Library/LiveActor/ActorFlagFunction.h"
 #include "al/Library/LiveActor/ActorMovementFunction.h"
@@ -12,11 +13,7 @@
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Screen/ScreenFunction.h"
 
-#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
 #include "actors/PuppetActor.h"
-#include "helpers.hpp"
-#include "Scene/Twists/TwistsConfig.hpp"
-#include "server/gamemode/GameModeManager.hpp"
 
 NameTag::NameTag(PuppetActor* pupActor, const al::LayoutInitInfo& initInfo, float startDist, float endDist, const char* playerName)
     : al::LayoutActor("PNameTag"), mPuppet(pupActor), mStartDist(startDist), mEndDist(endDist) {
@@ -69,7 +66,7 @@ void NameTag::control() {
 void NameTag::updateTrans() {
     sead::Vector2f newTrans = sead::Vector2f::zero;
 
-    sead::Vector3f targetOffset(0, 130 * ::getScale(), 0);
+    sead::Vector3f targetOffset(0, 130, 0);
 
     al::LiveActor* puppetModel = mPuppet->getCurrentModel();
 
@@ -78,12 +75,6 @@ void NameTag::updateTrans() {
     al::setLocalTrans(this, newTrans);
 
     mNormalizedDist = 1 - al::normalize(al::calcDistance(puppetModel, al::getPlayerActor(puppetModel, 0)), 200.0f, mEndDist);
-
-    // Freeze tag exclusive name tag distance changes
-    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG)) {
-        if (mPuppet->getInfo()->isFreezeTagFreeze)
-            mNormalizedDist = al::clamp(mNormalizedDist, 0.5f, 1.f);
-    }
 
     al::setLocalScale(this, mNormalizedDist);
 }

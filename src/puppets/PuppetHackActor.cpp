@@ -9,10 +9,6 @@
 #include "al/Library/LiveActor/ActorModelFunction.h"
 #include "al/Library/LiveActor/ActorSensorUtil.h"
 
-#include "../src/Scene/Twists/SmallMario/smallMarioHooks.hpp"
-#include "helpers.hpp"
-#include "Scene/Twists/TwistsConfig.hpp"
-
 PuppetHackActor::PuppetHackActor(const char* name) : al::LiveActor(name) {}
 
 void PuppetHackActor::init(al::ActorInitInfo const& initInfo) {
@@ -60,10 +56,7 @@ void PuppetHackActor::movement() {
     al::LiveActor::movement();
 }
 
-void PuppetHackActor::control() {
-    // Small Mario Scaling
-    al::setScaleAll(this, ::getScale());
-}
+void PuppetHackActor::control() {}
 
 void PuppetHackActor::startAction(const char* actName) {
     if (!actName || actName[0] == '\0') {

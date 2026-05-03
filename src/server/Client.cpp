@@ -33,15 +33,10 @@
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "Library/Base/StringUtil.h"
+#include "Library/Layout/LayoutActorUtil.h"
 #include "Library/LiveActor/LiveActor.h"
 #include "logger.hpp"
 #include "packets/Packet.h"
-#include "server/freeze/FreezeTagMode.hpp"
-#include "server/gamemode/GameModeManager.hpp"
-#include "server/hns/HideAndSeekMode.hpp"
-#include "server/shine-thief/ShineThiefInfo.h"
-#include "server/shine-thief/ShineThiefMode.hpp"
-#include "server/snh/SardineMode.hpp"
 #include "server/SocketClient.hpp"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
@@ -80,8 +75,6 @@ Client::Client() {
     }
 
     strcpy(mDebugPuppetInfo.puppetName, "PuppetDebug");
-
-    mMessageQueue.allocate(sMaxMsgCount, mHeap);
 
     mConnectCount = 0;
 
@@ -489,36 +482,6 @@ void Client::readFunc() {
                 lastCaptureInfPacket.mUserID = mUserID;
                 mSocket->send(&lastCaptureInfPacket);
 
-                if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
-                    ShineThiefInfo* stInfo = GameModeManager::instance()->getInfo<ShineThiefInfo>();
-                    ShineThiefMode* stMode = GameModeManager::instance()->getMode<ShineThiefMode>();
-
-                    if (stInfo && stMode) {
-                        ShineThiefInf* stPacket = new (mHeap) ShineThiefInf();
-                        stPacket->mUserID = mUserID;
-                        stPacket->updateType = ShineThiefUpdateType::PLAYER;
-                        stPacket->isHolder = stInfo->mIsPlayerHolder;
-                        stPacket->isCaught = false;
-                        stPacket->score = stInfo->mPlayerTagScore.mScore;
-                        stPacket->shinePos = stMode->getShinePos();
-
-                        switch (stInfo->mPlayerTeam) {
-                        case ShineThiefTeam::TEAM_1:
-                            stPacket->team = 1;
-                            break;
-                        case ShineThiefTeam::TEAM_2:
-                            stPacket->team = 2;
-                            break;
-                        default:
-                            stPacket->team = 0;
-                            break;
-                        }
-
-                        mSocket->send(stPacket);
-                        mHeap->free(stPacket);
-                    }
-                }
-
                 break;
             case PacketType::COSTUMEINF:
                 updateCostumeInfo((CostumeInf*)curPacket);
@@ -526,16 +489,10 @@ void Client::readFunc() {
             case PacketType::SHINECOLL:
                 updateShineInfo((ShineCollect*)curPacket);
                 break;
-            case PacketType::MESSAGE:
-                updateMessages((MessagePacket*)curPacket);
-                break;
             case PacketType::PLAYERDC:
                 Logger::log("Received Player Disconnect!\n");
                 curPacket->mUserID.print();
                 disconnectPlayer((PlayerDC*)curPacket);
-                break;
-            case PacketType::TAGINF:
-                updateTagInfo((TagInf*)curPacket);
                 break;
             case PacketType::CHANGESTAGE:
                 sendToStage((ChangeStagePacket*)curPacket);
@@ -720,8 +677,7 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
-    GameModeManager* gmm = GameModeManager::instance();
-    packet->gameMode = gmm ? static_cast<s8>(gmm->getGameMode()) : static_cast<s8>(-1);
+    packet->gameMode = -1;
 
     if (*packet != sInstance->lastGameInfPacket) {
         sInstance->lastGameInfPacket = *packet;
@@ -752,166 +708,11 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
-    GameModeManager* gmm = GameModeManager::instance();
-    packet->gameMode = gmm ? static_cast<s8>(gmm->getGameMode()) : static_cast<s8>(-1);
+    packet->gameMode = -1;
 
     sInstance->lastGameInfPacket = *packet;
 
     sInstance->mSocket->queuePacket(packet);
-}
-
-/**
- * @brief Sends tag info packet for H&S or Sardine modes.
- */
-void Client::sendTagInfPacket() {
-    if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
-        return;
-    }
-
-    GameMode curMode = GameModeManager::instance()->getGameMode();
-    HideAndSeekMode* hsMode;
-    HideAndSeekInfo* hsInfo;
-    SardineMode* sarMode;
-    SardineInfo* sarInfo;
-
-    switch (GameModeManager::instance()->getGameMode()) {
-    case GameMode::HIDEANDSEEK:
-        hsMode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-        hsInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
-        break;
-    case GameMode::SARDINE:
-        sarMode = GameModeManager::instance()->getMode<SardineMode>();
-        sarInfo = GameModeManager::instance()->getInfo<SardineInfo>();
-        break;
-    case GameMode::NONE:
-        Logger::log("Tag info packet has unknown gamemode!\n");
-        return;
-    default:
-        Logger::log("Tag info packet has unknown gamemode!\n");
-        return;
-    };
-
-    TagInf* packet = new TagInf();
-
-    packet->mUserID = sInstance->mUserID;
-
-    if (curMode == GameMode::HIDEANDSEEK) {
-        packet->isIt = hsMode->isPlayerIt();
-        packet->minutes = hsInfo->mHidingTime.mMinutes;
-        packet->seconds = hsInfo->mHidingTime.mSeconds;
-    } else if (curMode == GameMode::SARDINE) {
-        packet->isIt = sarMode->isPlayerIt();
-        packet->minutes = sarInfo->mHidingTime.mMinutes;
-        packet->seconds = sarInfo->mHidingTime.mSeconds;
-    }
-
-    packet->updateType = static_cast<TagUpdateType>(TagUpdateType::STATE | TagUpdateType::TIME);
-
-    sInstance->mSocket->queuePacket(packet);
-}
-
-void Client::sendFreezeInfPacket() {
-    if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
-        return;
-    }
-
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
-
-    GameMode curMode = GameModeManager::instance()->getGameMode();
-    if (curMode != GameMode::FREEZETAG) {
-        Logger::log("Attempting to send FreezeInf packet while not in Freeze Tag mode!\n");
-        return;
-    }
-
-    FreezeTagMode* frMode = GameModeManager::instance()->getMode<FreezeTagMode>();
-    FreezeTagInfo* frInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
-
-    FreezeUpdateType updateType = frMode->getNextUpdateType();
-
-    if (updateType == FreezeUpdateType::ROUNDSTART || updateType == FreezeUpdateType::ROUNDCANCEL) {
-        FreezeInfRoundPacket* packet = new FreezeInfRoundPacket();
-
-        packet->mUserID = sInstance->mUserID;
-        packet->updateType = updateType;
-
-        if (updateType == FreezeUpdateType::ROUNDSTART) {
-            packet->roundTime = frInfo->mRoundLength;
-        }
-
-        sInstance->mSocket->queuePacket(packet);
-    } else {
-        FreezeInf* packet = new FreezeInf();
-
-        packet->mUserID = sInstance->mUserID;
-        packet->updateType = updateType;
-        packet->isRunner = frInfo->mIsPlayerRunner;
-        packet->isFreeze = frInfo->mIsPlayerFreeze;
-        packet->score = frInfo->mPlayerTagScore.mScore;
-
-        sInstance->mSocket->queuePacket(packet);
-    }
-}
-
-void Client::sendShineThiefInfPacket() {
-    if (!sInstance) {
-        return;
-    }
-
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
-
-    GameMode curMode = GameModeManager::instance()->getGameMode();
-    if (curMode != GameMode::SHINETHIEF) {
-        return;
-    }
-
-    ShineThiefMode* stMode = GameModeManager::instance()->getMode<ShineThiefMode>();
-    ShineThiefInfo* stInfo = GameModeManager::instance()->getInfo<ShineThiefInfo>();
-
-    if (!stMode || !stInfo) {
-        return;
-    }
-
-    ShineThiefUpdateType updateType = stMode->getNextUpdateType();
-
-    if (updateType == ShineThiefUpdateType::ROUNDSTART || updateType == ShineThiefUpdateType::ROUNDCANCEL) {
-        ShineThiefInfRoundPacket* packet = new ShineThiefInfRoundPacket();
-
-        packet->mUserID = sInstance->mUserID;
-        packet->updateType = updateType;
-
-        if (updateType == ShineThiefUpdateType::ROUNDSTART) {
-            packet->roundTime = stInfo->mRoundLength;
-            packet->shinePos = stMode->getShinePos();
-            packet->hostStartPos = stMode->getHostStartPos();
-        }
-
-        sInstance->mSocket->queuePacket(packet);
-    } else {
-        ShineThiefInf* packet = new ShineThiefInf();
-
-        packet->mUserID = sInstance->mUserID;
-        packet->updateType = updateType;
-        packet->isHolder = stInfo->mIsPlayerHolder;
-        packet->isCaught = false;
-        packet->score = stInfo->mPlayerTagScore.mScore;
-        packet->shinePos = stMode->getShinePos();
-
-        switch (stInfo->mPlayerTeam) {
-        case ShineThiefTeam::TEAM_1:
-            packet->team = 1;
-            break;
-        case ShineThiefTeam::TEAM_2:
-            packet->team = 2;
-            break;
-        default:
-            packet->team = 0;
-            break;
-        }
-
-        sInstance->mSocket->queuePacket(packet);
-    }
 }
 
 /**
@@ -1279,205 +1080,6 @@ void Client::updateGameInfo(GameInf* packet) {
         if (warpStage && strcmp(GameDataFunction::getCurrentStageName(Client::getHolder()), warpStage) == 0) {
             ChangeStageInfo info(Client::getHolder(), "start", warpStage, false, packet->scenarioNo);
             Client::getHolder()->changeNextStage(&info);
-        }
-    }
-}
-
-/**
- * @brief Queues a message packet for the game thread to consume.
- * @param packet
- */
-void Client::updateMessages(MessagePacket* packet) {
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
-    MessagePacket* p = new MessagePacket();
-
-    *p = *packet;
-
-    if (mMessageQueue.mMessageQueueInner._count != sMaxMsgCount)
-        mMessageQueue.push((s64)p, sead::MessageQueue::BlockType::NonBlocking);
-    else
-        sInstance->mHeap->free(p);
-}
-
-/**
- * @brief Updates tag info from packet for H&S, Sardine, Freeze Tag, and Shine Thief modes.
- * @param packet
- */
-void Client::updateTagInfo(TagInf* packet) {
-    GameMode mode = GameModeManager::instance()->getGameMode();
-
-    if (mode == GameMode::HIDEANDSEEK || mode == GameMode::SARDINE) {
-        if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
-            HideAndSeekMode* mMode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-            HideAndSeekInfo* curInfo = GameModeManager::instance()->getInfo<HideAndSeekInfo>();
-
-            if (packet->updateType & TagUpdateType::STATE) {
-                mMode->setPlayerTagState(packet->isIt);
-            }
-
-            if (packet->updateType & TagUpdateType::TIME) {
-                curInfo->mHidingTime.mSeconds = packet->seconds;
-                curInfo->mHidingTime.mMinutes = packet->minutes;
-            }
-
-            return;
-        }
-
-        if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::SARDINE)) {
-            SardineMode* mMode = GameModeManager::instance()->getMode<SardineMode>();
-            SardineInfo* curInfo = GameModeManager::instance()->getInfo<SardineInfo>();
-
-            if (packet->updateType & TagUpdateType::STATE) {
-                mMode->setPlayerTagState(packet->isIt);
-            }
-
-            if (packet->updateType & TagUpdateType::TIME) {
-                curInfo->mHidingTime.mSeconds = packet->seconds;
-                curInfo->mHidingTime.mMinutes = packet->minutes;
-            }
-
-            return;
-        }
-
-        PuppetInfo* curInfo = findPuppetInfo(packet->mUserID, false);
-
-        if (!curInfo) {
-            return;
-        }
-
-        curInfo->isIt = packet->isIt;
-        curInfo->seconds = packet->seconds;
-        curInfo->minutes = packet->minutes;
-    }
-
-    if (mode == GameMode::FREEZETAG) {
-        FreezeInf* freezePak = (FreezeInf*)packet;
-
-        if (freezePak->updateType == FreezeUpdateType::ROUNDSTART || freezePak->updateType == FreezeUpdateType::ROUNDCANCEL) {
-            FreezeInfRoundPacket* roundPak = (FreezeInfRoundPacket*)packet;
-            FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
-
-            if (roundPak->updateType == FreezeUpdateType::ROUNDSTART) {
-                if (mMode) {
-                    mMode->startRound(roundPak->roundTime);
-                }
-            } else if (roundPak->updateType == FreezeUpdateType::ROUNDCANCEL) {
-                if (mMode) {
-                    mMode->endRound(true);
-                }
-            }
-            return;
-        }
-
-        if (packet->mUserID == mUserID && GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
-            FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
-            FreezeTagInfo* curInfo = GameModeManager::instance()->getInfo<FreezeTagInfo>();
-
-            curInfo->mIsPlayerRunner = freezePak->isRunner;
-
-            if (freezePak->isFreeze && !freezePak->isRunner)
-                mMode->trySetPlayerRunnerState(FreezeState::FREEZE);
-            else
-                mMode->trySetPlayerRunnerState(FreezeState::ALIVE);
-
-            return;
-        }
-
-        PuppetInfo* curInfo = findPuppetInfo(packet->mUserID, false);
-
-        if (!curInfo)
-            return;
-
-        if (!GameModeManager::instance()->isActive()) {
-            curInfo->isFreezeTagFreeze = freezePak->isFreeze;
-            curInfo->isFreezeTagRunner = freezePak->isRunner;
-            curInfo->freezeTagScore = freezePak->score;
-            return;
-        }
-
-        FreezeTagMode* mMode = GameModeManager::instance()->getMode<FreezeTagMode>();
-
-        if (mMode->isScoreEventsEnabled())
-            mMode->tryScoreEvent(freezePak, curInfo);
-
-        curInfo->isFreezeTagFreeze = freezePak->isFreeze;
-        curInfo->isFreezeTagRunner = freezePak->isRunner;
-        curInfo->freezeTagScore = freezePak->score;
-    }
-
-    if (mode == GameMode::SHINETHIEF) {
-        ShineThiefInf* shinePak = (ShineThiefInf*)packet;
-
-        if (GameModeManager::instance()->isActive() &&
-            (shinePak->updateType == ShineThiefUpdateType::ROUNDSTART || shinePak->updateType == ShineThiefUpdateType::ROUNDCANCEL)) {
-            ShineThiefInfRoundPacket* roundPak = (ShineThiefInfRoundPacket*)packet;
-            ShineThiefMode* mMode = GameModeManager::instance()->getMode<ShineThiefMode>();
-
-            if (roundPak->updateType == ShineThiefUpdateType::ROUNDSTART) {
-                if (mMode && !mMode->isPlayerHolder()) {
-                    mMode->setHostStartPos(roundPak->hostStartPos);
-                    mMode->setShinePos(roundPak->shinePos);
-                    mMode->startRound(roundPak->roundTime);
-                }
-            } else if (roundPak->updateType == ShineThiefUpdateType::ROUNDCANCEL) {
-                if (mMode)
-                    mMode->endRound(true);
-            }
-            return;
-        }
-
-        if (packet->mUserID == mUserID)
-            return;
-
-        PuppetInfo* curPupInfo = findPuppetInfo(packet->mUserID, false);
-        if (!curPupInfo)
-            return;
-
-        bool puppetIsNowHolder = shinePak->isHolder;
-        bool puppetWasHolder = curPupInfo->isShineThiefHolder;
-
-        if (!GameModeManager::instance()->isActive()) {
-            curPupInfo->isShineThiefHolder = puppetIsNowHolder;
-            curPupInfo->shineThiefScore = shinePak->score;
-            curPupInfo->shineThiefTeam = shinePak->team;
-            return;
-        }
-
-        ShineThiefMode* mMode = GameModeManager::instance()->getMode<ShineThiefMode>();
-
-        if (mMode && puppetIsNowHolder && !puppetWasHolder && mMode->isPlayerHolder())
-            mMode->forceDropShine();
-
-        if (mMode && mMode->isScoreEventsEnabled()) {
-            if (!puppetWasHolder && puppetIsNowHolder && !mMode->isPlayerHolder())
-                mMode->tryScoreEvent(shinePak, curPupInfo);
-            if (puppetWasHolder && !puppetIsNowHolder && !mMode->isPlayerHolder())
-                mMode->tryScoreEvent(shinePak, curPupInfo);
-        }
-
-        curPupInfo->isShineThiefHolder = puppetIsNowHolder;
-        curPupInfo->shineThiefScore = shinePak->score;
-        curPupInfo->shineThiefTeam = shinePak->team;
-
-        if (shinePak->updateType == ShineThiefUpdateType::FALLOFF) {
-            curPupInfo->isShineThiefFallenOff = true;
-            curPupInfo->isShineThiefHolder = false;
-
-            if (mMode) {
-                mMode->setShinePos(shinePak->shinePos);
-
-                ShineThiefIcon* layout = mMode->getLayout();
-                if (layout) {
-                    layout->showShineRespawned();
-                }
-            }
-        }
-
-        if (puppetIsNowHolder && shinePak->updateType != ShineThiefUpdateType::FALLOFF) {
-            sead::Vector3f offset{0, 100, 0};
-            if (mMode) {
-                mMode->setShinePos(curPupInfo->playerPos + offset);
-            }
         }
     }
 }
@@ -1851,8 +1453,6 @@ void Client::update() {
                 }
             }
         }
-
-        GameModeManager::instance()->update();
     }
 }
 
@@ -1866,22 +1466,6 @@ void Client::clearArrays() {
         sInstance->mCoinCollectArray.clear();
         sInstance->mCoinCollect2DArray.clear();
     }
-}
-
-sead::FixedSafeString<MESSAGESIZE>* Client::tryGetMessage() {
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
-
-    MessagePacket* p = (MessagePacket*)mMessageQueue.pop(sead::MessageQueue::BlockType::Blocking);
-    sead::FixedSafeString<MESSAGESIZE>* message = new sead::FixedSafeString<MESSAGESIZE>;
-
-    message->append(p->message);
-    message->assureTerminationImpl_();
-
-    Logger::log("Getting message with type: %d\n", p->messageType);
-
-    sInstance->mHeap->free(p);
-
-    return message;
 }
 
 void Client::setNeedUpdateHealthCoins(bool value) {
@@ -2074,31 +1658,4 @@ void Client::hideConnect() {
         return;
 
     sInstance->mUIMessage->tryEnd();
-}
-
-/**
- * @brief sends a message packet to the server
- *
- * @param message the message to send
- * @param messageType type of message (0 for chat)
- */
-void Client::sendMessagePacket(const char* message, int messageType) {
-    if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
-        return;
-    }
-
-    if (!message || strlen(message) == 0) {
-        return;
-    }
-
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
-
-    MessagePacket* packet = new MessagePacket();
-    packet->mUserID = sInstance->mUserID;
-    packet->senderId = sInstance->mUserID;
-    packet->messageType = messageType;
-    strcpy(packet->message, message);
-
-    sInstance->mSocket->queuePacket(packet);
 }

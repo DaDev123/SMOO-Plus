@@ -27,11 +27,7 @@
 
 #include "BloodMoon/BloodMoonUtils.hpp"
 #include "heap/seadHeapMgr.h"
-#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/Client.hpp"
-#include "server/gamemode/GameModeConfigMenu.hpp"
-#include "server/gamemode/GameModeFactory.hpp"
-#include "server/gamemode/GameModeManager.hpp"
 
 // ============================================================================
 // Static Configuration Variables
@@ -43,7 +39,7 @@ bool StageSceneStateModConfig::sPuppetCollisionEnabled = true;
 bool StageSceneStateModConfig::sPuppetBounceEnabled = true;
 bool StageSceneStateModConfig::sCostumeDoorsUnlocked = true;
 bool StageSceneStateModConfig::sLowLatencyEnabled = true;
-bool StageSceneStateModConfig::sSpeedrunModeEnabled = false;
+bool StageSceneStateModConfig::sSpeedrunModeEnabled = true;
 bool StageSceneStateModConfig::sSpeedrunNonStopEnabled = false;
 
 // ============================================================================
@@ -139,8 +135,7 @@ static std::vector<ServerBrowser> loadServersFromFile() {
 bool StageSceneStateModConfig::currentMenuHasRollParts() const {
     if (mCurrentMenu == menuList[MENU_GAMEPLAY])
         return true;
-    if (mGamemodeConfigMenu && mCurrentMenu == mGamemodeConfigMenu->mMenu)
-        return true;
+
     if (mCurrentMenu == menuList[MENU_SPEEDRUN_CONFIG]) {
         // Only the first item (SPEEDRUN_NONSTOP) is a check; item at index 2 is roll
         // Guard: only allow roll input when the selected row actually is a roll part
@@ -174,9 +169,6 @@ StageSceneStateModConfig::StageSceneStateModConfig(const char* name, al::Scene* 
     initNetworkMenu(initInfo);
     initServerBrowserMenu(initInfo);
     initGameplayMenu(initInfo);
-    initGameModeMenus(initInfo);
-    initTwistsMenu(initInfo);
-    initMiscMenu(initInfo);
     initSpeedrunConfigMenu(initInfo);
 
     mCurrentList = optionsList[MENU_MAIN];
@@ -210,8 +202,7 @@ void StageSceneStateModConfig::initMainMenu(const al::LayoutInitInfo& initInfo) 
 void StageSceneStateModConfig::updateMainMenuOptions() {
     msgList[MENU_MAIN]->mBuffer[MAIN_NETWORK_SETTINGS].copy(u"Network Settings");
     msgList[MENU_MAIN]->mBuffer[MAIN_GAMEPLAY_SETTINGS].copy(u"Gameplay Settings");
-    msgList[MENU_MAIN]->mBuffer[MAIN_GAMEMODE_SETTINGS].copy(u"Game Mode Settings");
-    msgList[MENU_MAIN]->mBuffer[MAIN_MISC_SETTINGS].copy(u"Misc Settings");
+    msgList[MENU_MAIN]->mBuffer[MAIN_SPEEDRUN_SETTINGS].copy(u"Speedrun Settings");
 }
 
 void StageSceneStateModConfig::exeMainMenu() {
@@ -238,17 +229,9 @@ void StageSceneStateModConfig::exeMainMenu() {
         case MAIN_GAMEPLAY_SETTINGS:
             al::setNerve(this, &NrvStageSceneStateModConfig.GameplaySettings);
             break;
-        case MAIN_GAMEMODE_SETTINGS:
-            if (!sSpeedrunModeEnabled) {
-                al::setNerve(this, &NrvStageSceneStateModConfig.GameModeSettings);
-            } else {
-                al::setNerve(this, &NrvStageSceneStateModConfig.MainMenu);
-                Client::showUIMessage(u"You cannot use Gamemodes in Speedrun Mode");
-                Client::hideUIMessage();
-            }
-            break;
-        case MAIN_MISC_SETTINGS:
-            al::setNerve(this, &NrvStageSceneStateModConfig.MiscSettings);
+
+        case MAIN_SPEEDRUN_SETTINGS:
+            al::setNerve(this, &NrvStageSceneStateModConfig.SpeedrunConfig);
             break;
         }
     }
@@ -453,327 +436,24 @@ void StageSceneStateModConfig::exeGameplaySettings() {
 }
 
 // ============================================================================
-// Game Mode Menus
-// ============================================================================
-
-void StageSceneStateModConfig::initGameModeMenus(const al::LayoutInitInfo& initInfo) {
-    // Game Mode Settings
-    menuList[MENU_GAMEMODE] = new SimpleLayoutMenu("GameModeSettingsMenu", "OptionModCheck", initInfo, 0, false);
-    optionsList[MENU_GAMEMODE] = new CommonVerticalList(menuList[MENU_GAMEMODE], initInfo, true);
-    al::setPaneString(menuList[MENU_GAMEMODE], "TxtOption", u"Game Mode", 0);
-    optionsList[MENU_GAMEMODE]->initDataNoResetSelected(mGameModeMenuOptionsCount);
-
-    for (int i = 0; i < mGameModeMenuOptionsCount; i++) {
-        setMenuItemBase(optionsList[MENU_GAMEMODE]->mListPartsArr[i + 1]);
-    }
-
-    updateGameModeSettingsOptions();
-    optionsList[MENU_GAMEMODE]->addStringData(msgList[MENU_GAMEMODE]->mBuffer, "TxtContent");
-
-    // Mode Selection
-    menuList[MENU_GAMEMODE_MODESEL] = new SimpleLayoutMenu("GameModeSelectMenu", "OptionModCheck", initInfo, 0, false);
-    optionsList[MENU_GAMEMODE_MODESEL] = new CommonVerticalList(menuList[MENU_GAMEMODE_MODESEL], initInfo, true);
-    al::setPaneString(menuList[MENU_GAMEMODE_MODESEL], "TxtOption", u"Select Game Mode", 0);
-
-    const int modeCount = GameModeFactory::getModeCount();
-    optionsList[MENU_GAMEMODE_MODESEL]->initDataNoResetSelected(modeCount);
-
-    for (int i = 0; i < modeCount; i++) {
-        setMenuItemBase(optionsList[MENU_GAMEMODE_MODESEL]->mListPartsArr[i + 1]);
-    }
-
-    auto* modeOptions = new sead::SafeArray<sead::WFixedSafeString<0x200>, modeCount>();
-    for (size_t i = 0; i < modeCount; i++) {
-        const char* modeName = GameModeFactory::getModeName(i);
-        modeOptions->mBuffer[i].convertFromMultiByteString(modeName, strlen(modeName));
-    }
-    optionsList[MENU_GAMEMODE_MODESEL]->addStringData(modeOptions->mBuffer, "TxtContent");
-
-    // Mode Config
-    GameModeConfigMenuFactory factory("GameModeConfigFactory");
-    for (int mode = 0; mode < factory.getMenuCount(); mode++) {
-        const char* name = factory.getMenuName(mode);
-        mGamemodeConfigMenus[mode] = factory.getCreator(name)(name);
-        GameModeConfigMenu& entry = *mGamemodeConfigMenus[mode];
-        entry.mMenu = new (al::getSceneHeap()) SimpleLayoutMenu("GameModeConfigMenu", "OptionModCheck", initInfo, 0, false);
-        entry.mList = new (al::getSceneHeap()) CommonVerticalList(entry.mMenu, initInfo, true);
-
-        al::setPaneString(entry.mMenu, "TxtOption", u"Mode Configuration", 0);
-
-        entry.mList->initDataNoResetSelected(entry.getMenuSize());
-        entry.initMenu();
-        entry.mList->addStringData(entry.getStringData(), "TxtContent");
-    }
-}
-
-void StageSceneStateModConfig::updateGameModeSettingsOptions() {
-    const char* modeName = GameModeFactory::getModeName(GameModeManager::instance()->getGameMode());
-    char text[256];
-    snprintf(text, sizeof(text), "Configure %s", modeName);
-    msgList[MENU_GAMEMODE]->mBuffer[GM_MODESETTINGS].convertFromMultiByteString(text, strlen(text));
-
-    msgList[MENU_GAMEMODE]->mBuffer[GM_TWISTS].copy(u"Twists & Modifiers");
-    msgList[MENU_GAMEMODE]->mBuffer[GM_MODESELECT].copy(u"Change Mode");
-}
-
-void StageSceneStateModConfig::exeGameModeSettings() {
-    if (mShouldHideMessage) {
-        mMessageHideTimer++;
-        if (mMessageHideTimer >= 60) {
-            Client::hideUIMessage();
-            mShouldHideMessage = false;
-            mMessageHideTimer = 0;
-        }
-    }
-
-    if (al::isFirstStep(this)) {
-        mCurrentList = optionsList[MENU_GAMEMODE];
-        mCurrentMenu = menuList[MENU_GAMEMODE];
-        subMenuStart();
-    }
-
-    subMenuUpdate();
-
-    if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
-        switch (mCurrentList->mCurSelected) {
-        case GM_MODESETTINGS:
-            al::setNerve(this, &NrvStageSceneStateModConfig.GameModeConfig);
-            break;
-        case GM_TWISTS:
-            al::setNerve(this, &NrvStageSceneStateModConfig.TwistsSettings);
-            break;
-        case GM_MODESELECT:
-            al::setNerve(this, &NrvStageSceneStateModConfig.GameModeSelect);
-            break;
-        }
-    }
-}
-
-void StageSceneStateModConfig::exeGameModeConfig() {
-    if (al::isFirstStep(this)) {
-        int mode = GameModeManager::instance()->getGameMode();
-        if (mode < 0 || mode >= (int)mGamemodeConfigMenus.size()) {
-            endSubMenuToParent(menuList[MENU_GAMEMODE], optionsList[MENU_GAMEMODE]);
-            return;
-        }
-
-        mGamemodeConfigMenu = mGamemodeConfigMenus[mode];
-        mCurrentList = mGamemodeConfigMenu->mList;
-        mCurrentMenu = mGamemodeConfigMenu->mMenu;
-        subMenuStart();
-    }
-
-    subMenuUpdate();
-
-    if (mIsDecideConfig && mCurrentList->isDecideEnd() && mGamemodeConfigMenu) {
-        auto action = mGamemodeConfigMenu->updateMenu(mCurrentList->mCurSelected);
-        switch (action) {
-        case GameModeConfigMenu::UpdateAction::CLOSE:
-            endSubMenu();
-            break;
-        case GameModeConfigMenu::UpdateAction::REFRESH:
-        case GameModeConfigMenu::UpdateAction::NOOP:
-            activateInput();
-            break;
-        }
-    }
-}
-
-void StageSceneStateModConfig::exeGameModeSelect() {
-    if (al::isFirstStep(this)) {
-        mCurrentList = optionsList[MENU_GAMEMODE_MODESEL];
-        mCurrentMenu = menuList[MENU_GAMEMODE_MODESEL];
-        subMenuStart();
-    }
-
-    subMenuUpdate();
-
-    if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
-        GameMode selectedMode = static_cast<GameMode>(mCurrentList->mCurSelected);
-
-        GameModeManager::instance()->setMode(selectedMode);
-
-        ChangeStageInfo info =
-            ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),
-                            GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1, (ChangeStageInfo::SubScenarioType)0);
-        Client::get()->getHolder()->changeNextStage(&info, 0);
-
-        updateGameModeSettingsOptions();
-        optionsList[MENU_GAMEMODE]->initDataNoResetSelected(mGameModeMenuOptionsCount);
-        optionsList[MENU_GAMEMODE]->addStringData(msgList[MENU_GAMEMODE]->mBuffer, "TxtContent");
-        optionsList[MENU_GAMEMODE]->updateParts();
-        endSubMenuToParent(menuList[MENU_GAMEMODE], optionsList[MENU_GAMEMODE]);
-    }
-}
-
-// ============================================================================
-// Twists Menu
-// ============================================================================
-
-void StageSceneStateModConfig::initTwistsMenu(const al::LayoutInitInfo& initInfo) {
-    menuList[MENU_TWISTS] = new SimpleLayoutMenu("TwistsMenu", "OptionModCheck", initInfo, 0, false);
-    optionsList[MENU_TWISTS] = new CommonVerticalList(menuList[MENU_TWISTS], initInfo, true);
-    al::setPaneString(menuList[MENU_TWISTS], "TxtOption", u"Twists & Modifiers", 0);
-
-    optionsList[MENU_TWISTS]->initDataNoResetSelected(mTwistsMenuOptionsCount);
-
-    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_DISABLECAP + 1]);
-    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_ICEPHYSICS + 1]);
-    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_SMALLMARIO + 1]);
-    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_DARKNESS + 1]);
-    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_TIMEWARP + 1]);
-    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_TWOD + 1]);
-    setMenuItemCheck(optionsList[MENU_TWISTS]->mListPartsArr[TW_MOONGRAVITY + 1]);
-
-    optionsList[MENU_TWISTS]->addStringData(msgList[MENU_TWISTS]->mBuffer, "TxtContent");
-    updateTwistsOptions();
-}
-
-void StageSceneStateModConfig::updateTwistsOptions() {
-    msgList[MENU_TWISTS]->mBuffer[TW_DISABLECAP].copy(u"Disable Cappy");
-    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_DISABLECAP + 1], TwistsConfig::isCappyDisableEnabled() ? "Off" : "On", "State");
-
-    msgList[MENU_TWISTS]->mBuffer[TW_ICEPHYSICS].copy(u"Ice Physics");
-    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_ICEPHYSICS + 1], TwistsConfig::isIcePhysicsEnabled() ? "On" : "Off", "State");
-
-    msgList[MENU_TWISTS]->mBuffer[TW_SMALLMARIO].copy(u"Small Mario");
-    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_SMALLMARIO + 1], TwistsConfig::isSmallMarioEnabled() ? "On" : "Off", "State");
-
-    msgList[MENU_TWISTS]->mBuffer[TW_DARKNESS].copy(u"Darkness");
-    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_DARKNESS + 1], TwistsConfig::isDarknessEnabled() ? "On" : "Off", "State");
-
-    msgList[MENU_TWISTS]->mBuffer[TW_TIMEWARP].copy(u"Time Travel");
-    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_TIMEWARP + 1], TwistsConfig::isTimeWarpEnabled() ? "On" : "Off", "State");
-
-    msgList[MENU_TWISTS]->mBuffer[TW_TWOD].copy(u"2D in 3D");
-    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_TWOD + 1], TwistsConfig::isTwoDEnabled() ? "On" : "Off", "State");
-
-    msgList[MENU_TWISTS]->mBuffer[TW_MOONGRAVITY].copy(u"Moon Gravity");
-    al::startAction(optionsList[MENU_TWISTS]->mListPartsArr[TW_MOONGRAVITY + 1], TwistsConfig::isMoonGravityEnabled() ? "On" : "Off", "State");
-}
-
-void StageSceneStateModConfig::exeTwistsSettings() {
-    if (al::isFirstStep(this)) {
-        mCurrentList = optionsList[MENU_TWISTS];
-        mCurrentMenu = menuList[MENU_TWISTS];
-        subMenuStart();
-    }
-
-    subMenuUpdate();
-
-    if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
-        switch (mCurrentList->mCurSelected) {
-        case TW_DISABLECAP:
-            TwistsConfig::toggleCappyDisable();
-            break;
-        case TW_ICEPHYSICS:
-            TwistsConfig::toggleIcePhysics();
-            break;
-        case TW_SMALLMARIO:
-            TwistsConfig::toggleSmallMario();
-            break;
-        case TW_DARKNESS:
-            TwistsConfig::toggleDarkness();
-            break;
-        case TW_TIMEWARP:
-            TwistsConfig::toggleTimeWarp();
-            break;
-        case TW_TWOD:
-            TwistsConfig::toggleTwoD();
-            break;
-        case TW_MOONGRAVITY:
-            TwistsConfig::toggleMoonGravity();
-            break;
-        }
-
-        updateTwistsOptions();
-        activateInput();
-        mIsDecideConfig = false;
-    }
-}
-
-// ============================================================================
 // Misc Menu
 // ============================================================================
 
-void StageSceneStateModConfig::initMiscMenu(const al::LayoutInitInfo& initInfo) {
-    menuList[MENU_MISC] = new SimpleLayoutMenu("MiscMenu", "OptionModCheck", initInfo, 0, false);
-    optionsList[MENU_MISC] = new CommonVerticalList(menuList[MENU_MISC], initInfo, true);
-    al::setPaneString(menuList[MENU_MISC], "TxtOption", u"Misc Settings", 0);
-    optionsList[MENU_MISC]->initDataNoResetSelected(mMiscMenuOptionsCount);
-
-    setMenuItemCheck(optionsList[MENU_MISC]->mListPartsArr[MISC_SPEEDRUN_MODE + 1]);
-    setMenuItemBase(optionsList[MENU_MISC]->mListPartsArr[MISC_SPEEDRUN_CONFIG + 1]);
-
-    optionsList[MENU_MISC]->addStringData(msgList[MENU_MISC]->mBuffer, "TxtContent");
-    updateMiscOptions();
-}
-
-void StageSceneStateModConfig::updateMiscOptions() {
-    msgList[MENU_MISC]->mBuffer[MISC_SPEEDRUN_MODE].copy(u"Speedrun Mode");
-    al::startAction(optionsList[MENU_MISC]->mListPartsArr[MISC_SPEEDRUN_MODE + 1], sSpeedrunModeEnabled ? "On" : "Off", "State");
-
-    msgList[MENU_MISC]->mBuffer[MISC_SPEEDRUN_CONFIG].copy(u"Speedrun Config");
-}
-
-void StageSceneStateModConfig::exeMiscSettings() {
-    if (al::isFirstStep(this)) {
-        mCurrentList = optionsList[MENU_MISC];
-        mCurrentMenu = menuList[MENU_MISC];
-        subMenuStart();
-    }
-
-    subMenuUpdate();
-
-    if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
-        ChangeStageInfo info =
-            ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),
-                            GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1, ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO);
-        switch (mCurrentList->mCurSelected) {
-        case MISC_SPEEDRUN_MODE:
-            sSpeedrunModeEnabled = !sSpeedrunModeEnabled;
-            if (sSpeedrunModeEnabled) {
-                GameModeBase* mode = GameModeManager::instance()->getMode<GameModeBase>();
-                if (mode && mode->isModeActive()) {
-                    GameModeManager::instance()->end();
-                }
-                GameModeManager::instance()->setActive(false);
-            }
-
-            Client::get()->getHolder()->changeNextStage(&info, 0);
-
-            updateMiscOptions();
-            activateInput();
-            break;
-
-        case MISC_SPEEDRUN_CONFIG:
-            al::setNerve(this, &NrvStageSceneStateModConfig.SpeedrunConfig);
-            break;
-        }
-    }
-}
-
-// ============================================================================
-// Speedrun Config Menu
-// ============================================================================
-
 void StageSceneStateModConfig::initSpeedrunConfigMenu(const al::LayoutInitInfo& initInfo) {
-    menuList[MENU_SPEEDRUN_CONFIG] = new SimpleLayoutMenu("SpeedrunConfigMenu", "OptionModCheck", initInfo, 0, false);
+    menuList[MENU_SPEEDRUN_CONFIG] = new SimpleLayoutMenu("MiscMenu", "OptionModCheck", initInfo, 0, false);
     optionsList[MENU_SPEEDRUN_CONFIG] = new CommonVerticalList(menuList[MENU_SPEEDRUN_CONFIG], initInfo, true);
-    al::setPaneString(menuList[MENU_SPEEDRUN_CONFIG], "TxtOption", u"Speedrun Config", 0);
+    al::setPaneString(menuList[MENU_SPEEDRUN_CONFIG], "TxtOption", u"Misc Settings", 0);
     optionsList[MENU_SPEEDRUN_CONFIG]->initDataNoResetSelected(mSpeedrunConfigOptionsCount);
 
-    setMenuItemCheck(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[1]);
-    setMenuItemBase(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[2]);
-    setMenuItemRoll(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[3]);
+    setMenuItemCheck(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_NON_STOP + 1]);
 
     optionsList[MENU_SPEEDRUN_CONFIG]->addStringData(msgList[MENU_SPEEDRUN_CONFIG]->mBuffer, "TxtContent");
-    updateSpeedrunConfigOptions();
+    updateSpeedrunConfig();
 }
 
-void StageSceneStateModConfig::updateSpeedrunConfigOptions() {
-    msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_NONSTOP].copy(u"Non-Stop (WIP)");
-    al::startAction(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_NONSTOP + 1], sSpeedrunNonStopEnabled ? "On" : "Off", "State");
+void StageSceneStateModConfig::updateSpeedrunConfig() {
+    msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_NON_STOP].copy(u"Nonstop (WIP)");
+    al::startAction(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_NON_STOP + 1], sSpeedrunNonStopEnabled ? "On" : "Off", "State");
 }
 
 void StageSceneStateModConfig::exeSpeedrunConfig() {
@@ -786,14 +466,19 @@ void StageSceneStateModConfig::exeSpeedrunConfig() {
     subMenuUpdate();
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
+        ChangeStageInfo info =
+            ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),
+                            GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1, ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO);
         switch (mCurrentList->mCurSelected) {
-        case SPEEDRUN_NONSTOP:
-            sSpeedrunNonStopEnabled = !sSpeedrunNonStopEnabled;
+        case SPEEDRUN_NON_STOP:
+            sSpeedrunNonStopEnabled = false;
+
+            Client::get()->getHolder()->changeNextStage(&info, 0);
+
+            updateSpeedrunConfig();
+            activateInput();
             break;
         }
-
-        updateSpeedrunConfigOptions();
-        activateInput();
     }
 }
 
@@ -888,24 +573,13 @@ void StageSceneStateModConfig::subMenuUpdate() {
     handleMenuInput();
 
     if (rs::isTriggerUiCancel(mHost) && !mIsDecideConfig) {
-        if (mCurrentMenu == menuList[MENU_GAMEMODE] && mShouldHideMessage) {
-            Client::hideUIMessage();
-            mShouldHideMessage = false;
-            mMessageHideTimer = 0;
-        }
-
         // Commit roll parts state only when leaving the menu that owns them,
         // never on arbitrary cancel presses from other menus.
         updateDataFromRollParts();
 
         if (mCurrentMenu == menuList[MENU_SERVERBROWSER]) {
             endSubMenuToParent(menuList[MENU_NETWORK], optionsList[MENU_NETWORK]);
-        } else if (mCurrentMenu == menuList[MENU_GAMEMODE_MODESEL] || mCurrentMenu == menuList[MENU_TWISTS]) {
-            endSubMenuToParent(menuList[MENU_GAMEMODE], optionsList[MENU_GAMEMODE]);
-        } else if (mCurrentMenu == menuList[MENU_SPEEDRUN_CONFIG]) {
-            endSubMenuToParent(menuList[MENU_MISC], optionsList[MENU_MISC]);
-        } else if (mGamemodeConfigMenu && mCurrentMenu == mGamemodeConfigMenu->mMenu) {
-            endSubMenuToParent(menuList[MENU_GAMEMODE], optionsList[MENU_GAMEMODE]);
+
         } else {
             endSubMenu();
         }
@@ -913,12 +587,6 @@ void StageSceneStateModConfig::subMenuUpdate() {
 }
 
 void StageSceneStateModConfig::endSubMenu() {
-    if (mCurrentMenu == menuList[MENU_GAMEMODE] && mShouldHideMessage) {
-        Client::hideUIMessage();
-        mShouldHideMessage = false;
-        mMessageHideTimer = 0;
-    }
-
     mCurrentList->deactivate();
     mCurrentMenu->startEnd("End");
     mCurrentList = optionsList[MENU_MAIN];
@@ -929,12 +597,6 @@ void StageSceneStateModConfig::endSubMenu() {
 }
 
 void StageSceneStateModConfig::endSubMenuToParent(SimpleLayoutMenu* parentMenu, CommonVerticalList* parentList) {
-    if (mCurrentMenu == menuList[MENU_GAMEMODE] && mShouldHideMessage) {
-        Client::hideUIMessage();
-        mShouldHideMessage = false;
-        mMessageHideTimer = 0;
-    }
-
     mCurrentList->deactivate();
     mCurrentMenu->startEnd("End");
     mCurrentList = parentList;
@@ -946,10 +608,8 @@ void StageSceneStateModConfig::endSubMenuToParent(SimpleLayoutMenu* parentMenu, 
         al::setNerve(this, &NrvStageSceneStateModConfig.GameplaySettings);
     } else if (parentMenu == menuList[MENU_NETWORK]) {
         al::setNerve(this, &NrvStageSceneStateModConfig.NetworkSettings);
-    } else if (parentMenu == menuList[MENU_GAMEMODE]) {
-        al::setNerve(this, &NrvStageSceneStateModConfig.GameModeSettings);
-    } else if (parentMenu == menuList[MENU_MISC]) {
-        al::setNerve(this, &NrvStageSceneStateModConfig.MiscSettings);
+    } else if (parentMenu == menuList[MENU_SPEEDRUN_CONFIG]) {
+        al::setNerve(this, &NrvStageSceneStateModConfig.SpeedrunConfig);
     }
 }
 
@@ -968,11 +628,6 @@ void StageSceneStateModConfig::deactivateInput() {
 }
 
 void StageSceneStateModConfig::updateDataFromRollParts() {
-    // Only commit gamemode config roll parts when actually in that menu
-    if (mGamemodeConfigMenu && mCurrentMenu == mGamemodeConfigMenu->mMenu) {
-        mGamemodeConfigMenu->updateDataFromRollParts();
-    }
-
     // Only commit gameplay roll parts when actually in the gameplay menu
     if (mCurrentMenu == menuList[MENU_GAMEPLAY]) {
         int playerColType = ((al::RollParts*)optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_PLAYERCOL + 1])->mSelectedIdx;

@@ -17,7 +17,7 @@ BUILDVERSTR ?= 0.7.5-pre
 DEBUGLOG ?= 0 # defaults to disable debug logger 
 SERVERIP ?= 192.168.178.41 # put debug logger server IP here
 
-PROJNAME ?= SMOO-Plus
+PROJNAME ?= SMOO-Plus-Speedrun
 
 SWITCHPATH := package/$(PROJNAME)-Switch
 EMUPATH := package/$(PROJNAME)-Emulator

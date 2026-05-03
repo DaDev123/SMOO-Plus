@@ -20,51 +20,29 @@
 #include "al/Library/Yaml/ByamlUtil.h"
 #include "al/Library/Yaml/Writer/ByamlWriter.h"
 
-#include "game/Actors/WorldndBorderKeeper.h"
 #include "game/Item/Shine.h"
 #include "game/Layout/CoinCounter.h"
 #include "game/MapObj/AppearSwitchTimer.h"
-#include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Scene/StageSceneStateOption.h"
 #include "game/Scene/StageSceneStatePauseMenu.h"
 
 #include <cstring>
 #include <sys/types.h>
 
-#include "helpers.hpp"
 #include "Imgui.hpp"
 #include "Item/CoinCollect.h"
 #include "layouts/ConnectionStatus.h"
 #include "Library/Collision/CollisionPartsTriangle.h"
 #include "Library/Nerve/Nerve.h"
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
-#include "Library/Scene/SceneObjUtil.h"
 #include "Scene/StageScene.h"
 #include "Scene/StageSceneStateModConfig.hpp"
-#include "Scene/Twists/TwistsConfig.hpp"
 #include "server/CheckpointMasterList.h"
 #include "server/Client.hpp"
-#include "server/freeze/FreezeTagMode.hpp"
-#include "server/gamemode/GameModeManager.hpp"
-#include "server/hns/HideAndSeekMode.hpp"
-#include "server/shine-thief/ShineThiefMode.hpp"
 #include "System/GameDataFile.h"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
 #include "System/UniqObjInfo.h"
-
-static HkReplace<bool, al::IUseSceneObjHolder*> comboBtnHook = hk::hook::replace([](al::IUseSceneObjHolder* holder) -> bool {
-    // only switch to combo if freezetag or shinethief is active
-    if (GameModeManager::instance()->isModeAndActive(GameMode::FREEZETAG) || GameModeManager::instance()->isModeAndActive(GameMode::SHINETHIEF))
-        return false;
-
-    // only if the gamemode wants it
-    if (GameModeManager::instance()->isActive()) {  // only switch to combo if any gamemode is active
-        return !al::isPadHoldL(-1) && al::isPadTriggerDown(-1);
-    } else {
-        return al::isPadTriggerDown(-1);
-    }
-});
 
 static HkTrampoline<void, GameConfigData*, al::ByamlWriter*> saveWriteHook = hk::hook::trampoline([](GameConfigData* cfgData, al::ByamlWriter* writer) -> void {
     saveWriteHook.orig(cfgData, writer);
@@ -219,79 +197,6 @@ static HkTrampoline<void, StageSceneStatePauseMenu*, const char*, al::Scene*, al
         al::initNerveState(state, sceneStateModConfig, &NrvStageSceneStatePauseMenu.ModConfig, "CustomNerveOverride");
     });
 
-// skips starting both coin counters
-static HkTrampoline<void, CoinCounter*> startCoinCounterHook = hk::hook::trampoline([](CoinCounter* counter) -> void {
-    if (!GameModeManager::instance()->isModeRequireUI()) {
-        startCoinCounterHook.orig(counter);
-    }
-});
-
-// Simple hook that can be used to override isModeE3 checks to enable/disable certain behaviors
-static bool modeE3Hook() {
-    return GameModeManager::instance()->isModeRequireUI();
-}
-
-// Gravity Hooks
-
-static void initHackCapHook(al::LiveActor* cappy) {
-    al::initActorPoseTQGSV(cappy);
-}
-
-// Skips ending the play guide layout if a mode is active, since the mode would have already ended
-// it
-static void playGuideEndHook(al::SimpleLayoutAppearWaitEnd* thisPtr) {
-    if (!GameModeManager::instance()->isModeRequireUI()) {
-        thisPtr->end();
-    }
-}
-
-static HkTrampoline<void, StageScene*, al::SceneInitInfo*> stageSceneInitHook =
-    hk::hook::trampoline([](StageScene* curScene, al::SceneInitInfo* initInfo) -> void {
-        stageSceneInitHook.orig(curScene, initInfo);
-        if (GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
-            al::CameraDirector* director = curScene->getCameraDirector();
-            if (director) {
-                if (director->mPoserFactory) {
-                    al::CameraTicket* gravityCamera = director->createCameraFromFactory("CameraPoserCustom", nullptr, 0, 5, sead::Matrix34f::ident);
-
-                    HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-
-                    mode->setCameraTicket(gravityCamera);
-                }
-            }
-        }
-        if (GameModeManager::instance()->isMode(GameMode::FREEZETAG) || GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
-            al::CameraDirector* director = curScene->getCameraDirector();
-            if (director && director->mPoserFactory) {
-                al::CameraTicket* spectateCamera = director->createCameraFromFactory("CameraPoserActorSpectate", nullptr, 0, 5, sead::Matrix34f::ident);
-
-                if (GameModeManager::instance()->isMode(GameMode::FREEZETAG)) {
-                    FreezeTagMode* mode = GameModeManager::instance()->getMode<FreezeTagMode>();
-                    mode->setCameraTicket(spectateCamera);
-                } else if (GameModeManager::instance()->isMode(GameMode::HIDEANDSEEK)) {
-                    HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-                    mode->setCameraTicket(spectateCamera);
-                } else if (GameModeManager::instance()->isMode(GameMode::SHINETHIEF)) {
-                    ShineThiefMode* mode = GameModeManager::instance()->getMode<ShineThiefMode>();
-                    mode->setCameraTicket(spectateCamera);
-                }
-            }
-        }
-    });
-
-static HkTrampoline<void, WorldEndBorderKeeper*> borderPullBackHook = hk::hook::trampoline([](WorldEndBorderKeeper* keeper) -> void {
-    if (al::isFirstStep(keeper) && GameModeManager::instance()->isActive()) {
-        if (GameModeManager::instance()->isModeAndActive(GameMode::HIDEANDSEEK)) {
-            HideAndSeekMode* mode = GameModeManager::instance()->getMode<HideAndSeekMode>();
-
-            if (mode->isUseGravity()) {
-                killMainPlayer(keeper->mActor);
-            }
-        }
-    }
-    borderPullBackHook.orig(keeper);
-});
-
 constexpr static al::ExecuteTable DrawTableCustom[] = {
     createDrawTable("OnlineDrawExecutors", "PuppetActor", "ActorModelDrawDeferred", "PuppetActor", "ActorModelDrawDeferred")};
 
@@ -343,15 +248,6 @@ static bool unlockCostumeDoorMetroHook(const char* str1, const char* str2) {
         return true;
     return al::isEqualString(str1, str2);
 }
-
-static HkTrampoline<bool, al::Triangle&, char*> icePhysicsHook = hk::hook::trampoline([](al::Triangle& triangle, char* floorCode) -> bool {
-    if (strcmp(floorCode, "Skate") != 0)
-        return icePhysicsHook.orig(triangle, floorCode);
-
-    bool isNaturalIce = icePhysicsHook.orig(triangle, floorCode);
-
-    return isNaturalIce ? true : TwistsConfig::isIcePhysicsEnabled();
-});
 
 static HkTrampoline<void, StageSceneStatePauseMenu*> pauseMenuWaitHook = hk::hook::trampoline([](StageSceneStatePauseMenu* menu) -> void {
     if (al::isFirstStep(menu))

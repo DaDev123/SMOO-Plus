@@ -137,13 +137,9 @@ public:
     static void sendCaptureInfPacket(const PlayerActorHakoniwa* player);
     static void sendCostumeInfPacket(const char* body, const char* cap);
     static void sendShineCollectPacket(int shineId);
-    static void sendTagInfPacket();
-    static void sendFreezeInfPacket();
-    static void sendShineThiefInfPacket();
     static void sendPuppetPosInfoPacket();
     static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
     static void sendCheckpointGetPacket(const char* objId);
-    static void sendMessagePacket(const char* message, int messageType = 0);
 
     // ===== PUPPET MANAGEMENT =====
     static bool tryAddPuppet(PuppetActor* puppet);
@@ -163,7 +159,6 @@ public:
     static const char* getClientName() { return sInstance ? sInstance->mUsername.cstr() : "Player"; }
     static nn::account::Uid getClientId() { return sInstance ? sInstance->mUserID : nn::account::Uid(); }
     static sead::FixedSafeString<0x20> getUsername() { return sInstance ? sInstance->mUsername : sead::FixedSafeString<0x20>::cEmptyString; }
-    sead::FixedSafeString<MESSAGESIZE>* tryGetMessage();
     static bool shouldKids() { return sInstance ? sInstance->isKids : false; }
     static u8 getHealth() { return sInstance ? sInstance->mHealth : 3; }
     static int getCoins() { return sInstance ? sInstance->mCoins : 0; }
@@ -246,10 +241,6 @@ public:
 
     bool mIsAllowReconnect = false;
 
-    // ===== Message System =====
-    int getMsgCount() { return mMessageQueue.mMessageQueueInner._count; };
-    static int getMaxMsgCount() { return sMaxMsgCount; };
-
 private:
     // ===== CORE FUNCTIONALITY =====
     void readFunc();
@@ -262,15 +253,9 @@ private:
     void updateCostumeInfo(CostumeInf* packet);
     void updateShineInfo(ShineCollect* packet);
     void updatePlayerConnect(PlayerConnect* packet);
-    void updateTagInfo(TagInf* packet);
-    void updateFreezeInfo(FreezeInf* packet);
-    void handleFreezeInfRoundPacket(FreezeInfRoundPacket* packet);
-    void updateShineThiefInfo(ShineThiefInf* packet);
-    void handleShineThiefRoundPacket(ShineThiefInfRoundPacket* packet);
     void updateCaptureInfo(CaptureInf* packet);
     void sendToStage(ChangeStagePacket* packet);
     void disconnectPlayer(PlayerDC* packet);
-    void updateMessages(MessagePacket* packet);
     void updateHealthCoins(HealthCoins* packet);
     void updateCoinCollects(CoinCollectCollect* packet);
     void updateCheckpoints(CheckpointGet* packet);
@@ -327,10 +312,6 @@ private:
     static constexpr s32 sMaxPendingCheckpoints = 10;
     PendingCheckpoint mPendingCheckpoints[sMaxPendingCheckpoints];
     s32 mPendingCheckpointCount = 0;
-
-    // ===== MESSAGE MEMBERS =====
-    static const int sMaxMsgCount = 100;
-    sead::MessageQueue mMessageQueue;
 
     // ===== PACKET BACKUPS =====
     PlayerInf lastPlayerInfPacket = PlayerInf();

@@ -4,8 +4,7 @@
 #include "al/Library/Layout/LayoutInitInfo.h"
 #include "al/Library/Nerve/NerveSetupUtil.h"
 
-#include "container/seadPtrArray.h"
-#include "layouts/GameModePlayerSlot.h"
+#include "Scene/StageScene.h"
 
 // TODO: kill layout if going through loading zone or paused
 
@@ -25,20 +24,11 @@ public:
     void exeWait();
     void exeEnd();
 
-    void setCurScene(StageScene* scene) {
-        mCurScene = scene;
-        // Update all player slots with the scene
-        for (int i = 0; i < mMaxPlayers; i++) {
-            mPlayerSlots.at(i)->setScene(scene);
-        }
-    }
+    void setCurScene(StageScene* scene) { mCurScene = scene; }
 
     static ConnectionStatus* sInstance;
 
 private:
-    struct HideAndSeekInfo* mInfo;
-    sead::PtrArray<GameModePlayerSlot> mPlayerSlots;
-    static constexpr int mMaxPlayers = 16;
     StageScene* mCurScene = nullptr;
 };
 
