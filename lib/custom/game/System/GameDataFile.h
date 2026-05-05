@@ -790,8 +790,8 @@ public:
     bool& getIsEnableCap() { return mIsEnableCap; }
     GameDataHolder* getGameDataHolder() { return mGameDataHolder; }
     sead::FixedSafeString<128> getPlayerStartId() { return mPlayerStartId; }
-    FixedHeapArray<s32, sNumWorlds> getScenarioNumArr() { return mScenarioNo; }
-    FixedHeapArray<s32, sNumWorlds> getMainScenarioNumArr() { return mMainScenarioNo; }
+    FixedHeapArray<s32, sNumWorlds>& getScenarioNumArr() { return mScenarioNo; }
+    FixedHeapArray<s32, sNumWorlds>& getMainScenarioNumArr() { return mMainScenarioNo; }
     FixedHeapArray<CheckpointInfo*, sNumWorlds>& getCheckpointTable() { return mCheckpointTable; }
     FixedHeapArray<UniqObjInfo, 320>& getGotCheckpointTable() { return mGotCheckpoint; }
 

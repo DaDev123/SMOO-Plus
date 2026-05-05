@@ -35,11 +35,14 @@
 #include "Library/Collision/CollisionPartsTriangle.h"
 #include "Library/Nerve/Nerve.h"
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
+#include "logger.hpp"
 #include "Scene/StageScene.h"
 #include "Scene/StageSceneStateModConfig.hpp"
+#include "Sequence/HakoniwaSequence.h"
 #include "server/CheckpointMasterList.h"
 #include "server/Client.hpp"
 #include "System/GameDataFile.h"
+#include "System/GameDataFunction.h"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
 #include "System/UniqObjInfo.h"
@@ -273,6 +276,19 @@ static HkTrampoline<void, AppearSwitchTimer*, const al::ActorInitInfo&, const al
 static HkTrampoline<bool, al::WindowConfirmWait*> windowConfirmWaitHook = hk::hook::trampoline([](al::WindowConfirmWait* win) -> bool {
     al::setNerve(win, (al::Nerve*)(hk::ro::getMainModule()->range().start() + 0x1e05be8));
     return true;
+});
+
+static HkTrampoline<void, HakoniwaSequence*> resetScenarioSyncHook = hk::hook::trampoline([](HakoniwaSequence* seq) -> void {
+    resetScenarioSyncHook.orig(seq);
+    GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
+    GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
+
+    Logger::log("Resetting Scenarios\n");
+    for (int i = 0; i < sNumWorlds; i++) {
+        scenNumArr[i] = 1;
+        mainSenNumArr[i] = 1;
+        Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
+    }
 });
 
 namespace speedrun {
