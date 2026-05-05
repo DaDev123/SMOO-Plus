@@ -285,8 +285,8 @@ static HkTrampoline<void, HakoniwaSequence*> resetScenarioSyncHook = hk::hook::t
     Logger::log("Resetting Scenarios\n");
     for (int i = 0; i < sNumWorlds; i++) {
         scenNumArr[i] = 1;
-        mainSenNumArr[i] = 1;
-        Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
+        mainSenNumArr[i] = -1;
+        // Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
     }
 });
 

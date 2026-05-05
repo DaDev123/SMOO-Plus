@@ -119,7 +119,7 @@ HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSys
 
     /* ImGui */
 
-    imgui::updateImGuiInput();
+    // imgui::updateImGuiInput();
 
     ImGui::NewFrame();
     drawMain(gameSystem->mSequence);
@@ -283,6 +283,16 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
                 if (debugPuppetIndex >= Client::getMaxPlayerCount()) {
                     debugPuppetIndex = 0;
                 }
+            }
+        }
+    } else if (al::isPadHoldL()) {
+        if (debugMode && al::isPadTriggerUp()) {
+            GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
+            GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
+
+            Logger::log("Resetting Scenarios\n");
+            for (int i = 0; i < sNumWorlds; i++) {
+                Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
             }
         }
     }

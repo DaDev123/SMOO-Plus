@@ -674,6 +674,7 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
     }
 
     packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
+    packet->mainScenarioNo = holder.mData->getGameDataFile()->getMainScenarioNoCurrent();
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -705,6 +706,7 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
     packet->is2D = false;
 
     packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
+    packet->mainScenarioNo = holder.mData->getGameDataFile()->getMainScenarioNoCurrent();
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -1076,7 +1078,7 @@ void Client::updateGameInfo(GameInf* packet) {
     if ((packet->scenarioNo < 15 && packet->scenarioNo > curScen && validateScenarioFromStageName(packet->stageName, packet->scenarioNo, curScen)) ||
         (packet->scenarioNo == 7 && strcmp(packet->stageName, "WaterfallWorldHomeStage") == 0) /*HACK*/) {
         scenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
-        mainSenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
+        mainSenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->mainScenarioNo;
         const char* warpStage = findWarpStageFromStageName(packet->stageName);
         if (warpStage && strcmp(GameDataFunction::getCurrentStageName(Client::getHolder()), warpStage) == 0) {
             ChangeStageInfo info(Client::getHolder(), "start", warpStage, false, packet->scenarioNo);
