@@ -6,8 +6,6 @@
 #include "main.hpp"
 
 #include "hk/gfx/DebugRenderer.h"
-#include "hk/gfx/Util.h"
-#include "hk/gfx/Vertex.h"
 #include "hk/hook/a64/Assembler.h"
 #include "hk/hook/InstrUtil.h"
 #include "hk/hook/Trampoline.h"
@@ -56,7 +54,6 @@
 #include "game/System/GameDataHolderAccessor.h"
 #include "game/System/PlayerHitPointData.h"
 
-#include <cmath>
 #include <cstring>
 #include <math.h>
 
@@ -111,8 +108,8 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
 
     gameSystemInit.orig(gameSystem);
 
-    nn::hid::InitializeMouse();
-    nn::hid::InitializeKeyboard();
+    // nn::hid::InitializeMouse();
+    // nn::hid::InitializeKeyboard();
 });
 
 HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSystem* gameSystem) -> void {
