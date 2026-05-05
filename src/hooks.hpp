@@ -269,8 +269,7 @@ static HkTrampoline<void, AppearSwitchTimer*, const al::ActorInitInfo&, const al
     disableAppearSwitchCameraHook = hk::hook::trampoline([](AppearSwitchTimer* timer, const al::ActorInitInfo& initInofo, const al::IUseAudioKeeper* audio,
                                                             al::IUseStageSwitch* stageSwitch, al::IUseCamera* camera, al::LiveActor* actor) -> void {
         disableAppearSwitchCameraHook.orig(timer, initInofo, audio, stageSwitch, camera, actor);
-        if (!StageSceneStateModConfig::isSpeedrunModeEnabled())
-            timer->mDemoCameraFrame = 0;
+        timer->mDemoCameraFrame = 0;
     });
 
 static HkTrampoline<bool, al::WindowConfirmWait*> windowConfirmWaitHook = hk::hook::trampoline([](al::WindowConfirmWait* win) -> bool {

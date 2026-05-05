@@ -645,8 +645,6 @@ extern "C" void hkMain() {
     hakoniwaSequenceHook.installAtSym<"_ZN16HakoniwaSequence12exePlayStageEv">();
     initMarioModelActorHook.installAtSym<"R_ZN14PlayerFunction19initMarioModelActor">();
 
-    hk::hook::trampoline([]() -> void {}).installAtSym<"_ZN2rs21requestShowHtmlViewerEPKN2al18IUseSceneObjHolderE">();  // Disable Action Guide / HtmlViewer
-    disableAppearSwitchCameraHook.installAtSym<"R_ZN17AppearSwitchTimer4init">();  // disables AppearSwitchTimer's camera switch
     // Puppet Actor Setup
     initPuppetActorsHook.installAtSym<"_ZN2al22initPlacementObjectMapEPNS_5SceneERKNS_13ActorInitInfoEPKc">();
 
@@ -698,9 +696,11 @@ extern "C" void hkMain() {
     hk::hook::writeBranchLinkAtSym<"R_metroCostumeDoor">(unlockCostumeDoorMetroHook);                                   // metro
 
     // QOL Patches
-    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
-    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);  // Notes Demo Skip
-    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);  // Removes Assist Mode Ledge Grabs
+    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);                                                     // LifeUpMaxItem demo skip
+    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);                                                     // Notes Demo Skip
+    hk::hook::trampoline([]() -> void {}).installAtSym<"_ZN2rs21requestShowHtmlViewerEPKN2al18IUseSceneObjHolderE">();  // Disable Action Guide / HtmlViewer
+    disableAppearSwitchCameraHook.installAtSym<"R_ZN17AppearSwitchTimer4init">();  // disables AppearSwitchTimer's camera switch
+    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);                // Removes Assist Mode Ledge Grabs
 
     // World Resource Heap stuff
     // hk::ro::getMainModule()->writeRo(0x5145c8, 0x7107D29F);  // cmp w20, #500

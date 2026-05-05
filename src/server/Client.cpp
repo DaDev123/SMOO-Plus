@@ -1073,7 +1073,8 @@ void Client::updateGameInfo(GameInf* packet) {
     GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
 
     int curScen = scenNumArr[findWorldIdFromStageName(packet->stageName)];
-    if (packet->scenarioNo < 15 && packet->scenarioNo > curScen && validateScenarioFromStageName(packet->stageName, packet->scenarioNo, curScen)) {
+    if ((packet->scenarioNo < 15 && packet->scenarioNo > curScen && validateScenarioFromStageName(packet->stageName, packet->scenarioNo, curScen)) ||
+        (packet->scenarioNo == 7 && strcmp(packet->stageName, "WaterfallWorldHomeStage") == 0) /*HACK*/) {
         scenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
         mainSenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
         const char* warpStage = findWarpStageFromStageName(packet->stageName);
