@@ -1,15 +1,15 @@
 .PHONY: debug clean release file_structure release_build
 
 # Color definitions
-RESET := \033[0m
-BOLD := \033[1m
-RED := \033[31m
-GREEN := \033[32m
-YELLOW := \033[33m
-BLUE := \033[34m
-MAGENTA := \033[35m
-CYAN := \033[36m
-WHITE := \033[37m
+RESET := \e[0m
+BOLD := \e[1m
+RED := \e[31m
+GREEN := \e[32m
+YELLOW := \e[33m
+BLUE := \e[34m
+MAGENTA := \e[35m
+CYAN := \e[36m
+WHITE := \e[37m
 
 SMOVER ?= 100
 BUILDVER ?= 101
@@ -47,41 +47,41 @@ format:
 	find ./lib/custom -name "*.*" | xargs clang-format -i || true
 
 clean:
-	rm -r build || true
+	yes | rm -r build || true
 
 file_structure:
-	@echo ""
-	@echo "$(CYAN)════════════════════════════════════════════════════════════════$(RESET)"
-	@echo "$(BOLD)$(WHITE)  Creating deployment structures...$(RESET)"
-	@echo "$(CYAN)════════════════════════════════════════════════════════════════$(RESET)"
+	@echo -e ""
+	@echo -e "$(CYAN)════════════════════════════════════════════════════════════════$(RESET)"
+	@echo -e "$(BOLD)$(WHITE)  Creating deployment structures...$(RESET)"
+	@echo -e "$(CYAN)════════════════════════════════════════════════════════════════$(RESET)"
 	
-	@echo "$(YELLOW)  → Creating Switch (Atmosphere) structure...$(RESET)"
+	@echo -e "$(YELLOW)  → Creating Switch (Atmosphere) structure...$(RESET)"
 	@mkdir -p $(SCONTENTPATH)/exefs/
 	
-	@echo "$(YELLOW)  → Creating Emulator (SMOO-Plus) structure...$(RESET)"
+	@echo -e "$(YELLOW)  → Creating Emulator (SMOO-Plus) structure...$(RESET)"
 	@mkdir -p $(EMUPATH)/$(PROJNAME)/exefs/
 	@mkdir -p $(EMUPATH)/$(PROJNAME)/romfs/
 
-	@echo "$(BLUE)  → Copying subsdk binaries...$(RESET)" 
+	@echo -e "$(BLUE)  → Copying subsdk binaries...$(RESET)" 
 	@cp build/$(PROJNAME).nso $(SCONTENTPATH)/exefs/subsdk4 
 	@cp build/$(PROJNAME).nso $(ECONTENTPATH)/exefs/subsdk4 
 
-	@echo "$(BLUE)  → Copying npdm file...$(RESET)"
+	@echo -e "$(BLUE)  → Copying npdm file...$(RESET)"
 	@cp build/main.npdm $(SCONTENTPATH)/exefs/main.npdm 
 	@cp build/main.npdm $(ECONTENTPATH)/exefs/main.npdm 
 
-	@echo "$(BLUE)  → Moving NSS debug symbols...$(RESET)"
+	@echo -e "$(BLUE)  → Moving NSS debug symbols...$(RESET)"
 	@mv build/$(PROJNAME).nss package/$(PROJNAME).nss || true
 	
-	@echo "$(BLUE)  → Copying romfs data...$(RESET)"
+	@echo -e "$(BLUE)  → Copying romfs data...$(RESET)"
 	@cp -R romfs/ $(SCONTENTPATH)
 	@cp -R romfs/ $(ECONTENTPATH) 2>/dev/null || true
 
-	@echo ""
-	@echo "$(GREEN)════════════════════════════════════════════════════════════════$(RESET)"
-	@echo "$(BOLD)$(GREEN)  ✓ Build complete!$(RESET)"
-	@echo "$(GREEN)════════════════════════════════════════════════════════════════$(RESET)"
-	@echo "$(WHITE)  Switch (Atmosphere):  $(CYAN)package/$(PROJNAME)-Switch/atmosphere/$(RESET)"
-	@echo "$(WHITE)  Emulator (SMOO-Plus): $(CYAN)package/$(PROJNAME)-Emulator/SMOO-Plus/$(RESET)"
-	@echo "$(GREEN)════════════════════════════════════════════════════════════════$(RESET)"
-	@echo ""
+	@echo -e ""
+	@echo -e "$(GREEN)════════════════════════════════════════════════════════════════$(RESET)"
+	@echo -e "$(BOLD)$(GREEN)  ✓ Build complete!$(RESET)"
+	@echo -e "$(GREEN)════════════════════════════════════════════════════════════════$(RESET)"
+	@echo -e "$(WHITE)  Switch (Atmosphere):  $(CYAN)package/$(PROJNAME)-Switch/atmosphere/$(RESET)"
+	@echo -e "$(WHITE)  Emulator (SMOO-Plus): $(CYAN)package/$(PROJNAME)-Emulator/SMOO-Plus/$(RESET)"
+	@echo -e "$(GREEN)════════════════════════════════════════════════════════════════$(RESET)"
+	@echo -e ""

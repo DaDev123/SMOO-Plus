@@ -303,14 +303,14 @@ private:
     // Coin collect packets that arrived while mCurStageScene was null are stored here
     // and applied in update() once the scene becomes available.
     static constexpr s32 sMaxPendingCoinCollects = 50;
-    PendingCoinCollect mPendingCoinCollects[sMaxPendingCoinCollects];
+    sead::SafeArray<PendingCoinCollect, sMaxPendingCoinCollects> mPendingCoinCollects;
     s32 mPendingCoinCollectCount = 0;
 
     // ===== CHECKPOINT PENDING QUEUE =====
     // Checkpoint get packets that arrived while mCurStageScene was null are stored here
     // and applied in update() once the scene becomes available.
     static constexpr s32 sMaxPendingCheckpoints = 10;
-    PendingCheckpoint mPendingCheckpoints[sMaxPendingCheckpoints];
+    sead::SafeArray<PendingCheckpoint, sMaxPendingCheckpoints> mPendingCheckpoints;
     s32 mPendingCheckpointCount = 0;
 
     // ===== PACKET BACKUPS =====

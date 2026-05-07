@@ -1075,8 +1075,9 @@ void Client::updateGameInfo(GameInf* packet) {
     GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
 
     int curScen = scenNumArr[findWorldIdFromStageName(packet->stageName)];
-    if ((packet->scenarioNo < 15 && packet->scenarioNo > curScen && validateScenarioFromStageName(packet->stageName, packet->scenarioNo, curScen)) ||
-        (packet->scenarioNo == 7 && strcmp(packet->stageName, "WaterfallWorldHomeStage") == 0) /*HACK*/) {
+    if (packet->scenarioNo < 15 && packet->scenarioNo > curScen &&
+        (validateScenarioFromStageName(packet->stageName, packet->scenarioNo, curScen) ||
+         (packet->scenarioNo == 7 && strcmp(packet->stageName, "WaterfallWorldHomeStage") == 0) /*HACK*/)) {
         scenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
         mainSenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->mainScenarioNo;
         const char* warpStage = findWarpStageFromStageName(packet->stageName);
@@ -1326,24 +1327,22 @@ void Client::applyOneCoinCollect(const char* placeID, int worldID, const char* s
 
     gdf->customAddCoinCollect(&pid, worldID, stage);
 
-    // if (gdf->isGotCoinCollect(&pid)) {
-    //     for (int i = 0; i < sInstance->mCoinCollectArray.size(); i++) {
-    //         al::StringTmp<128> placeIDString;
-    //         sInstance->mCoinCollect2DArray[i]->mPlacementId->makeString(&placeIDString);
-    //         if (strcmp(placeIDString.cstr(), placeID) == 0) {
-    //             sInstance->mCoinCollectArray[i]->makeActorDead();
-    //             return;
-    //         }
-    //     }
-    //     for (int i = 0; i < sInstance->mCoinCollect2DArray.size(); i++) {
-    //         al::StringTmp<128> placeIDString;
-    //         sInstance->mCoinCollect2DArray[i]->mPlacementId->makeString(&placeIDString);
-    //         if (placeIDString.isEqual(placeID)) {
-    //             sInstance->mCoinCollect2DArray[i]->makeActorDead();
-    //             return;
-    //         }
-    //     }
-    // }
+    if (gdf->isGotCoinCollect(&pid)) {
+        for (int i = 0; i < sInstance->mCoinCollectArray.size(); i++) {
+            if (sInstance->mCoinCollect2DArray[i] && sInstance->mCoinCollect2DArray[i]->mPlacementId &&
+                sInstance->mCoinCollect2DArray[i]->mPlacementId->isEqual(pid)) {
+                sInstance->mCoinCollectArray[i]->makeActorDead();
+                return;
+            }
+        }
+        for (int i = 0; i < sInstance->mCoinCollect2DArray.size(); i++) {
+            if (sInstance->mCoinCollect2DArray[i] && sInstance->mCoinCollect2DArray[i]->mPlacementId &&
+                sInstance->mCoinCollect2DArray[i]->mPlacementId->isEqual(pid)) {
+                sInstance->mCoinCollect2DArray[i]->makeActorDead();
+                return;
+            }
+        }
+    }
 }
 
 /**
@@ -1391,7 +1390,7 @@ void Client::getOneCheckpoint(const char* objId) {
     UniqObjInfo* info = gdf->customSetCheckpointId(&placeId);
     if (al::isEqualString(info->getStageName(), sInstance->mStageName.cstr())) {
         CheckpointFlag* checkpoint = rs::tryFindCheckpointFlag(sInstance->mCurStageScene, objId);
-        if (checkpoint) {
+        if (checkpoint && !checkpoint->isGot()) {
             al::startHitReaction(checkpoint, "取得");
             al::startAction(checkpoint, "Get");
             rs::requestHideCheckpointFlagBalloon(checkpoint);
