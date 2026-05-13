@@ -37,6 +37,7 @@
 #include "Library/LiveActor/LiveActor.h"
 #include "logger.hpp"
 #include "packets/Packet.h"
+#include "prim/seadSafeString.h"
 #include "server/SocketClient.hpp"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
@@ -673,8 +674,8 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
         packet->is2D = false;
     }
 
-    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
-    packet->mainScenarioNo = holder.mData->getGameDataFile()->getMainScenarioNoCurrent();
+    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
+    packet->mainScenarioNo = holder.mData->getGameDataFile()->getMainScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -705,8 +706,8 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
 
     packet->is2D = false;
 
-    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
-    packet->mainScenarioNo = holder.mData->getGameDataFile()->getMainScenarioNoCurrent();
+    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
+    packet->mainScenarioNo = holder.mData->getGameDataFile()->getMainScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -1075,7 +1076,7 @@ void Client::updateGameInfo(GameInf* packet) {
     GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
 
     int curScen = scenNumArr[findWorldIdFromStageName(packet->stageName)];
-    if (packet->scenarioNo < 15 && packet->scenarioNo > curScen &&
+    if (packet->scenarioNo < 15 && (packet->scenarioNo > curScen || (curScen == 7 && packet->scenarioNo != 7) /*HACK*/) &&
         (validateScenarioFromStageName(packet->stageName, packet->scenarioNo, curScen) ||
          (packet->scenarioNo == 7 && strcmp(packet->stageName, "WaterfallWorldHomeStage") == 0) /*HACK*/)) {
         scenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
@@ -1388,9 +1389,9 @@ void Client::getOneCheckpoint(const char* objId) {
 
     al::PlacementId placeId(objId, nullptr, nullptr);
     UniqObjInfo* info = gdf->customSetCheckpointId(&placeId);
-    if (al::isEqualString(info->getStageName(), sInstance->mStageName.cstr())) {
+    if (info && al::isEqualString(info->getStageName(), sInstance->mStageName.cstr())) {
         CheckpointFlag* checkpoint = rs::tryFindCheckpointFlag(sInstance->mCurStageScene, objId);
-        if (checkpoint && !checkpoint->isGot()) {
+        if (checkpoint) {
             al::startHitReaction(checkpoint, "取得");
             al::startAction(checkpoint, "Get");
             rs::requestHideCheckpointFlagBalloon(checkpoint);

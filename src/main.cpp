@@ -66,6 +66,7 @@
 #include "Imgui.hpp"
 #include "layouts/ConnectionStatus.h"
 #include "layouts/SpeedrunIcon.h"
+#include "Library/Base/StringUtil.h"
 #include "logger.hpp"
 #include "MapObj/CheckpointFlag.h"
 #include "puppetHooks.hpp"
@@ -74,6 +75,7 @@
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "speedboot/BootHooks.hpp"
+#include "System/GameDataHolderWriter.h"
 #include "System/GameSystem.h"
 #include "Util/AchievementUtil.h"
 
@@ -240,6 +242,25 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
 
     updatePlayerInfo(GameDataHolderWriter(stageScene), playerBase, isYukimaru);
 
+    if (!shoudResetScenario) {
+        if (al::isEqualString(GameDataFunction::getCurrentStageName(stageScene), "CapWorldHomeStage") &&
+            GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNo() == 1) {
+            GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr = GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNumArr();
+            GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = GameDataHolderWriter(stageScene).mData->getGameDataFile()->getMainScenarioNumArr();
+
+            Logger::log("Resetting Scenarios\n");
+            for (int i = 0; i < sNumWorlds; i++) {
+                // Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
+                scenNumArr[i] = 1;
+                mainSenNumArr[i] = -1;
+                // Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
+            }
+        }
+        if (!al::isEqualString(GameDataFunction::getCurrentStageName(stageScene), "CapWorldHomeStage")) {
+            shoudResetScenario = false;
+        }
+    }
+
     if (SpeedrunIcon::sInstance) {
         if (StageSceneStateModConfig::isSpeedrunModeEnabled()) {
             SpeedrunIcon::sInstance->tryStart();
@@ -286,11 +307,13 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
             }
         }
     } else if (al::isPadHoldL()) {
-        if (debugMode && al::isPadTriggerUp()) {
+        if (al::isPadTriggerUp()) {
+            Client::sInstance->setStopRumble();
+        }
+        if (debugMode && al::isPadTriggerLeft()) {
             GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
             GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
 
-            Logger::log("Resetting Scenarios\n");
             for (int i = 0; i < sNumWorlds; i++) {
                 Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
             }
@@ -703,11 +726,13 @@ extern "C" void hkMain() {
     hk::hook::writeBranchLinkAtSym<"R_metroCostumeDoor">(unlockCostumeDoorMetroHook);                                   // metro
 
     // QOL Patches
-    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);                                                     // LifeUpMaxItem demo skip
-    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);                                                     // Notes Demo Skip
+    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
+    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);                                                     // Notes Demo Skip
     hk::hook::trampoline([]() -> void {}).installAtSym<"_ZN2rs21requestShowHtmlViewerEPKN2al18IUseSceneObjHolderE">();  // Disable Action Guide / HtmlViewer
     disableAppearSwitchCameraHook.installAtSym<"R_ZN17AppearSwitchTimer4init">();  // disables AppearSwitchTimer's camera switch
     hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);                // Removes Assist Mode Ledge Grabs
+
+    hk::hook::trampoline([]() -> bool { return true; }).installAtSym<"_ZNK9MapLayout22isEnableCheckpointWarpEv">();
 
     // World Resource Heap stuff
     // hk::ro::getMainModule()->writeRo(0x5145c8, 0x7107D29F);  // cmp w20, #500

@@ -13,7 +13,7 @@ WHITE := \e[37m
 
 SMOVER ?= 100
 BUILDVER ?= 101
-BUILDVERSTR ?= 0.7.5-pre
+BUILDVERSTR ?= 0.8.0-SR-pre
 DEBUGLOG ?= 1 # defaults to disable debug logger 
 SERVERIP ?= 192.168.178.41 # put debug logger server IP here
 

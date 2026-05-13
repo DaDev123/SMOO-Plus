@@ -36,6 +36,7 @@
 #include "Library/Nerve/Nerve.h"
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
 #include "logger.hpp"
+#include "main.hpp"
 #include "Scene/StageScene.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "Sequence/HakoniwaSequence.h"
@@ -284,10 +285,12 @@ static HkTrampoline<void, HakoniwaSequence*> resetScenarioSyncHook = hk::hook::t
 
     Logger::log("Resetting Scenarios\n");
     for (int i = 0; i < sNumWorlds; i++) {
-        scenNumArr[i] = 1;
-        mainSenNumArr[i] = -1;
+        Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
+        // scenNumArr[i] = 1;
+        // mainSenNumArr[i] = -1;
         // Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
     }
+    shoudResetScenario = true;
 });
 
 namespace speedrun {

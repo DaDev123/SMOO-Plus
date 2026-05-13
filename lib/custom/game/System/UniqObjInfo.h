@@ -21,11 +21,11 @@ public:
 
     const char* getStageName() const { return mStageName.cstr(); }
 
-    void setStageName(const char* str) { mStageName.format("%s", str); }
+    void setStageName(const char* str) { mStageName.copy(str); }
 
     const char* getObjId() const { return mObjId.cstr(); }
 
-    void setObjId(const char* str) { mObjId.format("%s", str); }
+    void setObjId(const char* str) { mObjId.copy(str); }
 
     sead::FixedSafeString<128> mStageName;
     sead::FixedSafeString<128> mObjId;

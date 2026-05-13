@@ -743,14 +743,14 @@ public:
 
     // these three functions are custom impls of checkpoint functions from 0b-0f's decomp of GameDataFile and they are used for checkpoint sync
     UniqObjInfo* customSetCheckpointId(const al::PlacementId* placement_id) {
-        UniqObjInfo* result;
-        al::StringTmp<128> obj_id;
+        UniqObjInfo* result = nullptr;
+        al::StringTmp<128> obj_id = "";
         placement_id->makeString(&obj_id);
         if (CheckpointInfo* info = tryFindCheckpointInfoImpl(mCheckpointTable.begin(), mCurrentStageName.cstr(), obj_id.cstr())) {
             info->isGet = true;
             if (UniqObjInfo* got_info = addGotCheckpoint(mGotCheckpoint.begin(), info->objInfo.getStageName(), info->objInfo.getObjId())) {
                 got_info->setStageName(info->objInfo.getStageName());
-                got_info->mObjId.format("%s", info->objInfo.getObjId());
+                got_info->mObjId.copy(info->objInfo.getObjId());
                 mGotCheckpointNum++;
                 result = got_info;
             }
@@ -758,12 +758,16 @@ public:
             CheckpointMasterList::CheckpointData data = CheckpointMasterList::getCheckpointDataFromMasterList(obj_id.cstr());
             if (UniqObjInfo* got_info = addGotCheckpoint(mGotCheckpoint.begin(), data.stageName, data.objId)) {
                 got_info->setStageName(data.stageName);
-                got_info->mObjId.format("%s", data.objId);
+                got_info->mObjId.copy(data.objId);
                 mGotCheckpointNum++;
                 result = got_info;
             }
         }
-        al::copyString(mCheckpointName.getBuffer(), obj_id.cstr(), 128);
+        // mCheckpointName.copy(obj_id, 128);
+        // _290.format("%s", mCurrentStageName.cstr());
+        // _908.clear();
+        // mPlayerStartId.clear();
+        // _160.clear();
         return result;
     }
 

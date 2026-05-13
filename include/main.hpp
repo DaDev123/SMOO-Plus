@@ -1,3 +1,4 @@
+#pragma once
 #include "al/Library/Sequence/Sequence.h"
 
 #include "game/Player/PlayerActorBase.h"
@@ -5,6 +6,7 @@
 static bool isInGame = false;
 
 static bool debugMode = false;
+static bool shoudResetScenario = false;
 
 void drawMain(al::Sequence* seq);
 void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru);

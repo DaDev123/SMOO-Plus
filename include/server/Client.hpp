@@ -203,6 +203,10 @@ public:
         if (sInstance)
             sInstance->mShouldStopRumble = false;
     }
+    static void setStopRumble() {
+        if (sInstance)
+            sInstance->mShouldStopRumble = true;
+    }
     // ===== UTILITY METHODS =====
     static void update();
     static void clearArrays();
