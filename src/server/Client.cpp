@@ -30,14 +30,19 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
+#include "account.h"
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "Library/Base/StringUtil.h"
 #include "Library/Layout/LayoutActorUtil.h"
 #include "Library/LiveActor/LiveActor.h"
+#include "Library/Message/MessageHolder.h"
 #include "logger.hpp"
 #include "packets/Packet.h"
 #include "prim/seadSafeString.h"
+#include "prim/seadStringUtil.h"
+#include "server/CheckpointMasterList.h"
+#include "server/PlayerEventLog.h"
 #include "server/SocketClient.hpp"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
@@ -955,6 +960,27 @@ void Client::updateShineInfo(ShineCollect* packet) {
     if (collectedShineCount < curCollectedShines.size() - 1) {
         curCollectedShines[collectedShineCount] = packet->shineId;
         collectedShineCount++;
+
+        if (PlayerEventLog::sInstance) {
+            nn::account::Nickname name;
+            nn::account::GetNickname(&name, packet->mUserID);
+
+            if (packet->shineId >= 2000 && packet->shineId <= 2060) {
+                sead::FixedSafeString<128> achievementName;
+                sead::StringUtil::convertUtf16ToUtf8(
+                    achievementName.mBuffer, 128,
+                    al::getSystemMessageString(PlayerEventLog::sInstance, "AchievementName", toadetteMoons[packet->shineId - 2000]), 128);
+                PlayerEventLog::sInstance->addEvent(name.name, PlayerEventLog::shine, achievementName);
+                return;
+            }
+
+            sead::FixedSafeString<128> shineName;
+            GameDataFile::HintInfo* hintInfo = CustomGameDataFunction::getHintInfoByUniqueID(getStageScene(), packet->shineId);
+            al::StringTmp<128> messageLabel("ScenarioName_%s", hintInfo->objId.cstr());
+            sead::StringUtil::convertUtf16ToUtf8(shineName.mBuffer, 128,
+                                                 al::getStageMessageString(PlayerEventLog::sInstance, hintInfo->stageName.cstr(), messageLabel.cstr()), 128);
+            PlayerEventLog::sInstance->addEvent(name.name, PlayerEventLog::shine, shineName);
+        }
     }
 }
 
@@ -982,6 +1008,11 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
         strcpy(curInfo->puppetName, packet->clientName);
 
         mConnectCount++;
+        if (PlayerEventLog::sInstance) {
+            nn::account::Nickname name;
+            nn::account::GetNickname(&name, packet->mUserID);
+            PlayerEventLog::sInstance->addEvent(name.name, PlayerEventLog::connect, sead::FixedSafeString<128>(""));
+        }
     }
 }
 
@@ -1125,6 +1156,12 @@ void Client::disconnectPlayer(PlayerDC* packet) {
 
     mConnectCount--;
     mShouldStopRumble = true;
+
+    if (PlayerEventLog::sInstance) {
+        nn::account::Nickname name;
+        nn::account::GetNickname(&name, packet->mUserID);
+        PlayerEventLog::sInstance->addEvent(name.name, PlayerEventLog::disconnect, sead::FixedSafeString<128>(""));
+    }
 }
 
 /**
@@ -1372,6 +1409,17 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
     }
 
     applyOneCoinCollect(packet->placeID, packet->worldID, packet->stage);
+
+    if (PlayerEventLog::sInstance) {
+        nn::account::Nickname name;
+        nn::account::GetNickname(&name, packet->mUserID);
+
+        al::StringTmp<128> messageLabel("WorldName_%s", GameDataFunction::getWorldDevelopName(getStageScene(), packet->worldID));
+        sead::FixedSafeString<128> kingdomName;
+        sead::StringUtil::convertUtf16ToUtf8(kingdomName.mBuffer, 128, al::getSystemMessageString(PlayerEventLog::sInstance, "StageName", messageLabel.cstr()),
+                                             128);
+        PlayerEventLog::sInstance->addEvent(name.name, PlayerEventLog::purple, kingdomName);
+    }
 }
 
 /**
@@ -1422,6 +1470,18 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
     }
 
     getOneCheckpoint(packet->objId);
+
+    if (PlayerEventLog::sInstance) {
+        nn::account::Nickname name;
+        nn::account::GetNickname(&name, packet->mUserID);
+
+        al::StringTmp<128> messageLabel("Checkpoint_%s", packet->objId);
+        sead::FixedSafeString<128> checkpointName;
+        CheckpointMasterList::CheckpointData checkpointData = CheckpointMasterList::getCheckpointDataFromMasterList(packet->objId);
+        sead::StringUtil::convertUtf16ToUtf8(checkpointName.mBuffer, 128,
+                                             al::getStageMessageString(PlayerEventLog::sInstance, checkpointData.stageName, messageLabel.cstr()), 128);
+        PlayerEventLog::sInstance->addEvent(name.name, PlayerEventLog::purple, checkpointName);
+    }
 }
 
 /**

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 #include "Packet.h"
 
 struct PACKED PlayerConnect : Packet {
