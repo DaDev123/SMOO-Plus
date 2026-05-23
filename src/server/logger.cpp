@@ -30,7 +30,7 @@ nn::Result Logger::init(const char* ip, u16 port) {
     in_addr hostAddress = {0};
     sockaddr_in serverAddress = {0};
 
-    if (this->socket_log_state != SOCKET_LOG_UNINITIALIZED)
+    if (this->socket_log_state != SockState::UNINITIALIZED)
         return nn::Result(-1);
 
     nn::nifm::Initialize();
@@ -43,14 +43,14 @@ nn::Result Logger::init(const char* ip, u16 port) {
 #ifndef EMU
 
     if (!nn::nifm::IsNetworkAvailable()) {
-        this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+        this->socket_log_state = SockState::UNAVAILABLE;
         return nn::Result(-1);
     }
 
 #endif
 
     if ((this->socket_log_socket = nn::socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0) {
-        this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+        this->socket_log_state = SockState::UNAVAILABLE;
         return nn::Result(nn::socket::GetLastErrno());
     }
 
@@ -73,11 +73,11 @@ nn::Result Logger::init(const char* ip, u16 port) {
     }
 
     if (connected) {
-        this->socket_log_state = SOCKET_LOG_CONNECTED;
+        this->socket_log_state = SockState::CONNECTED;
         this->isDisableName = false;
         return nn::Result(0);
     } else {
-        this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+        this->socket_log_state = SockState::UNAVAILABLE;
         return result;
     }
 }
@@ -96,7 +96,7 @@ s32 Logger::read(char* out) {
 }
 
 void Logger::log(const char* fmt, ...) {
-    if (!sInstance || sInstance->socket_log_state != SOCKET_LOG_CONNECTED)
+    if (!sInstance || sInstance->socket_log_state != SockState::CONNECTED)
         return;
     va_list args;
     va_start(args, fmt);

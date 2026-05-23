@@ -53,7 +53,7 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
         nn::err::ShowApplicationError(mAppErr);
 
         Logger::log("Network Unavailable.\n");
-        this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+        this->socket_log_state = SockState::NONET;
         this->socket_errno = nn::socket::GetLastErrno();
 
         return nn::Result(-1);
@@ -75,7 +75,7 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
 
         Logger::log("Socket Unavailable.\n");
         this->socket_errno = nn::socket::GetLastErrno();
-        this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+        this->socket_log_state = SockState::UNAVAILABLE;
 
         return nn::Result(-1);
     }
@@ -87,7 +87,7 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
 
         Logger::log("IP address is invalid or hostname not resolveable.\n");
         this->socket_errno = nn::socket::GetLastErrno();
-        this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+        this->socket_log_state = SockState::INVALIP;
 
         return nn::Result(-1);
     }
@@ -105,7 +105,7 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
     if ((result = nn::socket::Connect(this->socket_log_socket, (sockaddr*)&serverAddress, sizeof(serverAddress))).IsFailure()) {
         Logger::log("Socket Connection Failed!\n");
         this->socket_errno = nn::socket::GetLastErrno();
-        this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+        this->socket_log_state = SockState::CONNFAIL;
 
         strcpy(mAppErr.dialog_message, "Connection Failed");
         strcpy(mAppErr.fullscreen_message, "Failed to connect to server");
@@ -114,7 +114,7 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
         return result;
     }
 
-    this->socket_log_state = SOCKET_LOG_CONNECTED;
+    this->socket_log_state = SockState::CONNECTED;
 
     Logger::log("Socket fd: %d\n", socket_log_socket);
 
@@ -144,7 +144,7 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
 }
 
 bool SocketClient::send(Packet* packet) {
-    if (this->socket_log_state != SOCKET_LOG_CONNECTED || packet == nullptr)
+    if (this->socket_log_state != SockState::CONNECTED || packet == nullptr)
         return false;
 
     char* buffer = reinterpret_cast<char*>(packet);
@@ -166,7 +166,7 @@ bool SocketClient::send(Packet* packet) {
 }
 
 bool SocketClient::recv() {
-    if (this->socket_log_state != SOCKET_LOG_CONNECTED) {
+    if (this->socket_log_state != SockState::CONNECTED) {
         Logger::log("Unable To Receive! Socket Not Connected.\n");
         this->socket_errno = nn::socket::GetLastErrno();
         return this->tryReconnect();
@@ -345,7 +345,7 @@ void SocketClient::endThreads() {
 void SocketClient::sendFunc() {
     Logger::log("Starting Send Thread.\n");
 
-    while (trySendQueue() || socket_log_state != SOCKET_LOG_DISCONNECTED) {
+    while (trySendQueue() || socket_log_state != SockState::DISCONNECTED) {
     }
 
     Logger::log("Sending packet failed!\n");
@@ -357,7 +357,7 @@ void SocketClient::recvFunc() {
 
     Logger::log("Starting Recv Thread.\n");
 
-    while (recv() || socket_log_state != SOCKET_LOG_DISCONNECTED) {
+    while (recv() || socket_log_state != SockState::DISCONNECTED) {
     }
 
     // Free up all blocked threads
@@ -369,7 +369,7 @@ void SocketClient::recvFunc() {
 }
 
 bool SocketClient::queuePacket(Packet* packet) {
-    if (socket_log_state == SOCKET_LOG_CONNECTED && !(mSendQueue.mMessageQueueInner._count == mSendQueue.mMessageQueueInner._maxCount)) {
+    if (socket_log_state == SockState::CONNECTED && !(mSendQueue.mMessageQueueInner._count == mSendQueue.mMessageQueueInner._maxCount)) {
         // as this is non-blocking, it will always return true.
         mSendQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking);
         return true;
@@ -390,5 +390,5 @@ bool SocketClient::trySendQueue() {
 }
 
 Packet* SocketClient::tryGetPacket() {
-    return socket_log_state == SOCKET_LOG_CONNECTED ? (Packet*)mRecvQueue.pop(sead::MessageQueue::BlockType::Blocking) : nullptr;
+    return socket_log_state == SockState::CONNECTED ? (Packet*)mRecvQueue.pop(sead::MessageQueue::BlockType::Blocking) : nullptr;
 }

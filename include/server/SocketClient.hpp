@@ -34,11 +34,11 @@ public:
     void sendFunc();
     void recvFunc();
 
-    void setLogState(SocketLogState state) { this->socket_log_state = state; };
+    void setLogState(SockState state) { this->socket_log_state = state; };
     void startEndThread() { this->mEndThread->start(); };
 
     void printPacket(Packet* packet);
-    bool isConnected() { return socket_log_state == SOCKET_LOG_CONNECTED; }
+    bool isConnected() { return socket_log_state == SockState::CONNECTED; }
 
     u32 getSendCount() { return mSendQueue.mMessageQueueInner._count; }
     u32 getSendMaxCount() { return mSendQueue.mMessageQueueInner._maxCount; }

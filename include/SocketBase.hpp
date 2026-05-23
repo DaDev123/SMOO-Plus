@@ -16,7 +16,7 @@ public:
     virtual struct Packet* tryGetPacket() { return nullptr; };
 
     const char* getStateChar();
-    u8 getLogState();
+    SockState getLogState();
     s32 getFd();
 
     void set_sock_flags(int flags);
@@ -34,7 +34,7 @@ protected:
     const char* sock_ip;
 
     u16 port;
-    u8 socket_log_state = SOCKET_LOG_UNINITIALIZED;
+    SockState socket_log_state = SockState::UNINITIALIZED;
     s32 socket_log_socket;
 
     int sock_flags;

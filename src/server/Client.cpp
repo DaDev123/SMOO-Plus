@@ -177,7 +177,7 @@ void Client::restartConnection() {
         curInfo->isInSameStage = false;
     }
 
-    sInstance->mSocket->setLogState(SOCKET_LOG_DISCONNECTED);
+    sInstance->mSocket->setLogState(SockState::DISCONNECTED);
     sInstance->mSocket->startEndThread();
 
     sInstance->mIsConnectionActive = sInstance->mSocket->init(sInstance->mServerIP.cstr(), sInstance->mServerPort).IsSuccess();
