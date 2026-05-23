@@ -1,5 +1,7 @@
 #pragma once
 
+#include "nn/err.h"
+
 #include "al/Library/Thread/AsyncFunctorThread.h"
 
 #include <netinet/in.h>
@@ -58,6 +60,9 @@ private:
 
     int maxBufSize = 100;
     bool mIsFirstConnect = true;
+
+    nn::err::ApplicationErrorArg mAppErr;
+    ;
 
     /**
      * @param str a string containing an IPv4 address or a hostname that can be resolved via DNS

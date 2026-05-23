@@ -1,7 +1,9 @@
 #include "server/SocketClient.hpp"
 
+#include "nn/err.h"
 #include "nn/nifm.h"
 #include "nn/os.h"
+#include "nn/settings.h"
 #include "nn/socket.h"
 #include "vapours/results/results_common.hpp"
 
@@ -33,17 +35,10 @@ SocketClient::SocketClient(const char* name, sead::Heap* heap) : mHeap(heap), So
 
     mRecvQueue.allocate(maxBufSize, mHeap);
     mSendQueue.allocate(maxBufSize, mHeap);
+    mAppErr = nn::err::ApplicationErrorArg(0, "", "", nn::settings::LanguageCode::Make(nn::settings::Language_English));
 };
 
 nn::Result SocketClient::init(const char* ip, u16 port) {
-    this->sock_ip = ip;
-    this->port = port;
-
-    in_addr hostAddress = {0};
-    sockaddr_in serverAddress = {0};
-
-    Logger::log("SocketClient::init: %s:%d sock %s\n", ip, port, getStateChar());
-
     nn::nifm::Initialize();
     nn::nifm::SubmitNetworkRequest();
 
@@ -53,24 +48,47 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
 // emulators (ryujinx) make this return false always, so skip it during init
 #ifndef EMU
     if (!nn::nifm::IsNetworkAvailable()) {
+        strcpy(mAppErr.dialog_message, "No network available");
+        strcpy(mAppErr.fullscreen_message, "You must be connected to a network to play with friends");
+        nn::err::ShowApplicationError(mAppErr);
+
         Logger::log("Network Unavailable.\n");
         this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
         this->socket_errno = nn::socket::GetLastErrno();
+
         return nn::Result(-1);
     }
 #endif
 
+    this->sock_ip = ip;
+    this->port = port;
+
+    in_addr hostAddress = {0};
+    sockaddr_in serverAddress = {0};
+
+    Logger::log("SocketClient::init: %s:%d sock %s\n", ip, port, getStateChar());
+
     if ((this->socket_log_socket = nn::socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+        strcpy(mAppErr.dialog_message, "Can not create socket");
+        strcpy(mAppErr.fullscreen_message, "Something has gone terribly wrong");
+        nn::err::ShowApplicationError(mAppErr);
+
         Logger::log("Socket Unavailable.\n");
         this->socket_errno = nn::socket::GetLastErrno();
         this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+
         return nn::Result(-1);
     }
 
     if (!this->stringToIPAddress(this->sock_ip, &hostAddress)) {
+        strcpy(mAppErr.dialog_message, "Invalid IP");
+        strcpy(mAppErr.fullscreen_message, "IP address is invalid or hostname not resolveable");
+        nn::err::ShowApplicationError(mAppErr);
+
         Logger::log("IP address is invalid or hostname not resolveable.\n");
         this->socket_errno = nn::socket::GetLastErrno();
         this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+
         return nn::Result(-1);
     }
 
@@ -88,6 +106,11 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
         Logger::log("Socket Connection Failed!\n");
         this->socket_errno = nn::socket::GetLastErrno();
         this->socket_log_state = SOCKET_LOG_UNAVAILABLE;
+
+        strcpy(mAppErr.dialog_message, "Connection Failed");
+        strcpy(mAppErr.fullscreen_message, "Failed to connect to server");
+        nn::err::ShowApplicationError(mAppErr);
+
         return result;
     }
 
@@ -112,6 +135,10 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
     }
 
     send(&initPacket);
+
+    strcpy(mAppErr.dialog_message, "Connected");
+    strcpy(mAppErr.fullscreen_message, "Successfully connected");
+    nn::err::ShowApplicationError(mAppErr);
 
     return result;
 }

@@ -740,6 +740,8 @@ extern "C" void hkMain() {
 
     resetScenarioSyncHook.installAtSym<"_ZN24HakoniwaStateDemoOpening11startSecondEv">();
 
+    hk::hook::a64::assemble<"mov x0, #1\nsvc #0x28">().installAtOffset(hk::ro::getRtldModule(), 0);
+
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
     hk::gfx::DebugRenderer::instance()->installHooks();
 }
