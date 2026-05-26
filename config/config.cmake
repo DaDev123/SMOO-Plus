@@ -23,7 +23,7 @@ set(MODULE_BINARY subsdk4)
 set(SDK_PAST_1900 FALSE)
 set(USE_SAIL TRUE)
 
-set(TRAMPOLINE_POOL_SIZE 0x35)
+set(TRAMPOLINE_LEVEL 1)
 set(BAKE_SYMBOLS FALSE)
 
 set(HAKKUN_ADDONS Nvn ImGui DebugRenderer HeapSourceDynamic)

@@ -4,8 +4,8 @@
 
 #include "game/Scene/ProjectActorFactory.h"
 
-HkTrampoline<void, ProjectActorFactory*> actorFactoryHook = hk::hook::trampoline([](ProjectActorFactory* actorFactory) -> void {
-    actorFactoryHook.orig(actorFactory);
+HkTrampoline actorFactoryHook = [](TrampolineStatic(), ProjectActorFactory* actorFactory) -> void {
+    orig(actorFactory);
     s32 customActorEntriesCount = sizeof(sCustomActorFactoryEntries) / sizeof(sCustomActorFactoryEntries[0]);
     al::NameToCreator<al::ActorCreatorFunction>* factoryEntries =
         new al::NameToCreator<al::ActorCreatorFunction>[actorFactory->mNumFactoryEntries + customActorEntriesCount];
@@ -19,7 +19,7 @@ HkTrampoline<void, ProjectActorFactory*> actorFactoryHook = hk::hook::trampoline
 
     actorFactory->mFactoryEntries = factoryEntries;
     actorFactory->mNumFactoryEntries += customActorEntriesCount;
-});
+};
 
 void insertCustomThingsInFactory() {
     actorFactoryHook.installAtSym<"_ZN19ProjectActorFactoryC2Ev">();

@@ -93,11 +93,11 @@ al::SequenceInitInfo* initInfo;
 static constexpr int socketPoolSize = 0x600000;
 static constexpr int socketAllocPoolSize = 0x20000;
 char socketPool[socketPoolSize + socketAllocPoolSize] __attribute__((aligned(0x1000)));
-HkTrampoline<void> disableSocketInit = hk::hook::trampoline([]() -> void {});
+HkTrampoline disableSocketInit = [](TrampolineStatic()) -> void {};
 
 // ===== HOOKS =====
 
-HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSystem* gameSystem) -> void {
+HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
     imgui::setup();
 
     nn::socket::Initialize(socketPool, socketPoolSize, socketAllocPoolSize, 0xE);
@@ -108,14 +108,14 @@ HkTrampoline<void, GameSystem*> gameSystemInit = hk::hook::trampoline([](GameSys
 
     Client::createInstance(al::getCurrentHeap());
 
-    gameSystemInit.orig(gameSystem);
+    orig(gameSystem);
 
     // nn::hid::InitializeMouse();
     // nn::hid::InitializeKeyboard();
-});
+};
 
-HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSystem* gameSystem) -> void {
-    drawMainHookHk.orig(gameSystem);
+HkTrampoline drawMainHookHk = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
+    orig(gameSystem);
 
     auto* drawContext = Application::instance()->mDrawSystemInfo->drawContext;
 
@@ -129,15 +129,15 @@ HkTrampoline<void, GameSystem*> drawMainHookHk = hk::hook::trampoline([](GameSys
     ImGui::Render();
 
     hk::gfx::ImGuiBackendNvn::instance()->draw(ImGui::GetDrawData(), drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
-});
+};
 
-HkTrampoline<PlayerCostumeInfo*, al::LiveActor*, al::ActorInitInfo&, char*, char*, al::AudioKeeper*, bool> initMarioModelActorHook = hk::hook::trampoline(
-    [](al::LiveActor* actor, al::ActorInitInfo& initInfo, char* bodyModel, char* capModel, al::AudioKeeper* keeper, bool isCloset) -> PlayerCostumeInfo* {
-        Client::sendCostumeInfPacket(bodyModel, capModel);
-        return initMarioModelActorHook.orig(actor, initInfo, bodyModel, capModel, keeper, isCloset);
-    });
+HkTrampoline initMarioModelActorHook = [](TrampolineStatic(), al::LiveActor* actor, al::ActorInitInfo& initInfo, char* bodyModel, char* capModel,
+                                          al::AudioKeeper* keeper, bool isCloset) -> PlayerCostumeInfo* {
+    Client::sendCostumeInfPacket(bodyModel, capModel);
+    return orig(actor, initInfo, bodyModel, capModel, keeper, isCloset);
+};
 
-HkTrampoline<void, GameDataHolderWriter, ShineInfo*> sendShinePacketHook = hk::hook::trampoline([](GameDataHolderWriter writer, ShineInfo* info) -> void {
+HkTrampoline sendShinePacketHook = [](TrampolineStatic(), GameDataHolderWriter writer, ShineInfo* info) -> void {
     if (!GameDataFunction::isGotShine(writer, info)) {
         for (int x = 0; x < 0x400; x++) {
             GameDataFile::HintInfo* curInfo = &writer->getGameDataFile()->getHintList()[x];
@@ -146,10 +146,10 @@ HkTrampoline<void, GameDataHolderWriter, ShineInfo*> sendShinePacketHook = hk::h
             }
         }
     }
-    sendShinePacketHook.orig(writer, info);
-});
+    orig(writer, info);
+};
 
-HkTrampoline<void, GameDataFile*, const char*> sendShinePacketHook2 = hk::hook::trampoline([](GameDataFile* file, const char* name) -> void {
+HkTrampoline sendShinePacketHook2 = [](TrampolineStatic(), GameDataFile* file, const char* name) -> void {
     if (!rs::checkGetAchievement(file->getGameDataHolder(), name)) {
         for (int i = 0; i < hk::util::arraySize(toadetteMoons); i++) {
             if (strcmp(toadetteMoons[i], name) == 0) {
@@ -158,58 +158,55 @@ HkTrampoline<void, GameDataFile*, const char*> sendShinePacketHook2 = hk::hook::
         }
     }
 
-    sendShinePacketHook2.orig(file, name);
-});
+    orig(file, name);
+};
 
-HkTrampoline<void, GameDataFile*, al::PlacementId*> sendCoinCollectCollectPacketHook =
-    hk::hook::trampoline([](GameDataFile* file, al::PlacementId* placeID) -> void {
-        al::StringTmp<128> placeIDString;
-        placeID->makeString(&placeIDString);
-        Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(), file->getStageNameCurrent());
-        sendCoinCollectCollectPacketHook.orig(file, placeID);
-    });
+HkTrampoline sendCoinCollectCollectPacketHook = [](TrampolineStatic(), GameDataFile* file, al::PlacementId* placeID) -> void {
+    al::StringTmp<128> placeIDString;
+    placeID->makeString(&placeIDString);
+    Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(), file->getStageNameCurrent());
+    orig(file, placeID);
+};
 
-HkTrampoline<void, CheckpointFlag*> sendCheckpointGetPacketHook = hk::hook::trampoline([](CheckpointFlag* checkpoint) -> void {
+HkTrampoline sendCheckpointGetPacketHook = [](TrampolineStatic(), CheckpointFlag* checkpoint) -> void {
     if (al::isFirstStep(checkpoint))
         Client::sendCheckpointGetPacket(al::makeStringPlacementId(checkpoint->getPlacementId()).cstr());
-    sendCheckpointGetPacketHook.orig(checkpoint);
-});
+    orig(checkpoint);
+};
 
-HkTrampoline<void, HakoniwaSequence*, al::SequenceInitInfo*> hakoniwaSequenceInitHook =
-    hk::hook::trampoline([](HakoniwaSequence* sequence, al::SequenceInitInfo* initInfo) -> void {
-        hakoniwaSequenceInitHook.orig(sequence, initInfo);
-        // was threadInit ( hook for initializing client class)
-        al::LayoutInitInfo lytInfo;
+HkTrampoline hakoniwaSequenceInitHook = [](TrampolineStatic(), HakoniwaSequence* sequence, al::SequenceInitInfo* initInfo) -> void {
+    orig(sequence, initInfo);
+    // was threadInit ( hook for initializing client class)
+    al::LayoutInitInfo lytInfo;
 
-        al::initLayoutInitInfo(&lytInfo, sequence->mLayoutKit, 0, sequence->mAudioDirector, initInfo->mSystemInfo->layoutSystem,
-                               initInfo->mSystemInfo->messageSystem, initInfo->mSystemInfo->gamePadSystem);
+    al::initLayoutInitInfo(&lytInfo, sequence->mLayoutKit, 0, sequence->mAudioDirector, initInfo->mSystemInfo->layoutSystem,
+                           initInfo->mSystemInfo->messageSystem, initInfo->mSystemInfo->gamePadSystem);
 
-        Client::instance()->init(lytInfo, sequence->mGameDataHolderAccessor);
+    Client::instance()->init(lytInfo, sequence->mGameDataHolderAccessor);
 
-        speedrun::createHooks();
+    speedrun::createHooks();
 
-        ConnectionStatus::sInstance = new ConnectionStatus("Status", lytInfo);
-        SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", lytInfo);
-    });
+    ConnectionStatus::sInstance = new ConnectionStatus("Status", lytInfo);
+    SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", lytInfo);
+};
 
-HkTrampoline<void, al::ActorInitInfo*, al::Scene*, al::PlacementInfo*, al::LayoutInitInfo*, al::ActorFactory*, al::SceneMsgCtrl*, al::GameDataHolderBase*>
-    initActorInitInfoHook =
-        hk::hook::trampoline([](al::ActorInitInfo* initInfo, al::Scene* scene, al::PlacementInfo* placementInfo, al::LayoutInitInfo* layoutInfp,
-                                al::ActorFactory* actorFactory, al::SceneMsgCtrl* sceneMsgCtrl, al::GameDataHolderBase* gameDataHolderBase) -> void {
-            initActorInitInfoHook.orig(initInfo, scene, placementInfo, layoutInfp, actorFactory, sceneMsgCtrl, gameDataHolderBase);
+HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* initInfo, al::Scene* scene, al::PlacementInfo* placementInfo,
+                                        al::LayoutInitInfo* layoutInfp, al::ActorFactory* actorFactory, al::SceneMsgCtrl* sceneMsgCtrl,
+                                        al::GameDataHolderBase* gameDataHolderBase) -> void {
+    orig(initInfo, scene, placementInfo, layoutInfp, actorFactory, sceneMsgCtrl, gameDataHolderBase);
 
-            if (!scene || !al::isEqualString(scene->mName.cstr(), "StageScene"))
-                return;
+    if (!scene || !al::isEqualString(scene->mName.cstr(), "StageScene"))
+        return;
 
-            // was stage init hook
-            Client::clearArrays();
+    // was stage init hook
+    Client::clearArrays();
 
-            Client::setSceneInfo(*initInfo, (StageScene*)scene);
+    Client::setSceneInfo(*initInfo, (StageScene*)scene);
 
-            Client::sendGameInfPacket(initInfo->actorSceneInfo.sceneObjHolder);
-        });
+    Client::sendGameInfPacket(initInfo->actorSceneInfo.sceneObjHolder);
+};
 
-HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampoline([](HakoniwaSequence* sequence) -> void {
+HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* sequence) -> void {
     StageScene* stageScene = (StageScene*)sequence->mCurrentScene;
 
     static bool isCameraActive = false;
@@ -221,7 +218,7 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
     auto* player = (PlayerActorHakoniwa*)al::tryGetPlayerActor(pHolder, 0);
 
     if (!playerBase) {
-        hakoniwaSequenceHook.orig(sequence);
+        orig(sequence);
         return;
     }
 
@@ -325,8 +322,8 @@ HkTrampoline<void, HakoniwaSequence*> hakoniwaSequenceHook = hk::hook::trampolin
         }
     }
 
-    hakoniwaSequenceHook.orig(sequence);
-});
+    orig(sequence);
+};
 
 // ===== PLAYER INFO UPDATE FUNCTION =====
 

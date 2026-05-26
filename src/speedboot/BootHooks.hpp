@@ -18,17 +18,16 @@ static CustomBootNerve nrvSpeedboot;
 
 static HakoniwaSequenceSpeedboot* speedbootState = nullptr;
 
-static HkTrampoline<void, BootLayout*, al::LayoutInitInfo&> prepareSpeedBootHook =
-    hk::hook::trampoline([](BootLayout* boot, al::LayoutInitInfo& initInfo) -> void {
-        al::NerveExecutor* e;
-        __asm("MOV %[result], X19" : [result] "=r"(e));  // Hacky but it works
+static HkTrampoline prepareSpeedBootHook = [](TrampolineStatic(), BootLayout* boot, al::LayoutInitInfo& initInfo) -> void {
+    al::NerveExecutor* e;
+    __asm("MOV %[result], X19" : [result] "=r"(e));  // Hacky but it works
 
-        if (al::isEqualString(typeid(*e).name(), typeid(HakoniwaSequence).name())) {
-            new SpeedbootLoad(((HakoniwaSequence*)e)->mResourceLoader, initInfo, ((HakoniwaSequence*)e));
-        }
+    if (al::isEqualString(typeid(*e).name(), typeid(HakoniwaSequence).name())) {
+        new SpeedbootLoad(((HakoniwaSequence*)e)->mResourceLoader, initInfo, ((HakoniwaSequence*)e));
+    }
 
-        prepareSpeedBootHook.orig(boot, initInfo);
-    });
+    orig(boot, initInfo);
+};
 
 static void hakoniwaSetNerveSetup(al::IUseNerve* useNerve, al::Nerve* nerve) {
     al::setNerve(useNerve, &nrvSpeedboot);
