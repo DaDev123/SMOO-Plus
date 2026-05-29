@@ -1,32 +1,36 @@
 #include "server/PlayerEventLog.h"
 
 #include <basis/seadTypes.h>
+#include <prim/seadSafeString.h>
 
-#include "../Imgui.hpp"
+#include "fsHelper.h"
 #include "imgui.h"
 #include "Library/Base/StringUtil.h"
-#include "Library/Message/IUseMessageSystem.h"
-#include "Library/Message/MessageSystem.h"
-#include "logger.hpp"
-#include "prim/seadSafeString.h"
+#include "Library/Yaml/ByamlIter.h"
+#include "Library/Yaml/ByamlUtil.h"
 
 PlayerEventLog* PlayerEventLog::sInstance = nullptr;
 
-PlayerEventLog::PlayerEventLog(al::MessageSystem* messageSystem) {
-    mMessageSystem = messageSystem;
-}
+PlayerEventLog::PlayerEventLog() {}
 
 PlayerEventLog::Entry::Entry() {
     mLife = 0;
 }
 
-PlayerEventLog::Entry::Entry(const char* player, Event event, sead::FixedSafeString<128> text) {
+PlayerEventLog::Entry::Entry(sead::FixedSafeString<16> player, Event event, sead::FixedSafeString<128> text) {
     mPlayer = player;
     mEvent = event;
     mText = text;
 }
 
-void PlayerEventLog::addEvent(const char* player, PlayerEventLog::Event event, sead::FixedSafeString<128> text) {
+void PlayerEventLog::addEvent(sead::SafeStringBase<char> player, PlayerEventLog::Event event, sead::SafeStringBase<char> text) {
+    if (event == shine) {
+        for (s32 i = 0; i < sNumEntries; i++) {
+            if (mLog->mEvent == shine && al::isEqualString(mLog[i].mText, text))
+                return;
+        }
+    }
+
     if (event == purple) {
         for (s32 i = 0; i < sNumEntries; i++) {
             if (mLog[i].mEvent == purple) {
@@ -155,4 +159,17 @@ void PlayerEventLog::update() {
 void PlayerEventLog::kill() {
     sInstance = nullptr;
     delete this;
+}
+
+sead::FixedSafeString<128> PlayerEventLog::getMessage(sead::SafeStringBase<char> stage, sead::SafeStringBase<char> label) {
+    FsHelper::LoadData data{.path = "content:/DebugData/USenMessageDB.byml"};
+    FsHelper::loadFileFromPath(data);
+
+    al::ByamlIter rootIter((u8*)data.buffer);
+    al::ByamlIter stageIter = rootIter.getIterByKey(stage.cstr());
+
+    sead::FixedSafeString<128> result;
+    al::tryGetByamlString(&result.mStringTop, stageIter, label.cstr());
+
+    return result;
 }

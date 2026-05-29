@@ -125,6 +125,13 @@ __attribute__((used)) static const char* toadetteMoons[] = {"Scenario_Ending",
                                                             "Other_Coin_3",
                                                             "Other_Jump",
                                                             "Other_CapThrow"};
+
+// same ids as GameDataFunction::getCurrentWorldIdNoDevelop
+__attribute__((used)) static const char* worldNames[] = {"Cap Kingdom",      "Cascade Kingdom", "Sand Kingdom",     "Wooded Kingdom",  "Lake Kingdom",
+                                                         "Cloud Kingdom",    "Lost Kingdom",    "Metro Kingdom",    "Seaside Kingdom", "Snow Kingdom",
+                                                         "Luncheon Kingdom", "Ruined Kingdom",  "Bowser's Kingdom", "Moon Kingdom",    "Mushroom Kingdom",
+                                                         "Dark Side",        "Darker Side"};
+
 struct Transform {
     sead::Vector3f* position;
     sead::Quatf* rotation;

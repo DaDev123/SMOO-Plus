@@ -9,8 +9,10 @@ namespace CheckpointMasterList {
 constexpr s32 sNumCheckpoints = 85;
 
 const struct CheckpointData {
-    const char* stageName = "\0";
-    const char* objId = "\0";
+    const char* stageName;
+    const char* objId;
+    const char* zoneName;
+    const char* zoneObjId;
 } list[] = {{"CapWorldHomeStage", "obj381"},
             {"CapWorldHomeStage", "obj2497"},
             {"WaterfallWorldHomeStage", "obj598"},
@@ -27,12 +29,12 @@ const struct CheckpointData {
             {"SandWorldHomeStage", "obj1595"},
             {"SandWorldHomeStage", "obj1597"},
             {"SandWorldHomeStage", "obj5575"},
-            {"LakeWorldHomeStage", "obj220(LakeWorldTownZone[obj324])"},
-            {"LakeWorldHomeStage", "obj583(LakeWorldTownZone[obj324])"},
-            {"LakeWorldHomeStage", "obj693(LakeWorldTownZone[obj324])"},
-            {"LakeWorldHomeStage", "obj839(LakeWorldTownZone[obj324])"},
-            {"LakeWorldHomeStage", "obj1323(LakeWorldTownZone[obj324])"},
-            {"LakeWorldHomeStage", "obj1389(LakeWorldTownZone[obj324])"},
+            {"LakeWorldHomeStage", "obj220(LakeWorldTownZone[obj324])", "LakeWorldTownZone", "obj220"},
+            {"LakeWorldHomeStage", "obj583(LakeWorldTownZone[obj324])", "LakeWorldTownZone", "obj583"},
+            {"LakeWorldHomeStage", "obj693(LakeWorldTownZone[obj324])", "LakeWorldTownZone", "obj693"},
+            {"LakeWorldHomeStage", "obj839(LakeWorldTownZone[obj324])", "LakeWorldTownZone", "obj839"},
+            {"LakeWorldHomeStage", "obj1323(LakeWorldTownZone[obj324])", "LakeWorldTownZone", "obj1323"},
+            {"LakeWorldHomeStage", "obj1389(LakeWorldTownZone[obj324])", "LakeWorldTownZone", "obj1389"},
             {"ForestWorldHomeStage", "obj447"},
             {"ForestWorldHomeStage", "obj1841"},
             {"ForestWorldHomeStage", "obj2821"},
@@ -64,10 +66,10 @@ const struct CheckpointData {
             {"SeaWorldHomeStage", "obj2264"},
             {"SeaWorldHomeStage", "obj2266"},
             {"SeaWorldHomeStage", "obj2621"},
-            {"SeaWorldHomeStage", "obj59(SeaWorldDamageBallZone[obj1070])"},
-            {"SeaWorldHomeStage", "obj182(SeaWorldLavaZone[obj1399])"},
-            {"SeaWorldHomeStage", "obj212(SeaWorldLighthouseZone[obj1402])"},
-            {"SeaWorldHomeStage", "obj153(SeaWorldUnderGlassZone[obj1898])"},
+            {"SeaWorldHomeStage", "obj59(SeaWorldDamageBallZone[obj1070])", "SeaWorldDamageBallZone", "obj59"},
+            {"SeaWorldHomeStage", "obj182(SeaWorldLavaZone[obj1399])", "SeaWorldLavaZone", "obj182"},
+            {"SeaWorldHomeStage", "obj212(SeaWorldLighthouseZone[obj1402])", "SeaWorldLighthouseZone", "obj212"},
+            {"SeaWorldHomeStage", "obj153(SeaWorldUnderGlassZone[obj1898])", "SeaWorldUnderGlassZone", "obj153"},
             {"LavaWorldHomeStage", "obj642"},
             {"LavaWorldHomeStage", "obj1061"},
             {"LavaWorldHomeStage", "obj2292"},
@@ -81,13 +83,13 @@ const struct CheckpointData {
             {"SkyWorldHomeStage", "obj1726"},
             {"SkyWorldHomeStage", "obj2028"},
             {"SkyWorldHomeStage", "obj2697"},
-            {"SkyWorldHomeStage", "obj1392(SkyWorldCastleZone[obj2160])"},
-            {"SkyWorldHomeStage", "obj1888(SkyWorldCastleZone[obj2160])"},
-            {"SkyWorldHomeStage", "obj1890(SkyWorldCastleZone[obj2160])"},
-            {"SkyWorldHomeStage", "obj1891(SkyWorldCastleZone[obj2160])"},
-            {"SkyWorldHomeStage", "obj2134(SkyWorldCastleZone[obj2160])"},
-            {"SkyWorldHomeStage", "obj6423(SkyWorldCastleZone[obj2160])"},
-            {"SkyWorldHomeStage", "obj545(SkyWorldWallZone[obj2161])"},
+            {"SkyWorldHomeStage", "obj1392(SkyWorldCastleZone[obj2160])", "SkyWorldCastleZone", "obj1392"},
+            {"SkyWorldHomeStage", "obj1888(SkyWorldCastleZone[obj2160])", "SkyWorldCastleZone", "obj1888"},
+            {"SkyWorldHomeStage", "obj1890(SkyWorldCastleZone[obj2160])", "SkyWorldCastleZone", "obj1890"},
+            {"SkyWorldHomeStage", "obj1891(SkyWorldCastleZone[obj2160])", "SkyWorldCastleZone", "obj1891"},
+            {"SkyWorldHomeStage", "obj2134(SkyWorldCastleZone[obj2160])", "SkyWorldCastleZone", "obj2134"},
+            {"SkyWorldHomeStage", "obj6423(SkyWorldCastleZone[obj2160])", "SkyWorldCastleZone", "obj6423"},
+            {"SkyWorldHomeStage", "obj545(SkyWorldWallZone[obj2161])", "SkyWorldWallZone", "obj545"},
             {"MoonWorldHomeStage", "obj127"},
             {"MoonWorldHomeStage", "obj345"},
             {"MoonWorldHomeStage", "obj1006"},

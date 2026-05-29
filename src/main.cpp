@@ -68,7 +68,6 @@
 #include "layouts/ConnectionStatus.h"
 #include "layouts/SpeedrunIcon.h"
 #include "Library/Base/StringUtil.h"
-#include "Library/Message/MessageHolder.h"
 #include "logger.hpp"
 #include "MapObj/CheckpointFlag.h"
 #include "prim/seadSafeString.h"
@@ -149,12 +148,7 @@ HkTrampoline sendShinePacketHook = [](TrampolineStatic(), GameDataHolderWriter w
                 Client::sendShineCollectPacket(curInfo->uniqueId);
                 if (PlayerEventLog::sInstance) {
                     al::StringTmp<128> messageLabel("ScenarioName_%s", curInfo->objId.cstr());
-                    Logger::log("messageLabel: %s\n", messageLabel.cstr());
-                    sead::FixedSafeString<128> shineName;
-                    sead::StringUtil::convertUtf16ToUtf8(
-                        shineName.mBuffer, 128, al::getStageMessageString(PlayerEventLog::sInstance, curInfo->stageName.cstr(), messageLabel.cstr()), 128);
-                    Logger::log("shineName: %s\n", shineName.cstr());
-                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::shine, shineName);
+                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::shine, PlayerEventLog::sInstance->getMessage(curInfo->stageName, messageLabel));
                 }
             }
         }
@@ -168,11 +162,7 @@ HkTrampoline sendShinePacketHook2 = [](TrampolineStatic(), GameDataFile* file, c
             if (strcmp(toadetteMoons[i], name) == 0) {
                 Client::sendShineCollectPacket(2000 + i);
                 if (PlayerEventLog::sInstance) {
-                    sead::FixedSafeString<128> achievementName;
-                    sead::StringUtil::convertUtf16ToUtf8(achievementName.mBuffer, 128,
-                                                         al::getSystemMessageString(PlayerEventLog::sInstance, "AchievementName", name), 128);
-                    Logger::log("achievementName: %s\n", achievementName.cstr());
-                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::shine, achievementName);
+                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::shine, PlayerEventLog::sInstance->getMessage("AchievementName", name));
                 }
             }
         }
@@ -186,12 +176,7 @@ HkTrampoline sendCoinCollectCollectPacketHook = [](TrampolineStatic(), GameDataF
     placeID->makeString(&placeIDString);
     Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(), file->getStageNameCurrent());
     if (PlayerEventLog::sInstance) {
-        al::StringTmp<128> messageLabel("WorldName_%s", GameDataFunction::getWorldDevelopNameCurrent(file->getGameDataHolder()));
-        sead::FixedSafeString<128> kingdomName;
-        sead::StringUtil::convertUtf16ToUtf8(kingdomName.mBuffer, 128,
-                                                al::getSystemMessageString(PlayerEventLog::sInstance, "StageName", messageLabel.cstr()), 128);
-        Logger::log("kingdomName: %s\n", kingdomName.cstr());
-        PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::purple, kingdomName);
+        PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::purple, worldNames[file->getCurrentWorldIdNoDevelop()]);
     }
     orig(file, placeID);
 };
@@ -200,10 +185,22 @@ HkTrampoline sendCheckpointGetPacketHook = [](TrampolineStatic(), CheckpointFlag
     if (al::isFirstStep(checkpoint)) {
         Client::sendCheckpointGetPacket(al::makeStringPlacementId(checkpoint->getPlacementId()).cstr());
         if (PlayerEventLog::sInstance) {
-            sead::FixedSafeString<128> checkpointName;
-            sead::StringUtil::convertUtf16ToUtf8(checkpointName.mBuffer, 128, checkpoint->mFlagName, 128);
-            Logger::log("checkpointName: %s\n", checkpointName.cstr());
-            PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::checkpoint, checkpointName);
+            al::StringTmp<128> placementId = al::makeStringPlacementId(checkpoint->getPlacementId());
+            CheckpointMasterList::CheckpointData data = CheckpointMasterList::getCheckpointDataFromMasterList(placementId.cstr());
+
+            if (data.stageName) {
+                Logger::log("stageName: %s objId: %s\n", data.stageName, data.objId);
+                if (data.zoneName) {
+                    Logger::log("zoneName: %s zoneObjId: %s\n", data.zoneName, data.zoneObjId);
+                    al::StringTmp<128> label("Checkpoint_%s", data.zoneObjId);
+                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::checkpoint, PlayerEventLog::sInstance->getMessage(data.zoneName, label.cstr()));
+                } else {
+                    al::StringTmp<128> label("Checkpoint_%s", data.objId);
+                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::checkpoint, PlayerEventLog::sInstance->getMessage(data.stageName, label.cstr()));
+                }
+            } else {
+                PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::checkpoint, "NULL");
+            }
         }
     }
     orig(checkpoint);
@@ -223,7 +220,7 @@ HkTrampoline hakoniwaSequenceInitHook = [](TrampolineStatic(), HakoniwaSequence*
 
     ConnectionStatus::sInstance = new ConnectionStatus("Status", lytInfo);
     SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", lytInfo);
-    PlayerEventLog::sInstance = new PlayerEventLog(lytInfo.getMessageSystem());
+    PlayerEventLog::sInstance = new PlayerEventLog();
 };
 
 HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* initInfo, al::Scene* scene, al::PlacementInfo* placementInfo,

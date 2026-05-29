@@ -1,20 +1,17 @@
 #pragma once
 
 #include <basis/seadTypes.h>
-
-#include "Library/Message/IUseMessageSystem.h"
-#include "Library/Message/MessageSystem.h"
-#include "prim/seadSafeString.h"
+#include <prim/seadSafeString.h>
 
 constexpr s32 sNumEntries = 8;
 
-class PlayerEventLog : public al::IUseMessageSystem {
+class PlayerEventLog {
 public:
     enum Event { connect, disconnect, shine, purple, checkpoint };
 
     struct Entry {
         Entry();
-        Entry(const char* player, Event event, sead::FixedSafeString<128> text);
+        Entry(sead::FixedSafeString<16> player, Event event, sead::FixedSafeString<128> text);
 
         sead::FixedSafeString<16> mPlayer;
         Event mEvent = shine;
@@ -23,18 +20,18 @@ public:
         s32 mLife = 300;
     };
 
-    PlayerEventLog(al::MessageSystem* messageSystem);
+    PlayerEventLog();
 
-    void addEvent(const char* player, Event event, sead::FixedSafeString<128> text);
+    void addEvent(sead::SafeStringBase<char> player, Event event, sead::SafeStringBase<char> text);
     void update();
     void kill();
 
-    const al::MessageSystem* getMessageSystem() const override { return mMessageSystem; }
+    // while the first argument is "stage", zone names and "AchievementName" are also valid values and should be used instead of a stage when applicable
+    sead::FixedSafeString<128> getMessage(sead::SafeStringBase<char> stage, sead::SafeStringBase<char> label);
 
 public:
     static PlayerEventLog* sInstance;
 
 private:
     Entry mLog[8];
-    al::MessageSystem* mMessageSystem = nullptr;
 };
