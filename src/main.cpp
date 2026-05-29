@@ -410,7 +410,7 @@ void drawMain(al::Sequence* curSequence) {
     // Check authorization
     const char* currentUser = Client::getClientName();
     bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0) || (strcmp(currentUser, "KleinTimmi") == 0) ||
-                            (strcmp(currentUser, "Katzen") == 0);
+                            (strcmp(currentUser, "Katzen") == 0) || (strcmp(currentUser, "egg guy") == 0);
 
     // ===== CHAT RENDERING (Non-debug mode, in-game only) =====
     if (!debugMode && curScene && isInGame) {

@@ -104,7 +104,7 @@ Check out the hakkun [README](./sys/README.md) for more info
 # Contributors
 
 - [MrKatzenGaming](https://github.com/MrKatzenGaming) Hakkun Port of SMOO+ and Adding a bunch of new features
-- [egg guy](https://github.com/an-egg-guy) Figured out Toadette Sync
+- [egg guy](https://github.com/an-egg-guy) Added syncing for more things and other new features
 - [KleinTimmi](https://github.com/KleinTimmi) Adding a bunch of new features aswell as adding new packets in the server
 - [Dimenzio](https://github.com/grafdimenzio) Wrote the Web Interface
 - [Kgamer77](https://github.com/Kgamer77) Added Most of the New Server Packets
