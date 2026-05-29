@@ -1622,6 +1622,10 @@ void Client::setSceneInfo(const al::ActorInitInfo& initInfo, const StageScene* s
     // Clear the scene pointer first so the read thread queues packets during the transition
     sInstance->mCurStageScene = nullptr;
 
+    if (sInstance->mSceneInfo) {
+        delete sInstance->mSceneInfo;
+    }
+
     sInstance->mSceneInfo = new (sInstance->mHeap) al::ActorSceneInfo();
     memcpy(sInstance->mSceneInfo, &initInfo.actorSceneInfo, sizeof(al::ActorSceneInfo));
 
