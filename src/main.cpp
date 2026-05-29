@@ -183,9 +183,9 @@ HkTrampoline sendCoinCollectCollectPacketHook = [](TrampolineStatic(), GameDataF
 
 HkTrampoline sendCheckpointGetPacketHook = [](TrampolineStatic(), CheckpointFlag* checkpoint) -> void {
     if (al::isFirstStep(checkpoint)) {
-        Client::sendCheckpointGetPacket(al::makeStringPlacementId(checkpoint->getPlacementId()).cstr());
+        al::StringTmp<128> placementId = al::makeStringPlacementId(checkpoint->getPlacementId());
+        Client::sendCheckpointGetPacket(placementId.cstr());
         if (PlayerEventLog::sInstance) {
-            al::StringTmp<128> placementId = al::makeStringPlacementId(checkpoint->getPlacementId());
             CheckpointMasterList::CheckpointData data = CheckpointMasterList::getCheckpointDataFromMasterList(placementId.cstr());
 
             if (data.stageName) {
@@ -335,6 +335,10 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
                     debugPuppetIndex = 0;
                 }
             }
+        }
+        if (al::isPadTriggerUp(-1)) {
+            if (PlayerEventLog::sInstance)
+                PlayerEventLog::sInstance->toggleHidden();
         }
     } else if (al::isPadHoldL()) {
         if (al::isPadTriggerUp()) {

@@ -1383,6 +1383,11 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
         return;
     }
 
+    if (PlayerEventLog::sInstance) {
+        PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
+        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::purple, worldNames[packet->worldID]);
+    }
+
     if (!sInstance->mCurStageScene) {
         // Scene not ready — queue for later processing in update()
         if (sInstance->mPendingCoinCollectCount < sMaxPendingCoinCollects) {
@@ -1398,11 +1403,6 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
     }
 
     applyOneCoinCollect(packet->placeID, packet->worldID, packet->stage);
-
-    if (PlayerEventLog::sInstance) {
-        PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
-        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::purple, worldNames[packet->worldID]);
-    }
 }
 
 /**
@@ -1441,6 +1441,18 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
     if (!sInstance)
         return;
 
+    if (PlayerEventLog::sInstance) {
+        PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
+        CheckpointMasterList::CheckpointData data = CheckpointMasterList::getCheckpointDataFromMasterList(packet->objId);
+        if (data.zoneName) {
+            al::StringTmp<128> label("Checkpoint_%s", data.zoneObjId);
+            PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::checkpoint, PlayerEventLog::sInstance->getMessage(data.zoneName, label));
+        } else {
+            al::StringTmp<128> label("Checkpoint_%s", data.objId);
+            PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::checkpoint, PlayerEventLog::sInstance->getMessage(data.stageName, label));
+        }
+    }
+
     if (!sInstance->mCurStageScene) {
         if (sInstance->mPendingCheckpointCount < sMaxPendingCheckpoints) {
             PendingCheckpoint& pending = sInstance->mPendingCheckpoints[sInstance->mPendingCheckpointCount++];
@@ -1453,14 +1465,6 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
     }
 
     getOneCheckpoint(packet->objId);
-
-    if (PlayerEventLog::sInstance) {
-        PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
-        al::StringTmp<128> label("Checkpoint_%s", packet->objId);
-        CheckpointMasterList::CheckpointData checkpointData = CheckpointMasterList::getCheckpointDataFromMasterList(packet->objId);
-        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::checkpoint,
-                                            PlayerEventLog::sInstance->getMessage(checkpointData.stageName, label));
-    }
 }
 
 /**
@@ -1618,7 +1622,7 @@ void Client::setSceneInfo(const al::ActorInitInfo& initInfo, const StageScene* s
     // Clear the scene pointer first so the read thread queues packets during the transition
     sInstance->mCurStageScene = nullptr;
 
-    sInstance->mSceneInfo = new al::ActorSceneInfo();
+    sInstance->mSceneInfo = new (sInstance->mHeap) al::ActorSceneInfo();
     memcpy(sInstance->mSceneInfo, &initInfo.actorSceneInfo, sizeof(al::ActorSceneInfo));
 
     sInstance->mCurStageScene = stageScene;

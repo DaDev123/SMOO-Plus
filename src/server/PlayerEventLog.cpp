@@ -4,10 +4,12 @@
 #include <prim/seadSafeString.h>
 
 #include "fsHelper.h"
+#include "heap/seadHeapMgr.h"
 #include "imgui.h"
 #include "Library/Base/StringUtil.h"
 #include "Library/Yaml/ByamlIter.h"
 #include "Library/Yaml/ByamlUtil.h"
+#include "server/Client.hpp"
 
 PlayerEventLog* PlayerEventLog::sInstance = nullptr;
 
@@ -55,121 +57,130 @@ void PlayerEventLog::addEvent(sead::SafeStringBase<char> player, PlayerEventLog:
 }
 
 void PlayerEventLog::update() {
-    f32 width = ImGui::GetIO().DisplaySize.x;
-    f32 height = ImGui::GetIO().DisplaySize.y;
-    ImGuiStyle& style = ImGui::GetStyle();
-    ImFont* font = ImGui::GetFont();
-    f32 charWidth = font->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, 0.0f, "X").x;
-    f32 lineHeight = ImGui::GetTextLineHeightWithSpacing();
-    f32 windowWidth = (charWidth * 128.0f) + (style.WindowPadding.x * 2.0f) + (style.FramePadding.x * 2.0f);
-    f32 windowHeight = (lineHeight * 8.0f) + (style.WindowPadding.y * 2.0f);  // + ImGui::GetFrameHeight();
-    ImGui::SetNextWindowPos(ImVec2(0, (height - windowHeight) * 0.5f), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
-    ImGui::Begin("Player Event Log", nullptr,
-                 ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
-                     ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings);
+    if (!mIsHidden) {
+        f32 width = ImGui::GetIO().DisplaySize.x;
+        f32 height = ImGui::GetIO().DisplaySize.y;
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImFont* font = ImGui::GetFont();
+        f32 charWidth = font->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, 0.0f, "X").x;
+        f32 lineHeight = ImGui::GetTextLineHeightWithSpacing();
+        f32 windowWidth = (charWidth * 128.0f) + (style.WindowPadding.x * 2.0f) + (style.FramePadding.x * 2.0f);
+        f32 windowHeight = (lineHeight * 8.0f) + (style.WindowPadding.y * 2.0f);  // + ImGui::GetFrameHeight();
+        ImGui::SetNextWindowPos(ImVec2(0, (height - windowHeight) * 0.5f), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
+        ImGui::Begin("Player Event Log", nullptr,
+                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
+                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings);
 
-    for (s32 i = 0; i < sNumEntries; i++) {
-        if (mLog[i].mLife > 0) {
-            ImVec2 originalCursor = ImGui::GetCursorPos();
-            switch (mLog[i].mEvent) {
-            case connect:
-                ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                ImGui::Text("%s connected", mLog[i].mPlayer.cstr());
-                ImGui::PopStyleColor();
+        for (s32 i = 0; i < sNumEntries; i++) {
+            if (mLog[i].mLife > 0) {
+                ImVec2 originalCursor = ImGui::GetCursorPos();
+                switch (mLog[i].mEvent) {
+                case connect:
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+                    ImGui::Text("%s connected", mLog[i].mPlayer.cstr());
+                    ImGui::PopStyleColor();
 
-                ImGui::SetCursorPos(originalCursor);
-                ImGui::Text("%s connected", mLog[i].mPlayer.cstr());
-                break;
-            case disconnect:
-                ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                ImGui::Text("%s disconnected", mLog[i].mPlayer.cstr());
-                ImGui::PopStyleColor();
+                    ImGui::SetCursorPos(originalCursor);
+                    ImGui::Text("%s connected", mLog[i].mPlayer.cstr());
+                    break;
+                case disconnect:
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+                    ImGui::Text("%s disconnected", mLog[i].mPlayer.cstr());
+                    ImGui::PopStyleColor();
 
-                ImGui::SetCursorPos(originalCursor);
-                ImGui::Text("%s disconnected", mLog[i].mPlayer.cstr());
-                break;
-            case shine:
-                ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                ImGui::Text("%s got the moon %s", mLog[i].mPlayer.cstr(), mLog[i].mText.cstr());
-                ImGui::PopStyleColor();
+                    ImGui::SetCursorPos(originalCursor);
+                    ImGui::Text("%s disconnected", mLog[i].mPlayer.cstr());
+                    break;
+                case shine:
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+                    ImGui::Text("%s got the moon %s", mLog[i].mPlayer.cstr(), mLog[i].mText.cstr());
+                    ImGui::PopStyleColor();
 
-                ImGui::SetCursorPos(originalCursor);
-                ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::SetCursorPos(originalCursor);
+                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
 
-                ImGui::SameLine(0.0f, 0.0f);
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
-                ImGui::Text("got the moon ");
-                ImGui::PopStyleColor();
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
+                    ImGui::Text("got the moon ");
+                    ImGui::PopStyleColor();
 
-                ImGui::SameLine(0.0f, 0.0f);
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.9f, 0.0f, 1.0f));
-                ImGui::Text("%s", mLog[i].mText.cstr());
-                ImGui::PopStyleColor();
-                break;
-            case purple:
-                ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                ImGui::Text("%s got %d %s purples", mLog[i].mPlayer.cstr(), mLog[i].mNumPurples, mLog[i].mText.cstr());
-                ImGui::PopStyleColor();
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.9f, 0.0f, 1.0f));
+                    ImGui::Text("%s", mLog[i].mText.cstr());
+                    ImGui::PopStyleColor();
+                    break;
+                case purple:
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+                    ImGui::Text("%s got %d %s purples", mLog[i].mPlayer.cstr(), mLog[i].mNumPurples, mLog[i].mText.cstr());
+                    ImGui::PopStyleColor();
 
-                ImGui::SetCursorPos(originalCursor);
-                ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::SetCursorPos(originalCursor);
+                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
 
-                ImGui::SameLine(0.0f, 0.0f);
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
-                ImGui::Text("got ");
-                ImGui::PopStyleColor();
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
+                    ImGui::Text("got ");
+                    ImGui::PopStyleColor();
 
-                ImGui::SameLine(0.0f, 0.0f);
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.85f, 0.0f, 1.0f, 1.0f));
-                ImGui::Text("%d %s purples", mLog[i].mNumPurples, mLog[i].mText.cstr());
-                ImGui::PopStyleColor();
-                break;
-            case checkpoint:
-                ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                ImGui::Text("%s got the checkpoint %s", mLog[i].mPlayer.cstr(), mLog[i].mText.cstr());
-                ImGui::PopStyleColor();
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.85f, 0.0f, 1.0f, 1.0f));
+                    ImGui::Text("%d %s purples", mLog[i].mNumPurples, mLog[i].mText.cstr());
+                    ImGui::PopStyleColor();
+                    break;
+                case checkpoint:
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+                    ImGui::Text("%s got the checkpoint %s", mLog[i].mPlayer.cstr(), mLog[i].mText.cstr());
+                    ImGui::PopStyleColor();
 
-                ImGui::SetCursorPos(originalCursor);
-                ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::SetCursorPos(originalCursor);
+                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
 
-                ImGui::SameLine(0.0f, 0.0f);
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
-                ImGui::Text("got the checkpoint ");
-                ImGui::PopStyleColor();
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
+                    ImGui::Text("got the checkpoint ");
+                    ImGui::PopStyleColor();
 
-                ImGui::SameLine(0.0f, 0.0f);
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
-                ImGui::Text("%s", mLog[i].mText.cstr());
-                ImGui::PopStyleColor();
-                break;
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+                    ImGui::Text("%s", mLog[i].mText.cstr());
+                    ImGui::PopStyleColor();
+                    break;
+                }
+                // mLog[i].mLife--;
             }
-            // mLog[i].mLife--;
         }
+        ImGui::End();
     }
-
-    ImGui::End();
-}
-
-void PlayerEventLog::kill() {
-    sInstance = nullptr;
-    delete this;
 }
 
 sead::FixedSafeString<128> PlayerEventLog::getMessage(sead::SafeStringBase<char> stage, sead::SafeStringBase<char> label) {
+    if (Client::sInstance) {
+        sead::Heap* clientHeap = Client::sInstance->getClientHeap();
+        sead::ScopedCurrentHeapSetter heapSetter(clientHeap);
+    }
+
+    sead::FixedSafeString<128> result;
+
     FsHelper::LoadData data{.path = "content:/DebugData/USenMessageDB.byml"};
     FsHelper::loadFileFromPath(data);
+
+    if (!data.buffer) {
+        result.format("NULL");
+        return result;
+    }
 
     al::ByamlIter rootIter((u8*)data.buffer);
     al::ByamlIter stageIter = rootIter.getIterByKey(stage.cstr());
 
-    sead::FixedSafeString<128> result;
     al::tryGetByamlString(&result.mStringTop, stageIter, label.cstr());
+
+    free(data.buffer);
 
     return result;
 }
