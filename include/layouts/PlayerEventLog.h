@@ -3,10 +3,6 @@
 #include <basis/seadTypes.h>
 #include <prim/seadSafeString.h>
 
-namespace al {
-class AsyncFunctorThread;
-}
-
 constexpr s32 sNumEntries = 8;
 
 class PlayerEventLog {
@@ -41,7 +37,4 @@ public:
 private:
     Entry mLog[8];
     bool mIsHidden = false;
-    al::AsyncFunctorThread* mThread = nullptr;
 };
-
-typedef void (PlayerEventLog::*LogThreadFunc)();
