@@ -31,8 +31,12 @@
 #include <sys/socket.h>
 
 #include "account.h"
+#include "CheckpointMasterList.h"
 #include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
+#include "layouts/ConnectionStatus.h"
+#include "layouts/PlayerEventLog.h"
+#include "layouts/SpeedrunIcon.h"
 #include "Library/Base/StringUtil.h"
 #include "Library/Layout/LayoutActorUtil.h"
 #include "Library/LiveActor/LiveActor.h"
@@ -40,8 +44,6 @@
 #include "packets/Packet.h"
 #include "prim/seadSafeString.h"
 #include "puppets/PuppetInfo.h"
-#include "server/CheckpointMasterList.h"
-#include "server/PlayerEventLog.h"
 #include "server/SocketClient.hpp"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
@@ -118,9 +120,25 @@ Client::Client() {
  * @param initInfo init info used to create layouts used by client
  */
 void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor holder) {
+    if (mUIMessage)
+        delete mUIMessage;
     mUIMessage = new (mHeap) al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
 
+    if (mConnectStatus)
+        delete mConnectStatus;
     mConnectStatus = new (mHeap) al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
+
+    if (ConnectionStatus::sInstance)
+        delete ConnectionStatus::sInstance;
+    ConnectionStatus::sInstance = new (mHeap) ConnectionStatus("Status", initInfo);
+
+    if (SpeedrunIcon::sInstance)
+        delete SpeedrunIcon::sInstance;
+    SpeedrunIcon::sInstance = new (mHeap) SpeedrunIcon("SpeedrunIcon", initInfo);
+
+    if (PlayerEventLog::sInstance)
+        delete PlayerEventLog::sInstance;
+    PlayerEventLog::sInstance = new (mHeap) PlayerEventLog();
 
     mUIMessage->setTxtMessage(u"Connecting to Server.");
     mUIMessage->setTxtMessageConfirm(u"Failed to Connect!");
@@ -965,13 +983,13 @@ void Client::updateShineInfo(ShineCollect* packet) {
         if (PlayerEventLog::sInstance) {
             if (packet->shineId >= 2000 && packet->shineId <= 2060) {
                 PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::shine,
-                                                    PlayerEventLog::sInstance->getMessage("AchievementName", toadetteMoons[packet->shineId - 2000]));
+                                                    PlayerEventLog::getAchievementMessage(toadetteMoons[packet->shineId - 2000]));
                 return;
             }
 
             GameDataFile::HintInfo* hintInfo = CustomGameDataFunction::getHintInfoByUniqueID(getStageScene(), packet->shineId);
-            al::StringTmp<128> label("ScenarioName_%s", hintInfo->objId.cstr());
-            PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::shine, PlayerEventLog::sInstance->getMessage(hintInfo->stageName, label));
+            PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::shine,
+                                                PlayerEventLog::getShineMessage(hintInfo->stageName, hintInfo->objId));
         }
     }
 }
@@ -1443,14 +1461,7 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
 
     if (PlayerEventLog::sInstance) {
         PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
-        CheckpointMasterList::CheckpointData data = CheckpointMasterList::getCheckpointDataFromMasterList(packet->objId);
-        if (data.zoneName) {
-            al::StringTmp<128> label("Checkpoint_%s", data.zoneObjId);
-            PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::checkpoint, PlayerEventLog::sInstance->getMessage(data.zoneName, label));
-        } else {
-            al::StringTmp<128> label("Checkpoint_%s", data.objId);
-            PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::checkpoint, PlayerEventLog::sInstance->getMessage(data.stageName, label));
-        }
+        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::checkpoint, PlayerEventLog::getCheckpointMessage(packet->objId));
     }
 
     if (!sInstance->mCurStageScene) {

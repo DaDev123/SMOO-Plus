@@ -29,6 +29,7 @@
 #include <cstring>
 #include <sys/types.h>
 
+#include "CheckpointMasterList.h"
 #include "Imgui.hpp"
 #include "Item/CoinCollect.h"
 #include "layouts/ConnectionStatus.h"
@@ -40,7 +41,6 @@
 #include "Scene/StageScene.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "Sequence/HakoniwaSequence.h"
-#include "server/CheckpointMasterList.h"
 #include "server/Client.hpp"
 #include "System/GameDataFile.h"
 #include "System/GameDataFunction.h"

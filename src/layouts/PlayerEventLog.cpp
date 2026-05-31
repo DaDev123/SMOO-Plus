@@ -1,15 +1,11 @@
-#include "server/PlayerEventLog.h"
+#include "layouts/PlayerEventLog.h"
 
 #include <basis/seadTypes.h>
 #include <prim/seadSafeString.h>
 
-#include "fsHelper.h"
-#include "heap/seadHeapMgr.h"
 #include "imgui.h"
 #include "Library/Base/StringUtil.h"
-#include "Library/Yaml/ByamlIter.h"
-#include "Library/Yaml/ByamlUtil.h"
-#include "server/Client.hpp"
+#include "MessageMasterList.h"
 
 PlayerEventLog* PlayerEventLog::sInstance = nullptr;
 
@@ -159,28 +155,29 @@ void PlayerEventLog::update() {
     }
 }
 
-sead::FixedSafeString<128> PlayerEventLog::getMessage(sead::SafeStringBase<char> stage, sead::SafeStringBase<char> label) {
-    if (Client::sInstance) {
-        sead::Heap* clientHeap = Client::sInstance->getClientHeap();
-        sead::ScopedCurrentHeapSetter heapSetter(clientHeap);
+const char* PlayerEventLog::getShineMessage(sead::SafeStringBase<char> stage, sead::SafeStringBase<char> objId) {
+    for (MessageMasterList::MessageData data : MessageMasterList::shineList) {
+        if (al::isEqualString(stage, data.stage) && al::isEqualString(objId, data.objId)) {
+            return data.text;
+        }
     }
+    return "NULL";
+}
 
-    sead::FixedSafeString<128> result;
-
-    FsHelper::LoadData data{.path = "content:/DebugData/USenMessageDB.byml"};
-    FsHelper::loadFileFromPath(data);
-
-    if (!data.buffer) {
-        result.format("NULL");
-        return result;
+const char* PlayerEventLog::getCheckpointMessage(sead::SafeStringBase<char> objId) {
+    for (MessageMasterList::MessageData data : MessageMasterList::checkpointList) {
+        if (al::isEqualString(objId, data.objId)) {
+            return data.text;
+        }
     }
+    return "NULL";
+}
 
-    al::ByamlIter rootIter((u8*)data.buffer);
-    al::ByamlIter stageIter = rootIter.getIterByKey(stage.cstr());
-
-    al::tryGetByamlString(&result.mStringTop, stageIter, label.cstr());
-
-    free(data.buffer);
-
-    return result;
+const char* PlayerEventLog::getAchievementMessage(sead::SafeStringBase<char> label) {
+    for (MessageMasterList::AchievementMessageData data : MessageMasterList::achievementList) {
+        if (al::isEqualString(label, data.label)) {
+            return data.text;
+        }
+    }
+    return "NULL";
 }

@@ -7,11 +7,11 @@
 #include <prim/seadSafeString.h>
 #include <stream/seadStream.h>
 
+#include "CheckpointMasterList.h"
 #include "Library/Base/StringUtil.h"
 #include "Library/Placement/PlacementId.h"
 #include "Npc/SessionEventProgress.h"
 #include "Npc/SessionMusicianType.h"
-#include "server/CheckpointMasterList.h"
 #include "System/UniqObjInfo.h"
 #include "Util/ScenePrepoFunction.h"
 

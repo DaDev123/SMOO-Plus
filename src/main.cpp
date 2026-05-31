@@ -65,7 +65,7 @@
 #include "hooks.hpp"
 #include "imgui.h"
 #include "Imgui.hpp"
-#include "layouts/ConnectionStatus.h"
+#include "layouts/PlayerEventLog.h"
 #include "layouts/SpeedrunIcon.h"
 #include "Library/Base/StringUtil.h"
 #include "logger.hpp"
@@ -76,7 +76,6 @@
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
-#include "server/PlayerEventLog.h"
 #include "speedboot/BootHooks.hpp"
 #include "System/GameDataHolderWriter.h"
 #include "System/GameSystem.h"
@@ -147,8 +146,7 @@ HkTrampoline sendShinePacketHook = [](TrampolineStatic(), GameDataHolderWriter w
             if (info->mStageName == curInfo->stageName && info->mObjId == curInfo->objId) {
                 Client::sendShineCollectPacket(curInfo->uniqueId);
                 if (PlayerEventLog::sInstance) {
-                    al::StringTmp<128> messageLabel("ScenarioName_%s", curInfo->objId.cstr());
-                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::shine, PlayerEventLog::sInstance->getMessage(curInfo->stageName, messageLabel));
+                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::shine, PlayerEventLog::getShineMessage(curInfo->stageName, curInfo->objId));
                 }
             }
         }
@@ -162,7 +160,7 @@ HkTrampoline sendShinePacketHook2 = [](TrampolineStatic(), GameDataFile* file, c
             if (strcmp(toadetteMoons[i], name) == 0) {
                 Client::sendShineCollectPacket(2000 + i);
                 if (PlayerEventLog::sInstance) {
-                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::shine, PlayerEventLog::sInstance->getMessage("AchievementName", name));
+                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::shine, PlayerEventLog::sInstance->getAchievementMessage(name));
                 }
             }
         }
@@ -186,21 +184,7 @@ HkTrampoline sendCheckpointGetPacketHook = [](TrampolineStatic(), CheckpointFlag
         al::StringTmp<128> placementId = al::makeStringPlacementId(checkpoint->getPlacementId());
         Client::sendCheckpointGetPacket(placementId.cstr());
         if (PlayerEventLog::sInstance) {
-            CheckpointMasterList::CheckpointData data = CheckpointMasterList::getCheckpointDataFromMasterList(placementId.cstr());
-
-            if (data.stageName) {
-                Logger::log("stageName: %s objId: %s\n", data.stageName, data.objId);
-                if (data.zoneName) {
-                    Logger::log("zoneName: %s zoneObjId: %s\n", data.zoneName, data.zoneObjId);
-                    al::StringTmp<128> label("Checkpoint_%s", data.zoneObjId);
-                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::checkpoint, PlayerEventLog::sInstance->getMessage(data.zoneName, label.cstr()));
-                } else {
-                    al::StringTmp<128> label("Checkpoint_%s", data.objId);
-                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::checkpoint, PlayerEventLog::sInstance->getMessage(data.stageName, label.cstr()));
-                }
-            } else {
-                PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::checkpoint, "NULL");
-            }
+            PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::checkpoint, PlayerEventLog::getCheckpointMessage(placementId));
         }
     }
     orig(checkpoint);
@@ -217,16 +201,12 @@ HkTrampoline hakoniwaSequenceInitHook = [](TrampolineStatic(), HakoniwaSequence*
     Client::instance()->init(lytInfo, sequence->mGameDataHolderAccessor);
 
     speedrun::createHooks();
-
-    ConnectionStatus::sInstance = new ConnectionStatus("Status", lytInfo);
-    SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", lytInfo);
-    PlayerEventLog::sInstance = new PlayerEventLog();
 };
 
 HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* initInfo, al::Scene* scene, al::PlacementInfo* placementInfo,
-                                        al::LayoutInitInfo* layoutInfp, al::ActorFactory* actorFactory, al::SceneMsgCtrl* sceneMsgCtrl,
+                                        al::LayoutInitInfo* layoutInfo, al::ActorFactory* actorFactory, al::SceneMsgCtrl* sceneMsgCtrl,
                                         al::GameDataHolderBase* gameDataHolderBase) -> void {
-    orig(initInfo, scene, placementInfo, layoutInfp, actorFactory, sceneMsgCtrl, gameDataHolderBase);
+    orig(initInfo, scene, placementInfo, layoutInfo, actorFactory, sceneMsgCtrl, gameDataHolderBase);
 
     if (!scene || !al::isEqualString(scene->mName.cstr(), "StageScene"))
         return;

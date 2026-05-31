@@ -47,7 +47,7 @@ format:
 	find ./lib/custom -name "*.*" | xargs clang-format -i || true
 
 clean:
-	yes | rm -r build || true
+	yes | rm -r build package || true
 
 file_structure:
 	@echo -e ""

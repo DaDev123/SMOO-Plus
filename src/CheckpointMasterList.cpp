@@ -1,4 +1,4 @@
-#include "server/CheckpointMasterList.h"
+#include "CheckpointMasterList.h"
 
 #include "Library/Base/StringUtil.h"
 
