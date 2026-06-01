@@ -83,6 +83,6 @@ void SpeedrunIcon::updateSpeedrunText() {
 void SpeedrunIcon::updateShineCount() {
     if (getStageScene())
         al::setPaneStringFormat(
-            this, "ShineCount", "%d",
+            this, "ShineCount", "%03d",
             GameDataHolderAccessor(getStageScene())->getGameDataFile()->getTotalUniqueShineNum());
 }

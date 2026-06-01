@@ -247,6 +247,9 @@ public:
 
     bool mIsAllowReconnect = false;
 
+    // ===== MEMORY MANAGEMENT =====
+    static sead::ExpHeap* mHeap;
+
 private:
     // ===== CORE FUNCTIONALITY =====
     void readFunc();
@@ -345,9 +348,6 @@ private:
     sead::FixedSafeString<0x40> mStageName;
     GameDataHolderAccessor mHolder;
     u8 mScenario = 0;
-
-    // ===== MEMORY MANAGEMENT =====
-    sead::ExpHeap* mHeap = nullptr;
 
     // ===== PUPPET MANAGEMENT MEMBERS =====
     int maxPuppets = 9;

@@ -35,7 +35,6 @@
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Scene/SceneUtil.h"
 #include "al/Library/Screen/ScreenFunction.h"
-#include "al/Project/Memory/Util.h"
 
 #include "agl/common/aglDrawContext.h"
 
@@ -108,7 +107,8 @@ HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> 
     Logger::createInstance();
 #endif
 
-    Client::createInstance(al::getCurrentHeap());
+    Client::mHeap = sead::ExpHeap::create(500_KB, "ClientHeap", sead::HeapMgr::instance()->getCurrentHeap(), 8, sead::Heap::cHeapDirection_Forward, false);
+    Client::createInstance(Client::mHeap);
 
     orig(gameSystem);
 

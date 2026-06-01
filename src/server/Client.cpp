@@ -49,7 +49,6 @@
 #include "System/GameDataHolderAccessor.h"
 #include "System/GameDataHolderWriter.h"
 #include "System/UniqObjInfo.h"
-#include "thread/seadMessageQueue.h"
 #include "types.h"
 #include "Util/AchievementUtil.h"
 
@@ -57,15 +56,14 @@ SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
 typedef void (Client::*ClientThreadFunc)(void);
 
+sead::ExpHeap* Client::mHeap = nullptr;
+
 /**
  * @brief Construct a new Client:: Client object
  *
  * @param bufferSize defines the maximum amount of puppets the client can handle
  */
 Client::Client() {
-    mHeap = sead::ExpHeap::create(500_KB, "ClientHeap", sead::HeapMgr::instance()->getCurrentHeap(), 8,
-                                  sead::Heap::cHeapDirection_Forward, false);
-
     sead::ScopedCurrentHeapSetter heapSetter(
         mHeap);  // every new call after this will use ClientHeap instead of SequenceHeap
 
