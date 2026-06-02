@@ -63,11 +63,15 @@ typedef void (Client::*ClientThreadFunc)(void);
  * @param bufferSize defines the maximum amount of puppets the client can handle
  */
 Client::Client() {
-    mHeap = sead::ExpHeap::create(500_KB, "ClientHeap", sead::HeapMgr::instance()->getCurrentHeap(), 8, sead::Heap::cHeapDirection_Forward, false);
+    mHeap = sead::ExpHeap::create(500_KB, "ClientHeap", sead::HeapMgr::instance()->getCurrentHeap(), 8,
+                                  sead::Heap::cHeapDirection_Forward, false);
 
-    sead::ScopedCurrentHeapSetter heapSetter(mHeap);  // every new call after this will use ClientHeap instead of SequenceHeap
+    sead::ScopedCurrentHeapSetter heapSetter(
+        mHeap);  // every new call after this will use ClientHeap instead of SequenceHeap
 
-    mReadThread = new al::AsyncFunctorThread("ClientReadThread", al::FunctorV0M<Client*, ClientThreadFunc>(this, &Client::readFunc), 0, 0x1000, {0});
+    mReadThread = new al::AsyncFunctorThread(
+        "ClientReadThread", al::FunctorV0M<Client*, ClientThreadFunc>(this, &Client::readFunc), 0, 0x1000,
+        {0});
 
     mKeyboard = new Keyboard(nn::swkbd::GetRequiredStringBufferSize());
 
@@ -202,7 +206,8 @@ void Client::restartConnection() {
     sInstance->mSocket->setLogState(SockState::DISCONNECTED);
     sInstance->mSocket->startEndThread();
 
-    sInstance->mIsConnectionActive = sInstance->mSocket->init(sInstance->mServerIP.cstr(), sInstance->mServerPort).IsSuccess();
+    sInstance->mIsConnectionActive =
+        sInstance->mSocket->init(sInstance->mServerIP.cstr(), sInstance->mServerPort).IsSuccess();
 
     nn::os::SleepThread(nn::TimeSpan::FromMilliSeconds(10));  // BAD
 
@@ -696,8 +701,11 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
         packet->is2D = false;
     }
 
-    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
-    packet->mainScenarioNo = holder.mData->getGameDataFile()->getMainScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
+    packet->scenarioNo = holder.mData->getGameDataFile()
+                             ->getScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
+    packet->mainScenarioNo =
+        holder.mData->getGameDataFile()
+            ->getMainScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -728,8 +736,11 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
 
     packet->is2D = false;
 
-    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
-    packet->mainScenarioNo = holder.mData->getGameDataFile()->getMainScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
+    packet->scenarioNo = holder.mData->getGameDataFile()
+                             ->getScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
+    packet->mainScenarioNo =
+        holder.mData->getGameDataFile()
+            ->getMainScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -868,8 +879,10 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
 
     curInfo->playerPos = packet->playerPos;
 
-    if (abs(packet->playerRot.x) > 0.f || abs(packet->playerRot.y) > 0.f || abs(packet->playerRot.z) > 0.f || abs(packet->playerRot.w) > 0.f) {
-        if (abs(packet->playerRot.x) <= 1.f || abs(packet->playerRot.y) <= 1.f || abs(packet->playerRot.z) <= 1.f || abs(packet->playerRot.w) <= 1.f) {
+    if (abs(packet->playerRot.x) > 0.f || abs(packet->playerRot.y) > 0.f || abs(packet->playerRot.z) > 0.f ||
+        abs(packet->playerRot.w) > 0.f) {
+        if (abs(packet->playerRot.x) <= 1.f || abs(packet->playerRot.y) <= 1.f ||
+            abs(packet->playerRot.z) <= 1.f || abs(packet->playerRot.w) <= 1.f) {
             curInfo->playerRot = packet->playerRot;
         }
     }
@@ -982,14 +995,17 @@ void Client::updateShineInfo(ShineCollect* packet) {
 
         if (PlayerEventLog::sInstance) {
             if (packet->shineId >= 2000 && packet->shineId <= 2060) {
-                PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::shine,
-                                                    PlayerEventLog::getAchievementMessage(toadetteMoons[packet->shineId - 2000]));
+                PlayerEventLog::sInstance->addEvent(
+                    player->puppetName, PlayerEventLog::shine,
+                    PlayerEventLog::getAchievementMessage(toadetteMoons[packet->shineId - 2000]));
                 return;
             }
 
-            GameDataFile::HintInfo* hintInfo = CustomGameDataFunction::getHintInfoByUniqueID(getStageScene(), packet->shineId);
-            PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::shine,
-                                                PlayerEventLog::getShineMessage(hintInfo->stageName, hintInfo->objId));
+            GameDataFile::HintInfo* hintInfo =
+                CustomGameDataFunction::getHintInfoByUniqueID(getStageScene(), packet->shineId);
+            PlayerEventLog::sInstance->addEvent(
+                player->puppetName, PlayerEventLog::shine,
+                PlayerEventLog::getShineMessage(hintInfo->stageName, hintInfo->objId));
         }
     }
 }
@@ -1112,11 +1128,14 @@ void Client::updateGameInfo(GameInf* packet) {
 
     if (findWorldIdFromStageName(packet->stageName) == -1)
         return;
-    GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
-    GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
+    GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr =
+        Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
+    GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr =
+        Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
 
     int curScen = scenNumArr[findWorldIdFromStageName(packet->stageName)];
-    if (packet->scenarioNo < 15 && (packet->scenarioNo > curScen || (curScen == 7 && packet->scenarioNo != 7) /*HACK*/) &&
+    if (packet->scenarioNo < 15 &&
+        (packet->scenarioNo > curScen || (curScen == 7 && packet->scenarioNo != 7) /*HACK*/) &&
         (validateScenarioFromStageName(packet->stageName, packet->scenarioNo, curScen) ||
          (packet->scenarioNo == 7 && strcmp(packet->stageName, "WaterfallWorldHomeStage") == 0) /*HACK*/)) {
         scenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
@@ -1137,7 +1156,8 @@ void Client::sendToStage(ChangeStagePacket* packet) {
     if (mSceneInfo && mSceneInfo->sceneObjHolder) {
         GameDataHolderWriter accessor(mSceneInfo->sceneObjHolder);
 
-        Logger::log("Sending Player to %s at Entrance %s in Scenario %d\n", packet->changeStage, packet->changeID, packet->scenarioNo);
+        Logger::log("Sending Player to %s at Entrance %s in Scenario %d\n", packet->changeStage,
+                    packet->changeID, packet->scenarioNo);
 
         ChangeStageInfo info(accessor.mData, packet->changeID, packet->changeStage, false, packet->scenarioNo,
                              static_cast<ChangeStageInfo::SubScenarioType>(packet->subScenarioType));
@@ -1307,7 +1327,8 @@ void Client::updateShines() {
     }
 
     // skip shine sync if player is in cap kingdom scenario zero (very start of the game)
-    if (sInstance->mStageName == "CapWorldHomeStage" && (sInstance->mScenario == 0 || sInstance->mScenario == 1)) {
+    if (sInstance->mStageName == "CapWorldHomeStage" &&
+        (sInstance->mScenario == 0 || sInstance->mScenario == 1)) {
         return;
     }
 
@@ -1323,7 +1344,9 @@ void Client::updateShines() {
 
         if (shineID >= 2000 && shineID <= 2060) {
             if (!rs::checkGetAchievement(sInstance->mCurStageScene, toadetteMoons[shineID - 2000])) {
-                GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile()->getAchievement(toadetteMoons[shineID - 2000]);
+                GameDataHolderAccessor(sInstance->mCurStageScene)
+                    ->getGameDataFile()
+                    ->getAchievement(toadetteMoons[shineID - 2000]);
             }
             continue;
         }
@@ -1331,7 +1354,8 @@ void Client::updateShines() {
         GameDataFile::HintInfo* shineInfo = CustomGameDataFunction::getHintInfoByUniqueID(accessor, shineID);
 
         if (shineInfo) {
-            if (!GameDataFunction::isGotShine(accessor, shineInfo->stageName.cstr(), shineInfo->objId.cstr())) {
+            if (!GameDataFunction::isGotShine(accessor, shineInfo->stageName.cstr(),
+                                              shineInfo->objId.cstr())) {
                 Shine* stageShine = findStageShine(shineID);
 
                 if (stageShine) {
@@ -1403,17 +1427,20 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
 
     if (PlayerEventLog::sInstance) {
         PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
-        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::purple, worldNames[packet->worldID]);
+        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::purple,
+                                            worldNames[packet->worldID]);
     }
 
     if (!sInstance->mCurStageScene) {
         // Scene not ready — queue for later processing in update()
         if (sInstance->mPendingCoinCollectCount < sMaxPendingCoinCollects) {
-            PendingCoinCollect& pending = sInstance->mPendingCoinCollects[sInstance->mPendingCoinCollectCount++];
+            PendingCoinCollect& pending =
+                sInstance->mPendingCoinCollects[sInstance->mPendingCoinCollectCount++];
             strcpy(pending.placeID, packet->placeID);
             pending.worldID = packet->worldID;
             strcpy(pending.stage, packet->stage);
-            Logger::log("updateCoinCollects: scene not ready, queued (total pending: %d)\n", sInstance->mPendingCoinCollectCount);
+            Logger::log("updateCoinCollects: scene not ready, queued (total pending: %d)\n",
+                        sInstance->mPendingCoinCollectCount);
         } else {
             Logger::log("updateCoinCollects: pending queue full, dropping packet\n");
         }
@@ -1424,7 +1451,8 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
 }
 
 /**
- * @brief Core logic for marking a checkpoint as collected and warpable when a checkpoint get packet is received from the read thread.
+ * @brief Core logic for marking a checkpoint as collected and warpable when a checkpoint get packet is
+ * received from the read thread.
  *
  * @param objId
  */
@@ -1461,14 +1489,16 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
 
     if (PlayerEventLog::sInstance) {
         PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
-        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::checkpoint, PlayerEventLog::getCheckpointMessage(packet->objId));
+        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::checkpoint,
+                                            PlayerEventLog::getCheckpointMessage(packet->objId));
     }
 
     if (!sInstance->mCurStageScene) {
         if (sInstance->mPendingCheckpointCount < sMaxPendingCheckpoints) {
             PendingCheckpoint& pending = sInstance->mPendingCheckpoints[sInstance->mPendingCheckpointCount++];
             strcpy(pending.objId, packet->objId);
-            Logger::log("updateCheckpoints: scene not ready, queued (total pending: %d)\n", sInstance->mPendingCoinCollectCount);
+            Logger::log("updateCheckpoints: scene not ready, queued (total pending: %d)\n",
+                        sInstance->mPendingCoinCollectCount);
         } else {
             Logger::log("updateCheckpoints: pending queue full, dropping packet\n");
         }
@@ -1493,7 +1523,8 @@ void Client::update() {
         if (sInstance->mCurStageScene) {
             // Drain coin collects that arrived while the scene was loading
             if (sInstance->mPendingCoinCollectCount > 0) {
-                Logger::log("update: draining %d pending coin collect(s)\n", sInstance->mPendingCoinCollectCount);
+                Logger::log("update: draining %d pending coin collect(s)\n",
+                            sInstance->mPendingCoinCollectCount);
                 for (s32 i = 0; i < sInstance->mPendingCoinCollectCount; i++) {
                     PendingCoinCollect& p = sInstance->mPendingCoinCollects[i];
                     applyOneCoinCollect(p.placeID, p.worldID, p.stage);
@@ -1503,7 +1534,8 @@ void Client::update() {
 
             // Drain checkpoints that arrived while the scene was loading
             if (sInstance->mPendingCheckpointCount > 0) {
-                Logger::log("update: draining %d pending checkpoint(s)\n", sInstance->mPendingCheckpointCount);
+                Logger::log("update: draining %d pending checkpoint(s)\n",
+                            sInstance->mPendingCheckpointCount);
                 for (s32 i = 0; i < sInstance->mPendingCheckpointCount; i++) {
                     PendingCheckpoint& c = sInstance->mPendingCheckpoints[i];
                     getOneCheckpoint(c.objId);
@@ -1601,7 +1633,8 @@ const bool Client::hasServerChanged() {
     if (!sInstance) {
         return false;
     }
-    return (getCurrentPort() != sInstance->mSocket->getPort() || strcmp(getCurrentIP(), sInstance->mSocket->getIP()) != 0);
+    return (getCurrentPort() != sInstance->mSocket->getPort() ||
+            strcmp(getCurrentIP(), sInstance->mSocket->getIP()) != 0);
 }
 
 void Client::setLastUsedIP(const char* ip) {

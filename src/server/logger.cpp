@@ -63,7 +63,8 @@ nn::Result Logger::init(const char* ip, u16 port) {
     nn::Result result;
     bool connected = false;
     for (u32 i = 0; i < ADDITIONAL_LOG_PORT_COUNT + 1; ++i) {
-        result = nn::socket::Connect(this->socket_log_socket, (sockaddr*)&serverAddress, sizeof(serverAddress));
+        result =
+            nn::socket::Connect(this->socket_log_socket, (sockaddr*)&serverAddress, sizeof(serverAddress));
         if (result.IsSuccess()) {
             connected = true;
             break;

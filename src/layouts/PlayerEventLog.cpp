@@ -21,7 +21,8 @@ PlayerEventLog::Entry::Entry(sead::FixedSafeString<16> player, Event event, sead
     mText = text;
 }
 
-void PlayerEventLog::addEvent(sead::SafeStringBase<char> player, PlayerEventLog::Event event, sead::SafeStringBase<char> text) {
+void PlayerEventLog::addEvent(sead::SafeStringBase<char> player, PlayerEventLog::Event event,
+                              sead::SafeStringBase<char> text) {
     if (event == shine) {
         for (s32 i = 0; i < sNumEntries; i++) {
             if (mLog->mEvent == shine && al::isEqualString(mLog[i].mText, text))
@@ -60,13 +61,16 @@ void PlayerEventLog::update() {
         ImFont* font = ImGui::GetFont();
         f32 charWidth = font->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, 0.0f, "X").x;
         f32 lineHeight = ImGui::GetTextLineHeightWithSpacing();
-        f32 windowWidth = (charWidth * 128.0f) + (style.WindowPadding.x * 2.0f) + (style.FramePadding.x * 2.0f);
-        f32 windowHeight = (lineHeight * 8.0f) + (style.WindowPadding.y * 2.0f);  // + ImGui::GetFrameHeight();
+        f32 windowWidth =
+            (charWidth * 128.0f) + (style.WindowPadding.x * 2.0f) + (style.FramePadding.x * 2.0f);
+        f32 windowHeight =
+            (lineHeight * 8.0f) + (style.WindowPadding.y * 2.0f);  // + ImGui::GetFrameHeight();
         ImGui::SetNextWindowPos(ImVec2(0, (height - windowHeight) * 0.5f), ImGuiCond_FirstUseEver);
         ImGui::SetNextWindowSize(ImVec2(windowWidth, windowHeight));
         ImGui::Begin("Player Event Log", nullptr,
-                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground |
-                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoSavedSettings);
+                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+                         ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoScrollbar |
+                         ImGuiWindowFlags_NoSavedSettings);
 
         for (s32 i = 0; i < sNumEntries; i++) {
             if (mLog[i].mLife > 0) {
@@ -112,7 +116,8 @@ void PlayerEventLog::update() {
                 case purple:
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                    ImGui::Text("%s got %d %s purples", mLog[i].mPlayer.cstr(), mLog[i].mNumPurples, mLog[i].mText.cstr());
+                    ImGui::Text("%s got %d %s purples", mLog[i].mPlayer.cstr(), mLog[i].mNumPurples,
+                                mLog[i].mText.cstr());
                     ImGui::PopStyleColor();
 
                     ImGui::SetCursorPos(originalCursor);
@@ -155,7 +160,8 @@ void PlayerEventLog::update() {
     }
 }
 
-const char* PlayerEventLog::getShineMessage(sead::SafeStringBase<char> stage, sead::SafeStringBase<char> objId) {
+const char* PlayerEventLog::getShineMessage(sead::SafeStringBase<char> stage,
+                                            sead::SafeStringBase<char> objId) {
     for (MessageMasterList::MessageData data : MessageMasterList::shineList) {
         if (al::isEqualString(stage, data.stage) && al::isEqualString(objId, data.objId)) {
             return data.text;

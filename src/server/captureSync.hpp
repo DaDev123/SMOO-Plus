@@ -14,14 +14,15 @@ static bool isInCaptureList(const char* capture) {
     return CaptureTypes::FindType(capture) != CaptureTypes::Type::Unknown;
 }
 
-static PuppetHackActor* createPuppetHackActorFromFactory(const al::ActorInitInfo& rootInitInfo, const al::PlacementInfo* rootPlacementInfo, PuppetInfo* curInfo,
-                                                         const char* hackType) {
+static PuppetHackActor* createPuppetHackActorFromFactory(const al::ActorInitInfo& rootInitInfo,
+                                                         const al::PlacementInfo* rootPlacementInfo,
+                                                         PuppetInfo* curInfo, const char* hackType) {
     al::ActorInitInfo actorInitInfo = al::ActorInitInfo();
     actorInitInfo.initViewIdSelf(rootPlacementInfo, rootInitInfo);
 
-    int serverMaxPlayers = Client::getMaxPlayerCount();  // TODO: Find a way around needing to do this, such as
-                                                         // creating a single hack actor per puppet that can
-                                                         // dynamically switch models
+    int serverMaxPlayers = Client::getMaxPlayerCount();  // TODO: Find a way around needing to do this, such
+                                                         // as creating a single hack actor per puppet that
+                                                         // can dynamically switch models
 
     // only use this if player count is 8
     if (serverMaxPlayers == 8) {

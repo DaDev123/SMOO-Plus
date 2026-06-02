@@ -11,7 +11,8 @@
 
 namespace speedboot {
 // Constructor
-HakoniwaSequenceSpeedboot::HakoniwaSequenceSpeedboot(HakoniwaSequence* sequence) : al::NerveStateBase("Speedboot"), mSequence(sequence) {
+HakoniwaSequenceSpeedboot::HakoniwaSequenceSpeedboot(HakoniwaSequence* sequence)
+    : al::NerveStateBase("Speedboot"), mSequence(sequence) {
     initNerve(&NrvHakoniwaSequenceSpeedboot.LoadStage, 0);
 }
 
@@ -44,7 +45,8 @@ void HakoniwaSequenceSpeedboot::exeLoadStage() {
         }
 
         // Request world resources - use dot notation since mGameDataHolder is not a pointer
-        s32 worldIndex = mSequence->mGameDataHolderAccessor.mData->mWorldList->tryFindWorldIndexByStageName(stageName);
+        s32 worldIndex =
+            mSequence->mGameDataHolderAccessor.mData->mWorldList->tryFindWorldIndexByStageName(stageName);
         if (worldIndex > -1) {
             mSequence->mResourceLoader->requestLoadWorldHomeStageResource(worldIndex, scenario);
         }

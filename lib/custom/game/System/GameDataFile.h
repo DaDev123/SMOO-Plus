@@ -106,7 +106,8 @@ public:
 
         CollectBgmInfo() = default;
 
-        CollectBgmInfo(const char* name, const char* situationName) : name(name), situationName(situationName) {}
+        CollectBgmInfo(const char* name, const char* situationName)
+            : name(name), situationName(situationName) {}
     };
 
     static_assert(sizeof(CollectBgmInfo) == 0x18);
@@ -260,7 +261,8 @@ public:
     s32 getShineNum(s32 world_id) const;
     s32 getTotalShineNum() const;
     s32 getTotalShopShineNum() const;
-    bool tryGetNextMainScenarioLabel(sead::BufferedSafeString* out_label, sead::BufferedSafeString* out_stage_name) const;
+    bool tryGetNextMainScenarioLabel(sead::BufferedSafeString* out_label,
+                                     sead::BufferedSafeString* out_stage_name) const;
     bool tryGetNextMainScenarioPos(sead::Vector3f* out) const;
     const HintInfo* tryFindNextMainScenarioInfo() const;
     void addPayShine(s32 count);
@@ -298,7 +300,8 @@ public:
     const char* getWorldTravelingStatus() const;
     bool isStartWorldTravelingPeach() const;
     void startWorldTravelingPeach();
-    void setGrowFlowerTime(const al::PlacementId* pot_placement_id, const al::PlacementId* seed_placement_id, u64 time);
+    void setGrowFlowerTime(const al::PlacementId* pot_placement_id, const al::PlacementId* seed_placement_id,
+                           u64 time);
     void setGrowFlowerTime(const al::PlacementId* pot_placement_id, u64 time);
     u64 getGrowFlowerTime(const al::PlacementId* pot_placement_id) const;
     void addGrowFlowerGrowLevel(const al::PlacementId* pot_placement_id, u32 level);
@@ -426,9 +429,12 @@ public:
     bool isLatestGetMainShine(const ShineInfo* info) const;
     bool calcIsGetMainShineAll(const al::IUseSceneObjHolder* scene_obj_holder) const;
     bool calcIsGetShineAllInWorld(s32 world_id) const;
-    s32 tryFindLinkedShineIndex(const al::ActorInitInfo& actor_info, const al::IUseSceneObjHolder* scene_obj_holder) const;
-    s32 tryFindLinkedShineIndex(const al::ActorInitInfo& actor_info, s32 link_index, const al::IUseSceneObjHolder* scene_obj_holder) const;
-    s32 tryFindLinkedShineIndexByLinkName(const al::IUseSceneObjHolder* scene_obj_holder, const al::ActorInitInfo& actor_info, const char* link_name) const;
+    s32 tryFindLinkedShineIndex(const al::ActorInitInfo& actor_info,
+                                const al::IUseSceneObjHolder* scene_obj_holder) const;
+    s32 tryFindLinkedShineIndex(const al::ActorInitInfo& actor_info, s32 link_index,
+                                const al::IUseSceneObjHolder* scene_obj_holder) const;
+    s32 tryFindLinkedShineIndexByLinkName(const al::IUseSceneObjHolder* scene_obj_holder,
+                                          const al::ActorInitInfo& actor_info, const char* link_name) const;
     s32 calcLinkedShineNum(const al::ActorInitInfo& actor_info) const;
     s32 tryFindShineIndex(const al::ActorInitInfo& actor_info) const;
     s32 tryFindShineIndex(const char* stage_name, const char* obj_id) const;
@@ -441,7 +447,8 @@ public:
     void resetHintTrans(s32 index);
     void registerShineInfo(const ShineInfo* info, const sead::Vector3f& trans);
     s32 calcRestShineInStageWithWorldProgress(const char* stage_name) const;
-    s32 calcGetShineNumByObjectNameOrOptionalId(const char* object_name_or_optional_id, CountType count_type) const;
+    s32 calcGetShineNumByObjectNameOrOptionalId(const char* object_name_or_optional_id,
+                                                CountType count_type) const;
     s32 calcGetShineNumByObjectNameWithWorldId(const char* object_name, s32 world_id) const;
     s32 calcAllShineNumByObjectNameOrOptionalId(const char* object_name_or_optional_id) const;
     s32 calcGetShineNumByStageName(const char* stage_name) const;
@@ -476,7 +483,8 @@ public:
     bool isPlayDemoOpening() const { return mIsPlayDemoOpening; }
 
     bool isEnableCap() const {
-        return mIsMeetCap && mIsEnableCap && mCapStatusForJango != CapStatus::Removed && mCapStatusForJangoSubArea != CapStatus::Removed;
+        return mIsMeetCap && mIsEnableCap && mCapStatusForJango != CapStatus::Removed &&
+               mCapStatusForJangoSubArea != CapStatus::Removed;
     }
 
     bool isMeetCap() const { return mIsMeetCap; }
@@ -741,22 +749,27 @@ public:
         return shines;
     }
 
-    // these three functions are custom impls of checkpoint functions from 0b-0f's decomp of GameDataFile and they are used for checkpoint sync
+    // these three functions are custom impls of checkpoint functions from 0b-0f's decomp of GameDataFile and
+    // they are used for checkpoint sync
     UniqObjInfo* customSetCheckpointId(const al::PlacementId* placement_id) {
         UniqObjInfo* result = nullptr;
         al::StringTmp<128> obj_id = "";
         placement_id->makeString(&obj_id);
-        if (CheckpointInfo* info = tryFindCheckpointInfoImpl(mCheckpointTable.begin(), mCurrentStageName.cstr(), obj_id.cstr())) {
+        if (CheckpointInfo* info = tryFindCheckpointInfoImpl(mCheckpointTable.begin(),
+                                                             mCurrentStageName.cstr(), obj_id.cstr())) {
             info->isGet = true;
-            if (UniqObjInfo* got_info = addGotCheckpoint(mGotCheckpoint.begin(), info->objInfo.getStageName(), info->objInfo.getObjId())) {
+            if (UniqObjInfo* got_info = addGotCheckpoint(mGotCheckpoint.begin(), info->objInfo.getStageName(),
+                                                         info->objInfo.getObjId())) {
                 got_info->setStageName(info->objInfo.getStageName());
                 got_info->mObjId.copy(info->objInfo.getObjId());
                 mGotCheckpointNum++;
                 result = got_info;
             }
         } else {
-            CheckpointMasterList::CheckpointData data = CheckpointMasterList::getCheckpointDataFromMasterList(obj_id.cstr());
-            if (UniqObjInfo* got_info = addGotCheckpoint(mGotCheckpoint.begin(), data.stageName, data.objId)) {
+            CheckpointMasterList::CheckpointData data =
+                CheckpointMasterList::getCheckpointDataFromMasterList(obj_id.cstr());
+            if (UniqObjInfo* got_info =
+                    addGotCheckpoint(mGotCheckpoint.begin(), data.stageName, data.objId)) {
                 got_info->setStageName(data.stageName);
                 got_info->mObjId.copy(data.objId);
                 mGotCheckpointNum++;
@@ -775,16 +788,19 @@ public:
         for (s32 i = 0; i < 320; i++) {
             if (list[i].mStageName.isEmpty() && list[i].mObjId.isEmpty())
                 return &list[i];
-            if (al::isEqualString(list[i].getStageName(), stage_name) && al::isEqualString(list[i].getObjId(), obj_id))
+            if (al::isEqualString(list[i].getStageName(), stage_name) &&
+                al::isEqualString(list[i].getObjId(), obj_id))
                 break;
         }
         return nullptr;
     }
 
-    static CheckpointInfo* tryFindCheckpointInfoImpl(CheckpointInfo** table, const char* stage_name, const char* obj_id) {
+    static CheckpointInfo* tryFindCheckpointInfoImpl(CheckpointInfo** table, const char* stage_name,
+                                                     const char* obj_id) {
         for (s32 i = 0; i < sNumWorlds; i++)
             for (s32 j = 0; j < 16; j++)
-                if (al::isEqualString(stage_name, table[i][j].objInfo.mStageName) && al::isEqualString(obj_id, table[i][j].objInfo.getObjId()))
+                if (al::isEqualString(stage_name, table[i][j].objInfo.mStageName) &&
+                    al::isEqualString(obj_id, table[i][j].objInfo.getObjId()))
                     return &table[i][j];
         return nullptr;
     }

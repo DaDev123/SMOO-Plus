@@ -22,18 +22,22 @@ struct KingdomMapping {
 };
 
 constexpr KingdomMapping KINGDOM_NAMES[] = {
-    {"CapWorldHomeStage", u"Cap Kingdom"},       {"WaterfallWorldHomeStage", u"Cascade Kingdom"}, {"SandWorldHomeStage", u"Sand Kingdom"},
-    {"ForestWorldHomeStage", u"Wooded Kingdom"}, {"LakeWorldHomeStage", u"Lake Kingdom"},         {"CloudWorldHomeStage", u"Cloud Kingdom"},
-    {"ClashWorldHomeStage", u"Lost Kingdom"},    {"CityWorldHomeStage", u"Metro Kingdom"},        {"SnowWorldHomeStage", u"Snow Kingdom"},
-    {"SeaWorldHomeStage", u"Seaside Kingdom"},   {"LavaWorldHomeStage", u"Luncheon Kingdom"},     {"BossRaidWorldHomeStage", u"Ruined Kingdom"},
-    {"SkyWorldHomeStage", u"Bowser's Kingdom"},  {"MoonWorldHomeStage", u"Moon Kingdom"},         {"PeachWorldHomeStage", u"Mushroom Kingdom"},
-    {"Special1WorldHomeStage", u"Dark Side"},    {"Special2WorldHomeStage", u"Darker Side"}};
+    {"CapWorldHomeStage", u"Cap Kingdom"},        {"WaterfallWorldHomeStage", u"Cascade Kingdom"},
+    {"SandWorldHomeStage", u"Sand Kingdom"},      {"ForestWorldHomeStage", u"Wooded Kingdom"},
+    {"LakeWorldHomeStage", u"Lake Kingdom"},      {"CloudWorldHomeStage", u"Cloud Kingdom"},
+    {"ClashWorldHomeStage", u"Lost Kingdom"},     {"CityWorldHomeStage", u"Metro Kingdom"},
+    {"SnowWorldHomeStage", u"Snow Kingdom"},      {"SeaWorldHomeStage", u"Seaside Kingdom"},
+    {"LavaWorldHomeStage", u"Luncheon Kingdom"},  {"BossRaidWorldHomeStage", u"Ruined Kingdom"},
+    {"SkyWorldHomeStage", u"Bowser's Kingdom"},   {"MoonWorldHomeStage", u"Moon Kingdom"},
+    {"PeachWorldHomeStage", u"Mushroom Kingdom"}, {"Special1WorldHomeStage", u"Dark Side"},
+    {"Special2WorldHomeStage", u"Darker Side"}};
 
 constexpr f32 FALLBACK_DURATION = 15.0f;  // 15 seconds for unknown stages
 constexpr f32 FPS = 60.0f;
 }  // namespace
 
-SpeedbootLoad::SpeedbootLoad(WorldResourceLoader* resourceLoader, const al::LayoutInitInfo& initInfo, HakoniwaSequence* sequence)
+SpeedbootLoad::SpeedbootLoad(WorldResourceLoader* resourceLoader, const al::LayoutInitInfo& initInfo,
+                             HakoniwaSequence* sequence)
     : al::LayoutActor("SpeedbootLoad"), worldResourceLoader(resourceLoader), mSequence(sequence) {
     al::initLayoutActor(this, initInfo, "SpeedbootLoad", nullptr);
     initNerve(&NrvSpeedbootLoad.Appear, 0);

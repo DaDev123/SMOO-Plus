@@ -9,7 +9,8 @@ class LiveActor;
 
 class ActionPadAndCameraCtrl {
 public:
-    static ActionPadAndCameraCtrl* tryCreate(const LiveActor*, const ActorResource*, const sead::Vector3f*, const char*);
+    static ActionPadAndCameraCtrl* tryCreate(const LiveActor*, const ActorResource*, const sead::Vector3f*,
+                                             const char*);
 
     ActionPadAndCameraCtrl(const LiveActor*, const ActorResource*, const sead::Vector3f*, const char*);
     void notifyActorDead();

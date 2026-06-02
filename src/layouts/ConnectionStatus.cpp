@@ -8,7 +8,8 @@
 
 ConnectionStatus* ConnectionStatus::sInstance = nullptr;
 
-ConnectionStatus::ConnectionStatus(const char* name, const al::LayoutInitInfo& initInfo) : al::LayoutActor(name) {
+ConnectionStatus::ConnectionStatus(const char* name, const al::LayoutInitInfo& initInfo)
+    : al::LayoutActor(name) {
     al::initLayoutActor(this, initInfo, "ConnectionStatus", 0);
 
     al::setPaneStringFormat(this, "TxtStatus", "10/10");
@@ -66,7 +67,8 @@ void ConnectionStatus::exeEnd() {
 }
 
 void ConnectionStatus::showOnline() {
-    al::setPaneStringFormat(this, "TxtStatus", "%d/%d", Client::getConnectCount() + 1, Client::getMaxPlayerCount());
+    al::setPaneStringFormat(this, "TxtStatus", "%d/%d", Client::getConnectCount() + 1,
+                            Client::getMaxPlayerCount());
     al::showPane(this, "DotGreen");
     al::hidePane(this, "DotRed");
 }

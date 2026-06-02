@@ -27,8 +27,10 @@ void PuppetCapActor::init(al::ActorInitInfo const& initInfo) {
     PlayerFunction::initCapModelActorDemo(this, initInfo, capModelName.cstr());
 
     initHitSensor(2);
-    al::addHitSensor(this, initInfo, "Push", (u32)al::HitSensorType::MapObjSimple, 60.0f, 8, sead::Vector3f::zero);
-    al::addHitSensor(this, initInfo, "Attack", (u32)al::HitSensorType::EnemyAttack, 300.0f, 8, sead::Vector3f::zero);
+    al::addHitSensor(this, initInfo, "Push", (u32)al::HitSensorType::MapObjSimple, 60.0f, 8,
+                     sead::Vector3f::zero);
+    al::addHitSensor(this, initInfo, "Attack", (u32)al::HitSensorType::EnemyAttack, 300.0f, 8,
+                     sead::Vector3f::zero);
 
     al::hideSilhouetteModelIfShow(this);
     al::initExecutorModelUpdate(this, initInfo);

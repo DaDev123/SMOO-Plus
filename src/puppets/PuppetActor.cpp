@@ -79,8 +79,9 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
 
     al::LiveActor* normal2DModel = new al::LiveActor("Normal2D");
 
-    PlayerFunction::initMarioModelActor2D(normal2DModel, initInfo, al::StringTmp<0x40>("%s2D", mCostumeInfo->mBodyInfo->costumeName).cstr(),
-                                          PlayerFunction::isInvisibleCap(mCostumeInfo));
+    PlayerFunction::initMarioModelActor2D(
+        normal2DModel, initInfo, al::StringTmp<0x40>("%s2D", mCostumeInfo->mBodyInfo->costumeName).cstr(),
+        PlayerFunction::isInvisibleCap(mCostumeInfo));
 
     mModelHolder->registerModel(normal2DModel, "Normal2D");
 
@@ -106,9 +107,12 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
     }
 
     initHitSensor(3);
-    al::addHitSensor(this, initInfo, "Body", static_cast<u32>(al::HitSensorType::Npc), 50.0f, 16, sead::Vector3f(0.0f, 75.0f, 0.0f));
-    al::addHitSensor(this, initInfo, "Head", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 16, sead::Vector3f(0.0f, 110.0f, 0.0f));
-    al::addHitSensor(this, initInfo, "Foot", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 1, sead::Vector3f(0.0f, 40.0f, 0.0f));
+    al::addHitSensor(this, initInfo, "Body", static_cast<u32>(al::HitSensorType::Npc), 50.0f, 16,
+                     sead::Vector3f(0.0f, 75.0f, 0.0f));
+    al::addHitSensor(this, initInfo, "Head", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 16,
+                     sead::Vector3f(0.0f, 110.0f, 0.0f));
+    al::addHitSensor(this, initInfo, "Foot", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 1,
+                     sead::Vector3f(0.0f, 40.0f, 0.0f));
 
     al::validateClipping(normalModel);
     al::validateClipping(normal2DModel);
@@ -157,7 +161,8 @@ void PuppetActor::control() {
             sead::Vector3f* pPos = al::getTransPtr(this);
             sead::Quatf* pQuat = al::getQuatPtr(this);
 
-            mClosingSpeed = VisualUtils::SmoothMove({pPos, pQuat}, {&mInfo->playerPos, &mInfo->playerRot}, Time::deltaTime, mClosingSpeed, 1440.0f);
+            mClosingSpeed = VisualUtils::SmoothMove({pPos, pQuat}, {&mInfo->playerPos, &mInfo->playerRot},
+                                                    Time::deltaTime, mClosingSpeed, 1440.0f);
         } else {
             al::setTrans(this, mInfo->playerPos);
             al::setQuat(this, mInfo->playerRot);
@@ -277,7 +282,8 @@ bool PuppetActor::receiveMsg(const al::SensorMsg* msg, al::HitSensor* source, al
         return false;
     }
 
-    if ((al::isMsgPlayerTrampleReflect(msg) || rs::isMsgPlayerAndCapObjHipDropReflectAll(msg)) && al::isSensorName(target, "Body")) {
+    if ((al::isMsgPlayerTrampleReflect(msg) || rs::isMsgPlayerAndCapObjHipDropReflectAll(msg)) &&
+        al::isSensorName(target, "Body")) {
         rs::requestHitReactionToAttacker(msg, target, source);
         return true;
     }
@@ -328,10 +334,12 @@ void PuppetActor::hairControl() {
     al::LiveActor* curModel = getCurrentModel();
 
     if (mCostumeInfo->isNeedSyncBodyHair()) {
-        PlayerFunction::syncBodyHairVisibility(al::getSubActor(curModel, "髪"), al::getSubActor(curModel, "頭"));
+        PlayerFunction::syncBodyHairVisibility(al::getSubActor(curModel, "髪"),
+                                               al::getSubActor(curModel, "頭"));
     }
     if (mCostumeInfo->isSyncFaceBeard()) {
-        PlayerFunction::syncMarioFaceBeardVisibility(al::getSubActor(curModel, "顔"), al::getSubActor(curModel, "頭"));
+        PlayerFunction::syncMarioFaceBeardVisibility(al::getSubActor(curModel, "顔"),
+                                                     al::getSubActor(curModel, "頭"));
     }
     if (mCostumeInfo->isSyncStrap()) {
         PlayerFunction::syncMarioHeadStrapVisibility(al::getSubActor(curModel, "頭"));
@@ -344,7 +352,8 @@ void PuppetActor::hairControl() {
 bool PuppetActor::isNeedBlending() {
     const char* curActName = al::getActionName(getCurrentModel());
     if (curActName) {
-        return al::isEqualSubString(curActName, "Move") || al::isEqualSubString(curActName, "Sand") || al::isEqualSubString(curActName, "MotorcycleRide");
+        return al::isEqualSubString(curActName, "Move") || al::isEqualSubString(curActName, "Sand") ||
+               al::isEqualSubString(curActName, "MotorcycleRide");
     } else {
         return false;
     }
@@ -407,7 +416,8 @@ bool PuppetActor::setCapture(const char* captureName) {
 void PuppetActor::syncPose() {
     al::LiveActor* curModel = getCurrentModel();
 
-    curModel->mPoseKeeper->updatePoseQuat(al::getQuat(this));  // update pose using a quaternion instead of setting quaternion rotation
+    curModel->mPoseKeeper->updatePoseQuat(
+        al::getQuat(this));  // update pose using a quaternion instead of setting quaternion rotation
 
     al::setTrans(curModel, al::getTrans(this));
 }
@@ -420,17 +430,19 @@ void PuppetActor::emitJoinEffect() {
 
 const char* executorName = "ＮＰＣ";
 
-PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo, const char* bodyName, const char* capName, int subActorNum,
+PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo,
+                                        const char* bodyName, const char* capName, int subActorNum,
                                         al::AudioKeeper* audioKeeper) {
     // Logger::log("Loading Resources for Mario Puppet Model.\n");
 
-    al::ActorResource* modelRes =
-        al::findOrCreateActorResourceWithAnimResource(initInfo.actorResourceHolder, al::StringTmp<0x100>("ObjectData/%s", bodyName).cstr(),
-                                                      al::StringTmp<0x100>("ObjectData/%s", "PlayerAnimation").cstr(), 0, false);
+    al::ActorResource* modelRes = al::findOrCreateActorResourceWithAnimResource(
+        initInfo.actorResourceHolder, al::StringTmp<0x100>("ObjectData/%s", bodyName).cstr(),
+        al::StringTmp<0x100>("ObjectData/%s", "PlayerAnimation").cstr(), 0, false);
 
     // Logger::log("Creating Body Costume Info.\n");
 
-    PlayerBodyCostumeInfo* bodyInfo = PlayerCostumeFunction::createBodyCostumeInfo(modelRes->mModelRes, bodyName);
+    PlayerBodyCostumeInfo* bodyInfo =
+        PlayerCostumeFunction::createBodyCostumeInfo(modelRes->mModelRes, bodyName);
 
     // Logger::log("Initializing Basic Actor Data.\n");
 
@@ -443,7 +455,8 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
 
     // Logger::log("Creating Material Category for Player Type\n");
 
-    al::ModelMaterialCategory::tryCreate(player->mModelKeeper->mModelCtrl, "Player", initInfo.actorSceneInfo.graphicsSystemInfo->mMaterialCategoryKeeper);
+    al::ModelMaterialCategory::tryCreate(player->mModelKeeper->mModelCtrl, "Player",
+                                         initInfo.actorSceneInfo.graphicsSystemInfo->mMaterialCategoryKeeper);
 
     // Logger::log("Initing Skeleton.\n");
 
@@ -539,7 +552,8 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
     // Logger::log("Creating Head Costume Info. Cap Model: %s. Head Type: %s. Cap Name: %s.\n",
     // capModelName, headType, capName);
 
-    PlayerHeadCostumeInfo* headInfo = initMarioHeadCostumeInfo(player, initInfo, "頭", capName, headType, capModelName);
+    PlayerHeadCostumeInfo* headInfo =
+        initMarioHeadCostumeInfo(player, initInfo, "頭", capName, headType, capModelName);
 
     // Logger::log("Creating Costume Info.\n");
 
@@ -551,8 +565,11 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
 
         al::PartsModel* partsModel = new al::PartsModel("髪");
 
-        partsModel->initPartsFixFile(player, initInfo, al::StringTmp<0x100>("%sHair%s", bodyName, costumeInfo->isEnableHairNoCap() ? "NoCap" : "").cstr(), 0,
-                                     "Hair");
+        partsModel->initPartsFixFile(
+            player, initInfo,
+            al::StringTmp<0x100>("%sHair%s", bodyName, costumeInfo->isEnableHairNoCap() ? "NoCap" : "")
+                .cstr(),
+            0, "Hair");
 
         al::initExecutorUpdate(partsModel, initInfo, executorName);
         al::initExecutorDraw(partsModel, initInfo, executorName);
@@ -578,7 +595,8 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
     return costumeInfo;
 }
 
-PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player, const al::ActorInitInfo& initInfo, const char* headModelName, const char* capModelName,
+PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player, const al::ActorInitInfo& initInfo,
+                                                const char* headModelName, const char* capModelName,
                                                 const char* headType, const char* headSuffix) {
     al::PartsModel* headModel = new al::PartsModel(headModelName);
 

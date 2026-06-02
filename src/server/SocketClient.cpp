@@ -26,16 +26,20 @@
 
 SocketClient::SocketClient(const char* name, sead::Heap* heap) : mHeap(heap), SocketBase(name) {
     sead::ScopedCurrentHeapSetter setter(mHeap);
-    mRecvThread =
-        new al::AsyncFunctorThread("SocketRecvThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::recvFunc), 0, 0x1000, {0});
-    mSendThread =
-        new al::AsyncFunctorThread("SocketSendThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::sendFunc), 0, 0x1000, {0});
-    mEndThread =
-        new al::AsyncFunctorThread("SocketEndThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::endThreads), 0, 0x1000, {0});
+    mRecvThread = new al::AsyncFunctorThread(
+        "SocketRecvThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::recvFunc), 0,
+        0x1000, {0});
+    mSendThread = new al::AsyncFunctorThread(
+        "SocketSendThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::sendFunc), 0,
+        0x1000, {0});
+    mEndThread = new al::AsyncFunctorThread(
+        "SocketEndThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::endThreads),
+        0, 0x1000, {0});
 
     mRecvQueue.allocate(maxBufSize, mHeap);
     mSendQueue.allocate(maxBufSize, mHeap);
-    mAppErr = nn::err::ApplicationErrorArg(0, "", "", nn::settings::LanguageCode::Make(nn::settings::Language_English));
+    mAppErr = nn::err::ApplicationErrorArg(0, "", "",
+                                           nn::settings::LanguageCode::Make(nn::settings::Language_English));
 };
 
 nn::Result SocketClient::init(const char* ip, u16 port) {
@@ -102,7 +106,9 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
 
     nn::Result result;
 
-    if ((result = nn::socket::Connect(this->socket_log_socket, (sockaddr*)&serverAddress, sizeof(serverAddress))).IsFailure()) {
+    if ((result =
+             nn::socket::Connect(this->socket_log_socket, (sockaddr*)&serverAddress, sizeof(serverAddress)))
+            .IsFailure()) {
         Logger::log("Socket Connection Failed!\n");
         this->socket_errno = nn::socket::GetLastErrno();
         this->socket_log_state = SockState::CONNFAIL;
@@ -154,10 +160,12 @@ bool SocketClient::send(Packet* packet) {
     if (packet->mType != PLAYERINF && packet->mType != HACKCAPINF)
         Logger::log("Sending packet: %s\n", packetNames[packet->mType]);
 
-    if ((valread = nn::socket::Send(this->socket_log_socket, buffer, packet->mPacketSize + sizeof(Packet), 0) > 0)) {
+    if ((valread = nn::socket::Send(this->socket_log_socket, buffer, packet->mPacketSize + sizeof(Packet),
+                                    0) > 0)) {
         return true;
     } else {
-        Logger::log("Failed to Fully Send Packet! Result: %d Type: %s Packet Size: %d\n", valread, packetNames[packet->mType], packet->mPacketSize);
+        Logger::log("Failed to Fully Send Packet! Result: %d Type: %s Packet Size: %d\n", valread,
+                    packetNames[packet->mType], packet->mPacketSize);
         this->socket_errno = nn::socket::GetLastErrno();
         this->tryReconnect();
         return false;
@@ -178,7 +186,8 @@ bool SocketClient::recv() {
 
     // read only the size of a header
     while (valread < headerSize) {
-        int result = nn::socket::Recv(this->socket_log_socket, headerBuf + valread, headerSize - valread, this->sock_flags);
+        int result = nn::socket::Recv(this->socket_log_socket, headerBuf + valread, headerSize - valread,
+                                      this->sock_flags);
 
         this->socket_errno = nn::socket::GetLastErrno();
 
@@ -199,9 +208,11 @@ bool SocketClient::recv() {
 
         int fullSize = header->mPacketSize + sizeof(Packet);
 
-        if (header->mType > PacketType::UNKNOWN && header->mType < PacketType::End && fullSize <= MAXPACKSIZE && fullSize > 0 && valread == sizeof(Packet)) {
+        if (header->mType > PacketType::UNKNOWN && header->mType < PacketType::End &&
+            fullSize <= MAXPACKSIZE && fullSize > 0 && valread == sizeof(Packet)) {
             if (header->mType != PLAYERINF && header->mType != HACKCAPINF) {
-                Logger::log("Received packet (from %02X%02X):", header->mUserID.data[0], header->mUserID.data[1]);
+                Logger::log("Received packet (from %02X%02X):", header->mUserID.data[0],
+                            header->mUserID.data[1]);
                 Logger::disableName();
                 Logger::log(" Size: %d", header->mPacketSize);
                 Logger::log(" Type: %d", header->mType);
@@ -216,7 +227,8 @@ bool SocketClient::recv() {
                 memcpy(packetBuf, headerBuf, sizeof(Packet));
 
                 while (valread < fullSize) {
-                    int result = nn::socket::Recv(this->socket_log_socket, packetBuf + valread, fullSize - valread, this->sock_flags);
+                    int result = nn::socket::Recv(this->socket_log_socket, packetBuf + valread,
+                                                  fullSize - valread, this->sock_flags);
 
                     this->socket_errno = nn::socket::GetLastErrno();
 
@@ -224,8 +236,8 @@ bool SocketClient::recv() {
                         valread += result;
                     } else {
                         free(packetBuf);
-                        Logger::log("Packet Read Failed! Value: %d\nPacket Size: %d\nPacket Type: %s\n", result, header->mPacketSize,
-                                    packetNames[header->mType]);
+                        Logger::log("Packet Read Failed! Value: %d\nPacket Size: %d\nPacket Type: %s\n",
+                                    result, header->mPacketSize, packetNames[header->mType]);
                         return this->tryReconnect();
                     }
                 }
@@ -239,7 +251,8 @@ bool SocketClient::recv() {
                 }
             }
         } else {
-            Logger::log("Failed to aquire valid data! Packet Type: %d Full Packet Size %d valread size: %d\n", header->mType, fullSize, valread);
+            Logger::log("Failed to aquire valid data! Packet Type: %d Full Packet Size %d valread size: %d\n",
+                        header->mType, fullSize, valread);
         }
 
         return true;
@@ -257,9 +270,11 @@ void SocketClient::printPacket(Packet* packet) {
 
     switch (packet->mType) {
     case PacketType::PLAYERINF:
-        Logger::log("Pos X: %f Pos Y: %f Pos Z: %f\n", ((PlayerInf*)packet)->playerPos.x, ((PlayerInf*)packet)->playerPos.y, ((PlayerInf*)packet)->playerPos.z);
-        Logger::log("Rot X: %f Rot Y: %f Rot Z: %f\nRot W: %f\n", ((PlayerInf*)packet)->playerRot.x, ((PlayerInf*)packet)->playerRot.y,
-                    ((PlayerInf*)packet)->playerRot.z, ((PlayerInf*)packet)->playerRot.w);
+        Logger::log("Pos X: %f Pos Y: %f Pos Z: %f\n", ((PlayerInf*)packet)->playerPos.x,
+                    ((PlayerInf*)packet)->playerPos.y, ((PlayerInf*)packet)->playerPos.z);
+        Logger::log("Rot X: %f Rot Y: %f Rot Z: %f\nRot W: %f\n", ((PlayerInf*)packet)->playerRot.x,
+                    ((PlayerInf*)packet)->playerRot.y, ((PlayerInf*)packet)->playerRot.z,
+                    ((PlayerInf*)packet)->playerRot.w);
         break;
     default:
         break;
@@ -269,8 +284,8 @@ void SocketClient::printPacket(Packet* packet) {
 bool SocketClient::tryReconnect() {
     Logger::log("Attempting to Reconnect.\n");
 
-    if (closeSocket()) {                        // unfortunately we cannot use the same fd from the previous connection,
-                                                // so close the socket entirely and attempt a new connection.
+    if (closeSocket()) {  // unfortunately we cannot use the same fd from the previous connection,
+                          // so close the socket entirely and attempt a new connection.
         if (init(sock_ip, port).IsSuccess()) {  // call init again
             Logger::log("Reconnect Successful.\n");
             return true;
@@ -369,7 +384,8 @@ void SocketClient::recvFunc() {
 }
 
 bool SocketClient::queuePacket(Packet* packet) {
-    if (socket_log_state == SockState::CONNECTED && !(mSendQueue.mMessageQueueInner._count == mSendQueue.mMessageQueueInner._maxCount)) {
+    if (socket_log_state == SockState::CONNECTED &&
+        !(mSendQueue.mMessageQueueInner._count == mSendQueue.mMessageQueueInner._maxCount)) {
         // as this is non-blocking, it will always return true.
         mSendQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking);
         return true;
@@ -390,5 +406,7 @@ bool SocketClient::trySendQueue() {
 }
 
 Packet* SocketClient::tryGetPacket() {
-    return socket_log_state == SockState::CONNECTED ? (Packet*)mRecvQueue.pop(sead::MessageQueue::BlockType::Blocking) : nullptr;
+    return socket_log_state == SockState::CONNECTED ?
+               (Packet*)mRecvQueue.pop(sead::MessageQueue::BlockType::Blocking) :
+               nullptr;
 }

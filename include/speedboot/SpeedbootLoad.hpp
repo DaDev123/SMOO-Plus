@@ -18,7 +18,8 @@ class HakoniwaSequence;
  */
 class SpeedbootLoad : public al::LayoutActor {
 public:
-    SpeedbootLoad(WorldResourceLoader* resourceLoader, const al::LayoutInitInfo& initInfo, HakoniwaSequence* sequence);
+    SpeedbootLoad(WorldResourceLoader* resourceLoader, const al::LayoutInitInfo& initInfo,
+                  HakoniwaSequence* sequence);
 
     // Nerve execution functions
     void exeAppear();

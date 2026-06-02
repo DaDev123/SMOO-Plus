@@ -42,8 +42,8 @@ struct ServerBrowser {
 
 class StageSceneStateModConfig : public al::HostStateBase<al::Scene>, public al::IUseMessageSystem {
 public:
-    StageSceneStateModConfig(const char* name, al::Scene* scene, const al::LayoutInitInfo& initInfo, FooterParts* footerParts, GameDataHolder* dataHolder,
-                             bool unused);
+    StageSceneStateModConfig(const char* name, al::Scene* scene, const al::LayoutInitInfo& initInfo,
+                             FooterParts* footerParts, GameDataHolder* dataHolder, bool unused);
 
     ~StageSceneStateModConfig();
 
@@ -210,6 +210,6 @@ NERVE_IMPL(StageSceneStateModConfig, GameplaySettings)
 NERVE_IMPL(StageSceneStateModConfig, SpeedrunConfig)
 NERVE_IMPL(StageSceneStateModConfig, SaveData)
 
-NERVES_MAKE_STRUCT(StageSceneStateModConfig, MainMenu, NetworkSettings, ServerBrowserSelect, OpenKeyboardIP, OpenKeyboardPort, GameplaySettings, SpeedrunConfig,
-                   SaveData)
+NERVES_MAKE_STRUCT(StageSceneStateModConfig, MainMenu, NetworkSettings, ServerBrowserSelect, OpenKeyboardIP,
+                   OpenKeyboardPort, GameplaySettings, SpeedrunConfig, SaveData)
 }  // namespace

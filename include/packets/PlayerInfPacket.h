@@ -22,7 +22,8 @@ struct PACKED PlayerInf : Packet {
                 break;
             }
         }
-        return (playerPos == rhs.playerPos && playerRot == rhs.playerRot && isWeightsEqual && actName == rhs.actName && subActName == rhs.subActName);
+        return (playerPos == rhs.playerPos && playerRot == rhs.playerRot && isWeightsEqual &&
+                actName == rhs.actName && subActName == rhs.subActName);
     }
 
     bool operator!=(const PlayerInf& rhs) const { return !operator==(rhs); }

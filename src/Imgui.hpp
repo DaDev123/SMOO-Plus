@@ -38,7 +38,8 @@ static void setupFont() {
     ImFontConfig c{};
     strncpy(c.Name, "ChironHeiHK-Regular", sizeof(c.Name) - 1);
 
-    ImFont* font = ImGui::GetIO().Fonts->AddFontFromMemoryTTF(loadData.buffer, loadData.bufSize, 17.0f, &c, ranges.Data);
+    ImFont* font =
+        ImGui::GetIO().Fonts->AddFontFromMemoryTTF(loadData.buffer, loadData.bufSize, 17.0f, &c, ranges.Data);
 
     hk::gfx::ImGuiBackendNvn::instance()->initTexture(false);
     ImGui::GetIO().FontDefault = font;
@@ -59,12 +60,14 @@ static void updateImGuiInput() {
     ImGuiIO& io = ImGui::GetIO();
 
     // Mouse position
-    io.AddMousePosEvent(mouseState.mX / displayWidth * io.DisplaySize.x, mouseState.mY / displayHeight * io.DisplaySize.y);
+    io.AddMousePosEvent(mouseState.mX / displayWidth * io.DisplaySize.x,
+                        mouseState.mY / displayHeight * io.DisplaySize.y);
 
     // Mouse buttons
-    constexpr std::pair<nn::hid::MouseButton, ImGuiMouseButton> buttonMap[] = {{nn::hid::MouseButton::Left, ImGuiMouseButton_Left},
-                                                                               {nn::hid::MouseButton::Right, ImGuiMouseButton_Right},
-                                                                               {nn::hid::MouseButton::Middle, ImGuiMouseButton_Middle}};
+    constexpr std::pair<nn::hid::MouseButton, ImGuiMouseButton> buttonMap[] = {
+        {nn::hid::MouseButton::Left, ImGuiMouseButton_Left},
+        {nn::hid::MouseButton::Right, ImGuiMouseButton_Right},
+        {nn::hid::MouseButton::Middle, ImGuiMouseButton_Middle}};
 
     for (auto&& [hidBtn, imguiBtn] : buttonMap) {
         bool was = lastMouseState.mButtons.Test(int(hidBtn));
@@ -164,7 +167,8 @@ static void updateImGuiInput() {
         {nn::hid::KeyboardKey::Tab, ImGuiKey_Tab},
         {nn::hid::KeyboardKey::Backspace, ImGuiKey_Backspace},
         {nn::hid::KeyboardKey::Return, ImGuiKey_Enter},
-        {nn::hid::KeyboardKey::NumPadEnter, ImGuiKey_Enter}};  // looks like ImGui doesn't understand numPadEnter
+        {nn::hid::KeyboardKey::NumPadEnter,
+         ImGuiKey_Enter}};  // looks like ImGui doesn't understand numPadEnter
 
     for (auto&& [hidKey, imguiKey] : keyMap) {
         bool was = lastKeyboardState.mKeys.Test(int(hidKey));
@@ -175,13 +179,14 @@ static void updateImGuiInput() {
     }
 
     // Modifiers (proper ImGui 1.89+ way)
-    io.AddKeyEvent(ImGuiMod_Shift,
-                   keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::LeftShift)) || keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::RightShift)));
+    io.AddKeyEvent(ImGuiMod_Shift, keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::LeftShift)) ||
+                                       keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::RightShift)));
 
-    io.AddKeyEvent(ImGuiMod_Ctrl,
-                   keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::LeftControl)) || keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::RightControl)));
+    io.AddKeyEvent(ImGuiMod_Ctrl, keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::LeftControl)) ||
+                                      keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::RightControl)));
 
-    io.AddKeyEvent(ImGuiMod_Alt, keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::LeftAlt)) || keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::RightAlt)));
+    io.AddKeyEvent(ImGuiMod_Alt, keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::LeftAlt)) ||
+                                     keyboardState.mKeys.Test(int(nn::hid::KeyboardKey::RightAlt)));
 
     // ----------------------------
     // Text Input (safe + correct)
@@ -254,12 +259,14 @@ static void updateImGuiInput() {
 }
 
 static void setup() {
-    sImGuiHeap = sead::ExpHeap::create(2_MB, "ImGuiHeap", al::getStationedHeap(), 8, sead::Heap::cHeapDirection_Forward, false);
+    sImGuiHeap = sead::ExpHeap::create(2_MB, "ImGuiHeap", al::getStationedHeap(), 8,
+                                       sead::Heap::cHeapDirection_Forward, false);
 
     hk::gfx::ImGuiBackendNvn* imgui = hk::gfx::ImGuiBackendNvn::instance();
 
     imgui->setAllocator(
-        {[](size allocSize, size alignment) -> void* { return sImGuiHeap->tryAlloc(allocSize, alignment); }, [](void* ptr) -> void { sImGuiHeap->free(ptr); }});
+        {[](size allocSize, size alignment) -> void* { return sImGuiHeap->tryAlloc(allocSize, alignment); },
+         [](void* ptr) -> void { sImGuiHeap->free(ptr); }});
 
     imgui->tryInitialize();
     setupFont();

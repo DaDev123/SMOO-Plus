@@ -15,7 +15,8 @@
 
 #include "actors/PuppetActor.h"
 
-NameTag::NameTag(PuppetActor* pupActor, const al::LayoutInitInfo& initInfo, float startDist, float endDist, const char* playerName)
+NameTag::NameTag(PuppetActor* pupActor, const al::LayoutInitInfo& initInfo, float startDist, float endDist,
+                 const char* playerName)
     : al::LayoutActor("PNameTag"), mPuppet(pupActor), mStartDist(startDist), mEndDist(endDist) {
     al::initLayoutActor(this, initInfo, "BalloonSpeak", 0);
 
@@ -56,7 +57,8 @@ void NameTag::control() {
 
     al::LiveActor* puppetModel = mPuppet->getCurrentModel();
 
-    if (!al::isNerve(this, &NrvNameTag.End) && !al::isNerve(this, &NrvNameTag.Hide) && (al::isClipped(puppetModel) || al::isDead(puppetModel))) {
+    if (!al::isNerve(this, &NrvNameTag.End) && !al::isNerve(this, &NrvNameTag.Hide) &&
+        (al::isClipped(puppetModel) || al::isDead(puppetModel))) {
         al::setNerve(this, &NrvNameTag.End);
     } else {
         updateTrans();
@@ -74,7 +76,8 @@ void NameTag::updateTrans() {
 
     al::setLocalTrans(this, newTrans);
 
-    mNormalizedDist = 1 - al::normalize(al::calcDistance(puppetModel, al::getPlayerActor(puppetModel, 0)), 200.0f, mEndDist);
+    mNormalizedDist = 1 - al::normalize(al::calcDistance(puppetModel, al::getPlayerActor(puppetModel, 0)),
+                                        200.0f, mEndDist);
 
     al::setLocalScale(this, mNormalizedDist);
 }

@@ -24,7 +24,8 @@ void StageSceneStatePauseMenu::exeModConfig(void) {
             kill();
         } else {
             mSelectParts->appearWait();
-            mFooterParts->tryChangeTextFade(al::getSystemMessageString(mMenuGuide, "Footer", "MenuMessage_Footer"));
+            mFooterParts->tryChangeTextFade(
+                al::getSystemMessageString(mMenuGuide, "Footer", "MenuMessage_Footer"));
 
             al::setNerve(this, &NrvStageSceneStatePauseMenu.Wait);
         }

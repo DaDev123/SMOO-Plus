@@ -232,7 +232,8 @@ void registerGraphicsPreset(const al::Scene*, const char*, const char*, const ch
 void requestGraphicsPreset(const al::Scene*, const char*, const sead::Vector3f&);
 void requestGraphicsCubeMap(const al::Scene*, const char*, const char*);
 void requestGraphicsPresetAndCubeMap(const al::Scene*, const char*, const char*, const char*);
-void requestGraphicsPresetAndCubeMap(const al::Scene*, const char*, const char*, const char*, const sead::Vector3f&);
+void requestGraphicsPresetAndCubeMap(const al::Scene*, const char*, const char*, const char*,
+                                     const sead::Vector3f&);
 void requestGraphicsPresetAndCubeMapFixedAngle(const al::Scene*, const char*, const char*, const char*);
 void registerGraphicsPresetWorldMap(const al::Scene*);
 void registerGraphicsPresetShop(const al::Scene*);

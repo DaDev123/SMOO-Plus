@@ -17,7 +17,10 @@ struct PACKED GameInf : Packet {
     s8 gameMode = -1;
     s8 mainScenarioNo = -1;
 
-    bool operator==(const GameInf& rhs) const { return (is2D == rhs.is2D && scenarioNo == rhs.scenarioNo && al::isEqualString(stageName, rhs.stageName)); }
+    bool operator==(const GameInf& rhs) const {
+        return (is2D == rhs.is2D && scenarioNo == rhs.scenarioNo &&
+                al::isEqualString(stageName, rhs.stageName));
+    }
 
     bool operator!=(const GameInf& rhs) const { return !operator==(rhs); }
 };

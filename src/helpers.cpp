@@ -127,7 +127,8 @@ const char* tryConvertName(const char* className) {
 
 // Unity Classes
 // Ultra-smooth exponential interpolation
-float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed) {
+float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta,
+                              float closingSpeed, float maxAngularSpeed) {
     // Very responsive with minimal smoothing
     const float positionSmoothTime = 0.02f;
     const float rotationSmoothTime = 0.02f;
@@ -137,7 +138,8 @@ float VisualUtils::SmoothMove(Transform moveTransform, Transform targetTransform
 
     if (moveTransform.rotation) {
         float rotLerpFactor = 1.0f - sead::Mathf::exp(-timeDelta / rotationSmoothTime);
-        al::slerpQuat(moveTransform.rotation, *moveTransform.rotation, *targetTransform.rotation, rotLerpFactor);
+        al::slerpQuat(moveTransform.rotation, *moveTransform.rotation, *targetTransform.rotation,
+                      rotLerpFactor);
     }
 
     sead::Vector3f posDiff = *targetTransform.position - *moveTransform.position;

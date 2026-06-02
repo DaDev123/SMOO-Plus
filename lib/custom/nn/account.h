@@ -66,7 +66,8 @@ Result IsNetworkServiceAccountAvailable(bool* out, const nn::account::UserHandle
 void CloseUser(const nn::account::UserHandle&);
 
 Result EnsureNetworkServiceAccountAvailable(const nn::account::UserHandle& userHandle);
-Result EnsureNetworkServiceAccountIdTokenCacheAsync(nn::account::AsyncContext*, const nn::account::UserHandle&);
+Result EnsureNetworkServiceAccountIdTokenCacheAsync(nn::account::AsyncContext*,
+                                                    const nn::account::UserHandle&);
 Result LoadNetworkServiceAccountIdTokenCache(u64*, char*, u64, const nn::account::UserHandle&);
 
 Result GetLastOpenedUser(nn::account::Uid*);

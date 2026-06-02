@@ -31,9 +31,10 @@ class PlayerActorHakoniwa;  // use a stub instead of the actual class file
 
 class HackCap : public al::LiveActor {
 public:
-    HackCap(const al::LiveActor*, const char*, const PlayerInput*, struct PlayerAreaChecker const*, const PlayerWallActionHistory*,
-            const PlayerCapActionHistory*, const PlayerEyeSensorHitHolder*, const PlayerSeparateCapFlag*, const IUsePlayerCollision*,
-            const IUsePlayerHeightCheck*, const PlayerWetControl*, const PlayerJointControlKeeper*, HackCapJudgePreInputSeparateThrow*,
+    HackCap(const al::LiveActor*, const char*, const PlayerInput*, struct PlayerAreaChecker const*,
+            const PlayerWallActionHistory*, const PlayerCapActionHistory*, const PlayerEyeSensorHitHolder*,
+            const PlayerSeparateCapFlag*, const IUsePlayerCollision*, const IUsePlayerHeightCheck*,
+            const PlayerWetControl*, const PlayerJointControlKeeper*, HackCapJudgePreInputSeparateThrow*,
             HackCapJudgePreInputSeparateJump*);
 
     enum SwingHandType { Left, Right };
@@ -61,8 +62,9 @@ public:
     void syncHackDamageVisibility(bool);
     void endHack(void);
     void startSpinAttack(const char*);
-    void startThrow(bool, const sead::Vector3f&, const sead::Vector3f&, float, const sead::Vector2f&, const sead::Vector2f&, const sead::Vector3f&, bool,
-                    const sead::Vector3f&, HackCap::SwingHandType, bool, float, int);
+    void startThrow(bool, const sead::Vector3f&, const sead::Vector3f&, float, const sead::Vector2f&,
+                    const sead::Vector2f&, const sead::Vector3f&, bool, const sead::Vector3f&,
+                    HackCap::SwingHandType, bool, float, int);
     void startThrowSeparatePlay(const sead::Vector3f&, const sead::Vector3f&, float, bool);
     void startThrowSeparatePlayJump(const sead::Vector3f&, const sead::Vector3f&, float);
     void startCatch(const char*, bool, const sead::Vector3f&);
@@ -105,7 +107,8 @@ public:
     void updateThrowJoint(void);
     void setupThrowStart(void);
     void getThrowHeight(void);
-    void checkEnableThrowStartSpace(sead::Vector3f*, sead::Vector3f*, sead::Vector3f*, const sead::Vector3f&, float, float, bool, const sead::Vector3f&);
+    void checkEnableThrowStartSpace(sead::Vector3f*, sead::Vector3f*, sead::Vector3f*, const sead::Vector3f&,
+                                    float, float, bool, const sead::Vector3f&);
     void updateWaterArea(void);
     void getThrowRange(void);
     void getThrowBrakeTime(void);
@@ -137,7 +140,8 @@ public:
     bool receiveMsg(const al::SensorMsg*, al::HitSensor*, al::HitSensor*);
     void endMove(void);
     void prepareTransferLockOn(al::HitSensor*);
-    void collideThrowStartArrow(al::HitSensor*, const sead::Vector3f&, const sead::Vector3f&, const sead::Vector3f&);
+    void collideThrowStartArrow(al::HitSensor*, const sead::Vector3f&, const sead::Vector3f&,
+                                const sead::Vector3f&);
     void trySendAttackCollideAndReaction(bool*);
     void stayWallHit(void);
     void endHackThrow(void);

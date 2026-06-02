@@ -8,7 +8,8 @@ HkTrampoline actorFactoryHook = [](TrampolineStatic(), ProjectActorFactory* acto
     orig(actorFactory);
     s32 customActorEntriesCount = sizeof(sCustomActorFactoryEntries) / sizeof(sCustomActorFactoryEntries[0]);
     al::NameToCreator<al::ActorCreatorFunction>* factoryEntries =
-        new al::NameToCreator<al::ActorCreatorFunction>[actorFactory->mNumFactoryEntries + customActorEntriesCount];
+        new al::NameToCreator<al::ActorCreatorFunction>[actorFactory->mNumFactoryEntries +
+                                                        customActorEntriesCount];
 
     for (s32 i = 0; i < actorFactory->mNumFactoryEntries; i++) {
         factoryEntries[i] = actorFactory->mFactoryEntries[i];

@@ -83,7 +83,9 @@ private:
     float mClosingSpeed = 0;
 };
 
-PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo, char const* bodyName, char const* capName, int subActorNum,
+PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo,
+                                        char const* bodyName, char const* capName, int subActorNum,
                                         al::AudioKeeper* audioKeeper);
-PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player, const al::ActorInitInfo& initInfo, const char* headModelName, const char* capModelName,
+PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player, const al::ActorInitInfo& initInfo,
+                                                const char* headModelName, const char* capModelName,
                                                 const char* headType, const char* headSuffix);

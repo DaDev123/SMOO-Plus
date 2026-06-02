@@ -37,7 +37,8 @@ bool PuppetHolder::resizeHolder(int size) {
 
     if (!mPuppetArr.isBufferReady()) {
         bool result = mPuppetArr.tryAllocBuffer(size, seqHeap);
-        Logger::log("[PuppetHolder] Initial buffer allocation %s for size %d\n", result ? "succeeded" : "FAILED", size);
+        Logger::log("[PuppetHolder] Initial buffer allocation %s for size %d\n",
+                    result ? "succeeded" : "FAILED", size);
         return result;
     }
 
@@ -47,7 +48,8 @@ bool PuppetHolder::resizeHolder(int size) {
         int curPupCount = mPuppetArr.size();
         int copyCount = (curPupCount > size) ? size : curPupCount;
 
-        Logger::log("[PuppetHolder] Resizing from %d to %d, copying %d puppets\n", mPuppetArr.capacity(), size, copyCount);
+        Logger::log("[PuppetHolder] Resizing from %d to %d, copying %d puppets\n", mPuppetArr.capacity(),
+                    size, copyCount);
 
         for (int i = 0; i < copyCount; i++) {
             newPuppets.pushBack(mPuppetArr[i]);
@@ -70,7 +72,8 @@ bool PuppetHolder::tryRegisterPuppet(PuppetActor* puppet) {
         // Logger::log("[PuppetHolder] Registered puppet %d/%d\n", mPuppetArr.size(), mPuppetArr.capacity());
         return true;
     } else {
-        // Logger::log("[PuppetHolder] ERROR: Cannot register puppet, holder is full (%d/%d)\n", mPuppetArr.size(), mPuppetArr.capacity());
+        // Logger::log("[PuppetHolder] ERROR: Cannot register puppet, holder is full (%d/%d)\n",
+        // mPuppetArr.size(), mPuppetArr.capacity());
         return false;
     }
 }
@@ -109,15 +112,17 @@ void PuppetHolder::update() {
 
         // Log stage transitions for debugging
         if (wasInStage != curInfo->isInSameStage && curPuppet->mIsDebug) {
-            // Logger::log("[PuppetHolder] Puppet '%s' stage status changed: %s -> %s\n", curInfo->puppetName, wasInStage ? "in stage" : "out of stage",
-            // curInfo->isInSameStage ? "in stage" : "out of stage");
+            // Logger::log("[PuppetHolder] Puppet '%s' stage status changed: %s -> %s\n", curInfo->puppetName,
+            // wasInStage ? "in stage" : "out of stage", curInfo->isInSameStage ? "in stage" : "out of
+            // stage");
         }
 
         if (curInfo->isInSameStage && al::isDead(curPuppet)) {
             curPuppet->makeActorAlive();
 
             if (curPuppet->mIsDebug) {
-                // Logger::log("[PuppetHolder] Puppet '%s' made alive (entered stage)\n", curInfo->puppetName);
+                // Logger::log("[PuppetHolder] Puppet '%s' made alive (entered stage)\n",
+                // curInfo->puppetName);
             }
 
             // curPuppet->emitJoinEffect();  //Poof Particles

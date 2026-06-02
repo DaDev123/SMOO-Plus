@@ -130,23 +130,28 @@ HkTrampoline drawMainHookHk = [](TrampolineStatic(), GameSystem* gameSystem) -> 
 
     ImGui::Render();
 
-    hk::gfx::ImGuiBackendNvn::instance()->draw(ImGui::GetDrawData(), drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
+    hk::gfx::ImGuiBackendNvn::instance()->draw(ImGui::GetDrawData(),
+                                               drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
 };
 
-HkTrampoline initMarioModelActorHook = [](TrampolineStatic(), al::LiveActor* actor, al::ActorInitInfo& initInfo, char* bodyModel, char* capModel,
+HkTrampoline initMarioModelActorHook = [](TrampolineStatic(), al::LiveActor* actor,
+                                          al::ActorInitInfo& initInfo, char* bodyModel, char* capModel,
                                           al::AudioKeeper* keeper, bool isCloset) -> PlayerCostumeInfo* {
     Client::sendCostumeInfPacket(bodyModel, capModel);
     return orig(actor, initInfo, bodyModel, capModel, keeper, isCloset);
 };
 
-HkTrampoline sendShinePacketHook = [](TrampolineStatic(), GameDataHolderWriter writer, ShineInfo* info) -> void {
+HkTrampoline sendShinePacketHook = [](TrampolineStatic(), GameDataHolderWriter writer,
+                                      ShineInfo* info) -> void {
     if (!GameDataFunction::isGotShine(writer, info)) {
         for (int x = 0; x < 0x400; x++) {
             GameDataFile::HintInfo* curInfo = &writer->getGameDataFile()->getHintList()[x];
             if (info->mStageName == curInfo->stageName && info->mObjId == curInfo->objId) {
                 Client::sendShineCollectPacket(curInfo->uniqueId);
                 if (PlayerEventLog::sInstance) {
-                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::shine, PlayerEventLog::getShineMessage(curInfo->stageName, curInfo->objId));
+                    PlayerEventLog::sInstance->addEvent(
+                        "You", PlayerEventLog::shine,
+                        PlayerEventLog::getShineMessage(curInfo->stageName, curInfo->objId));
                 }
             }
         }
@@ -160,7 +165,8 @@ HkTrampoline sendShinePacketHook2 = [](TrampolineStatic(), GameDataFile* file, c
             if (strcmp(toadetteMoons[i], name) == 0) {
                 Client::sendShineCollectPacket(2000 + i);
                 if (PlayerEventLog::sInstance) {
-                    PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::shine, PlayerEventLog::sInstance->getAchievementMessage(name));
+                    PlayerEventLog::sInstance->addEvent(
+                        "You", PlayerEventLog::shine, PlayerEventLog::sInstance->getAchievementMessage(name));
                 }
             }
         }
@@ -169,12 +175,15 @@ HkTrampoline sendShinePacketHook2 = [](TrampolineStatic(), GameDataFile* file, c
     orig(file, name);
 };
 
-HkTrampoline sendCoinCollectCollectPacketHook = [](TrampolineStatic(), GameDataFile* file, al::PlacementId* placeID) -> void {
+HkTrampoline sendCoinCollectCollectPacketHook = [](TrampolineStatic(), GameDataFile* file,
+                                                   al::PlacementId* placeID) -> void {
     al::StringTmp<128> placeIDString;
     placeID->makeString(&placeIDString);
-    Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(), file->getStageNameCurrent());
+    Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(),
+                                         file->getStageNameCurrent());
     if (PlayerEventLog::sInstance) {
-        PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::purple, worldNames[file->getCurrentWorldIdNoDevelop()]);
+        PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::purple,
+                                            worldNames[file->getCurrentWorldIdNoDevelop()]);
     }
     orig(file, placeID);
 };
@@ -184,27 +193,31 @@ HkTrampoline sendCheckpointGetPacketHook = [](TrampolineStatic(), CheckpointFlag
         al::StringTmp<128> placementId = al::makeStringPlacementId(checkpoint->getPlacementId());
         Client::sendCheckpointGetPacket(placementId.cstr());
         if (PlayerEventLog::sInstance) {
-            PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::checkpoint, PlayerEventLog::getCheckpointMessage(placementId));
+            PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::checkpoint,
+                                                PlayerEventLog::getCheckpointMessage(placementId));
         }
     }
     orig(checkpoint);
 };
 
-HkTrampoline hakoniwaSequenceInitHook = [](TrampolineStatic(), HakoniwaSequence* sequence, al::SequenceInitInfo* initInfo) -> void {
+HkTrampoline hakoniwaSequenceInitHook = [](TrampolineStatic(), HakoniwaSequence* sequence,
+                                           al::SequenceInitInfo* initInfo) -> void {
     orig(sequence, initInfo);
     // was threadInit ( hook for initializing client class)
     al::LayoutInitInfo lytInfo;
 
-    al::initLayoutInitInfo(&lytInfo, sequence->mLayoutKit, 0, sequence->mAudioDirector, initInfo->mSystemInfo->layoutSystem,
-                           initInfo->mSystemInfo->messageSystem, initInfo->mSystemInfo->gamePadSystem);
+    al::initLayoutInitInfo(&lytInfo, sequence->mLayoutKit, 0, sequence->mAudioDirector,
+                           initInfo->mSystemInfo->layoutSystem, initInfo->mSystemInfo->messageSystem,
+                           initInfo->mSystemInfo->gamePadSystem);
 
     Client::instance()->init(lytInfo, sequence->mGameDataHolderAccessor);
 
     speedrun::createHooks();
 };
 
-HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* initInfo, al::Scene* scene, al::PlacementInfo* placementInfo,
-                                        al::LayoutInitInfo* layoutInfo, al::ActorFactory* actorFactory, al::SceneMsgCtrl* sceneMsgCtrl,
+HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* initInfo, al::Scene* scene,
+                                        al::PlacementInfo* placementInfo, al::LayoutInitInfo* layoutInfo,
+                                        al::ActorFactory* actorFactory, al::SceneMsgCtrl* sceneMsgCtrl,
                                         al::GameDataHolderBase* gameDataHolderBase) -> void {
     orig(initInfo, scene, placementInfo, layoutInfo, actorFactory, sceneMsgCtrl, gameDataHolderBase);
 
@@ -259,9 +272,12 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
         }
 
         if (al::isEqualString(GameDataFunction::getCurrentStageName(stageScene), "CapWorldHomeStage") &&
-            GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNo() == 1 && !shouldResetScenario) {
-            GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr = GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNumArr();
-            GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = GameDataHolderWriter(stageScene).mData->getGameDataFile()->getMainScenarioNumArr();
+            GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNo() == 1 &&
+            !shouldResetScenario) {
+            GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr =
+                GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNumArr();
+            GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr =
+                GameDataHolderWriter(stageScene).mData->getGameDataFile()->getMainScenarioNumArr();
 
             Logger::log("Resetting Scenarios\n");
             for (int i = 0; i < sNumWorlds; i++) {
@@ -327,8 +343,10 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
             Client::sInstance->setStopRumble();
         }
         if (debugMode && al::isPadTriggerLeft()) {
-            GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
-            GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
+            GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr =
+                Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
+            GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr =
+                Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
 
             for (int i = 0; i < sNumWorlds; i++) {
                 Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
@@ -395,7 +413,8 @@ void drawMain(al::Sequence* curSequence) {
 
     // Check authorization
     const char* currentUser = Client::getClientName();
-    bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0) || (strcmp(currentUser, "KleinTimmi") == 0) ||
+    bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0) ||
+                            (strcmp(currentUser, "KleinTimmi") == 0) ||
                             (strcmp(currentUser, "Katzen") == 0) || (strcmp(currentUser, "egg guy") == 0);
 
     // ===== CHAT RENDERING (Non-debug mode, in-game only) =====
@@ -423,12 +442,14 @@ void drawMain(al::Sequence* curSequence) {
     // ===== CHAT WINDOW (always visible when connected) =====
     // if (isConnected && isInGame) {
     //     ImGui::Begin("Chat", nullptr,
-    //                  ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+    //                  ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
+    //                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
     //                      ImGuiWindowFlags_NoNavFocus);
     //     ImGui::SetWindowPos(ImVec2(0, dispHeight - 200), ImGuiCond_FirstUseEver);
     //     ImGui::SetWindowSize(ImVec2(400, 150));
     //     ImGui::Text("Chat:");
-    //     if (ImGui::InputText("##chat", chatInput, IM_ARRAYSIZE(chatInput), ImGuiInputTextFlags_EnterReturnsTrue)) {
+    //     if (ImGui::InputText("##chat", chatInput, IM_ARRAYSIZE(chatInput),
+    //     ImGuiInputTextFlags_EnterReturnsTrue)) {
     //         Client::sendMessagePacket(chatInput, 0);
     //         chatInput[0] = '\0';  // Clear the input
     //     }
@@ -439,9 +460,10 @@ void drawMain(al::Sequence* curSequence) {
     if (!debugMode)
         return;
 
-    ImGui::Begin("Debug Menu", nullptr,
-                 ImGuiWindowFlags_NoSavedSettings /*| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse*/ | ImGuiWindowFlags_NoResize |
-                     ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoScrollbar);
+    ImGui::Begin(
+        "Debug Menu", nullptr,
+        ImGuiWindowFlags_NoSavedSettings /*| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse*/ |
+            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoScrollbar);
 
     ImGui::SetWindowPos(ImVec2(0, dispHeight / 3.f), ImGuiCond_FirstUseEver);
     ImGui::SetWindowSize(ImVec2(al::getLayoutDisplayWidth() / 3.f, dispHeight - (dispHeight / 4.f)));
@@ -450,11 +472,13 @@ void drawMain(al::Sequence* curSequence) {
     ImGui::Text("FPS: %.1f\n", Application::sInstance->mGameFramework->calcFps());
     // Server info
     if (Client::isServerHidden()) {
-        ImGui::Text(isConnected ? "Server: <hidden> | %d/%d Players\n" : "Server: <hidden>\n", isConnected ? Client::getConnectCount() + 1 : 0,
+        ImGui::Text(isConnected ? "Server: <hidden> | %d/%d Players\n" : "Server: <hidden>\n",
+                    isConnected ? Client::getConnectCount() + 1 : 0,
                     isConnected ? Client::getMaxPlayerCount() : 0);
     } else {
-        ImGui::Text(isConnected ? "Server: %s:%d | %d/%d Players\n" : "Server: %s:%d\n", socket->getIP(), socket->getPort(),
-                    isConnected ? Client::getConnectCount() + 1 : 0, isConnected ? Client::getMaxPlayerCount() : 0);
+        ImGui::Text(isConnected ? "Server: %s:%d | %d/%d Players\n" : "Server: %s:%d\n", socket->getIP(),
+                    socket->getPort(), isConnected ? Client::getConnectCount() + 1 : 0,
+                    isConnected ? Client::getMaxPlayerCount() : 0);
     }
     ImGui::Text("Your TCP status: %s\n", socket->getStateChar());
 
@@ -470,7 +494,8 @@ void drawMain(al::Sequence* curSequence) {
     //         float ImguiUsed = imgui::sImGuiHeap->getSize() - imgui::sImGuiHeap->getFreeSize();
     //         float ImguiTotal = imgui::sImGuiHeap->getSize();
 
-    //         ImGui::Text("Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode)\n", clientUsed / 1_KB, clientTotal / 1_KB, gmUsed / 1_KB, gmTotal / 1_KB);
+    //         ImGui::Text("Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode)\n", clientUsed / 1_KB, clientTotal
+    //         / 1_KB, gmUsed / 1_KB, gmTotal / 1_KB);
     //     } else {
     //         ImGui::Text("Heap Use: Invalid heap sizes\n");
     //     }
@@ -479,8 +504,8 @@ void drawMain(al::Sequence* curSequence) {
     // }
 
     // Queue info
-    ImGui::Text("Queue Count: %d/%d (Send) %d/%d (Receive)\n", socket->getSendCount(), socket->getSendMaxCount(), socket->getRecvCount(),
-                socket->getRecvMaxCount());
+    ImGui::Text("Queue Count: %d/%d (Send) %d/%d (Receive)\n", socket->getSendCount(),
+                socket->getSendMaxCount(), socket->getRecvCount(), socket->getRecvMaxCount());
 
     ImGui::Text("Framework: Hakkun");
     ImGui::Text("Mod version: %s\n", TOSTRING(BUILDVERSTR));
@@ -495,7 +520,8 @@ void drawMain(al::Sequence* curSequence) {
     // ===== 3D DEBUG RENDERING (Authorized users only) =====
     if (curScene && isInGame) {
         sead::LookAtCamera* cam = &const_cast<sead::LookAtCamera&>(al::getLookAtCamera(curScene, 0));
-        sead::Projection* projection = cam ? &const_cast<sead::Projection&>(al::getProjectionSead(curScene, 0)) : nullptr;
+        sead::Projection* projection =
+            cam ? &const_cast<sead::Projection&>(al::getProjectionSead(curScene, 0)) : nullptr;
 
         if (cam && projection) {
             PlayerActorBase* playerBase = (PlayerActorBase*)rs::getPlayerActor(curScene);
@@ -515,7 +541,8 @@ void drawMain(al::Sequence* curSequence) {
 
             switch (pageIndex) {
             case 0: {
-                ImGui::Text("(ZL ←)----------%s Player %d/%d %s-----------(ZL →)\n\n", debugPuppetIndex + 1 < 10 ? "-" : "", debugPuppetIndex + 1,
+                ImGui::Text("(ZL ←)----------%s Player %d/%d %s-----------(ZL →)\n\n",
+                            debugPuppetIndex + 1 < 10 ? "-" : "", debugPuppetIndex + 1,
                             Client::getMaxPlayerCount(), Client::getMaxPlayerCount() < 10 ? "-" : "");
 
                 if (debugPuppetIndex == 0) {
@@ -524,7 +551,8 @@ void drawMain(al::Sequence* curSequence) {
                     ImGui::Text("Is in same Stage: Yes\n");
                     ImGui::Text("Stage: %s\n", client->getLastGameInfPacket()->stageName);
                     ImGui::Text("Scenario: %u\n", client->getLastGameInfPacket()->scenarioNo);
-                    ImGui::Text("Costume: H: %s B: %s\n", client->getLastCostumeInfPacket()->capModel, client->getLastCostumeInfPacket()->bodyModel);
+                    ImGui::Text("Costume: H: %s B: %s\n", client->getLastCostumeInfPacket()->capModel,
+                                client->getLastCostumeInfPacket()->bodyModel);
                     ImGui::Text("Capture: %s\n", client->getLastCaptureInfPacket()->hackName);
 
                     PlayerHackKeeper* hackKeeper = playerBase->getPlayerHackKeeper();
@@ -542,12 +570,14 @@ void drawMain(al::Sequence* curSequence) {
 
                     if (curModel && curPupInfo) {
                         ImGui::Text("Player Name: %s\n", curPupInfo->puppetName);
-                        ImGui::Text("Connection Status: %s\n", curPupInfo->isConnected ? "Online" : "Offline");
+                        ImGui::Text("Connection Status: %s\n",
+                                    curPupInfo->isConnected ? "Online" : "Offline");
                         GameMode puppetGameMode = static_cast<GameMode>(curPupInfo->gameMode);
                         ImGui::Text("Is in same Stage: %s\n", curPupInfo->isInSameStage ? "Yes" : "No");
                         ImGui::Text("Stage: %s\n", curPupInfo->stageName);
                         ImGui::Text("Scenario: %u\n", curPupInfo->scenarioNo);
-                        ImGui::Text("Costume: H: %s B: %s\n", curPupInfo->costumeHead, curPupInfo->costumeBody);
+                        ImGui::Text("Costume: H: %s B: %s\n", curPupInfo->costumeHead,
+                                    curPupInfo->costumeBody);
                         ImGui::Text("Capture: %s\n", curPupInfo->isCaptured ? curPupInfo->curHack : "");
                         ImGui::Text("Animation: %d %s\n", curPupInfo->curAnim, curPupInfo->curAnimStr);
 
@@ -571,11 +601,13 @@ void drawMain(al::Sequence* curSequence) {
                         ImGui::Text("Current Hack Name: %s\n", hackKeeper->getCurrentHackName());
 
                         sead::Quatf captureRot = curHack->mPoseKeeper->getQuat();
-                        ImGui::Text("Current Hack Rot: %.3f %.3f %.3f %f\n", captureRot.x, captureRot.y, captureRot.z, captureRot.w);
+                        ImGui::Text("Current Hack Rot: %.3f %.3f %.3f %f\n", captureRot.x, captureRot.y,
+                                    captureRot.z, captureRot.w);
 
                         sead::Quatf calcRot;
                         al::calcQuat(&calcRot, curHack);
-                        ImGui::Text("Calc Hack Rot: %.3f %.3f %.3f %.3f\n", calcRot.x, calcRot.y, calcRot.z, calcRot.w);
+                        ImGui::Text("Calc Hack Rot: %.3f %.3f %.3f %.3f\n", calcRot.x, calcRot.y, calcRot.z,
+                                    calcRot.w);
                     } else {
                         ImGui::Text("Cur Action: %s\n", p1->mAnimator->mAnimFrameCtrl->getActionName());
                         ImGui::Text("Cur Anim: %s\n", p1->mAnimator->mCurAnim.cstr());
@@ -588,7 +620,8 @@ void drawMain(al::Sequence* curSequence) {
                             sead::Vector3f* capRot = &p1->mHackCap->mJointKeeper->mJointRot;
                             ImGui::Text("Cappy: Position   Rotation\nX:   % 10.3f % 10.3f\nY:   % 10.3f % "
                                         "10.3f\nZ:   % 10.3f % 10.3f\n",
-                                        capTrans->x, capRot->x, capTrans->y, capRot->y, capTrans->z, capRot->z);
+                                        capTrans->x, capRot->x, capTrans->y, capRot->y, capTrans->z,
+                                        capRot->z);
                             ImGui::Text("Cappy Skew: %.3f\n", p1->mHackCap->mJointKeeper->mSkew);
                         }
                     }
@@ -612,13 +645,17 @@ void drawMain(al::Sequence* curSequence) {
 
                     f32 const progress = 1.0f - static_cast<float>(heap->getFreeSize()) / heap->getSize();
 
-                    ImGui::GetWindowDrawList()->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y), 0xFF966C52);  // fill
-                    ImGui::GetWindowDrawList()->AddRectFilled(pos, ImVec2(pos.x + size.x * progress, pos.y + size.y),
-                                                              0xFF13869D);  // fill
+                    ImGui::GetWindowDrawList()->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y),
+                                                              0xFF966C52);  // fill
+                    ImGui::GetWindowDrawList()->AddRectFilled(
+                        pos, ImVec2(pos.x + size.x * progress, pos.y + size.y),
+                        0xFF13869D);  // fill
 
-                    float used = isKB ? (heap->getSize() - heap->getFreeSize()) / 1024.f : (heap->getSize() - heap->getFreeSize()) / (1024.f * 1024.f);
+                    float used = isKB ? (heap->getSize() - heap->getFreeSize()) / 1024.f :
+                                        (heap->getSize() - heap->getFreeSize()) / (1024.f * 1024.f);
                     float max = isKB ? heap->getSize() / 1024.f : heap->getSize() / (1024.f * 1024.f);
-                    float percentUsed = (heap->getSize() - heap->getFreeSize()) / (float(heap->getSize()) / 100);
+                    float percentUsed =
+                        (heap->getSize() - heap->getFreeSize()) / (float(heap->getSize()) / 100);
                     char buf[32];
                     snprintf(buf, sizeof(buf), "%.3f/%.3f %s", used, max, isKB ? "KB" : "MB");
 
@@ -650,10 +687,12 @@ void drawMain(al::Sequence* curSequence) {
             renderer->setModelMatrix(sead::Matrix34f::ident);
 
             if (curPuppet) {
-                renderer->drawSphere4x8(curPuppet->getInfo()->playerPos, 20, sead::Color4f(1.f, 0.f, 0.f, 0.25f));
+                renderer->drawSphere4x8(curPuppet->getInfo()->playerPos, 20,
+                                        sead::Color4f(1.f, 0.f, 0.f, 0.25f));
                 renderer->drawSphere4x8(al::getTrans(curPuppet), 20, sead::Color4f(0.f, 0.f, 1.f, 0.25f));
             } else if (debugPuppetIndex == 0) {
-                renderer->drawSphere4x8(client->getLastPlayerInfPacket()->playerPos, 20, sead::Color4f(1.f, 0.f, 0.f, 0.25f));
+                renderer->drawSphere4x8(client->getLastPlayerInfPacket()->playerPos, 20,
+                                        sead::Color4f(1.f, 0.f, 0.f, 0.25f));
             }
 
             renderer->end();
@@ -698,25 +737,33 @@ extern "C" void hkMain() {
     initPuppetActorsHook.installAtSym<"_ZN2al22initPlacementObjectMapEPNS_5SceneERKNS_13ActorInitInfoEPKc">();
 
     // Shine Syncing
-    sendShinePacketHook.installAtSym<"_ZN16GameDataFunction11setGotShineE20GameDataHolderWriterPK9ShineInfo">();
+    sendShinePacketHook
+        .installAtSym<"_ZN16GameDataFunction11setGotShineE20GameDataHolderWriterPK9ShineInfo">();
     sendShinePacketHook2.installAtSym<"_ZN12GameDataFile14getAchievementEPKc">();
     registerShineToListHook.installAtSym<"_ZN5Shine18initAfterPlacementEv">();
 
     // CoinCollect Syncing
     sendCoinCollectCollectPacketHook.installAtSym<"_ZN12GameDataFile14addCoinCollectEPKN2al11PlacementIdE">();
-    registerCoinCollectToListHook.installAtSym<"_ZN17CoinCollectHolder19registerCoinCollectEP11CoinCollect">();
-    registerCoinCollect2DToListHook.installAtSym<"_ZN17CoinCollectHolder21registerCoinCollect2DEP13CoinCollect2D">();
+    registerCoinCollectToListHook
+        .installAtSym<"_ZN17CoinCollectHolder19registerCoinCollectEP11CoinCollect">();
+    registerCoinCollect2DToListHook
+        .installAtSym<"_ZN17CoinCollectHolder21registerCoinCollect2DEP13CoinCollect2D">();
 
     // CheckpointFlag Syncing
     sendCheckpointGetPacketHook.installAtSym<"_ZN14CheckpointFlag6exeGetEv">();
     isGotCheckpointInWorldHook.installAtSym<"_ZNK12GameDataFile22isGotCheckpointInWorldEi">();
 
     // Amiibo Button Disabling
-    hk::hook::replace([]() -> void { return; }).installAtSym<"_ZN2rs16isHoldAmiiboModeEPKN2al18IUseSceneObjHolderE">();
-    hk::hook::replace([]() -> void { return; }).installAtSym<"_ZN2rs19isTriggerAmiiboModeEPKN2al18IUseSceneObjHolderE">();
+    hk::hook::replace([]() -> void {
+        return;
+    }).installAtSym<"_ZN2rs16isHoldAmiiboModeEPKN2al18IUseSceneObjHolderE">();
+    hk::hook::replace([]() -> void {
+        return;
+    }).installAtSym<"_ZN2rs19isTriggerAmiiboModeEPKN2al18IUseSceneObjHolderE">();
 
     // Capture Syncing
-    initObjHook.installAtSym<"_ZN2al31createPlacementActorFromFactoryERKNS_13ActorInitInfoEPKNS_13PlacementInfoE">();
+    initObjHook
+        .installAtSym<"_ZN2al31createPlacementActorFromFactoryERKNS_13ActorInitInfoEPKNS_13PlacementInfoE">();
 
     // Save Data Edits
     saveWriteHook.installAtSym<"_ZN14GameConfigData5writeEPN2al11ByamlWriterE">();
@@ -727,31 +774,42 @@ extern "C" void hkMain() {
 
     // Pause Menu Changes
 
-    hk::hook::a64::assemble<"mov w2, #5">().installAtSym<"R_ZN24StageSceneStatePauseMenuNrvStateCount">();  // increase nerve state count to 5
-    initNerveStateHook.installAtSym<"R_ZN24StageSceneStatePauseMenuC1">();                                  // inits options nerve state and server config state
-    pauseMenuWaitHook.installAtSym<"_ZN24StageSceneStatePauseMenu7exeWaitEv">();                            // Change Action Guide Text + Onine Indicator
+    hk::hook::a64::assemble<"mov w2, #5">()
+        .installAtSym<"R_ZN24StageSceneStatePauseMenuNrvStateCount">();     // increase nerve state count to 5
+    initNerveStateHook.installAtSym<"R_ZN24StageSceneStatePauseMenuC1">();  // inits options nerve state and
+                                                                            // server config state
+    pauseMenuWaitHook.installAtSym<"_ZN24StageSceneStatePauseMenu7exeWaitEv">();  // Change Action Guide Text
+                                                                                  // + Onine Indicator
 
     // inits StageSceneStateOption and StageSceneStateModConfig
-    initStateHook.installAtSym<"_ZN21StageSceneStateOptionC1EPKcPN2al5SceneERKNS2_14LayoutInitInfoEP11FooterPartsP14GameDataHolderb">();
+    initStateHook.installAtSym<"_ZN21StageSceneStateOptionC1EPKcPN2al5SceneERKNS2_"
+                               "14LayoutInitInfoEP11FooterPartsP14GameDataHolderb">();
     overrideHelpFadeNerve.installAtSym<"_ZN24StageSceneStatePauseMenu17exeFadeBeforeHelpEv">();
 
     // custom bootscreen hooks
     hk::hook::writeBranchLinkAtSym<"R_hakoniwaSetNerveSetup">(speedboot::hakoniwaSetNerveSetup);
-    hk::hook::a64::assemble<"mov w2, #0x1f">().installAtSym<"R_hakoniwaSetNerveCount">();  // nerve state count
+    hk::hook::a64::assemble<"mov w2, #0x1f">()
+        .installAtSym<"R_hakoniwaSetNerveCount">();  // nerve state count
     speedboot::prepareSpeedBootHook.installAtSym<"_ZN10BootLayoutC1ERKN2al14LayoutInitInfoE">();
 
     // unlock costume doors
-    unlockCostumeDoorsHook.installAtSym<"_ZN2al19listenStageSwitchOnEPNS_15IUseStageSwitchEPKcRKNS_11FunctorBaseE">();  // all except metro
-    hk::hook::writeBranchLinkAtSym<"R_metroCostumeDoor">(unlockCostumeDoorMetroHook);                                   // metro
+    unlockCostumeDoorsHook.installAtSym<
+        "_ZN2al19listenStageSwitchOnEPNS_15IUseStageSwitchEPKcRKNS_11FunctorBaseE">();  // all except metro
+    hk::hook::writeBranchLinkAtSym<"R_metroCostumeDoor">(unlockCostumeDoorMetroHook);   // metro
 
     // QOL Patches
     // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
-    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);                                                     // Notes Demo Skip
-    hk::hook::trampoline([]() -> void {}).installAtSym<"_ZN2rs21requestShowHtmlViewerEPKN2al18IUseSceneObjHolderE">();  // Disable Action Guide / HtmlViewer
-    disableAppearSwitchCameraHook.installAtSym<"R_ZN17AppearSwitchTimer4init">();  // disables AppearSwitchTimer's camera switch
-    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);                // Removes Assist Mode Ledge Grabs
+    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C); // Notes Demo Skip
+    hk::hook::trampoline([]() -> void {
+    }).installAtSym<"_ZN2rs21requestShowHtmlViewerEPKN2al18IUseSceneObjHolderE">();  // Disable Action Guide /
+                                                                                     // HtmlViewer
+    disableAppearSwitchCameraHook
+        .installAtSym<"R_ZN17AppearSwitchTimer4init">();  // disables AppearSwitchTimer's camera switch
+    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);  // Removes Assist Mode Ledge Grabs
 
-    hk::hook::trampoline([]() -> bool { return true; }).installAtSym<"_ZNK9MapLayout22isEnableCheckpointWarpEv">();
+    hk::hook::trampoline([]() -> bool {
+        return true;
+    }).installAtSym<"_ZNK9MapLayout22isEnableCheckpointWarpEv">();
 
     // World Resource Heap stuff
     // hk::ro::getMainModule()->writeRo(0x5145c8, 0x7107D29F);  // cmp w20, #500

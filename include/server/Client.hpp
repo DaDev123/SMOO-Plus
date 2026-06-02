@@ -158,7 +158,9 @@ public:
     // ===== CLIENT INFO GETTERS =====
     static const char* getClientName() { return sInstance ? sInstance->mUsername.cstr() : "Player"; }
     static nn::account::Uid getClientId() { return sInstance ? sInstance->mUserID : nn::account::Uid(); }
-    static sead::FixedSafeString<0x20> getUsername() { return sInstance ? sInstance->mUsername : sead::FixedSafeString<0x20>::cEmptyString; }
+    static sead::FixedSafeString<0x20> getUsername() {
+        return sInstance ? sInstance->mUsername : sead::FixedSafeString<0x20>::cEmptyString;
+    }
     static bool shouldKids() { return sInstance ? sInstance->isKids : false; }
     static u8 getHealth() { return sInstance ? sInstance->mHealth : 3; }
     static int getCoins() { return sInstance ? sInstance->mCoins : 0; }

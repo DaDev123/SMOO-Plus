@@ -53,9 +53,12 @@ public:
     void endInit(const PlayerHolder*);
 
     CameraPoseUpdater* getPoseUpdater(s32 index) const;
-    CameraTicket* createCameraFromFactory(const char*, const PlacementId*, const char*, s32, const sead::Matrix34f&);
-    CameraTicket* createCamera(CameraPoser*, const PlacementId*, const char*, s32, const sead::Matrix34f&, bool);
-    CameraTicket* createObjectCamera(const PlacementId*, const char*, const char*, s32, const sead::Matrix34f&);
+    CameraTicket* createCameraFromFactory(const char*, const PlacementId*, const char*, s32,
+                                          const sead::Matrix34f&);
+    CameraTicket* createCamera(CameraPoser*, const PlacementId*, const char*, s32, const sead::Matrix34f&,
+                               bool);
+    CameraTicket* createObjectCamera(const PlacementId*, const char*, const char*, s32,
+                                     const sead::Matrix34f&);
     CameraTicket* createObjectEntranceCamera(const PlacementId*, const char*, const sead::Matrix34f&);
     CameraTicket* createMirrorObjectCamera(const PlacementId*, const char*, s32, const sead::Matrix34f&);
 

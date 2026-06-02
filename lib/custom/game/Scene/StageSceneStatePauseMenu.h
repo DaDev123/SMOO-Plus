@@ -25,8 +25,9 @@ class WipeSimple;
 
 class StageSceneStatePauseMenu : public al::HostStateBase<al::Scene> {
 public:
-    StageSceneStatePauseMenu(const char*, al::Scene*, al::SimpleLayoutAppearWaitEnd*, GameDataHolder*, const al::SceneInitInfo&, const al::ActorInitInfo&,
-                             const al::LayoutInitInfo&, al::WindowConfirm*, StageSceneLayout*, bool, SceneAudioSystemPauseController*);
+    StageSceneStatePauseMenu(const char*, al::Scene*, al::SimpleLayoutAppearWaitEnd*, GameDataHolder*,
+                             const al::SceneInitInfo&, const al::ActorInitInfo&, const al::LayoutInitInfo&,
+                             al::WindowConfirm*, StageSceneLayout*, bool, SceneAudioSystemPauseController*);
     ~StageSceneStatePauseMenu();
 
     void appear(void);
@@ -116,6 +117,7 @@ NERVE_IMPL(StageSceneStatePauseMenu, NotExistEmptyFile)
 // custom nerves
 NERVE_IMPL(StageSceneStatePauseMenu, ModConfig)
 
-NERVES_MAKE_STRUCT(StageSceneStatePauseMenu, Appear, Wait, FadeBeforeHelp, StartHelp, WaitDraw, End, StartSeparatePlay, EndSeparatePlay, Option, Save,
-                   ConfirmNewGame, NotExistEmptyFile, ModConfig)
+NERVES_MAKE_STRUCT(StageSceneStatePauseMenu, Appear, Wait, FadeBeforeHelp, StartHelp, WaitDraw, End,
+                   StartSeparatePlay, EndSeparatePlay, Option, Save, ConfirmNewGame, NotExistEmptyFile,
+                   ModConfig)
 }  // namespace

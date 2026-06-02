@@ -46,7 +46,15 @@ typedef unsigned long undefined8;
 const u8 MAX_HOSTNAME_LENGTH = 50;
 typedef sead::FixedSafeString<MAX_HOSTNAME_LENGTH + 1> hostname;
 
-enum class SockState { UNINITIALIZED = 0, CONNECTED = 1, UNAVAILABLE = 2, DISCONNECTED = 3, NONET = 4, INVALIP = 5, CONNFAIL = 6 };
+enum class SockState {
+    UNINITIALIZED = 0,
+    CONNECTED = 1,
+    UNAVAILABLE = 2,
+    DISCONNECTED = 3,
+    NONET = 4,
+    INVALIP = 5,
+    CONNFAIL = 6
+};
 
 // typedef signed int          ssize_t;
 

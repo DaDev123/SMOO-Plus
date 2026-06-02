@@ -14,10 +14,12 @@ struct NameToCreator {
 template <typename T>
 class Factory {
 public:
-    inline Factory(const char* factoryName) : mFactoryName(factoryName), mFactoryEntries(nullptr), mNumFactoryEntries(0) {}
+    inline Factory(const char* factoryName)
+        : mFactoryName(factoryName), mFactoryEntries(nullptr), mNumFactoryEntries(0) {}
 
     template <s32 N>
-    inline Factory(const char* factoryName, const NameToCreator<T> (&entries)[N]) : mFactoryName(factoryName) {
+    inline Factory(const char* factoryName, const NameToCreator<T> (&entries)[N])
+        : mFactoryName(factoryName) {
         initFactory(entries);
     }
 

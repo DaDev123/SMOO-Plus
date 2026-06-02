@@ -48,7 +48,8 @@
 #include "System/GameDataHolderAccessor.h"
 #include "System/UniqObjInfo.h"
 
-static HkTrampoline saveWriteHook = [](TrampolineStatic(), GameConfigData* cfgData, al::ByamlWriter* writer) -> void {
+static HkTrampoline saveWriteHook = [](TrampolineStatic(), GameConfigData* cfgData,
+                                       al::ByamlWriter* writer) -> void {
     orig(cfgData, writer);
 
     const char* serverIP = Client::getCurrentIP();
@@ -86,7 +87,8 @@ static HkTrampoline saveWriteHook = [](TrampolineStatic(), GameConfigData* cfgDa
     writer->pop();
 };
 
-static HkTrampoline saveReadHook = [](TrampolineStatic(), GameConfigData* cfgData, const al::ByamlIter& iter) -> void {
+static HkTrampoline saveReadHook = [](TrampolineStatic(), GameConfigData* cfgData,
+                                      const al::ByamlIter& iter) -> void {
     orig(cfgData, iter);
 
     const char* serverIP = "";
@@ -147,67 +149,78 @@ static HkTrampoline registerShineToListHook = [](TrampolineStatic(), Shine* shin
     }
 };
 class CoinCollectHolder;
-static HkTrampoline registerCoinCollectToListHook = [](TrampolineStatic(), CoinCollectHolder* h, CoinCollect* coin) -> void {
+static HkTrampoline registerCoinCollectToListHook = [](TrampolineStatic(), CoinCollectHolder* h,
+                                                       CoinCollect* coin) -> void {
     orig(h, coin);
     Client::tryRegisterCoinCollect(coin);
 };
 
-static HkTrampoline registerCoinCollect2DToListHook = [](TrampolineStatic(), CoinCollectHolder* h, CoinCollect2D* coin) -> void {
+static HkTrampoline registerCoinCollect2DToListHook = [](TrampolineStatic(), CoinCollectHolder* h,
+                                                         CoinCollect2D* coin) -> void {
     orig(h, coin);
     Client::tryRegisterCoinCollect2D(coin);
 };
 
-static HkReplace<bool, GameDataFile*, s32> isGotCheckpointInWorldHook = hk::hook::replace([](GameDataFile* gdf, s32 index) -> bool {
-    s32 index2 = gdf->calcCheckpointIndexInScenario(index);
-    if (index2 < 0)
-        return false;
-    const char* checkpointName = gdf->getCheckpointTable()[gdf->getCurrentWorldIdNoDevelop()][index2].objInfo.getObjId();
-    for (s32 i = 0; i < CheckpointMasterList::sNumCheckpoints; i++) {
-        UniqObjInfo info = gdf->getGotCheckpointTable()[i];
-        if (al::isEqualString(checkpointName, info.getObjId())) {
-            return true;
+static HkReplace<bool, GameDataFile*, s32> isGotCheckpointInWorldHook =
+    hk::hook::replace([](GameDataFile* gdf, s32 index) -> bool {
+        s32 index2 = gdf->calcCheckpointIndexInScenario(index);
+        if (index2 < 0)
+            return false;
+        const char* checkpointName =
+            gdf->getCheckpointTable()[gdf->getCurrentWorldIdNoDevelop()][index2].objInfo.getObjId();
+        for (s32 i = 0; i < CheckpointMasterList::sNumCheckpoints; i++) {
+            UniqObjInfo info = gdf->getGotCheckpointTable()[i];
+            if (al::isEqualString(checkpointName, info.getObjId())) {
+                return true;
+            }
         }
-    }
-    return false;
-});
+        return false;
+    });
 
-static HkReplace<void, StageSceneStatePauseMenu*> overrideHelpFadeNerve = hk::hook::replace([](StageSceneStatePauseMenu* state) -> void {
-    // Set label in menu inside LocalizedData/${lang}/MessageData/LayoutMessage.szs/Menu.msbt/Menu_Help
-    state->exeModConfig();
-    al::setNerve(state, &NrvStageSceneStatePauseMenu.ModConfig);
-});
+static HkReplace<void, StageSceneStatePauseMenu*> overrideHelpFadeNerve =
+    hk::hook::replace([](StageSceneStatePauseMenu* state) -> void {
+        // Set label in menu inside LocalizedData/${lang}/MessageData/LayoutMessage.szs/Menu.msbt/Menu_Help
+        state->exeModConfig();
+        al::setNerve(state, &NrvStageSceneStatePauseMenu.ModConfig);
+    });
 
 static StageSceneStateModConfig* sceneStateModConfig = nullptr;
 
-static HkTrampoline initStateHook = [](TrampolineStatic(), StageSceneStateOption* thisPtr, const char* stateName, al::Scene* host,
-                                       const al::LayoutInitInfo& initInfo, FooterParts* footer, GameDataHolder* data, bool unkBool) -> void {
+static HkTrampoline initStateHook =
+    [](TrampolineStatic(), StageSceneStateOption* thisPtr, const char* stateName, al::Scene* host,
+       const al::LayoutInitInfo& initInfo, FooterParts* footer, GameDataHolder* data, bool unkBool) -> void {
     orig(thisPtr, stateName, host, initInfo, footer, data, unkBool);
     sceneStateModConfig = new StageSceneStateModConfig("ModConfig", host, initInfo, footer, data, unkBool);
 };
 
-static HkTrampoline initNerveStateHook = [](TrampolineStatic(), StageSceneStatePauseMenu* state, const char* name, al::Scene* host,
-                                            al::SimpleLayoutAppearWaitEnd* menuLayout, GameDataHolder* gameDataHolder, const al::SceneInitInfo& sceneInitInfo,
-                                            const al::ActorInitInfo& actorInitInfo, const al::LayoutInitInfo& layoutInitInfo, al::WindowConfirm* windowConfirm,
-                                            StageSceneLayout* stageSceneLayout, bool isTitle,
-                                            SceneAudioSystemPauseController* sceneAudioSystemPauseController) -> void {
-    orig(state, name, host, menuLayout, gameDataHolder, sceneInitInfo, actorInitInfo, layoutInitInfo, windowConfirm, stageSceneLayout, isTitle,
-         sceneAudioSystemPauseController);
+static HkTrampoline initNerveStateHook =
+    [](TrampolineStatic(), StageSceneStatePauseMenu* state, const char* name, al::Scene* host,
+       al::SimpleLayoutAppearWaitEnd* menuLayout, GameDataHolder* gameDataHolder,
+       const al::SceneInitInfo& sceneInitInfo, const al::ActorInitInfo& actorInitInfo,
+       const al::LayoutInitInfo& layoutInitInfo, al::WindowConfirm* windowConfirm,
+       StageSceneLayout* stageSceneLayout, bool isTitle,
+       SceneAudioSystemPauseController* sceneAudioSystemPauseController) -> void {
+    orig(state, name, host, menuLayout, gameDataHolder, sceneInitInfo, actorInitInfo, layoutInitInfo,
+         windowConfirm, stageSceneLayout, isTitle, sceneAudioSystemPauseController);
 
-    al::initNerveState(state, sceneStateModConfig, &NrvStageSceneStatePauseMenu.ModConfig, "CustomNerveOverride");
+    al::initNerveState(state, sceneStateModConfig, &NrvStageSceneStatePauseMenu.ModConfig,
+                       "CustomNerveOverride");
 };
 
-constexpr static al::ExecuteTable DrawTableCustom[] = {
-    createDrawTable("OnlineDrawExecutors", "PuppetActor", "ActorModelDrawDeferred", "PuppetActor", "ActorModelDrawDeferred")};
+constexpr static al::ExecuteTable DrawTableCustom[] = {createDrawTable(
+    "OnlineDrawExecutors", "PuppetActor", "ActorModelDrawDeferred", "PuppetActor", "ActorModelDrawDeferred")};
 
 constexpr static al::ExecuteTable UpdateTableCustom[] = {
     createUpdateTable("OnlineUpdateExecutors", "PuppetActor", "PuppetActor"),
 };
 
-static HkTrampoline drawTableHook = [](TrampolineStatic(), al::ExecuteDirector* director, const al::ExecuteSystemInitInfo& initInfo) -> void {
+static HkTrampoline drawTableHook = [](TrampolineStatic(), al::ExecuteDirector* director,
+                                       const al::ExecuteSystemInitInfo& initInfo) -> void {
     orig(director, initInfo);
 
     constexpr s32 UpdateTableSize = sizeof(UpdateTableCustom) / sizeof(UpdateTableCustom[0]);
-    al::ExecuteTableHolderUpdate** updateTables = new al::ExecuteTableHolderUpdate*[director->mUpdateTableCount + UpdateTableSize]();
+    al::ExecuteTableHolderUpdate** updateTables =
+        new al::ExecuteTableHolderUpdate*[director->mUpdateTableCount + UpdateTableSize]();
 
     for (s32 i = 0; i < director->mUpdateTableCount; i++) {
         updateTables[i] = director->mUpdateTables[i];
@@ -215,26 +228,31 @@ static HkTrampoline drawTableHook = [](TrampolineStatic(), al::ExecuteDirector* 
     for (s32 i = 0; i < UpdateTableSize; i++) {
         updateTables[director->mUpdateTableCount + i] = new al::ExecuteTableHolderUpdate();
         const al::ExecuteTable& curTable = UpdateTableCustom[i];
-        updateTables[director->mUpdateTableCount + i]->init(curTable.name, initInfo, curTable.executeOrders, curTable.executeOrderCount);
+        updateTables[director->mUpdateTableCount + i]->init(curTable.name, initInfo, curTable.executeOrders,
+                                                            curTable.executeOrderCount);
     }
     director->mUpdateTableCount += UpdateTableSize;
     director->mUpdateTables = updateTables;
 
     constexpr s32 DrawTableSize = sizeof(DrawTableCustom) / sizeof(DrawTableCustom[0]);
-    al::ExecuteTableHolderDraw** drawTables = new al::ExecuteTableHolderDraw*[director->mDrawTableCount + DrawTableSize]();
+    al::ExecuteTableHolderDraw** drawTables =
+        new al::ExecuteTableHolderDraw*[director->mDrawTableCount + DrawTableSize]();
     for (s32 i = 0; i < director->mDrawTableCount; i++) {
         drawTables[i] = director->mDrawTables[i];
     }
     for (s32 i = 0; i < DrawTableSize; i++) {
         drawTables[director->mDrawTableCount + i] = new al::ExecuteTableHolderDraw();
         const al::ExecuteTable& curTable = DrawTableCustom[i];
-        drawTables[director->mDrawTableCount + i]->init(curTable.name, initInfo, curTable.executeOrders, curTable.executeOrderCount);
+        drawTables[director->mDrawTableCount + i]->init(curTable.name, initInfo, curTable.executeOrders,
+                                                        curTable.executeOrderCount);
     }
     director->mDrawTableCount += DrawTableSize;
     director->mDrawTables = drawTables;
 };
 
-static HkTrampoline unlockCostumeDoorsHook = [](TrampolineStatic(), al::IUseStageSwitch* user, const char* eventName, const al::FunctorBase& action) -> bool {
+static HkTrampoline unlockCostumeDoorsHook = [](TrampolineStatic(), al::IUseStageSwitch* user,
+                                                const char* eventName,
+                                                const al::FunctorBase& action) -> bool {
     if (strcmp(eventName, "OpenKeySwitch") == 0 && StageSceneStateModConfig::isCostumeDoorsUnlocked())
         return false;
     return orig(user, eventName, action);
@@ -259,9 +277,10 @@ static HkTrampoline pauseMenuWaitHook = [](TrampolineStatic(), StageSceneStatePa
     }
 };
 
-static HkTrampoline disableAppearSwitchCameraHook = [](TrampolineStatic(), AppearSwitchTimer* timer, const al::ActorInitInfo& initInofo,
-                                                       const al::IUseAudioKeeper* audio, al::IUseStageSwitch* stageSwitch, al::IUseCamera* camera,
-                                                       al::LiveActor* actor) -> void {
+static HkTrampoline disableAppearSwitchCameraHook =
+    [](TrampolineStatic(), AppearSwitchTimer* timer, const al::ActorInitInfo& initInofo,
+       const al::IUseAudioKeeper* audio, al::IUseStageSwitch* stageSwitch, al::IUseCamera* camera,
+       al::LiveActor* actor) -> void {
     orig(timer, initInofo, audio, stageSwitch, camera, actor);
     timer->mDemoCameraFrame = 0;
 };
@@ -273,8 +292,10 @@ static HkTrampoline windowConfirmWaitHook = [](TrampolineStatic(), al::WindowCon
 
 static HkTrampoline resetScenarioSyncHook = [](TrampolineStatic(), HakoniwaSequence* seq) -> void {
     orig(seq);
-    GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
-    GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
+    GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr =
+        Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
+    GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr =
+        Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
 
     Logger::log("Resetting Scenarios\n");
     for (int i = 0; i < sNumWorlds; i++) {
@@ -306,7 +327,8 @@ static void uninstallHooks() {
 static void createHooks() {
     if (!isHooksCreated) {
         for (int i = 0; i < hk::util::arraySize(listPtrNop); i++) {
-            listNop[i] = new (imgui::sImGuiHeap) hk::hook::a64::AsmBlock<true, 1>(hk::hook::a64::assemble<"nop", true>());
+            listNop[i] = new (imgui::sImGuiHeap)
+                hk::hook::a64::AsmBlock<true, 1>(hk::hook::a64::assemble<"nop", true>());
         }
         isHooksCreated = true;
     }

@@ -39,11 +39,12 @@ enum PacketType : short {
     End  // end of enum for bounds checking
 };
 
-constexpr static const char* packetNames[] = {"Unknown", "Client Initialization", "Player Info", "Player Cap Info", "Game Info", "Tag Info",
-                                              //"Freeze Info",
-                                              "Player Connect", "Player Disconnect", "Costume Info", "Moon Collection", "Capture Info", "Change Stage",
-                                              "Server Command", "Message", "UDP Initialization", "UDP Hole Punch", "Extra", "Health and Coins",
-                                              "Purple Coin Collection", "Checkpoint Get"};
+constexpr static const char* packetNames[] = {
+    "Unknown", "Client Initialization", "Player Info", "Player Cap Info", "Game Info", "Tag Info",
+    //"Freeze Info",
+    "Player Connect", "Player Disconnect", "Costume Info", "Moon Collection", "Capture Info", "Change Stage",
+    "Server Command", "Message", "UDP Initialization", "UDP Hole Punch", "Extra", "Health and Coins",
+    "Purple Coin Collection", "Checkpoint Get"};
 
 enum SenderType { SERVER, CLIENT };
 

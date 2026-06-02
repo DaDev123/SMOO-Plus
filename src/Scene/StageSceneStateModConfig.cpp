@@ -148,8 +148,9 @@ bool StageSceneStateModConfig::currentMenuHasRollParts() const {
 // Constructor
 // ============================================================================
 
-StageSceneStateModConfig::StageSceneStateModConfig(const char* name, al::Scene* scene, const al::LayoutInitInfo& initInfo, FooterParts* footerParts,
-                                                   GameDataHolder* dataHolder, bool)
+StageSceneStateModConfig::StageSceneStateModConfig(const char* name, al::Scene* scene,
+                                                   const al::LayoutInitInfo& initInfo,
+                                                   FooterParts* footerParts, GameDataHolder* dataHolder, bool)
     : al::HostStateBase<al::Scene>(name, scene) {
     mFooterParts = footerParts;
     mGameDataHolder = dataHolder;
@@ -258,7 +259,8 @@ void StageSceneStateModConfig::updateNetworkSettingsOptions() {
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERLIST].copy(u"Browse Server List");
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERIP].copy(u"Custom Server IP");
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERPORT].copy(u"Custom Server Port");
-    msgList[MENU_NETWORK]->mBuffer[NETW_RECONNECT].copy(Client::get()->mIsAllowReconnect ? u"Reconnect to Server" : u"Reconnect to Server (Disabled)");
+    msgList[MENU_NETWORK]->mBuffer[NETW_RECONNECT].copy(
+        Client::get()->mIsAllowReconnect ? u"Reconnect to Server" : u"Reconnect to Server (Disabled)");
 }
 
 void StageSceneStateModConfig::exeNetworkSettings() {
@@ -331,14 +333,17 @@ void StageSceneStateModConfig::exeOpenKeyboardPort() {
 // ============================================================================
 
 void StageSceneStateModConfig::initServerBrowserMenu(const al::LayoutInitInfo& initInfo) {
-    menuList[MENU_SERVERBROWSER] = new SimpleLayoutMenu("ServerBrowserMenu", "OptionModCheck", initInfo, 0, false);
+    menuList[MENU_SERVERBROWSER] =
+        new SimpleLayoutMenu("ServerBrowserMenu", "OptionModCheck", initInfo, 0, false);
     optionsList[MENU_SERVERBROWSER] = new CommonVerticalList(menuList[MENU_SERVERBROWSER], initInfo, true);
-    al::setPaneString(menuList[MENU_SERVERBROWSER], "TxtOption", u"Server List (OnlineData/ServerList.txt)", 0);
+    al::setPaneString(menuList[MENU_SERVERBROWSER], "TxtOption", u"Server List (OnlineData/ServerList.txt)",
+                      0);
     optionsList[MENU_SERVERBROWSER]->initDataNoResetSelected(mServerBrowserCount);
 
     mServerBrowserOptions = new sead::WFixedSafeString<0x200>[mServerBrowserCount];
     for (int i = 0; i < mServerBrowserCount; i++) {
-        mServerBrowserOptions[i].convertFromMultiByteString(mServerBrowserServers[i].name, strlen(mServerBrowserServers[i].name));
+        mServerBrowserOptions[i].convertFromMultiByteString(mServerBrowserServers[i].name,
+                                                            strlen(mServerBrowserServers[i].name));
     }
     optionsList[MENU_SERVERBROWSER]->addStringData(mServerBrowserOptions, "TxtContent");
 
@@ -384,12 +389,15 @@ void StageSceneStateModConfig::initGameplayMenu(const al::LayoutInitInfo& initIn
 
     sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
     optionsList[MENU_GAMEPLAY]->startLoopActionAll("Loop", "Loop");
-    RollPartsData* dataColPlayer = new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                                                     (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), false);
-    RollPartsData* dataColCap = new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                                                  (sCapCollisionEnabled + (sCapBounceEnabled << 1)), false);
-    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
-    optionsList[MENU_GAMEPLAY]->setRollPartsData(new RollPartsData[]{*dataColPlayer, *dataColCap, *dataEmpty, *dataEmpty, *dataEmpty});
+    RollPartsData* dataColPlayer = new RollPartsData(
+        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" },
+        (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), false);
+    RollPartsData* dataColCap = new RollPartsData(
+        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" },
+        (sCapCollisionEnabled + (sCapBounceEnabled << 1)), false);
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t* [] { u"" });
+    optionsList[MENU_GAMEPLAY]->setRollPartsData(
+        new RollPartsData[]{*dataColPlayer, *dataColCap, *dataEmpty, *dataEmpty, *dataEmpty});
 
     optionsList[MENU_GAMEPLAY]->addStringData(msgList[MENU_GAMEPLAY]->mBuffer, "TxtContent");
     updateGameplaySettingsOptions();
@@ -399,13 +407,16 @@ void StageSceneStateModConfig::updateGameplaySettingsOptions() {
     msgList[MENU_GAMEPLAY]->mBuffer[GP_PLAYERCOL].copy(u"Player Interaction");
     msgList[MENU_GAMEPLAY]->mBuffer[GP_CAPCOL].copy(u"Cappy Interaction");
     msgList[MENU_GAMEPLAY]->mBuffer[GP_COSTUMEDOORS].copy(u"Unlock Costume Doors");
-    al::startAction(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_COSTUMEDOORS + 1], sCostumeDoorsUnlocked ? "On" : "Off", "State");
+    al::startAction(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_COSTUMEDOORS + 1],
+                    sCostumeDoorsUnlocked ? "On" : "Off", "State");
 
     msgList[MENU_GAMEPLAY]->mBuffer[GP_LATENCY].copy(u"Reduce Player Latency");
-    al::startAction(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_LATENCY + 1], sLowLatencyEnabled ? "On" : "Off", "State");
+    al::startAction(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_LATENCY + 1],
+                    sLowLatencyEnabled ? "On" : "Off", "State");
 
     msgList[MENU_GAMEPLAY]->mBuffer[GP_MUSIC].copy(u"In-Game Music");
-    al::startAction(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_MUSIC + 1], Client::isMusicDisabled() ? "Off" : "On", "State");
+    al::startAction(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_MUSIC + 1],
+                    Client::isMusicDisabled() ? "Off" : "On", "State");
 }
 
 void StageSceneStateModConfig::exeGameplaySettings() {
@@ -441,7 +452,8 @@ void StageSceneStateModConfig::exeGameplaySettings() {
 
 void StageSceneStateModConfig::initSpeedrunConfigMenu(const al::LayoutInitInfo& initInfo) {
     menuList[MENU_SPEEDRUN_CONFIG] = new SimpleLayoutMenu("MiscMenu", "OptionModCheck", initInfo, 0, false);
-    optionsList[MENU_SPEEDRUN_CONFIG] = new CommonVerticalList(menuList[MENU_SPEEDRUN_CONFIG], initInfo, true);
+    optionsList[MENU_SPEEDRUN_CONFIG] =
+        new CommonVerticalList(menuList[MENU_SPEEDRUN_CONFIG], initInfo, true);
     al::setPaneString(menuList[MENU_SPEEDRUN_CONFIG], "TxtOption", u"Misc Settings", 0);
     optionsList[MENU_SPEEDRUN_CONFIG]->initDataNoResetSelected(mSpeedrunConfigOptionsCount);
 
@@ -453,7 +465,8 @@ void StageSceneStateModConfig::initSpeedrunConfigMenu(const al::LayoutInitInfo& 
 
 void StageSceneStateModConfig::updateSpeedrunConfig() {
     msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_NON_STOP].copy(u"Nonstop (WIP)");
-    al::startAction(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_NON_STOP + 1], sSpeedrunNonStopEnabled ? "On" : "Off", "State");
+    al::startAction(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_NON_STOP + 1],
+                    sSpeedrunNonStopEnabled ? "On" : "Off", "State");
 }
 
 void StageSceneStateModConfig::exeSpeedrunConfig() {
@@ -467,8 +480,10 @@ void StageSceneStateModConfig::exeSpeedrunConfig() {
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
         ChangeStageInfo info =
-            ChangeStageInfo(Client::get()->getHolder(), Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),
-                            GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1, ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO);
+            ChangeStageInfo(Client::get()->getHolder(),
+                            Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),
+                            GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1,
+                            ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO);
         switch (mCurrentList->mCurSelected) {
         case SPEEDRUN_NON_STOP:
             sSpeedrunNonStopEnabled = false;
@@ -499,7 +514,8 @@ void StageSceneStateModConfig::kill() {
     if (Client::hasServerChanged()) {
         if (Client::get()->mIsAllowReconnect)
             Client::restartConnection();
-        Client::showUIMessage(Client::get()->mIsAllowReconnect ? u"Reconnecting..." : u"Server changed. Please restart the game.");
+        Client::showUIMessage(Client::get()->mIsAllowReconnect ? u"Reconnecting..." :
+                                                                 u"Server changed. Please restart the game.");
         for (int i = 0; i < 240; i++)
             nn::os::YieldThread();
         Client::hideUIMessage();
@@ -596,7 +612,8 @@ void StageSceneStateModConfig::endSubMenu() {
     al::setNerve(this, &NrvStageSceneStateModConfig.MainMenu);
 }
 
-void StageSceneStateModConfig::endSubMenuToParent(SimpleLayoutMenu* parentMenu, CommonVerticalList* parentList) {
+void StageSceneStateModConfig::endSubMenuToParent(SimpleLayoutMenu* parentMenu,
+                                                  CommonVerticalList* parentList) {
     mCurrentList->deactivate();
     mCurrentMenu->startEnd("End");
     mCurrentList = parentList;
@@ -630,11 +647,13 @@ void StageSceneStateModConfig::deactivateInput() {
 void StageSceneStateModConfig::updateDataFromRollParts() {
     // Only commit gameplay roll parts when actually in the gameplay menu
     if (mCurrentMenu == menuList[MENU_GAMEPLAY]) {
-        int playerColType = ((al::RollParts*)optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_PLAYERCOL + 1])->mSelectedIdx;
+        int playerColType =
+            ((al::RollParts*)optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_PLAYERCOL + 1])->mSelectedIdx;
         sPuppetBounceEnabled = (playerColType >> 1) & 1;
         sPuppetCollisionEnabled = playerColType & 1;
 
-        int capColType = ((al::RollParts*)optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_CAPCOL + 1])->mSelectedIdx;
+        int capColType =
+            ((al::RollParts*)optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_CAPCOL + 1])->mSelectedIdx;
         sCapBounceEnabled = (capColType >> 1) & 1;
         sCapCollisionEnabled = capColType & 1;
     }

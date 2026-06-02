@@ -19,7 +19,8 @@ class PlayerHolder;
 
 class StageSceneLayout : public al::NerveStateBase {
 public:
-    StageSceneLayout(const char*, const al::LayoutInitInfo&, const al::PlayerHolder*, const al::SubCameraRenderer*);
+    StageSceneLayout(const char*, const al::LayoutInitInfo&, const al::PlayerHolder*,
+                     const al::SubCameraRenderer*);
 
     void control(void);
     void updatePlayGuideMenuText(void);

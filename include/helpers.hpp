@@ -33,13 +33,15 @@ void killMainPlayer(al::LiveActor* actor);
 void killMainPlayer(PlayerActorHakoniwa* mainPlayer);
 
 __attribute__((used)) static const char* costumeNames[] = {
-    "Mario",          "MarioCaptain",      "Mario64",        "Mario64Metal",    "MarioAloha",        "MarioArmor",      "MarioBone",
-    "MarioClown",     "MarioColorClassic", "MarioColorGold", "MarioColorLuigi", "MarioColorWaluigi", "MarioColorWario", "MarioCook",
-    "MarioDiddyKong", "MarioDoctor",       "MarioExplorer",  "MarioFootball",   "MarioGolf",         "MarioGunman",     "MarioHakama",
-    "MarioHappi",     "MarioKing",         "MarioKoopa",     "MarioMaker",      "MarioMechanic",     "MarioNew3DS",     "MarioPainter",
-    "MarioPeach",     "MarioPilot",        "MarioPirate",    "MarioPoncho",     "MarioPrimitiveMan", "MarioSailor",     "MarioScientist",
-    "MarioShopman",   "MarioSnowSuit",     "MarioSpaceSuit", "MarioSuit",       "MarioSwimwear",     "MarioTailCoat",   "MarioTuxedo",
-    "MarioUnderwear"};
+    "Mario",           "MarioCaptain",      "Mario64",           "Mario64Metal",      "MarioAloha",
+    "MarioArmor",      "MarioBone",         "MarioClown",        "MarioColorClassic", "MarioColorGold",
+    "MarioColorLuigi", "MarioColorWaluigi", "MarioColorWario",   "MarioCook",         "MarioDiddyKong",
+    "MarioDoctor",     "MarioExplorer",     "MarioFootball",     "MarioGolf",         "MarioGunman",
+    "MarioHakama",     "MarioHappi",        "MarioKing",         "MarioKoopa",        "MarioMaker",
+    "MarioMechanic",   "MarioNew3DS",       "MarioPainter",      "MarioPeach",        "MarioPilot",
+    "MarioPirate",     "MarioPoncho",       "MarioPrimitiveMan", "MarioSailor",       "MarioScientist",
+    "MarioShopman",    "MarioSnowSuit",     "MarioSpaceSuit",    "MarioSuit",         "MarioSwimwear",
+    "MarioTailCoat",   "MarioTuxedo",       "MarioUnderwear"};
 
 struct HackActorName {
     const char* className;
@@ -127,10 +129,11 @@ __attribute__((used)) static const char* toadetteMoons[] = {"Scenario_Ending",
                                                             "Other_CapThrow"};
 
 // same ids as GameDataFunction::getCurrentWorldIdNoDevelop
-__attribute__((used)) static const char* worldNames[] = {"Cap Kingdom",      "Cascade Kingdom", "Sand Kingdom",     "Wooded Kingdom",  "Lake Kingdom",
-                                                         "Cloud Kingdom",    "Lost Kingdom",    "Metro Kingdom",    "Seaside Kingdom", "Snow Kingdom",
-                                                         "Luncheon Kingdom", "Ruined Kingdom",  "Bowser's Kingdom", "Moon Kingdom",    "Mushroom Kingdom",
-                                                         "Dark Side",        "Darker Side"};
+__attribute__((used)) static const char* worldNames[] = {
+    "Cap Kingdom",      "Cascade Kingdom", "Sand Kingdom",     "Wooded Kingdom",  "Lake Kingdom",
+    "Cloud Kingdom",    "Lost Kingdom",    "Metro Kingdom",    "Seaside Kingdom", "Snow Kingdom",
+    "Luncheon Kingdom", "Ruined Kingdom",  "Bowser's Kingdom", "Moon Kingdom",    "Mushroom Kingdom",
+    "Dark Side",        "Darker Side"};
 
 struct Transform {
     sead::Vector3f* position;
@@ -140,7 +143,8 @@ struct Transform {
 // From Boss Room Unity Example
 class VisualUtils {
 public:
-    static float SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta, float closingSpeed, float maxAngularSpeed);
+    static float SmoothMove(Transform moveTransform, Transform targetTransform, float timeDelta,
+                            float closingSpeed, float maxAngularSpeed);
 
     constexpr static const float k_MinSmoothSpeed = 0.1f;
     constexpr static const float k_TargetCatchupTime = 0.2f;
