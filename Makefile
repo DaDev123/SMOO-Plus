@@ -42,9 +42,7 @@ setup:
 
 format:
 	clear
-	find ./src -name "*.*" | xargs clang-format -i
-	find ./include -name "*.*" | xargs clang-format -i
-	find ./lib/custom -name "*.*" | xargs clang-format -i
+	find src include lib/custom -name "*.*" | xargs clang-format -i
 
 clean:
 	rm -rf build package
