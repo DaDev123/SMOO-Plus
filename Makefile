@@ -41,13 +41,13 @@ setup:
 	python sys/tools/setup_sail.py
 
 format:
-	clear || true
-	find ./src -name "*.*" | xargs clang-format -i || true
-	find ./include -name "*.*" | xargs clang-format -i || true
-	find ./lib/custom -name "*.*" | xargs clang-format -i || true
+	clear
+	find ./src -name "*.*" | xargs clang-format -i
+	find ./include -name "*.*" | xargs clang-format -i
+	find ./lib/custom -name "*.*" | xargs clang-format -i
 
 clean:
-	yes | rm -r build package || true
+	rm -rf build package
 
 file_structure:
 	@echo -e ""
