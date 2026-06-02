@@ -283,7 +283,7 @@ static HkTrampoline resetScenarioSyncHook = [](TrampolineStatic(), HakoniwaSeque
         // mainSenNumArr[i] = -1;
         // Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
     }
-    shoudResetScenario = true;
+    shouldResetScenario = true;
 };
 
 namespace speedrun {
