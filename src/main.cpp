@@ -252,9 +252,14 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
 
     updatePlayerInfo(GameDataHolderWriter(stageScene), playerBase, isYukimaru);
 
-    if (!shoudResetScenario) {
+    if (!shouldResetScenario) {
+        if (!al::isEqualString(GameDataFunction::getCurrentStageName(stageScene), "CapWorldHomeStage") ||
+            GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNo() != 1) {
+            shouldResetScenario = false;
+        }
+
         if (al::isEqualString(GameDataFunction::getCurrentStageName(stageScene), "CapWorldHomeStage") &&
-            GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNo() == 1) {
+            GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNo() == 1 && !shouldResetScenario) {
             GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr = GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNumArr();
             GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr = GameDataHolderWriter(stageScene).mData->getGameDataFile()->getMainScenarioNumArr();
 
@@ -265,9 +270,6 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
                 mainSenNumArr[i] = -1;
                 // Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
             }
-        }
-        if (!al::isEqualString(GameDataFunction::getCurrentStageName(stageScene), "CapWorldHomeStage")) {
-            shoudResetScenario = false;
         }
     }
 
