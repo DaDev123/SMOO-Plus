@@ -1396,8 +1396,8 @@ void Client::applyOneCoinCollect(const char* placeID, int worldID, const char* s
 
     if (gdf->isGotCoinCollect(&pid)) {
         for (s32 i = 0; i < sInstance->mCoinCollectArray.size(); i++) {
-            if (sInstance->mCoinCollect2DArray[i] && sInstance->mCoinCollect2DArray[i]->mPlacementId &&
-                sInstance->mCoinCollect2DArray[i]->mPlacementId->isEqual(pid)) {
+            if (sInstance->mCoinCollectArray[i] && sInstance->mCoinCollectArray[i]->mPlacementId &&
+                sInstance->mCoinCollectArray[i]->mPlacementId->isEqual(pid)) {
                 sInstance->mCoinCollectArray[i]->makeActorDead();
                 return;
             }

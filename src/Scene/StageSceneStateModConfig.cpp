@@ -34,12 +34,12 @@
 // Static Configuration Variables
 // ============================================================================
 
-bool StageSceneStateModConfig::sCapCollisionEnabled = false;
-bool StageSceneStateModConfig::sCapBounceEnabled = false;
+bool StageSceneStateModConfig::sCapCollisionEnabled = true;
+bool StageSceneStateModConfig::sCapBounceEnabled = true;
 bool StageSceneStateModConfig::sPuppetCollisionEnabled = true;
 bool StageSceneStateModConfig::sPuppetBounceEnabled = true;
 bool StageSceneStateModConfig::sCostumeDoorsUnlocked = true;
-bool StageSceneStateModConfig::sLowLatencyEnabled = true;
+bool StageSceneStateModConfig::sLowLatencyEnabled = false;
 bool StageSceneStateModConfig::sSpeedrunModeEnabled = true;
 StageSceneStateModConfig::SpeedrunLogLife StageSceneStateModConfig::sLogLife = StageSceneStateModConfig::INF;
 bool StageSceneStateModConfig::sShineCountEnabled = true;
