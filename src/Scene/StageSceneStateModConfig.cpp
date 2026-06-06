@@ -25,8 +25,9 @@
 #include <cstring>
 #include <vector>
 
-#include "BloodMoon/BloodMoonUtils.hpp"
+#include "fsHelper.h"
 #include "heap/seadHeapMgr.h"
+#include "layouts/PlayerEventLog.h"
 #include "server/Client.hpp"
 
 // ============================================================================
@@ -40,6 +41,8 @@ bool StageSceneStateModConfig::sPuppetBounceEnabled = true;
 bool StageSceneStateModConfig::sCostumeDoorsUnlocked = true;
 bool StageSceneStateModConfig::sLowLatencyEnabled = true;
 bool StageSceneStateModConfig::sSpeedrunModeEnabled = true;
+StageSceneStateModConfig::SpeedrunLogLife StageSceneStateModConfig::sLogLife = StageSceneStateModConfig::INF;
+bool StageSceneStateModConfig::sShineCountEnabled = true;
 bool StageSceneStateModConfig::sSpeedrunNonStopEnabled = false;
 
 // ============================================================================
@@ -82,15 +85,14 @@ ServerBrowser& ServerBrowser::operator=(const ServerBrowser& other) {
 
 static std::vector<ServerBrowser> loadServersFromFile() {
     std::vector<ServerBrowser> servers;
-    size_t fileSize = 0;
-    u8* fileData = BloodMoon::loadFile("OnlineData/ServerList.txt", &fileSize);
-
-    if (!fileData) {
-        servers.push_back(ServerBrowser("ERROR: OnlineData/ServerList.txt not found", "", 0));
+    FsHelper::LoadData loadData = {.path = "sd:/SMOO-Plus/ServerList.txt"};
+    if (!FsHelper::isFileExist(loadData.path)) {
+        servers.push_back(ServerBrowser("No ServerList.txt found.", "", 0));
         return servers;
     }
+    FsHelper::loadFileFromPath(loadData);
 
-    char* buffer = reinterpret_cast<char*>(fileData);
+    char* buffer = reinterpret_cast<char*>(loadData.buffer);
     char* savePtr = nullptr;
     char* line = strtok_r(buffer, "\n\r", &savePtr);
 
@@ -119,7 +121,7 @@ static std::vector<ServerBrowser> loadServersFromFile() {
         line = strtok_r(nullptr, "\n\r", &savePtr);
     }
 
-    delete[] fileData;
+    free(loadData.buffer);
 
     if (servers.empty()) {
         servers.push_back(ServerBrowser("ERROR: Empty or Invalid File", "", 0));
@@ -132,15 +134,25 @@ static std::vector<ServerBrowser> loadServersFromFile() {
 // Helper: does the current menu have roll parts on the selected item?
 // ============================================================================
 
-bool StageSceneStateModConfig::currentMenuHasRollParts() const {
-    if (mCurrentMenu == menuList[MENU_GAMEPLAY])
-        return true;
+bool StageSceneStateModConfig::isRollPartsSelected() const {
+    if (mCurrentMenu == menuList[MENU_GAMEPLAY]) {
+        switch (mCurrentList->mCurSelected) {
+        case GP_PLAYERCOL:
+            return true;
+        case GP_CAPCOL:
+            return true;
+        }
+        return false;
+    }
 
     if (mCurrentMenu == menuList[MENU_SPEEDRUN_CONFIG]) {
-        // Only the first item (SPEEDRUN_NONSTOP) is a check; item at index 2 is roll
-        // Guard: only allow roll input when the selected row actually is a roll part
-        return (mCurrentList->mCurSelected == 2);
+        switch (mCurrentList->mCurSelected) {
+        case SPEEDRUN_LOGLIFE:
+            return true;
+        }
+        return false;
     }
+
     return false;
 }
 
@@ -230,7 +242,6 @@ void StageSceneStateModConfig::exeMainMenu() {
         case MAIN_GAMEPLAY_SETTINGS:
             al::setNerve(this, &NrvStageSceneStateModConfig.GameplaySettings);
             break;
-
         case MAIN_SPEEDRUN_SETTINGS:
             al::setNerve(this, &NrvStageSceneStateModConfig.SpeedrunConfig);
             break;
@@ -336,7 +347,7 @@ void StageSceneStateModConfig::initServerBrowserMenu(const al::LayoutInitInfo& i
     menuList[MENU_SERVERBROWSER] =
         new SimpleLayoutMenu("ServerBrowserMenu", "OptionModCheck", initInfo, 0, false);
     optionsList[MENU_SERVERBROWSER] = new CommonVerticalList(menuList[MENU_SERVERBROWSER], initInfo, true);
-    al::setPaneString(menuList[MENU_SERVERBROWSER], "TxtOption", u"Server List (OnlineData/ServerList.txt)",
+    al::setPaneString(menuList[MENU_SERVERBROWSER], "TxtOption", u"Server List (SMOO-Plus/ServerList.txt)",
                       0);
     optionsList[MENU_SERVERBROWSER]->initDataNoResetSelected(mServerBrowserCount);
 
@@ -389,13 +400,13 @@ void StageSceneStateModConfig::initGameplayMenu(const al::LayoutInitInfo& initIn
 
     sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
     optionsList[MENU_GAMEPLAY]->startLoopActionAll("Loop", "Loop");
-    RollPartsData* dataColPlayer = new RollPartsData(
-        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" },
-        (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), false);
-    RollPartsData* dataColCap = new RollPartsData(
-        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" },
-        (sCapCollisionEnabled + (sCapBounceEnabled << 1)), false);
-    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t* [] { u"" });
+    RollPartsData* dataColPlayer =
+        new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
+                          (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), true);
+    RollPartsData* dataColCap =
+        new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
+                          (sCapCollisionEnabled + (sCapBounceEnabled << 1)), true);
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
     optionsList[MENU_GAMEPLAY]->setRollPartsData(
         new RollPartsData[]{*dataColPlayer, *dataColCap, *dataEmpty, *dataEmpty, *dataEmpty});
 
@@ -447,26 +458,54 @@ void StageSceneStateModConfig::exeGameplaySettings() {
 }
 
 // ============================================================================
-// Misc Menu
+// Speedrun Menu
 // ============================================================================
 
 void StageSceneStateModConfig::initSpeedrunConfigMenu(const al::LayoutInitInfo& initInfo) {
-    menuList[MENU_SPEEDRUN_CONFIG] = new SimpleLayoutMenu("MiscMenu", "OptionModCheck", initInfo, 0, false);
+    menuList[MENU_SPEEDRUN_CONFIG] =
+        new SimpleLayoutMenu("SpeedrunMenu", "OptionModCheck", initInfo, nullptr, false);
     optionsList[MENU_SPEEDRUN_CONFIG] =
         new CommonVerticalList(menuList[MENU_SPEEDRUN_CONFIG], initInfo, true);
-    al::setPaneString(menuList[MENU_SPEEDRUN_CONFIG], "TxtOption", u"Misc Settings", 0);
+    al::setPaneString(menuList[MENU_SPEEDRUN_CONFIG], "TxtOption", u"Speedrun Settings", 0);
     optionsList[MENU_SPEEDRUN_CONFIG]->initDataNoResetSelected(mSpeedrunConfigOptionsCount);
 
-    setMenuItemCheck(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_NON_STOP + 1]);
+    setMenuItemRoll(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_LOGLIFE + 1]);
+    setMenuItemCheck(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_LOG + 1]);
+    setMenuItemCheck(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_SHINECOUNT + 1]);
+
+    // Non-stop likely isn't coming for a while, so I removed it from the menu for this release.
+    // setMenuItemCheck(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_NON_STOP + 1]);
+
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+    optionsList[MENU_SPEEDRUN_CONFIG]->startLoopActionAll("Loop", "Loop");
+
+    RollPartsData* dataLogLife = new RollPartsData(
+        4, new const char16_t*[]{u"Never", u"After 15 Seconds", u"After 10 Seconds", u"After 5 Seconds"},
+        sLogLife, true);
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
+
+    optionsList[MENU_SPEEDRUN_CONFIG]->setRollPartsData(
+        new RollPartsData[]{*dataLogLife, *dataEmpty, *dataEmpty});
 
     optionsList[MENU_SPEEDRUN_CONFIG]->addStringData(msgList[MENU_SPEEDRUN_CONFIG]->mBuffer, "TxtContent");
     updateSpeedrunConfig();
 }
 
 void StageSceneStateModConfig::updateSpeedrunConfig() {
-    msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_NON_STOP].copy(u"Nonstop (WIP)");
-    al::startAction(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_NON_STOP + 1],
-                    sSpeedrunNonStopEnabled ? "On" : "Off", "State");
+    // Non-stop likely isn't coming for a while, so I removed it from the menu for this release.
+    // msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_NON_STOP].copy(u"Nonstop (WIP)");
+    // al::startAction(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_NON_STOP + 1],
+    //                sSpeedrunNonStopEnabled ? "On" : "Off", "State");
+
+    msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_LOGLIFE].copy(u"Clear Log Entries");
+
+    msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_LOG].copy(u"Player Event Log");
+    al::startAction(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_LOG + 1],
+                    PlayerEventLog::isShow() ? "On" : "Off", "State");
+
+    msgList[MENU_SPEEDRUN_CONFIG]->mBuffer[SPEEDRUN_SHINECOUNT].copy(u"Moon Counter");
+    al::startAction(optionsList[MENU_SPEEDRUN_CONFIG]->mListPartsArr[SPEEDRUN_SHINECOUNT + 1],
+                    sShineCountEnabled ? "On" : "Off", "State");
 }
 
 void StageSceneStateModConfig::exeSpeedrunConfig() {
@@ -474,26 +513,31 @@ void StageSceneStateModConfig::exeSpeedrunConfig() {
         mCurrentList = optionsList[MENU_SPEEDRUN_CONFIG];
         mCurrentMenu = menuList[MENU_SPEEDRUN_CONFIG];
         subMenuStart();
+        updateSpeedrunConfig();
     }
 
     subMenuUpdate();
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
-        ChangeStageInfo info =
-            ChangeStageInfo(Client::get()->getHolder(),
-                            Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),
-                            GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1,
-                            ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO);
+        // ChangeStageInfo info =
+        //     ChangeStageInfo(Client::get()->getHolder(),
+        //                     Client::get()->getHolder()->getGameDataFile()->getPlayerStartId().cstr(),
+        //                     GameDataFunction::getCurrentStageName(Client::get()->getHolder()), false, -1,
+        //                     ChangeStageInfo::SubScenarioType::NO_SUB_SCENARIO);
         switch (mCurrentList->mCurSelected) {
         case SPEEDRUN_NON_STOP:
             sSpeedrunNonStopEnabled = false;
-
-            Client::get()->getHolder()->changeNextStage(&info, 0);
-
-            updateSpeedrunConfig();
-            activateInput();
+            // Client::get()->getHolder()->changeNextStage(&info, 0);
+            break;
+        case SPEEDRUN_LOG:
+            PlayerEventLog::toggleShow();
+            break;
+        case SPEEDRUN_SHINECOUNT:
+            sShineCountEnabled = !sShineCountEnabled;
             break;
         }
+        updateSpeedrunConfig();
+        activateInput();
     }
 }
 
@@ -562,16 +606,17 @@ void StageSceneStateModConfig::handleMenuInput() {
         mCurrentList->down();
     }
 
-    // Only forward left/right to menus (and rows) that actually have roll parts.
+    // Only forward left/right to menus (and rows) if roll parts are selected.
     // Calling rollLeft/rollRight on a non-roll item casts to al::RollParts* through
     // a garbage vtable and asserts.
-    if (mInput->isTriggerUiLeft() || mInput->isTriggerUiRight()) {
-        if (currentMenuHasRollParts()) {
-            if (mInput->isTriggerUiLeft())
-                mCurrentList->rollLeft();
-            if (mInput->isTriggerUiRight())
-                mCurrentList->rollRight();
-        }
+    if (isRollPartsSelected()) {
+        if (mInput->isTriggerUiLeft())
+            mCurrentList->rollLeft();
+        if (mInput->isTriggerUiRight())
+            mCurrentList->rollRight();
+
+        // Early return so that you can't "decide" on roll parts.
+        return;
     }
 
     if (rs::isTriggerUiDecide(mHost))
@@ -645,16 +690,26 @@ void StageSceneStateModConfig::deactivateInput() {
 }
 
 void StageSceneStateModConfig::updateDataFromRollParts() {
-    // Only commit gameplay roll parts when actually in the gameplay menu
     if (mCurrentMenu == menuList[MENU_GAMEPLAY]) {
-        int playerColType =
+        s32 playerColType =
             ((al::RollParts*)optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_PLAYERCOL + 1])->mSelectedIdx;
         sPuppetBounceEnabled = (playerColType >> 1) & 1;
         sPuppetCollisionEnabled = playerColType & 1;
 
-        int capColType =
+        s32 capColType =
             ((al::RollParts*)optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_CAPCOL + 1])->mSelectedIdx;
         sCapBounceEnabled = (capColType >> 1) & 1;
         sCapCollisionEnabled = capColType & 1;
+    }
+
+    if (mCurrentMenu == menuList[MENU_SPEEDRUN_CONFIG]) {
+        sLogLife = (SpeedrunLogLife)((al::RollParts*)optionsList[MENU_SPEEDRUN_CONFIG]
+                                         ->mListPartsArr[SPEEDRUN_LOGLIFE + 1])
+                       ->mSelectedIdx;
+        // recreate log in case its settings were adjusted
+        if (PlayerEventLog::sInstance) {
+            delete PlayerEventLog::sInstance;
+            PlayerEventLog::sInstance = new (Client::getClientHeap()) PlayerEventLog();
+        }
     }
 }

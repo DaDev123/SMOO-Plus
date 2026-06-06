@@ -6,8 +6,10 @@
 #include "imgui.h"
 #include "Library/Base/StringUtil.h"
 #include "MessageMasterList.h"
+#include "Scene/StageSceneStateModConfig.hpp"
 
 PlayerEventLog* PlayerEventLog::sInstance = nullptr;
+bool PlayerEventLog::mIsShow = true;
 
 PlayerEventLog::PlayerEventLog() {}
 
@@ -19,17 +21,19 @@ PlayerEventLog::Entry::Entry(sead::FixedSafeString<16> player, Event event, sead
     mPlayer = player;
     mEvent = event;
     mText = text;
+    mLife = calculateLife();
 }
 
-void PlayerEventLog::addEvent(sead::SafeStringBase<char> player, PlayerEventLog::Event event,
-                              sead::SafeStringBase<char> text) {
+void PlayerEventLog::addEvent(sead::SafeString player, PlayerEventLog::Event event, sead::SafeString text) {
+    // prevent duplicate entries for shines
     if (event == shine) {
         for (s32 i = 0; i < sNumEntries; i++) {
-            if (mLog->mEvent == shine && al::isEqualString(mLog[i].mText, text))
+            if (mLog[i].mEvent == shine && al::isEqualString(mLog[i].mText, text))
                 return;
         }
     }
 
+    // if an entry already exists for purples, increase the number
     if (event == purple) {
         for (s32 i = 0; i < sNumEntries; i++) {
             if (mLog[i].mEvent == purple) {
@@ -54,7 +58,7 @@ void PlayerEventLog::addEvent(sead::SafeStringBase<char> player, PlayerEventLog:
 }
 
 void PlayerEventLog::update() {
-    if (!mIsHidden) {
+    if (mIsShow) {
         f32 width = ImGui::GetIO().DisplaySize.x;
         f32 height = ImGui::GetIO().DisplaySize.y;
         ImGuiStyle& style = ImGui::GetStyle();
@@ -73,7 +77,7 @@ void PlayerEventLog::update() {
                          ImGuiWindowFlags_NoSavedSettings);
 
         for (s32 i = 0; i < sNumEntries; i++) {
-            if (mLog[i].mLife > 0) {
+            if (mLog[i].mLife != 0) {
                 ImVec2 originalCursor = ImGui::GetCursorPos();
                 switch (mLog[i].mEvent) {
                 case connect:
@@ -153,15 +157,32 @@ void PlayerEventLog::update() {
                     ImGui::PopStyleColor();
                     break;
                 }
-                // mLog[i].mLife--;
             }
         }
         ImGui::End();
     }
+
+    // tick down life even when hidden
+    for (s32 i = 0; i < sNumEntries; i++) {
+        if (mLog[i].mLife > 0)
+            mLog[i].mLife--;
+    }
 }
 
-const char* PlayerEventLog::getShineMessage(sead::SafeStringBase<char> stage,
-                                            sead::SafeStringBase<char> objId) {
+s32 PlayerEventLog::calculateLife() {
+    switch (StageSceneStateModConfig::getSpeedrunLogLife()) {
+    case StageSceneStateModConfig::INF:
+        return -1;
+    case StageSceneStateModConfig::FIFTEEN:
+        return 900;
+    case StageSceneStateModConfig::TEN:
+        return 600;
+    case StageSceneStateModConfig::FIVE:
+        return 300;
+    }
+}
+
+const char* PlayerEventLog::getShineMessage(sead::SafeString stage, sead::SafeString objId) {
     for (MessageMasterList::MessageData data : MessageMasterList::shineList) {
         if (al::isEqualString(stage, data.stage) && al::isEqualString(objId, data.objId)) {
             return data.text;
@@ -170,7 +191,7 @@ const char* PlayerEventLog::getShineMessage(sead::SafeStringBase<char> stage,
     return "NULL";
 }
 
-const char* PlayerEventLog::getCheckpointMessage(sead::SafeStringBase<char> objId) {
+const char* PlayerEventLog::getCheckpointMessage(sead::SafeString objId) {
     for (MessageMasterList::MessageData data : MessageMasterList::checkpointList) {
         if (al::isEqualString(objId, data.objId)) {
             return data.text;
@@ -179,7 +200,7 @@ const char* PlayerEventLog::getCheckpointMessage(sead::SafeStringBase<char> objI
     return "NULL";
 }
 
-const char* PlayerEventLog::getAchievementMessage(sead::SafeStringBase<char> label) {
+const char* PlayerEventLog::getAchievementMessage(sead::SafeString label) {
     for (MessageMasterList::AchievementMessageData data : MessageMasterList::achievementList) {
         if (al::isEqualString(label, data.label)) {
             return data.text;

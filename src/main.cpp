@@ -107,7 +107,8 @@ HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> 
     Logger::createInstance();
 #endif
 
-    Client::mHeap = sead::ExpHeap::create(500_KB, "ClientHeap", sead::HeapMgr::instance()->getCurrentHeap(), 8, sead::Heap::cHeapDirection_Forward, false);
+    Client::mHeap = sead::ExpHeap::create(500_KB, "ClientHeap", sead::HeapMgr::instance()->getCurrentHeap(),
+                                          8, sead::Heap::cHeapDirection_Forward, false);
     Client::createInstance(Client::mHeap);
 
     orig(gameSystem);
@@ -336,7 +337,7 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
         }
         if (al::isPadTriggerUp(-1)) {
             if (PlayerEventLog::sInstance)
-                PlayerEventLog::sInstance->toggleHidden();
+                PlayerEventLog::toggleShow();
         }
     } else if (al::isPadHoldL()) {
         if (al::isPadTriggerUp()) {
@@ -816,6 +817,8 @@ extern "C" void hkMain() {
     // hk::hook::a64::assemble<"ret">().installAtMainOffset(0x514710);
 
     resetScenarioSyncHook.installAtSym<"_ZN24HakoniwaStateDemoOpening11startSecondEv">();
+
+    mountSdCardHook.installAtSym<"_ZN4sead13FileDeviceMgrC1Ev">();
 
     hk::hook::a64::assemble<"mov x0, #1\nsvc #0x28">().installAtOffset(hk::ro::getRtldModule(), 0);
 

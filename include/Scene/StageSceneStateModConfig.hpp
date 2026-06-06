@@ -47,6 +47,8 @@ public:
 
     ~StageSceneStateModConfig();
 
+    enum SpeedrunLogLife { INF, FIFTEEN, TEN, FIVE };
+
     // Lifecycle methods
     virtual void init() override;
     virtual void appear() override;
@@ -69,24 +71,28 @@ public:
     void exeSaveData();
 
     // Static getters for settings
-    static bool isCapCollisionEnabled() { return sCapCollisionEnabled; };
-    static bool isCapBounceEnabled() { return sCapBounceEnabled; };
-    static bool isPuppetCollisionEnabled() { return sPuppetCollisionEnabled; };
-    static bool isPuppetBounceEnabled() { return sPuppetBounceEnabled; };
-    static bool isCostumeDoorsUnlocked() { return sCostumeDoorsUnlocked; };
-    static bool isLowLatencyEnabled() { return sLowLatencyEnabled; };
-    static bool isSpeedrunModeEnabled() { return sSpeedrunModeEnabled; };
-    static bool isSpeedrunNonStopEnabled() { return sSpeedrunNonStopEnabled; };
+    static bool isCapCollisionEnabled() { return sCapCollisionEnabled; }
+    static bool isCapBounceEnabled() { return sCapBounceEnabled; }
+    static bool isPuppetCollisionEnabled() { return sPuppetCollisionEnabled; }
+    static bool isPuppetBounceEnabled() { return sPuppetBounceEnabled; }
+    static bool isCostumeDoorsUnlocked() { return sCostumeDoorsUnlocked; }
+    static bool isLowLatencyEnabled() { return sLowLatencyEnabled; }
+    static bool isSpeedrunModeEnabled() { return sSpeedrunModeEnabled; }
+    static SpeedrunLogLife getSpeedrunLogLife() { return sLogLife; }
+    static bool isShineCountEnabled() { return sShineCountEnabled; }
+    static bool isSpeedrunNonStopEnabled() { return sSpeedrunNonStopEnabled; }
 
     // Static setters for settings
-    static void setCapCollisionEnabled(bool enabled) { sCapCollisionEnabled = enabled; };
-    static void setCapBounceEnabled(bool enabled) { sCapBounceEnabled = enabled; };
-    static void setPuppetCollisionEnabled(bool enabled) { sPuppetCollisionEnabled = enabled; };
-    static void setPuppetBounceEnabled(bool enabled) { sPuppetBounceEnabled = enabled; };
-    static void setCostumeDoorsUnlocked(bool unlocked) { sCostumeDoorsUnlocked = unlocked; };
-    static void setLowLatencyEnabled(bool enabled) { sLowLatencyEnabled = enabled; };
-    static void setSpeedrunModeEnabled(bool enabled) { sSpeedrunModeEnabled = enabled; };
-    static void setSpeedrunNonStopEnabled(bool enabled) { sSpeedrunNonStopEnabled = enabled; };
+    static void setCapCollisionEnabled(bool enabled) { sCapCollisionEnabled = enabled; }
+    static void setCapBounceEnabled(bool enabled) { sCapBounceEnabled = enabled; }
+    static void setPuppetCollisionEnabled(bool enabled) { sPuppetCollisionEnabled = enabled; }
+    static void setPuppetBounceEnabled(bool enabled) { sPuppetBounceEnabled = enabled; }
+    static void setCostumeDoorsUnlocked(bool unlocked) { sCostumeDoorsUnlocked = unlocked; }
+    static void setLowLatencyEnabled(bool enabled) { sLowLatencyEnabled = enabled; }
+    static void setSpeedrunModeEnabled(bool enabled) { sSpeedrunModeEnabled = enabled; }
+    static void setSpeedrunLogLife(SpeedrunLogLife life) { sLogLife = life; }
+    static void setShineCountEnabled(bool enabled) { sShineCountEnabled = enabled; }
+    static void setSpeedrunNonStopEnabled(bool enabled) { sSpeedrunNonStopEnabled = enabled; }
 
     // Menu Creation Helpers
     static void setMenuItemBase(al::LayoutActor* item) {
@@ -148,8 +154,8 @@ private:
     void initSpeedrunConfigMenu(const al::LayoutInitInfo& initInfo);
     void updateSpeedrunConfig();
 
-    enum MiscMenuOptions { SPEEDRUN_NON_STOP };
-    static constexpr int mSpeedrunConfigOptionsCount = 1;
+    enum MiscMenuOptions { SPEEDRUN_LOGLIFE, SPEEDRUN_LOG, SPEEDRUN_SHINECOUNT, SPEEDRUN_NON_STOP };
+    static constexpr int mSpeedrunConfigOptionsCount = 3;
 
     // ========================================================================
     // Menu Helpers
@@ -166,7 +172,7 @@ private:
 
     // Update Helpers
     void updateDataFromRollParts();
-    bool currentMenuHasRollParts() const;
+    bool isRollPartsSelected() const;
 
     // ========================================================================
     // Static Configuration
@@ -178,6 +184,8 @@ private:
     static bool sCostumeDoorsUnlocked;
     static bool sLowLatencyEnabled;
     static bool sSpeedrunModeEnabled;
+    static SpeedrunLogLife sLogLife;
+    static bool sShineCountEnabled;
     static bool sSpeedrunNonStopEnabled;
 
     // ========================================================================

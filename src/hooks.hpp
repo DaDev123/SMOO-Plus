@@ -3,6 +3,9 @@
 #include "hk/hook/Trampoline.h"
 #include "hk/util/Math.h"
 
+#include "nn/fs/fs_directories.h"
+#include "nn/fs/fs_mount.h"
+
 #include "al/Library/Camera/CameraDirector.h"
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/Execute/ExecuteDirector.h"
@@ -25,14 +28,22 @@
 #include "game/MapObj/AppearSwitchTimer.h"
 #include "game/Scene/StageSceneStateOption.h"
 #include "game/Scene/StageSceneStatePauseMenu.h"
+#include "game/System/GameConfigData.h"
 
 #include <cstring>
 #include <sys/types.h>
 
 #include "CheckpointMasterList.h"
+#include "filedevice/nin/seadNinFileDeviceBaseNin.h"
+#include "filedevice/seadFileDeviceMgr.h"
+#include "fsHelper.h"
+#include "heap/seadFrameHeap.h"
+#include "heap/seadHeap.h"
+#include "heap/seadHeapMgr.h"
 #include "Imgui.hpp"
 #include "Item/CoinCollect.h"
 #include "layouts/ConnectionStatus.h"
+#include "layouts/PlayerEventLog.h"
 #include "Library/Collision/CollisionPartsTriangle.h"
 #include "Library/Nerve/Nerve.h"
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
@@ -42,18 +53,31 @@
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "Sequence/HakoniwaSequence.h"
 #include "server/Client.hpp"
+#include "stream/seadRamStream.h"
+#include "stream/seadStream.h"
 #include "System/GameDataFile.h"
 #include "System/GameDataFunction.h"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
 #include "System/UniqObjInfo.h"
 
+constexpr const char* sSettingsPath = "sd:/SMOO-Plus/settings.byml";
+constexpr const char* sModFolder = "sd:/SMOO-Plus";
+
 static HkTrampoline saveWriteHook = [](TrampolineStatic(), GameConfigData* cfgData,
-                                       al::ByamlWriter* writer) -> void {
-    orig(cfgData, writer);
+                                       al::ByamlWriter* origWriter) -> void {
+    orig(cfgData, origWriter);
+
+    sead::FrameHeap* frameHeap =
+        sead::FrameHeap::create(0x20000, "SaveWriteHeap", Client::getClientHeap(), 8,
+                                sead::Heap::HeapDirection::cHeapDirection_Forward, false);
+
+    sead::ScopedCurrentHeapSetter heapSetter(frameHeap);
+
+    al::ByamlWriter writer(frameHeap, false);
 
     const char* serverIP = Client::getCurrentIP();
-    const int serverPort = Client::getCurrentPort();
+    const s32 serverPort = Client::getCurrentPort();
     const bool serverHidden = Client::isServerHidden();
     const bool capCollision = StageSceneStateModConfig::isCapCollisionEnabled();
     const bool capBounce = StageSceneStateModConfig::isCapBounceEnabled();
@@ -61,38 +85,76 @@ static HkTrampoline saveWriteHook = [](TrampolineStatic(), GameConfigData* cfgDa
     const bool playerBounce = StageSceneStateModConfig::isPuppetBounceEnabled();
     const bool costumeDoorsUnlocked = StageSceneStateModConfig::isCostumeDoorsUnlocked();
     const bool lowLatency = StageSceneStateModConfig::isLowLatencyEnabled();
+    const s32 logLife = StageSceneStateModConfig::getSpeedrunLogLife();
+    const bool log = PlayerEventLog::isShow();
+    const bool shineCount = StageSceneStateModConfig::isShineCountEnabled();
     const bool music = !Client::isMusicDisabled();
 
-    writer->pushHash("SMOOData");
+    writer.pushHash();
+    writer.pushHash("SMOOData");
     if (serverIP) {
-        writer->addString("ServerIP", serverIP);
+        writer.addString("ServerIP", serverIP);
     } else {
-        writer->addString("ServerIP", "127.0.0.1");
+        writer.addString("ServerIP", "127.0.0.1");
     }
 
     if (serverPort) {
-        writer->addInt("ServerPort", serverPort);
+        writer.addInt("ServerPort", serverPort);
     } else {
-        writer->addInt("ServerPort", 0);
+        writer.addInt("ServerPort", 0);
     }
 
-    writer->addBool("ServerHidden", serverHidden);
-    writer->addBool("CapCollision", capCollision);
-    writer->addBool("CapBounce", capBounce);
-    writer->addBool("PlayerCollision", playerCollision);
-    writer->addBool("PlayerBounce", playerBounce);
-    writer->addBool("CostumeDoorsUnlocked", costumeDoorsUnlocked);
-    writer->addBool("LowLatency", lowLatency);
-    writer->addBool("Music", music);
-    writer->pop();
+    writer.addBool("ServerHidden", serverHidden);
+    writer.addBool("CapCollision", capCollision);
+    writer.addBool("CapBounce", capBounce);
+    writer.addBool("PlayerCollision", playerCollision);
+    writer.addBool("PlayerBounce", playerBounce);
+    writer.addBool("CostumeDoorsUnlocked", costumeDoorsUnlocked);
+    writer.addBool("LowLatency", lowLatency);
+    writer.addInt("LogLife", logLife);
+    writer.addBool("Log", log);
+    writer.addBool("ShineCount", shineCount);
+    writer.addBool("Music", music);
+    writer.pop();
+
+    writer.pushHash("GameConfigData");
+    writer.addInt("CameraStickSensitivityLevel", cfgData->mCameraStickSensitivityLevel);
+    writer.addBool("IsCameraReverseInputH", cfgData->mIsCameraReverseInputH);
+    writer.addBool("IsCameraReverseInputV", cfgData->mIsCameraReverseInputV);
+    writer.addBool("IsValidCameraGyro", cfgData->mIsValidCameraGyro);
+    writer.addInt("CameraGyroSensitivityLevel", cfgData->mCameraGyroSensitivityLevel);
+    writer.addBool("IsUseOpenListAdditionalButton", cfgData->mIsUseOpenListAdditionalButton);
+    writer.addBool("IsPadRumble", cfgData->mIsValidPadRumble);
+    writer.addInt("PadRumbleLevel", cfgData->mPadRumbleLevel);
+    writer.pop();
+
+    writer.pop();
+    u32 size = writer.calcPackSize();
+    u8 buffer[size];
+    sead::RamStreamSrc ramStream(&buffer, sizeof(buffer));
+    sead::WriteStream writeStream;
+    writeStream.setSrc(&ramStream);
+    writeStream.setMode(sead::Stream::Modes::Binary);
+    writer.write(&writeStream);
+    FsHelper::writeFileToPath(buffer, size, sSettingsPath);
+
+    frameHeap->freeAll();
+    frameHeap->destroy();
 };
 
 static HkTrampoline saveReadHook = [](TrampolineStatic(), GameConfigData* cfgData,
-                                      const al::ByamlIter& iter) -> void {
-    orig(cfgData, iter);
+                                      const al::ByamlIter& origIter) -> void {
+    orig(cfgData, origIter);
+
+    sead::ScopedCurrentHeapSetter heapSetter(Client::getClientHeap());
+
+    if (!FsHelper::isFileExist(sSettingsPath)) {
+        nn::fs::CreateDirectory(sModFolder);
+        return;
+    }
 
     const char* serverIP = "";
-    int serverPort = 0;
+    s32 serverPort = 0;
     bool serverHidden = false;
     bool capCollision = false;
     bool capBounce = false;
@@ -100,46 +162,60 @@ static HkTrampoline saveReadHook = [](TrampolineStatic(), GameConfigData* cfgDat
     bool playerBounce = true;
     bool costumeDoorsUnlocked = true;
     bool lowLatency = false;
+    s32 logLife = 0;
+    bool log = true;
+    bool shineCount = true;
     bool music = true;
 
-    al::ByamlIter iterIntern;
-    al::tryGetByamlIterByKey(&iterIntern, iter, "SMOOData");
+    FsHelper::LoadData data = {.path = sSettingsPath};
+    FsHelper::loadFileFromPath(data);
 
-    if (al::tryGetByamlString(&serverIP, iterIntern, "ServerIP")) {
+    al::ByamlIter rootIter((u8*)data.buffer);
+    al::ByamlIter smooIter;
+    al::ByamlIter gameIter;
+    al::tryGetByamlIterByKey(&smooIter, rootIter, "SMOOData");
+    al::tryGetByamlIterByKey(&gameIter, rootIter, "GameConfigData");
+
+    if (al::tryGetByamlString(&serverIP, smooIter, "ServerIP"))
         Client::setLastUsedIP(serverIP);
-    }
-
-    if (al::tryGetByamlS32(&serverPort, iterIntern, "ServerPort")) {
+    if (al::tryGetByamlS32(&serverPort, smooIter, "ServerPort"))
         Client::setLastUsedPort(serverPort);
-    }
-
-    if (al::tryGetByamlBool(&serverHidden, iterIntern, "ServerHidden")) {
+    if (al::tryGetByamlBool(&serverHidden, smooIter, "ServerHidden"))
         Client::setServerHidden(serverHidden);
-    }
-
-    if (al::tryGetByamlBool(&capCollision, iterIntern, "CapCollision")) {
+    if (al::tryGetByamlBool(&capCollision, smooIter, "CapCollision"))
         StageSceneStateModConfig::setCapCollisionEnabled(capCollision);
-    }
-    if (al::tryGetByamlBool(&capBounce, iterIntern, "CapBounce")) {
+    if (al::tryGetByamlBool(&capBounce, smooIter, "CapBounce"))
         StageSceneStateModConfig::setCapBounceEnabled(capBounce);
-    }
-    if (al::tryGetByamlBool(&playerCollision, iterIntern, "PlayerCollision")) {
+    if (al::tryGetByamlBool(&playerCollision, smooIter, "PlayerCollision"))
         StageSceneStateModConfig::setPuppetCollisionEnabled(playerCollision);
-    }
-    if (al::tryGetByamlBool(&playerBounce, iterIntern, "PlayerBounce")) {
+    if (al::tryGetByamlBool(&playerBounce, smooIter, "PlayerBounce"))
         StageSceneStateModConfig::setPuppetBounceEnabled(playerBounce);
-    }
-    if (al::tryGetByamlBool(&costumeDoorsUnlocked, iterIntern, "CostumeDoorsUnlocked")) {
+    if (al::tryGetByamlBool(&costumeDoorsUnlocked, smooIter, "CostumeDoorsUnlocked"))
         StageSceneStateModConfig::setCostumeDoorsUnlocked(costumeDoorsUnlocked);
-    }
-    if (al::tryGetByamlBool(&lowLatency, iterIntern, "LowLatency")) {
+    if (al::tryGetByamlBool(&lowLatency, smooIter, "LowLatency"))
         StageSceneStateModConfig::setLowLatencyEnabled(lowLatency);
-    }
-    if (al::tryGetByamlBool(&music, iterIntern, "Music")) {
+    if (al::tryGetByamlS32(&logLife, smooIter, "LogLife"))
+        StageSceneStateModConfig::setSpeedrunLogLife((StageSceneStateModConfig::SpeedrunLogLife)logLife);
+    if (al::tryGetByamlBool(&log, smooIter, "Log"))
+        PlayerEventLog::setShow(log);
+    if (al::tryGetByamlBool(&shineCount, smooIter, "ShineCount"))
+        StageSceneStateModConfig::setShineCountEnabled(shineCount);
+    if (al::tryGetByamlBool(&music, smooIter, "Music")) {
         if (Client::isMusicDisabled() != !music) {
             Client::toggleMusicDisabled();
         }
     }
+
+    al::tryGetByamlS32(&cfgData->mCameraStickSensitivityLevel, gameIter, "CameraStickSensitivityLevel");
+    al::tryGetByamlBool(&cfgData->mIsCameraReverseInputH, gameIter, "IsCameraReverseInputH");
+    al::tryGetByamlBool(&cfgData->mIsCameraReverseInputV, gameIter, "IsCameraReverseInputV");
+    al::tryGetByamlBool(&cfgData->mIsValidCameraGyro, gameIter, "IsValidCameraGyro");
+    al::tryGetByamlS32(&cfgData->mCameraGyroSensitivityLevel, gameIter, "CameraGyroSensitivityLevel");
+    al::tryGetByamlBool(&cfgData->mIsUseOpenListAdditionalButton, gameIter, "IsUseOpenListAdditionalButton");
+    al::tryGetByamlBool(&cfgData->mIsValidPadRumble, gameIter, "IsPadRumble");
+    al::tryGetByamlS32(&cfgData->mPadRumbleLevel, gameIter, "PadRumbleLevel");
+
+    free(data.buffer);
 };
 
 static HkTrampoline registerShineToListHook = [](TrampolineStatic(), Shine* shine) -> void {
@@ -305,6 +381,14 @@ static HkTrampoline resetScenarioSyncHook = [](TrampolineStatic(), HakoniwaSeque
         // Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
     }
     shouldResetScenario = true;
+};
+
+static HkTrampoline mountSdCardHook = [](TrampolineStatic(), sead::FileDeviceMgr* fileDeviceMgr) -> void {
+    orig(fileDeviceMgr);
+
+    fileDeviceMgr->mMountedSd = nn::fs::MountSdCardForDebug("sd") == 0;
+    sead::NinFileDeviceBase* sdFileDevice = new sead::NinFileDeviceBase("sd", "sd");
+    fileDeviceMgr->mount(sdFileDevice);
 };
 
 namespace speedrun {

@@ -17,24 +17,28 @@ public:
         Event mEvent = shine;
         sead::FixedSafeString<128> mText;
         s32 mNumPurples = 1;
-        s32 mLife = 300;
+        s32 mLife = -1;
     };
 
     PlayerEventLog();
 
-    void addEvent(sead::SafeStringBase<char> player, Event event, sead::SafeStringBase<char> text);
+    void addEvent(sead::SafeString player, Event event, sead::SafeString text);
     void update();
 
-    static const char* getShineMessage(sead::SafeStringBase<char> stage, sead::SafeStringBase<char> objId);
-    static const char* getCheckpointMessage(sead::SafeStringBase<char> objId);
-    static const char* getAchievementMessage(sead::SafeStringBase<char> label);
+    static s32 calculateLife();
 
-    void toggleHidden() { mIsHidden = !mIsHidden; }
+    static const char* getShineMessage(sead::SafeString stage, sead::SafeString objId);
+    static const char* getCheckpointMessage(sead::SafeString objId);
+    static const char* getAchievementMessage(sead::SafeString label);
+
+    static void toggleShow() { mIsShow = !mIsShow; }
+    static bool isShow() { return mIsShow; }
+    static void setShow(bool isShow) { mIsShow = isShow; }
 
 public:
     static PlayerEventLog* sInstance;
 
 private:
     Entry mLog[8];
-    bool mIsHidden = false;
+    static bool mIsShow;
 };

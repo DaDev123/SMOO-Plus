@@ -64,8 +64,8 @@ sead::ExpHeap* Client::mHeap = nullptr;
  * @param bufferSize defines the maximum amount of puppets the client can handle
  */
 Client::Client() {
-    sead::ScopedCurrentHeapSetter heapSetter(
-        mHeap);  // every new call after this will use ClientHeap instead of SequenceHeap
+    // every new call after this will use ClientHeap instead of SequenceHeap
+    sead::ScopedCurrentHeapSetter heapSetter(mHeap);
 
     mReadThread = new al::AsyncFunctorThread(
         "ClientReadThread", al::FunctorV0M<Client*, ClientThreadFunc>(this, &Client::readFunc), 0, 0x1000,
@@ -1395,14 +1395,14 @@ void Client::applyOneCoinCollect(const char* placeID, int worldID, const char* s
     gdf->customAddCoinCollect(&pid, worldID, stage);
 
     if (gdf->isGotCoinCollect(&pid)) {
-        for (int i = 0; i < sInstance->mCoinCollectArray.size(); i++) {
+        for (s32 i = 0; i < sInstance->mCoinCollectArray.size(); i++) {
             if (sInstance->mCoinCollect2DArray[i] && sInstance->mCoinCollect2DArray[i]->mPlacementId &&
                 sInstance->mCoinCollect2DArray[i]->mPlacementId->isEqual(pid)) {
                 sInstance->mCoinCollectArray[i]->makeActorDead();
                 return;
             }
         }
-        for (int i = 0; i < sInstance->mCoinCollect2DArray.size(); i++) {
+        for (s32 i = 0; i < sInstance->mCoinCollect2DArray.size(); i++) {
             if (sInstance->mCoinCollect2DArray[i] && sInstance->mCoinCollect2DArray[i]->mPlacementId &&
                 sInstance->mCoinCollect2DArray[i]->mPlacementId->isEqual(pid)) {
                 sInstance->mCoinCollect2DArray[i]->makeActorDead();

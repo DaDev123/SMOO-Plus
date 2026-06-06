@@ -63,6 +63,14 @@ void SpeedrunIcon::exeWait() {
     } else {
         al::hidePane(this, "TxtNonstop");
     }
+
+    if (StageSceneStateModConfig::isShineCountEnabled()) {
+        al::showPane(this, "ShineCount");
+        al::showPane(this, "ShineIcon");
+    } else {
+        al::hidePane(this, "ShineCount");
+        al::hidePane(this, "ShineIcon");
+    }
 }
 
 void SpeedrunIcon::exeEnd() {

@@ -1,3 +1,0 @@
-# SMOO+ Server List
-Exemple Server|127.0.0.1|1027
-2nd Server|127.0.0.1|1027
