@@ -412,12 +412,6 @@ void drawMain(al::Sequence* curSequence) {
     SocketClient* socket = client->mSocket;
     bool isConnected = socket->isConnected();
 
-    // Check authorization
-    const char* currentUser = Client::getClientName();
-    bool isAuthorizedUser = (strcmp(currentUser, "SrDev") == 0) || (strcmp(currentUser, "Crafty") == 0) ||
-                            (strcmp(currentUser, "KleinTimmi") == 0) ||
-                            (strcmp(currentUser, "Katzen") == 0) || (strcmp(currentUser, "egg guy") == 0);
-
     // ===== CHAT RENDERING (Non-debug mode, in-game only) =====
     if (!debugMode && curScene && isInGame) {
         auto* renderer = hk::gfx::DebugRenderer::instance();
@@ -512,13 +506,7 @@ void drawMain(al::Sequence* curSequence) {
     ImGui::Text("Mod version: %s\n", TOSTRING(BUILDVERSTR));
     ImGui::Text("Server is running version: %s\n", Client::getServerVersion());
 
-    // ===== AUTHORIZED USER ONLY CONTENT =====
-    if (!isAuthorizedUser) {
-        ImGui::End();
-        return;
-    }
-
-    // ===== 3D DEBUG RENDERING (Authorized users only) =====
+    // ===== 3D DEBUG RENDERING =====
     if (curScene && isInGame) {
         sead::LookAtCamera* cam = &const_cast<sead::LookAtCamera&>(al::getLookAtCamera(curScene, 0));
         sead::Projection* projection =
