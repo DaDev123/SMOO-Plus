@@ -7,7 +7,7 @@ constexpr s32 sNumEntries = 8;
 
 class PlayerEventLog {
 public:
-    enum Event { connect, disconnect, shine, purple, checkpoint };
+    enum Event { connect, disconnect, start, shine, purple, checkpoint };
 
     struct Entry {
         Entry();

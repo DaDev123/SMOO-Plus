@@ -992,6 +992,10 @@ void Client::updateShineInfo(ShineCollect* packet) {
         PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
 
         if (PlayerEventLog::sInstance) {
+            if (packet->shineId == 2500) {
+                PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::start, "");
+            }
+
             if (packet->shineId >= 2000 && packet->shineId <= 2060) {
                 PlayerEventLog::sInstance->addEvent(
                     player->puppetName, PlayerEventLog::shine,
@@ -1000,7 +1004,7 @@ void Client::updateShineInfo(ShineCollect* packet) {
             }
 
             GameDataFile::HintInfo* hintInfo =
-                CustomGameDataFunction::getHintInfoByUniqueID(getStageScene(), packet->shineId);
+                CustomGameDataFunction::getHintInfoByUniqueID(mHolder, packet->shineId);
             PlayerEventLog::sInstance->addEvent(
                 player->puppetName, PlayerEventLog::shine,
                 PlayerEventLog::getShineMessage(hintInfo->stageName, hintInfo->objId));

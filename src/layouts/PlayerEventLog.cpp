@@ -80,8 +80,8 @@ void PlayerEventLog::update() {
             if (mLog[i].mLife != 0) {
                 ImVec2 originalCursor = ImGui::GetCursorPos();
                 switch (mLog[i].mEvent) {
-                case connect:
-                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
+                case connect: {
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
                     ImGui::Text("%s connected", mLog[i].mPlayer.cstr());
                     ImGui::PopStyleColor();
@@ -89,8 +89,9 @@ void PlayerEventLog::update() {
                     ImGui::SetCursorPos(originalCursor);
                     ImGui::Text("%s connected", mLog[i].mPlayer.cstr());
                     break;
-                case disconnect:
-                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
+                }
+                case disconnect: {
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
                     ImGui::Text("%s disconnected", mLog[i].mPlayer.cstr());
                     ImGui::PopStyleColor();
@@ -98,10 +99,26 @@ void PlayerEventLog::update() {
                     ImGui::SetCursorPos(originalCursor);
                     ImGui::Text("%s disconnected", mLog[i].mPlayer.cstr());
                     break;
-                case shine:
-                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
+                }
+                case start: {
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                    ImGui::Text("%s got the moon %s", mLog[i].mPlayer.cstr(), mLog[i].mText.cstr());
+                    ImGui::Text("%s started", mLog[i].mPlayer.cstr());
+                    ImGui::PopStyleColor();
+
+                    ImGui::SetCursorPos(originalCursor);
+                    ImGui::Text("%s started", mLog[i].mPlayer.cstr());
+                    break;
+                }
+                case shine: {
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::Text("got the moon ");
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::Text("%s", mLog[i].mText.cstr());
+                    ImGui::SameLine(0.0f, 0.0f);
                     ImGui::PopStyleColor();
 
                     ImGui::SetCursorPos(originalCursor);
@@ -117,11 +134,19 @@ void PlayerEventLog::update() {
                     ImGui::Text("%s", mLog[i].mText.cstr());
                     ImGui::PopStyleColor();
                     break;
-                case purple:
-                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
+                }
+                case purple: {
+                    const char* plural = mLog[i].mNumPurples > 1 ? "s" : "";
+
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                    ImGui::Text("%s got %d %s purples", mLog[i].mPlayer.cstr(), mLog[i].mNumPurples,
-                                mLog[i].mText.cstr());
+                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::Text("got ");
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::Text("%d %s ", mLog[i].mNumPurples, mLog[i].mText.cstr());
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::Text("regional coin%s", plural);
                     ImGui::PopStyleColor();
 
                     ImGui::SetCursorPos(originalCursor);
@@ -134,13 +159,23 @@ void PlayerEventLog::update() {
 
                     ImGui::SameLine(0.0f, 0.0f);
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.85f, 0.0f, 1.0f, 1.0f));
-                    ImGui::Text("%d %s purples", mLog[i].mNumPurples, mLog[i].mText.cstr());
+                    ImGui::Text("%d %s ", mLog[i].mNumPurples, mLog[i].mText.cstr());
+                    ImGui::PopStyleColor();
+
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
+                    ImGui::Text("regional coin%s", plural);
                     ImGui::PopStyleColor();
                     break;
-                case checkpoint:
-                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 2.0f, originalCursor.y + 2.0f));
+                }
+                case checkpoint: {
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                    ImGui::Text("%s got the checkpoint %s", mLog[i].mPlayer.cstr(), mLog[i].mText.cstr());
+                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::Text("got the checkpoint ");
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::Text("%s", mLog[i].mText.cstr());
                     ImGui::PopStyleColor();
 
                     ImGui::SetCursorPos(originalCursor);
@@ -156,6 +191,7 @@ void PlayerEventLog::update() {
                     ImGui::Text("%s", mLog[i].mText.cstr());
                     ImGui::PopStyleColor();
                     break;
+                }
                 }
             }
         }

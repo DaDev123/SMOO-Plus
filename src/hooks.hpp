@@ -368,6 +368,12 @@ static HkTrampoline windowConfirmWaitHook = [](TrampolineStatic(), al::WindowCon
 
 static HkTrampoline resetScenarioSyncHook = [](TrampolineStatic(), HakoniwaSequence* seq) -> void {
     orig(seq);
+
+    if (PlayerEventLog::sInstance)
+        PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::start, "");
+
+    Client::sendShineCollectPacket(2500);
+
     GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr =
         Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
     GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr =

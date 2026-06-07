@@ -412,6 +412,11 @@ void drawMain(al::Sequence* curSequence) {
     SocketClient* socket = client->mSocket;
     bool isConnected = socket->isConnected();
 
+    if (!debugMode) {
+        if (PlayerEventLog::sInstance)
+            PlayerEventLog::sInstance->update();
+    }
+
     // ===== CHAT RENDERING (Non-debug mode, in-game only) =====
     if (!debugMode && curScene && isInGame) {
         auto* renderer = hk::gfx::DebugRenderer::instance();
@@ -425,9 +430,6 @@ void drawMain(al::Sequence* curSequence) {
         // renderer->clear();
 
         // renderer->end();
-
-        if (PlayerEventLog::sInstance)
-            PlayerEventLog::sInstance->update();
 
         isInGame = false;
 
@@ -664,7 +666,8 @@ void drawMain(al::Sequence* curSequence) {
             case 3: {
                 ImGui::Text("------------------- Controls --------------------\n\n");
 
-                ImGui::Text("\n- ZR + ↑ | Open/close this debug menu\n");
+                ImGui::Text("- ZR + ↑ | Open/close this debug menu\n");
+                ImGui::Text("- ZL + ↑ | Open/close the player event log\n");
                 break;
             }
             default:
@@ -804,7 +807,7 @@ extern "C" void hkMain() {
     // hk::ro::getMainModule()->writeRo(0x5145c8, 0x7107D29F);  // cmp w20, #500
     // hk::hook::a64::assemble<"ret">().installAtMainOffset(0x514710);
 
-    resetScenarioSyncHook.installAtSym<"_ZN24HakoniwaStateDemoOpening11startSecondEv">();
+    resetScenarioSyncHook.installAtSym<"_ZN24HakoniwaStateDemoOpening7exeLoadEv">();
 
     mountSdCardHook.installAtSym<"_ZN4sead13FileDeviceMgrC1Ev">();
 

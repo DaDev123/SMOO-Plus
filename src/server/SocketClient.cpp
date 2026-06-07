@@ -113,9 +113,9 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
         this->socket_errno = nn::socket::GetLastErrno();
         this->socket_log_state = SockState::CONNFAIL;
 
-        strcpy(mAppErr.dialog_message, "Connection Failed");
-        strcpy(mAppErr.fullscreen_message, "Failed to connect to server");
-        nn::err::ShowApplicationError(mAppErr);
+        // strcpy(mAppErr.dialog_message, "Connection Failed");
+        // strcpy(mAppErr.fullscreen_message, "Failed to connect to server");
+        // nn::err::ShowApplicationError(mAppErr);
 
         return result;
     }
@@ -142,9 +142,9 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
 
     send(&initPacket);
 
-    strcpy(mAppErr.dialog_message, "Connected");
-    strcpy(mAppErr.fullscreen_message, "Successfully connected");
-    nn::err::ShowApplicationError(mAppErr);
+    // strcpy(mAppErr.dialog_message, "Connected");
+    // strcpy(mAppErr.fullscreen_message, "Successfully connected");
+    // nn::err::ShowApplicationError(mAppErr);
 
     return result;
 }
