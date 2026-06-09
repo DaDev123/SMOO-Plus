@@ -23,6 +23,7 @@
 #include "al/Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
 #include "al/Library/Sequence/Sequence.h"
 #include "al/Library/Thread/AsyncFunctorThread.h"
+#include "al/Library/Yaml/Writer/ByamlWriter.h"
 
 // ===== GAME INCLUDES =====
 #include "game/Item/CoinCollect.h"
@@ -43,6 +44,7 @@
 #include "sead/prim/seadSafeString.h"
 
 #include "container/seadPtrArray.h"
+#include "Library/Yaml/ByamlIter.h"
 
 // ===== PROJECT INCLUDES =====
 #include "Keyboard.hpp"
@@ -129,6 +131,10 @@ public:
     static void tryRegisterCoinCollect(CoinCollect* coin);
     static void tryRegisterCoinCollect2D(CoinCollect2D* coin);
 
+    // ==== MOON ROCK MANAGEMENT ====
+    void saveMoonRocks(al::ByamlWriter* writer);
+    void readMoonRocks(const al::ByamlIter& save);
+
     // ===== PACKET SENDING METHODS =====
     static void sendHackCapInfPacket(const HackCap* hackCap);
     static void sendPlayerInfPacket(const PlayerActorBase* player, bool isYukimaru);
@@ -140,6 +146,7 @@ public:
     static void sendPuppetPosInfoPacket();
     static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
     static void sendCheckpointGetPacket(const char* objId);
+    static void sendMoonRockHitPacket(int worldId);
 
     // ===== PUPPET MANAGEMENT =====
     static bool tryAddPuppet(PuppetActor* puppet);
@@ -268,6 +275,7 @@ private:
     void updateHealthCoins(HealthCoins* packet);
     void updateCoinCollects(CoinCollectCollect* packet);
     void updateCheckpoints(CheckpointGet* packet);
+    void updateMoonRocks(MoonRockHit* packet);
 
     // ===== UTILITY METHODS =====
     PuppetInfo* findPuppetInfo(const nn::account::Uid& id, bool isFindAvailable);
@@ -321,6 +329,12 @@ private:
     static constexpr s32 sMaxPendingCheckpoints = 10;
     sead::SafeArray<PendingCheckpoint, sMaxPendingCheckpoints> mPendingCheckpoints;
     s32 mPendingCheckpointCount = 0;
+
+    // ===== MOON ROCK PENDING QUEUE =====
+    // Moon Rocks when players haven't beaten the game yet get stored here.
+    // The moon rock scenario is applied when the game is beaten.
+    static constexpr s32 SNumMoonRocks = 14;
+    sead::SafeArray<bool, SNumMoonRocks> mPendingMoonRocks;
 
     // ===== PACKET BACKUPS =====
     PlayerInf lastPlayerInfPacket = PlayerInf();

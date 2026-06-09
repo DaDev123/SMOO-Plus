@@ -6,7 +6,6 @@
 static bool isInGame = false;
 
 static bool debugMode = false;
-static bool shouldResetScenario = false;
 
 void drawMain(al::Sequence* seq);
 void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru);

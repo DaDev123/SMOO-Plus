@@ -129,11 +129,18 @@ __attribute__((used)) static const char* toadetteMoons[] = {"Scenario_Ending",
                                                             "Other_CapThrow"};
 
 // same ids as GameDataFunction::getCurrentWorldIdNoDevelop
-__attribute__((used)) static const char* worldNames[] = {
+__attribute__((used)) static const char* worldNames[17] = {
     "Cap Kingdom",      "Cascade Kingdom", "Sand Kingdom",     "Wooded Kingdom",  "Lake Kingdom",
     "Cloud Kingdom",    "Lost Kingdom",    "Metro Kingdom",    "Seaside Kingdom", "Snow Kingdom",
     "Luncheon Kingdom", "Ruined Kingdom",  "Bowser's Kingdom", "Moon Kingdom",    "Mushroom Kingdom",
     "Dark Side",        "Darker Side"};
+
+__attribute__((used)) static const char* homeStageNames[17] = {
+    "CapWorldHomeStage",     "WaterfallWorldHomeStage", "SandWorldHomeStage",  "ForestWorldHomeStage",
+    "LakeWorldHomeStage",    "CloudWorldHomeStage",     "ClashWorldHomeStage", "CityWorldHomeStage",
+    "SeaWorldHomeStage",     "SnowWorldHomeStage",      "LavaWorldHomeStage",  "BossRaidWorldHomeStage",
+    "SkyWorldHomeStage",     "MoonWorldHomeStage",      "PeachWorldHomeStage", "Special1WorldHomeStage",
+    "Special2WorldHomeStage"};
 
 struct Transform {
     sead::Vector3f* position;

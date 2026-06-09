@@ -37,9 +37,8 @@
 #include "filedevice/nin/seadNinFileDeviceBaseNin.h"
 #include "filedevice/seadFileDeviceMgr.h"
 #include "fsHelper.h"
-#include "heap/seadFrameHeap.h"
-#include "heap/seadHeap.h"
 #include "heap/seadHeapMgr.h"
+#include "helpers.hpp"
 #include "Imgui.hpp"
 #include "Item/CoinCollect.h"
 #include "layouts/ConnectionStatus.h"
@@ -47,106 +46,42 @@
 #include "Library/Collision/CollisionPartsTriangle.h"
 #include "Library/Nerve/Nerve.h"
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
-#include "logger.hpp"
-#include "main.hpp"
+#include "Library/Thread/AsyncFunctorThread.h"
+#include "MapObj/ChangeStageInfo.h"
+#include "MapObj/MoonRock.h"
 #include "Scene/StageScene.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "Sequence/HakoniwaSequence.h"
 #include "server/Client.hpp"
-#include "stream/seadRamStream.h"
-#include "stream/seadStream.h"
 #include "System/GameDataFile.h"
 #include "System/GameDataFunction.h"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
 #include "System/UniqObjInfo.h"
 
-constexpr const char* sSettingsPath = "sd:/SMOO-Plus/settings.byml";
-constexpr const char* sModFolder = "sd:/SMOO-Plus";
-
 static HkTrampoline saveWriteHook = [](TrampolineStatic(), GameConfigData* cfgData,
                                        al::ByamlWriter* origWriter) -> void {
+    Client::instance()->saveMoonRocks(origWriter);
+
     orig(cfgData, origWriter);
 
-    sead::FrameHeap* frameHeap =
-        sead::FrameHeap::create(0x20000, "SaveWriteHeap", Client::getClientHeap(), 8,
-                                sead::Heap::HeapDirection::cHeapDirection_Forward, false);
+    sead::ScopedCurrentHeapSetter heapSetter(Client::getClientHeap());
 
-    sead::ScopedCurrentHeapSetter heapSetter(frameHeap);
+    static auto saveWriteThread =
+        new al::AsyncFunctorThread("SaveWriteThread",
+                                   al::FunctorV0M<GameConfigData*, GameConfigData::SaveWriteThreadFunc>(
+                                       cfgData, &GameConfigData::writeToSd),
+                                   0, 0x1000, {0});
 
-    al::ByamlWriter writer(frameHeap, false);
-
-    const char* serverIP = Client::getCurrentIP();
-    const s32 serverPort = Client::getCurrentPort();
-    const bool serverHidden = Client::isServerHidden();
-    const bool capCollision = StageSceneStateModConfig::isCapCollisionEnabled();
-    const bool capBounce = StageSceneStateModConfig::isCapBounceEnabled();
-    const bool playerCollision = StageSceneStateModConfig::isPuppetCollisionEnabled();
-    const bool playerBounce = StageSceneStateModConfig::isPuppetBounceEnabled();
-    const bool costumeDoorsUnlocked = StageSceneStateModConfig::isCostumeDoorsUnlocked();
-    const bool lowLatency = StageSceneStateModConfig::isLowLatencyEnabled();
-    const s32 logLife = StageSceneStateModConfig::getSpeedrunLogLife();
-    const bool log = PlayerEventLog::isShow();
-    const bool shineCount = StageSceneStateModConfig::isShineCountEnabled();
-    const bool music = !Client::isMusicDisabled();
-
-    writer.pushHash();
-    writer.pushHash("SMOOData");
-    if (serverIP) {
-        writer.addString("ServerIP", serverIP);
-    } else {
-        writer.addString("ServerIP", "127.0.0.1");
-    }
-
-    if (serverPort) {
-        writer.addInt("ServerPort", serverPort);
-    } else {
-        writer.addInt("ServerPort", 0);
-    }
-
-    writer.addBool("ServerHidden", serverHidden);
-    writer.addBool("CapCollision", capCollision);
-    writer.addBool("CapBounce", capBounce);
-    writer.addBool("PlayerCollision", playerCollision);
-    writer.addBool("PlayerBounce", playerBounce);
-    writer.addBool("CostumeDoorsUnlocked", costumeDoorsUnlocked);
-    writer.addBool("LowLatency", lowLatency);
-    writer.addInt("LogLife", logLife);
-    writer.addBool("Log", log);
-    writer.addBool("ShineCount", shineCount);
-    writer.addBool("Music", music);
-    writer.pop();
-
-    writer.pushHash("GameConfigData");
-    writer.addInt("CameraStickSensitivityLevel", cfgData->mCameraStickSensitivityLevel);
-    writer.addBool("IsCameraReverseInputH", cfgData->mIsCameraReverseInputH);
-    writer.addBool("IsCameraReverseInputV", cfgData->mIsCameraReverseInputV);
-    writer.addBool("IsValidCameraGyro", cfgData->mIsValidCameraGyro);
-    writer.addInt("CameraGyroSensitivityLevel", cfgData->mCameraGyroSensitivityLevel);
-    writer.addBool("IsUseOpenListAdditionalButton", cfgData->mIsUseOpenListAdditionalButton);
-    writer.addBool("IsPadRumble", cfgData->mIsValidPadRumble);
-    writer.addInt("PadRumbleLevel", cfgData->mPadRumbleLevel);
-    writer.pop();
-
-    writer.pop();
-    u32 size = writer.calcPackSize();
-    u8 buffer[size];
-    sead::RamStreamSrc ramStream(&buffer, sizeof(buffer));
-    sead::WriteStream writeStream;
-    writeStream.setSrc(&ramStream);
-    writeStream.setMode(sead::Stream::Modes::Binary);
-    writer.write(&writeStream);
-    FsHelper::writeFileToPath(buffer, size, sSettingsPath);
-
-    frameHeap->freeAll();
-    frameHeap->destroy();
+    if (saveWriteThread->isDone())
+        saveWriteThread->start();
 };
 
 static HkTrampoline saveReadHook = [](TrampolineStatic(), GameConfigData* cfgData,
                                       const al::ByamlIter& origIter) -> void {
-    orig(cfgData, origIter);
+    Client::instance()->readMoonRocks(origIter);
 
-    sead::ScopedCurrentHeapSetter heapSetter(Client::getClientHeap());
+    orig(cfgData, origIter);
 
     if (!FsHelper::isFileExist(sSettingsPath)) {
         nn::fs::CreateDirectory(sModFolder);
@@ -366,27 +301,27 @@ static HkTrampoline windowConfirmWaitHook = [](TrampolineStatic(), al::WindowCon
     return true;
 };
 
-static HkTrampoline resetScenarioSyncHook = [](TrampolineStatic(), HakoniwaSequence* seq) -> void {
+static HkTrampoline startNewGameHook = [](TrampolineStatic(), HakoniwaSequence* seq) -> void {
     orig(seq);
 
     if (PlayerEventLog::sInstance)
-        PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::start, "");
+        PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::START, "");
 
     Client::sendShineCollectPacket(2500);
+};
 
-    GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr =
-        Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
-    GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr =
-        Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
+static HkTrampoline moonRockHook = [](TrampolineStatic(), MoonRock* moonRock) -> void {
+    if (al::isFirstStep(moonRock)) {
+        Client::sendMoonRockHitPacket(GameDataFunction::getCurrentWorldIdNoDevelop(moonRock));
 
-    Logger::log("Resetting Scenarios\n");
-    for (int i = 0; i < sNumWorlds; i++) {
-        Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
-        // scenNumArr[i] = 1;
-        // mainSenNumArr[i] = -1;
-        // Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
+        if (PlayerEventLog::sInstance) {
+            PlayerEventLog::sInstance->addEvent(
+                "You", PlayerEventLog::MOONROCK,
+                worldNames[GameDataFunction::getCurrentWorldIdNoDevelop(moonRock)]);
+        }
     }
-    shouldResetScenario = true;
+
+    orig(moonRock);
 };
 
 static HkTrampoline mountSdCardHook = [](TrampolineStatic(), sead::FileDeviceMgr* fileDeviceMgr) -> void {

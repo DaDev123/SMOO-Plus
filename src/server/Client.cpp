@@ -1,7 +1,5 @@
 #include "server/Client.hpp"
 
-#include "hk/util/Math.h"
-
 #include "nn/os.h"
 #include "nn/socket.h"
 
@@ -40,7 +38,10 @@
 #include "Library/Base/StringUtil.h"
 #include "Library/Layout/LayoutActorUtil.h"
 #include "Library/LiveActor/LiveActor.h"
+#include "Library/Yaml/ByamlIter.h"
+#include "Library/Yaml/ByamlUtil.h"
 #include "logger.hpp"
+#include "packets/MoonRockHit.h"
 #include "packets/Packet.h"
 #include "prim/seadSafeString.h"
 #include "puppets/PuppetInfo.h"
@@ -532,6 +533,9 @@ void Client::readFunc() {
             case PacketType::CHECKPOINTGET:
                 updateCheckpoints((CheckpointGet*)curPacket);
                 break;
+            case PacketType::MOONROCKHIT:
+                updateMoonRocks((MoonRockHit*)curPacket);
+                break;
 
             case PacketType::CLIENTINIT: {
                 InitPacket* initPacket = (InitPacket*)curPacket;
@@ -699,11 +703,7 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
         packet->is2D = false;
     }
 
-    packet->scenarioNo = holder.mData->getGameDataFile()
-                             ->getScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
-    packet->mainScenarioNo =
-        holder.mData->getGameDataFile()
-            ->getMainScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
+    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -734,11 +734,7 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
 
     packet->is2D = false;
 
-    packet->scenarioNo = holder.mData->getGameDataFile()
-                             ->getScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
-    packet->mainScenarioNo =
-        holder.mData->getGameDataFile()
-            ->getMainScenarioNumArr()[holder.mData->getGameDataFile()->getCurrentWorldId()];
+    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
 
     strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
 
@@ -992,13 +988,18 @@ void Client::updateShineInfo(ShineCollect* packet) {
         PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
 
         if (PlayerEventLog::sInstance) {
+            if (packet->shineId >= 3000 && packet->shineId <= 3013) {
+                return;
+            }
+
             if (packet->shineId == 2500) {
-                PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::start, "");
+                PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::START, "");
+                return;
             }
 
             if (packet->shineId >= 2000 && packet->shineId <= 2060) {
                 PlayerEventLog::sInstance->addEvent(
-                    player->puppetName, PlayerEventLog::shine,
+                    player->puppetName, PlayerEventLog::SHINE,
                     PlayerEventLog::getAchievementMessage(toadetteMoons[packet->shineId - 2000]));
                 return;
             }
@@ -1006,7 +1007,7 @@ void Client::updateShineInfo(ShineCollect* packet) {
             GameDataFile::HintInfo* hintInfo =
                 CustomGameDataFunction::getHintInfoByUniqueID(mHolder, packet->shineId);
             PlayerEventLog::sInstance->addEvent(
-                player->puppetName, PlayerEventLog::shine,
+                player->puppetName, PlayerEventLog::SHINE,
                 PlayerEventLog::getShineMessage(hintInfo->stageName, hintInfo->objId));
         }
     }
@@ -1038,12 +1039,12 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
         mConnectCount++;
 
         if (PlayerEventLog::sInstance) {
-            PlayerEventLog::sInstance->addEvent(packet->clientName, PlayerEventLog::connect, "");
+            PlayerEventLog::sInstance->addEvent(packet->clientName, PlayerEventLog::CONNECT, "");
         }
     }
 }
 
-const struct {
+/*const struct {
     const char* stage;
     s32 index;
     const char* warpStage;
@@ -1104,7 +1105,7 @@ static const char* findWarpStageFromStageName(const char* stageName) {
         }
     }
     return nullptr;
-}
+}*/
 
 /**
  * @brief Updates game info from packet, and handles scenario sync.
@@ -1128,18 +1129,18 @@ void Client::updateGameInfo(GameInf* packet) {
         curInfo->gameMode = packet->gameMode;
     }
 
-    if (findWorldIdFromStageName(packet->stageName) == -1)
+    /*if (findWorldIdFromStageName(packet->stageName) == -1)
         return;
-    GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr =
+    GameDataFile::FixedHeapArray<s32, sNumWorlds>& scenNumArr =
         Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
-    GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr =
+    GameDataFile::FixedHeapArray<s32, sNumWorlds>& mainSenNumArr =
         Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
 
     int curScen = scenNumArr[findWorldIdFromStageName(packet->stageName)];
     if (packet->scenarioNo < 15 &&
-        (packet->scenarioNo > curScen || (curScen == 7 && packet->scenarioNo != 7) /*HACK*/) &&
+        (packet->scenarioNo > curScen || (curScen == 7 && packet->scenarioNo != 7) HACK) &&
         (validateScenarioFromStageName(packet->stageName, packet->scenarioNo, curScen) ||
-         (packet->scenarioNo == 7 && strcmp(packet->stageName, "WaterfallWorldHomeStage") == 0) /*HACK*/)) {
+         (packet->scenarioNo == 7 && strcmp(packet->stageName, "WaterfallWorldHomeStage") == 0) HACK)) {
         scenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
         mainSenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->mainScenarioNo;
         const char* warpStage = findWarpStageFromStageName(packet->stageName);
@@ -1147,7 +1148,7 @@ void Client::updateGameInfo(GameInf* packet) {
             ChangeStageInfo info(Client::getHolder(), "start", warpStage, false, packet->scenarioNo);
             Client::getHolder()->changeNextStage(&info);
         }
-    }
+    }*/
 }
 
 /**
@@ -1189,7 +1190,7 @@ void Client::disconnectPlayer(PlayerDC* packet) {
     mShouldStopRumble = true;
 
     if (PlayerEventLog::sInstance) {
-        PlayerEventLog::sInstance->addEvent(curInfo->puppetName, PlayerEventLog::disconnect, "");
+        PlayerEventLog::sInstance->addEvent(curInfo->puppetName, PlayerEventLog::DISCONNECT, "");
     }
 }
 
@@ -1313,6 +1314,116 @@ bool Client::isNeedUpdateShines() {
     return sInstance ? sInstance->collectedShineCount > 0 : false;
 }
 
+struct storyShine {
+    s32 uid;
+    s32 worldId;
+    const char* homeStage;
+    s32 scenario;
+    bool isNeedWarp;
+    const char* stage;
+};
+
+struct moonRock {
+    s32 worldId;
+    s32 scenario;
+};
+
+inline constexpr storyShine scenarioSyncList[16] = {
+    {218, 1, "WaterfallWorldHomeStage", 2, false},
+    {495, 2, "SandWorldHomeStage", 2, false},
+    {560, 2, "SandWorldHomeStage", 3, true, "SandWorldUnderground001Stage"},
+    {130, 3, "ForestWorldHomeStage", 2, false},
+    {181, 3, "ForestWorldHomeStage", 3, true, "ForestWorldBossStage"},
+    {424, 4, "LakeWorldHomeStage", 2, false},
+    {37, 7, "CityWorldHomeStage", 2, false},
+    {95, 7, "CityWorldHomeStage", 4, false},
+    {437, 8, "SeaWorldHomeStage", 2, false},
+    {1020, 9, "SnowWorldHomeStage", 2, true, "SnowWorldLobby001Stage"},
+    {292, 10, "LavaWorldHomeStage", 2, false},
+    {290, 10, "LavaWorldHomeStage", 3, false},
+    {795, 11, "BossRaidWorldHomeStage", 2, false},
+    {332, 12, "SkyWorldHomeStage", 2, false},
+    {1055, 15, "Special1WorldHomeStage", 2, false},
+    {1061, 16, "Special2WorldHomeStage", 2, false}};
+
+inline constexpr s32 postGameScenarios[14] = {3, 3, 4, 4, 3, 3, 3, 5, 3, 3, 4, 3, 3, 2};
+
+inline constexpr s32 moonRockScenarios[14] = {4, 4, 5, 5, 4, 4, 4, 8, 4, 4, 8, 4, 4, 3};
+
+void Client::updateMoonRocks(MoonRockHit* packet) {
+    if (!sInstance)
+        return;
+
+    PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
+
+    if (PlayerEventLog::sInstance) {
+        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::MOONROCK,
+                                            worldNames[packet->worldId]);
+    }
+
+    if (!GameDataFunction::isGameClear(mHolder)) {
+        mPendingMoonRocks[packet->worldId] = true;
+        return;
+    }
+
+    GameDataFile* gdf = Client::instance()->getHolder()->getGameDataFile();
+
+    if (!gdf) {
+        Logger::log("hitOneMoonRock: GameDataFile null, dropping\n");
+        return;
+    }
+
+    // sub scenarios like kfr are reflected in getScenarioNo but not in the scenario array; dont wanna warp
+    // someone out of kfr
+    bool isSubScenario = gdf->getScenarioNumArr()[packet->worldId] != gdf->getScenarioNo();
+    // dont warp if youre already in the scenario
+    bool isAlreadyMoonRock = gdf->getScenarioNumArr()[packet->worldId] == moonRockScenarios[packet->worldId];
+
+    gdf->getScenarioNumArr()[packet->worldId] = moonRockScenarios[packet->worldId];
+
+    if (!isSubScenario && !isAlreadyMoonRock &&
+        al::isEqualString(homeStageNames[packet->worldId], gdf->getStageNameCurrent())) {
+        ChangeStageInfo info(Client::instance()->getHolder(), "MoonRock", gdf->getStageNameCurrent());
+        info.mWipeType = "FadeWhite";
+        GameDataFunction::tryChangeNextStage(gdf->getGameDataHolder(), &info);
+    }
+}
+
+void Client::saveMoonRocks(al::ByamlWriter* writer) {
+    writer->pushHash("ScenarioSyncMoonRockData");
+
+    for (s32 i = 0; i < SNumMoonRocks; i++) {
+        writer->addBool(mPendingMoonRocks[i]);
+    }
+
+    writer->pop();
+}
+
+void Client::readMoonRocks(const al::ByamlIter& save) {
+    al::ByamlIter iter;
+    al::tryGetByamlIterByKey(&iter, save, "ScenarioSyncMoonRockData");
+
+    for (s32 i = 0; i < SNumMoonRocks; i++) {
+        mPendingMoonRocks[i] = false;
+        iter.tryGetBoolByIndex(&mPendingMoonRocks[i], i);
+    }
+}
+
+void Client::sendMoonRockHitPacket(int worldId) {
+    if (!sInstance) {
+        Logger::log("Static Instance is Null!\n");
+        return;
+    }
+
+    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
+
+    MoonRockHit* packet = new MoonRockHit();
+    packet->mUserID = sInstance->mUserID;
+    packet->worldId = worldId;
+
+    sInstance->mSocket->queuePacket(packet);
+}
+
 /**
  * @brief Processes all pending collected shines on the game thread.
  *        Must only be called when mCurStageScene is valid.
@@ -1334,7 +1445,7 @@ void Client::updateShines() {
         return;
     }
 
-    GameDataHolderAccessor accessor(sInstance->mCurStageScene);
+    GameDataHolderAccessor accessor = sInstance->mHolder;
 
     for (size_t i = 0; i < sInstance->getCollectedShinesCount(); i++) {
         int shineID = sInstance->getShineID(i);
@@ -1343,6 +1454,29 @@ void Client::updateShines() {
             continue;
 
         Logger::log("Shine UID: %d\n", shineID);
+
+        for (const storyShine& shine : scenarioSyncList) {
+            if (shine.uid == shineID) {
+                s32& scenarioNum =
+                    Client::instance()->getHolder()->getGameDataFile()->getScenarioNumArr()[shine.worldId];
+
+                if (scenarioNum < shine.scenario) {
+                    bool isSubScenario = scenarioNum != accessor->getGameDataFile()->getScenarioNo();
+
+                    scenarioNum = shine.scenario;
+
+                    if (!isSubScenario && shine.isNeedWarp &&
+                        al::isEqualString(shine.homeStage, GameDataFunction::getCurrentStageName(accessor))) {
+                        ChangeStageInfo info(accessor, "start",
+                                             GameDataFunction::getCurrentStageName(accessor));
+                        info.mWipeType = "FadeWhite";
+                        GameDataFunction::tryChangeNextStage(accessor.mData, &info);
+                    }
+                }
+
+                break;
+            }
+        }
 
         if (shineID >= 2000 && shineID <= 2060) {
             if (!rs::checkGetAchievement(sInstance->mCurStageScene, toadetteMoons[shineID - 2000])) {
@@ -1429,7 +1563,7 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
 
     if (PlayerEventLog::sInstance) {
         PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
-        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::purple,
+        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::PURPLE,
                                             worldNames[packet->worldID]);
     }
 
@@ -1491,7 +1625,7 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
 
     if (PlayerEventLog::sInstance) {
         PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
-        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::checkpoint,
+        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::CHECKPOINT,
                                             PlayerEventLog::getCheckpointMessage(packet->objId));
     }
 
@@ -1541,6 +1675,16 @@ void Client::update() {
                 for (s32 i = 0; i < sInstance->mPendingCheckpointCount; i++) {
                     PendingCheckpoint& c = sInstance->mPendingCheckpoints[i];
                     getOneCheckpoint(c.objId);
+                }
+            }
+        }
+
+        if (GameDataFunction::isGameClear(Client::instance()->getHolder())) {
+            // Set moon rock scenarios for rocks that were hit prior to the player beating the game
+            for (s32 i = 0; i < SNumMoonRocks; i++) {
+                if (Client::instance()->mPendingMoonRocks[i]) {
+                    Client::instance()->getHolder()->getGameDataFile()->getScenarioNumArr()[i] =
+                        moonRockScenarios[i];
                 }
             }
         }

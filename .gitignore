@@ -8,6 +8,7 @@ Custom Stage Builds/**
 *.lst
 *.disabled
 .github/copilot-instructions.md
+.gdbinit
 
 lib/std
 build/

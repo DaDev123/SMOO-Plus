@@ -26,17 +26,17 @@ PlayerEventLog::Entry::Entry(sead::FixedSafeString<16> player, Event event, sead
 
 void PlayerEventLog::addEvent(sead::SafeString player, PlayerEventLog::Event event, sead::SafeString text) {
     // prevent duplicate entries for shines
-    if (event == shine) {
+    if (event == SHINE) {
         for (s32 i = 0; i < sNumEntries; i++) {
-            if (mLog[i].mEvent == shine && al::isEqualString(mLog[i].mText, text))
+            if (mLog[i].mEvent == SHINE && al::isEqualString(mLog[i].mText, text))
                 return;
         }
     }
 
     // if an entry already exists for purples, increase the number
-    if (event == purple) {
+    if (event == PURPLE) {
         for (s32 i = 0; i < sNumEntries; i++) {
-            if (mLog[i].mEvent == purple) {
+            if (mLog[i].mEvent == PURPLE) {
                 if (al::isEqualString(mLog[i].mPlayer, player) && al::isEqualString(mLog[i].mText, text)) {
                     s32 numPurples = mLog[i].mNumPurples + 1;
                     for (s32 j = i; j > 0; j--) {
@@ -80,7 +80,7 @@ void PlayerEventLog::update() {
             if (mLog[i].mLife != 0) {
                 ImVec2 originalCursor = ImGui::GetCursorPos();
                 switch (mLog[i].mEvent) {
-                case connect: {
+                case CONNECT: {
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
                     ImGui::Text("%s connected", mLog[i].mPlayer.cstr());
@@ -90,7 +90,7 @@ void PlayerEventLog::update() {
                     ImGui::Text("%s connected", mLog[i].mPlayer.cstr());
                     break;
                 }
-                case disconnect: {
+                case DISCONNECT: {
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
                     ImGui::Text("%s disconnected", mLog[i].mPlayer.cstr());
@@ -100,7 +100,7 @@ void PlayerEventLog::update() {
                     ImGui::Text("%s disconnected", mLog[i].mPlayer.cstr());
                     break;
                 }
-                case start: {
+                case START: {
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
                     ImGui::Text("%s started", mLog[i].mPlayer.cstr());
@@ -110,7 +110,7 @@ void PlayerEventLog::update() {
                     ImGui::Text("%s started", mLog[i].mPlayer.cstr());
                     break;
                 }
-                case shine: {
+                case SHINE: {
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
                     ImGui::Text("%s ", mLog[i].mPlayer.cstr());
@@ -135,7 +135,7 @@ void PlayerEventLog::update() {
                     ImGui::PopStyleColor();
                     break;
                 }
-                case purple: {
+                case PURPLE: {
                     const char* plural = mLog[i].mNumPurples > 1 ? "s" : "";
 
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
@@ -168,7 +168,7 @@ void PlayerEventLog::update() {
                     ImGui::PopStyleColor();
                     break;
                 }
-                case checkpoint: {
+                case CHECKPOINT: {
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
                     ImGui::Text("%s ", mLog[i].mPlayer.cstr());
@@ -188,6 +188,31 @@ void PlayerEventLog::update() {
 
                     ImGui::SameLine(0.0f, 0.0f);
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+                    ImGui::Text("%s", mLog[i].mText.cstr());
+                    ImGui::PopStyleColor();
+                    break;
+                }
+                case MOONROCK: {
+                    ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
+                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::Text("hit the moon rock in ");
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::Text("%s", mLog[i].mText.cstr());
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::PopStyleColor();
+
+                    ImGui::SetCursorPos(originalCursor);
+                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
+                    ImGui::Text("hit the moon rock in ");
+                    ImGui::PopStyleColor();
+
+                    ImGui::SameLine(0.0f, 0.0f);
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.5f, 1.0f, 1.0f));
                     ImGui::Text("%s", mLog[i].mText.cstr());
                     ImGui::PopStyleColor();
                     break;
@@ -219,7 +244,7 @@ s32 PlayerEventLog::calculateLife() {
 }
 
 const char* PlayerEventLog::getShineMessage(sead::SafeString stage, sead::SafeString objId) {
-    for (MessageMasterList::MessageData data : MessageMasterList::shineList) {
+    for (const MessageMasterList::MessageData& data : MessageMasterList::shineList) {
         if (al::isEqualString(stage, data.stage) && al::isEqualString(objId, data.objId)) {
             return data.text;
         }
@@ -228,7 +253,7 @@ const char* PlayerEventLog::getShineMessage(sead::SafeString stage, sead::SafeSt
 }
 
 const char* PlayerEventLog::getCheckpointMessage(sead::SafeString objId) {
-    for (MessageMasterList::MessageData data : MessageMasterList::checkpointList) {
+    for (const MessageMasterList::MessageData& data : MessageMasterList::checkpointList) {
         if (al::isEqualString(objId, data.objId)) {
             return data.text;
         }
@@ -237,7 +262,7 @@ const char* PlayerEventLog::getCheckpointMessage(sead::SafeString objId) {
 }
 
 const char* PlayerEventLog::getAchievementMessage(sead::SafeString label) {
-    for (MessageMasterList::AchievementMessageData data : MessageMasterList::achievementList) {
+    for (const MessageMasterList::AchievementMessageData& data : MessageMasterList::achievementList) {
         if (al::isEqualString(label, data.label)) {
             return data.text;
         }

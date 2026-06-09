@@ -151,7 +151,7 @@ HkTrampoline sendShinePacketHook = [](TrampolineStatic(), GameDataHolderWriter w
                 Client::sendShineCollectPacket(curInfo->uniqueId);
                 if (PlayerEventLog::sInstance) {
                     PlayerEventLog::sInstance->addEvent(
-                        "You", PlayerEventLog::shine,
+                        "You", PlayerEventLog::SHINE,
                         PlayerEventLog::getShineMessage(curInfo->stageName, curInfo->objId));
                 }
             }
@@ -167,7 +167,7 @@ HkTrampoline sendShinePacketHook2 = [](TrampolineStatic(), GameDataFile* file, c
                 Client::sendShineCollectPacket(2000 + i);
                 if (PlayerEventLog::sInstance) {
                     PlayerEventLog::sInstance->addEvent(
-                        "You", PlayerEventLog::shine, PlayerEventLog::sInstance->getAchievementMessage(name));
+                        "You", PlayerEventLog::SHINE, PlayerEventLog::sInstance->getAchievementMessage(name));
                 }
             }
         }
@@ -183,7 +183,7 @@ HkTrampoline sendCoinCollectCollectPacketHook = [](TrampolineStatic(), GameDataF
     Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(),
                                          file->getStageNameCurrent());
     if (PlayerEventLog::sInstance) {
-        PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::purple,
+        PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::PURPLE,
                                             worldNames[file->getCurrentWorldIdNoDevelop()]);
     }
     orig(file, placeID);
@@ -194,7 +194,7 @@ HkTrampoline sendCheckpointGetPacketHook = [](TrampolineStatic(), CheckpointFlag
         al::StringTmp<128> placementId = al::makeStringPlacementId(checkpoint->getPlacementId());
         Client::sendCheckpointGetPacket(placementId.cstr());
         if (PlayerEventLog::sInstance) {
-            PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::checkpoint,
+            PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::CHECKPOINT,
                                                 PlayerEventLog::getCheckpointMessage(placementId));
         }
     }
@@ -266,30 +266,6 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
 
     updatePlayerInfo(GameDataHolderWriter(stageScene), playerBase, isYukimaru);
 
-    if (!shouldResetScenario) {
-        if (!al::isEqualString(GameDataFunction::getCurrentStageName(stageScene), "CapWorldHomeStage") ||
-            GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNo() != 1) {
-            shouldResetScenario = false;
-        }
-
-        if (al::isEqualString(GameDataFunction::getCurrentStageName(stageScene), "CapWorldHomeStage") &&
-            GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNo() == 1 &&
-            !shouldResetScenario) {
-            GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr =
-                GameDataHolderWriter(stageScene).mData->getGameDataFile()->getScenarioNumArr();
-            GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr =
-                GameDataHolderWriter(stageScene).mData->getGameDataFile()->getMainScenarioNumArr();
-
-            Logger::log("Resetting Scenarios\n");
-            for (int i = 0; i < sNumWorlds; i++) {
-                // Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
-                scenNumArr[i] = 1;
-                mainSenNumArr[i] = -1;
-                // Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
-            }
-        }
-    }
-
     if (SpeedrunIcon::sInstance) {
         if (StageSceneStateModConfig::isSpeedrunModeEnabled()) {
             SpeedrunIcon::sInstance->tryStart();
@@ -346,12 +322,13 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
         if (debugMode && al::isPadTriggerLeft()) {
             GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr =
                 Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
-            GameDataFile::FixedHeapArray<s32, sNumWorlds> mainSenNumArr =
-                Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
 
-            for (int i = 0; i < sNumWorlds; i++) {
-                Logger::log("%d: Scen: %d, MainScen: %d\n", i, scenNumArr[i], mainSenNumArr[i]);
+            for (s32 i = 0; i < 17; i++) {
+                Logger::log("%s: Scenario: %d\n", worldNames[i], scenNumArr[i]);
             }
+
+            Logger::log("Current Scenario: %d\n",
+                        GameDataHolderAccessor(stageScene)->getGameDataFile()->getScenarioNo());
         }
     }
     if (Client::isMusicDisabled()) {
@@ -807,7 +784,9 @@ extern "C" void hkMain() {
     // hk::ro::getMainModule()->writeRo(0x5145c8, 0x7107D29F);  // cmp w20, #500
     // hk::hook::a64::assemble<"ret">().installAtMainOffset(0x514710);
 
-    resetScenarioSyncHook.installAtSym<"_ZN24HakoniwaStateDemoOpening7exeLoadEv">();
+    startNewGameHook.installAtSym<"_ZN24HakoniwaStateDemoOpening7exeLoadEv">();
+
+    moonRockHook.installAtSym<"_ZN8MoonRock11exeReactionEv">();
 
     mountSdCardHook.installAtSym<"_ZN4sead13FileDeviceMgrC1Ev">();
 

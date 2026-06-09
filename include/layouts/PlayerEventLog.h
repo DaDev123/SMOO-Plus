@@ -7,14 +7,14 @@ constexpr s32 sNumEntries = 8;
 
 class PlayerEventLog {
 public:
-    enum Event { connect, disconnect, start, shine, purple, checkpoint };
+    enum Event { CONNECT, DISCONNECT, START, SHINE, PURPLE, CHECKPOINT, MOONROCK };
 
     struct Entry {
         Entry();
         Entry(sead::FixedSafeString<16> player, Event event, sead::FixedSafeString<128> text);
 
         sead::FixedSafeString<16> mPlayer;
-        Event mEvent = shine;
+        Event mEvent = SHINE;
         sead::FixedSafeString<128> mText;
         s32 mNumPurples = 1;
         s32 mLife = -1;
