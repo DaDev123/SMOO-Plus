@@ -8,7 +8,6 @@
 #include "actors/PuppetActor.h"
 #include "helpers.hpp"
 #include "Library/Scene/SceneUtil.h"
-#include "puppets/PuppetMain.hpp"
 #include "server/captureSync.hpp"
 #include "server/Client.hpp"
 
@@ -23,13 +22,9 @@ static HkTrampoline initObjHook = [](TrampolineStatic(), al::ActorInitInfo& init
         }
     }
 
-    al::ActorInitInfo newInfo = al::ActorInitInfo();
-    newInfo.initViewIdSelf(placement, initInfo);
+    const char* className;
 
-    const char* className = "";
-    al::tryGetClassName(&className, newInfo);
-
-    if (isInCaptureList(className)) {
+    if (al::tryGetClassName(&className, initInfo) && isInCaptureList(className)) {
         int serverMaxPlayers = Client::getMaxPlayerCount();
 
         for (size_t i = 0; i < serverMaxPlayers - 1; i++) {
@@ -40,7 +35,7 @@ static HkTrampoline initObjHook = [](TrampolineStatic(), al::ActorInitInfo& init
                 // make sure we only make as many unique puppet hack actors as needed
                 if (!curPuppet->isInCaptureList(hackName)) {
                     PuppetHackActor* dupliActor =
-                        createPuppetHackActorFromFactory(initInfo, placement, curPuppet->getInfo(), hackName);
+                        createPuppetHackActor(initInfo, placement, curPuppet->getInfo(), hackName);
                     if (dupliActor) {
                         curPuppet->addCapture(dupliActor, hackName);
                     }
@@ -54,7 +49,7 @@ static HkTrampoline initObjHook = [](TrampolineStatic(), al::ActorInitInfo& init
             const char* hackName = tryConvertName(className);
             if (!debugPuppet->isInCaptureList(hackName)) {
                 PuppetHackActor* dupliActor =
-                    createPuppetHackActorFromFactory(initInfo, placement, debugPuppet->getInfo(), hackName);
+                    createPuppetHackActor(initInfo, placement, debugPuppet->getInfo(), hackName);
                 if (dupliActor) {
                     debugPuppet->addCapture(dupliActor, hackName);
                 }
@@ -62,31 +57,4 @@ static HkTrampoline initObjHook = [](TrampolineStatic(), al::ActorInitInfo& init
         }
     }
     return orig(initInfo, placement);
-};
-
-static HkTrampoline initPuppetActorsHook = [](TrampolineStatic(), al::Scene* scene,
-                                              const al::ActorInitInfo& rootInfo,
-                                              const char* listName) -> void {
-    if (!scene || !al::isEqualString(scene->mName.cstr(), "StageScene")) {
-        return orig(scene, rootInfo, listName);
-    }
-    al::StageInfo* stageInfo = al::getStageInfoMap(scene, 0);
-
-    int placementCount = 0;
-    al::PlacementInfo rootPlacement = al::PlacementInfo();
-    al::tryGetPlacementInfoAndCount(&rootPlacement, &placementCount, stageInfo, "PlayerList");
-    // check if default placement count for PlayerList is greater than 0 (so we can use the placement info of
-    // the player to init our custom puppet actors)
-    if (placementCount > 0) {
-        al::PlacementInfo playerPlacement = al::PlacementInfo();
-        al::getPlacementInfoByIndex(&playerPlacement, rootPlacement, 0);
-
-        for (size_t i = 0; i < Client::getMaxPlayerCount(); i++) {
-            createPuppetActorFromFactory(rootInfo, playerPlacement, false);
-        }
-
-        // create a debug puppet for testing purposes
-        // createPuppetActorFromFactory(rootInfo, playerPlacement, true);
-    }
-    orig(scene, rootInfo, listName);
 };

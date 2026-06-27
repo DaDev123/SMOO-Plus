@@ -16,6 +16,8 @@
 class PuppetActor : public al::LiveActor {
 public:
     PuppetActor(const char* name);
+    ~PuppetActor();
+
     virtual void init(al::ActorInitInfo const&) override;
     virtual void initAfterPlacement(void) override;
     virtual void control(void) override;

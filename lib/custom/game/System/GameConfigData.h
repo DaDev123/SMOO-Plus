@@ -1,6 +1,10 @@
 #pragma once
 
-#include "hk/prim/traits/Integer.h"
+#include <hk/prim/traits/Integer.h>
+
+#include <nn/fs/fs_directories.h>
+
+#include <sead/heap/seadHakkunHeap.h>
 
 #include <basis/seadTypes.h>
 #include <heap/seadFrameHeap.h>
@@ -58,10 +62,8 @@ public:
 
     void writeToSd() {
         sead::FrameHeap* frameHeap =
-            sead::FrameHeap::create(10_KB, "SaveWriteHeap", Client::getClientHeap(), 8,
+            sead::FrameHeap::create(10_KB, "SaveWriteHeap", sead::HakkunHeap::sInstance, 8,
                                     sead::Heap::HeapDirection::cHeapDirection_Forward, false);
-
-        sead::ScopedCurrentHeapSetter heapSetter(frameHeap);
 
         al::ByamlWriter writer(frameHeap, false);
 
@@ -125,9 +127,10 @@ public:
         writeStream.setSrc(&ramStream);
         writeStream.setMode(sead::Stream::Modes::Binary);
         writer.write(&writeStream);
+        if (!FsHelper::isFileExist(sSettingsPath))
+            nn::fs::CreateDirectory(sModFolder);
         FsHelper::writeFileToPath(buffer, size, sSettingsPath);
 
-        frameHeap->freeAll();
         frameHeap->destroy();
     }
 

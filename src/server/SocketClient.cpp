@@ -7,7 +7,7 @@
 #include "nn/socket.h"
 #include "vapours/results/results_common.hpp"
 
-#include "sead/basis/seadNew.h"
+#include "sead/heap/seadHakkunHeap.h"
 #include "sead/thread/seadDelegateThread.h"
 
 #include "al/Library/Thread/FunctorV0M.h"
@@ -16,28 +16,25 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-#include "heap/seadHeapMgr.h"
 #include "logger.hpp"
 #include "packets/Packet.h"
 #include "server/Client.hpp"
 #include "syssocket/sockdefines.h"
-#include "thread/seadThread.h"
 #include "types.h"
 
-SocketClient::SocketClient(const char* name, sead::Heap* heap) : mHeap(heap), SocketBase(name) {
-    sead::ScopedCurrentHeapSetter setter(mHeap);
+SocketClient::SocketClient(const char* name) : SocketBase(name) {
     mRecvThread = new al::AsyncFunctorThread(
-        "SocketRecvThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::recvFunc), 0,
-        0x1000, {0});
+        "SocketRecvThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::recvFunc),
+        16, 0x1000, {0});
     mSendThread = new al::AsyncFunctorThread(
-        "SocketSendThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::sendFunc), 0,
-        0x1000, {0});
+        "SocketSendThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::sendFunc),
+        16, 0x1000, {0});
     mEndThread = new al::AsyncFunctorThread(
         "SocketEndThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::endThreads),
-        0, 0x1000, {0});
+        16, 0x1000, {0});
 
-    mRecvQueue.allocate(maxBufSize, mHeap);
-    mSendQueue.allocate(maxBufSize, mHeap);
+    mRecvQueue.allocate(maxBufSize, sead::HakkunHeap::sInstance);
+    mSendQueue.allocate(maxBufSize, sead::HakkunHeap::sInstance);
     mAppErr = nn::err::ApplicationErrorArg(0, "", "",
                                            nn::settings::LanguageCode::Make(nn::settings::Language_English));
 };
@@ -390,7 +387,7 @@ bool SocketClient::queuePacket(Packet* packet) {
         mSendQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking);
         return true;
     } else {
-        mHeap->free(packet);
+        delete packet;
         return false;
     }
 }
@@ -400,7 +397,7 @@ bool SocketClient::trySendQueue() {
 
     bool successful = send(curPacket);
 
-    mHeap->free(curPacket);
+    delete curPacket;
 
     return successful;
 }

@@ -18,6 +18,8 @@
 
 #include <vector>
 
+#include "prim/seadSafeString.h"
+
 class FooterParts;
 
 // ============================================================================
@@ -25,13 +27,12 @@ class FooterParts;
 // ============================================================================
 
 struct ServerBrowser {
-    char* name;
-    char* ip;
-    int port;
+    sead::HeapSafeString name;
+    sead::HeapSafeString ip;
+    int port = 0;
 
     ServerBrowser();
     ServerBrowser(const char* n, const char* i, int p);
-    ~ServerBrowser();
     ServerBrowser(const ServerBrowser& other);
     ServerBrowser& operator=(const ServerBrowser& other);
 };
@@ -44,8 +45,6 @@ class StageSceneStateModConfig : public al::HostStateBase<al::Scene>, public al:
 public:
     StageSceneStateModConfig(const char* name, al::Scene* scene, const al::LayoutInitInfo& initInfo,
                              FooterParts* footerParts, GameDataHolder* dataHolder, bool unused);
-
-    ~StageSceneStateModConfig();
 
     enum SpeedrunLogLife { INF, FIFTEEN, TEN, FIVE };
 
@@ -117,9 +116,9 @@ public:
 private:
     static constexpr int menuCount = 10;
     static constexpr int maxMsgCount = 8;
-    SimpleLayoutMenu* menuList[menuCount];
-    CommonVerticalList* optionsList[menuCount];
-    sead::SafeArray<sead::WFixedSafeString<0x200>, maxMsgCount>* msgList[menuCount];
+    SimpleLayoutMenu* menuList[menuCount] = {};
+    CommonVerticalList* optionsList[menuCount] = {};
+    sead::SafeArray<sead::WFixedSafeString<0x200>, maxMsgCount>* msgList[menuCount] = {};
     enum Menu { MENU_MAIN, MENU_NETWORK, MENU_SERVERBROWSER, MENU_GAMEPLAY, MENU_SPEEDRUN_CONFIG };
 
     //@ ============= Main Menu =============
@@ -138,8 +137,9 @@ private:
 
     //@ ============= Server Browser Menu =============
     void initServerBrowserMenu(const al::LayoutInitInfo& initInfo);
+    void loadServersFromFile();
 
-    std::vector<ServerBrowser> mServerBrowserServers;
+    sead::PtrArray<ServerBrowser> mServerBrowserServers;
     int mServerBrowserCount = 0;
     sead::WFixedSafeString<0x200>* mServerBrowserOptions = nullptr;
 

@@ -1,22 +1,17 @@
 #pragma once
+
 #include "hk/gfx/ImGuiBackendNvn.h"
 
 #include "nn/hid.h"
-
-#include "sead/heap/seadExpHeap.h"
-
-#include "al/Library/Memory/HeapUtil.h"
 
 #include <cstring>
 #include <utility>
 
 #include "fsHelper.h"
-#include "heap/seadHeap.h"
 #include "imgui.h"
 
 namespace imgui {
 
-static sead::Heap* sImGuiHeap = nullptr;
 static const float displayHeight = 720.f, displayWidth = 1280.f;
 
 static void setupFont() {
@@ -259,14 +254,11 @@ static void updateImGuiInput() {
 }
 
 static void setup() {
-    sImGuiHeap = sead::ExpHeap::create(2_MB, "ImGuiHeap", al::getStationedHeap(), 8,
-                                       sead::Heap::cHeapDirection_Forward, false);
-
     hk::gfx::ImGuiBackendNvn* imgui = hk::gfx::ImGuiBackendNvn::instance();
 
     imgui->setAllocator(
-        {[](size allocSize, size alignment) -> void* { return sImGuiHeap->tryAlloc(allocSize, alignment); },
-         [](void* ptr) -> void { sImGuiHeap->free(ptr); }});
+        {[](size allocSize, size alignment) -> void* { return aligned_alloc(alignment, allocSize); },
+         [](void* ptr) -> void { free(ptr); }});
 
     imgui->tryInitialize();
     setupFont();

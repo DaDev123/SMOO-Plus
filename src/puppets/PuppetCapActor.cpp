@@ -17,28 +17,39 @@
 #include "math/seadVectorFwd.h"
 #include "Project/HitSensor/HitSensor.h"
 #include "Scene/StageSceneStateModConfig.hpp"
+#include "server/Client.hpp"
 
 PuppetCapActor::PuppetCapActor(const char* name) : al::LiveActor(name) {}
 
-void PuppetCapActor::init(al::ActorInitInfo const& initInfo) {
+void PuppetCapActor::init(const al::ActorInitInfo& initInfo) {
     sead::FixedSafeString<0x20> capModelName;
 
     PlayerFunction::createCapModelName(&capModelName, tryGetPuppetCapName(mInfo));
+    Logger::log("create cap model name\n");
     PlayerFunction::initCapModelActorDemo(this, initInfo, capModelName.cstr());
+    Logger::log("init cap model actor demo\n");
 
     initHitSensor(2);
+    Logger::log("init hit sensor\n");
     al::addHitSensor(this, initInfo, "Push", (u32)al::HitSensorType::MapObjSimple, 60.0f, 8,
                      sead::Vector3f::zero);
+    Logger::log("push sensor\n");
     al::addHitSensor(this, initInfo, "Attack", (u32)al::HitSensorType::EnemyAttack, 300.0f, 8,
                      sead::Vector3f::zero);
+    Logger::log("attack sensor\n");
 
     al::hideSilhouetteModelIfShow(this);
+    Logger::log("hide silhouette\n");
     al::initExecutorModelUpdate(this, initInfo);
+    Logger::log("init executor\n");
 
-    mJointKeeper = new HackCapJointControlKeeper();
+    mJointKeeper = new (Client::instance()->mHakkunSceneHeap) HackCapJointControlKeeper();
+    Logger::log("hack cap join control keeper\n");
     mJointKeeper->initCapJointControl(this);
+    Logger::log("init cap joint control\n");
 
     makeActorDead();
+    Logger::log("make actor dead\n");
 }
 
 void PuppetCapActor::initAfterPlacement() {

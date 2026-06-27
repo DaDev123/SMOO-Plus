@@ -18,8 +18,6 @@
 #include "al/Library/Layout/LayoutInitInfo.h"
 #include "al/Library/Layout/WindowConfirmWait.h"
 #include "al/Library/LiveActor/ActorInitInfo.h"
-#include "al/Library/LiveActor/ActorSceneInfo.h"
-#include "al/Library/LiveActor/LiveActor.h"
 #include "al/Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
 #include "al/Library/Sequence/Sequence.h"
 #include "al/Library/Thread/AsyncFunctorThread.h"
@@ -37,23 +35,21 @@
 #include "nn/account.h"
 
 // ===== SEAD INCLUDES =====
-#include "sead/basis/seadNew.h"
 #include "sead/container/seadSafeArray.h"
 #include "sead/heap/seadDisposer.h"
-#include "sead/heap/seadExpHeap.h"
 #include "sead/prim/seadSafeString.h"
 
 #include "container/seadPtrArray.h"
 #include "Library/Yaml/ByamlIter.h"
+#include "Sequence/HakoniwaSequence.h"
 
 // ===== PROJECT INCLUDES =====
+#include "heap/seadFrameHeap.h"
 #include "Keyboard.hpp"
-#include "packets/Packet.h"
 #include "puppets/PuppetHolder.hpp"
 #include "puppets/PuppetInfo.h"
 #include "server/SocketClient.hpp"
 #include "syssocket/sockdefines.h"
-#include "thread/seadMessageQueue.h"
 #include "types.h"
 
 // ===== CONSTANTS =====
@@ -139,7 +135,7 @@ public:
     static void sendHackCapInfPacket(const HackCap* hackCap);
     static void sendPlayerInfPacket(const PlayerActorBase* player, bool isYukimaru);
     static void sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolderAccessor holder);
-    static void sendGameInfPacket(GameDataHolderAccessor holder);
+    static void sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart = false);
     static void sendCaptureInfPacket(const PlayerActorHakoniwa* player);
     static void sendCostumeInfPacket(const char* body, const char* cap);
     static void sendShineCollectPacket(int shineId);
@@ -219,12 +215,10 @@ public:
     // ===== UTILITY METHODS =====
     static void update();
     static void clearArrays();
-    static sead::Heap* getClientHeap() { return sInstance ? sInstance->mHeap : nullptr; }
     static Keyboard* getKeyboard();
 
     // ===== STAGE MANAGEMENT =====
-    static void setStageInfo(GameDataHolderAccessor holder);
-    static void setSceneInfo(const al::ActorInitInfo& initInfo, const StageScene* stageScene);
+    static void setStageInfo(HakoniwaSequence* sequence);
     static void setTagState(bool state);
 
     // ===== UI METHODS =====
@@ -254,8 +248,7 @@ public:
 
     bool mIsAllowReconnect = false;
 
-    // ===== MEMORY MANAGEMENT =====
-    static sead::ExpHeap* mHeap;
+    sead::FrameHeap* mHakkunSceneHeap = nullptr;
 
 private:
     // ===== CORE FUNCTIONALITY =====
@@ -354,7 +347,6 @@ private:
     bool isSentHackInf = false;
 
     // ===== SCENE AND STAGE MEMBERS =====
-    al::ActorSceneInfo* mSceneInfo = nullptr;
     const StageScene* mCurStageScene = nullptr;
     sead::PtrArray<Shine> mShineArray;
     sead::PtrArray<CoinCollect> mCoinCollectArray;

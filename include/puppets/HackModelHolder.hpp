@@ -4,7 +4,7 @@
 
 struct CaptureEntry {
     PuppetHackActor* actor;
-    char className[0x16];
+    char className[32];
 };
 
 class HackModelHolder {

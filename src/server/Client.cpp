@@ -30,14 +30,12 @@
 
 #include "account.h"
 #include "CheckpointMasterList.h"
-#include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "layouts/ConnectionStatus.h"
 #include "layouts/PlayerEventLog.h"
 #include "layouts/SpeedrunIcon.h"
 #include "Library/Base/StringUtil.h"
 #include "Library/Layout/LayoutActorUtil.h"
-#include "Library/LiveActor/LiveActor.h"
 #include "Library/Yaml/ByamlIter.h"
 #include "Library/Yaml/ByamlUtil.h"
 #include "logger.hpp"
@@ -45,6 +43,8 @@
 #include "packets/Packet.h"
 #include "prim/seadSafeString.h"
 #include "puppets/PuppetInfo.h"
+#include "Scene/StageScene.h"
+#include "Sequence/HakoniwaSequence.h"
 #include "server/SocketClient.hpp"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
@@ -57,24 +57,19 @@ SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
 typedef void (Client::*ClientThreadFunc)(void);
 
-sead::ExpHeap* Client::mHeap = nullptr;
-
 /**
  * @brief Construct a new Client:: Client object
  *
  * @param bufferSize defines the maximum amount of puppets the client can handle
  */
 Client::Client() {
-    // every new call after this will use ClientHeap instead of SequenceHeap
-    sead::ScopedCurrentHeapSetter heapSetter(mHeap);
-
     mReadThread = new al::AsyncFunctorThread(
-        "ClientReadThread", al::FunctorV0M<Client*, ClientThreadFunc>(this, &Client::readFunc), 0, 0x1000,
+        "ClientReadThread", al::FunctorV0M<Client*, ClientThreadFunc>(this, &Client::readFunc), 16, 0x1000,
         {0});
 
     mKeyboard = new Keyboard(nn::swkbd::GetRequiredStringBufferSize());
 
-    mSocket = new SocketClient("SocketClient", mHeap);
+    mSocket = new SocketClient("SocketClient");
 
     mPuppetHolder = new PuppetHolder(maxPuppets);
 
@@ -123,25 +118,20 @@ Client::Client() {
  * @param initInfo init info used to create layouts used by client
  */
 void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor holder) {
-    if (mUIMessage)
-        delete mUIMessage;
-    mUIMessage = new (mHeap) al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
+    delete mUIMessage;
+    mUIMessage = new al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
 
-    if (mConnectStatus)
-        delete mConnectStatus;
-    mConnectStatus = new (mHeap) al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
+    delete mConnectStatus;
+    mConnectStatus = new al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
 
-    if (ConnectionStatus::sInstance)
-        delete ConnectionStatus::sInstance;
-    ConnectionStatus::sInstance = new (mHeap) ConnectionStatus("Status", initInfo);
+    delete ConnectionStatus::sInstance;
+    ConnectionStatus::sInstance = new ConnectionStatus("Status", initInfo);
 
-    if (SpeedrunIcon::sInstance)
-        delete SpeedrunIcon::sInstance;
-    SpeedrunIcon::sInstance = new (mHeap) SpeedrunIcon("SpeedrunIcon", initInfo);
+    delete SpeedrunIcon::sInstance;
+    SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", initInfo);
 
-    if (PlayerEventLog::sInstance)
-        delete PlayerEventLog::sInstance;
-    PlayerEventLog::sInstance = new (mHeap) PlayerEventLog();
+    delete PlayerEventLog::sInstance;
+    PlayerEventLog::sInstance = new PlayerEventLog();
 
     mUIMessage->setTxtMessage(u"Connecting to Server.");
     mUIMessage->setTxtMessageConfirm(u"Failed to Connect!");
@@ -153,7 +143,7 @@ void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor hol
 
     startThread();
 
-    Logger::log("Heap Free Size: %f/%f\n", mHeap->getFreeSize() * 0.001f, mHeap->getSize() * 0.001f);
+    // Logger::log("Heap Free Size: %f/%f\n", mHeap->getFreeSize() * 0.001f, mHeap->getSize() * 0.001f);
 }
 
 Client* Client::get() {
@@ -182,11 +172,11 @@ void Client::restartConnection() {
         return;
 
     // send disconnect packet
-    Packet* dc = new (sInstance->mHeap) Packet();
+    Packet* dc = new Packet();
     dc->mType = PacketType::PLAYERDC;
     dc->mUserID = Client::getClientId();
     sInstance->mSocket->send(dc);
-    sInstance->mHeap->free(dc);
+    delete dc;
 
     // close socket
     if (sInstance->mSocket->closeSocket()) {
@@ -293,7 +283,7 @@ bool Client::startConnection() {
                     waitingForInitPacket = false;
                 }
 
-                free(curPacket);
+                delete curPacket;
             } else {
                 Logger::log("Recieve failed! Stopping Connection.\n");
                 mIsConnectionActive = false;
@@ -556,7 +546,7 @@ void Client::readFunc() {
                 break;
             }
 
-            free(curPacket);
+            delete curPacket;
 
         } else {
             Logger::log("Client Socket Encountered an Error! Errno: 0x%x\n", mSocket->socket_errno);
@@ -576,8 +566,6 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
         Logger::log("Error: Null Player Reference\n");
         return;
     }
-
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
 
     PlayerInf* packet = new PlayerInf();
     packet->mUserID = sInstance->mUserID;
@@ -631,7 +619,7 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
         sInstance->lastPlayerInfPacket = *packet;
         sInstance->mSocket->queuePacket(packet);
     } else {
-        sInstance->mHeap->free(packet);
+        delete packet;
     }
 }
 
@@ -645,8 +633,6 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
         Logger::log("Static Instance is Null!\n");
         return;
     }
-
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
 
     bool isFlying = hackCap->isFlying();
 
@@ -692,8 +678,6 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
         return;
     }
 
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
-
     GameInf* packet = new GameInf();
     packet->mUserID = sInstance->mUserID;
 
@@ -713,7 +697,7 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
         sInstance->lastGameInfPacket = *packet;
         sInstance->mSocket->queuePacket(packet);
     } else {
-        sInstance->mHeap->free(packet);
+        delete packet;
     }
 }
 
@@ -721,24 +705,30 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
  * @brief Sends only stage info to the server.
  * @param holder
  */
-void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
+void Client::sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart) {
     if (!sInstance) {
         Logger::log("Static Instance is Null!\n");
         return;
     }
-
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
 
     GameInf* packet = new GameInf();
     packet->mUserID = sInstance->mUserID;
 
     packet->is2D = false;
 
-    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
+    if (isGameStart) {
+        packet->scenarioNo = 1;
 
-    strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
+        strcpy(packet->stageName, "CapWorldHomeStage");
+    } else {
+        packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
+
+        strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
+    }
 
     packet->gameMode = -1;
+
+    packet->isGameStart = isGameStart;
 
     sInstance->lastGameInfPacket = *packet;
 
@@ -756,8 +746,6 @@ void Client::sendCostumeInfPacket(const char* body, const char* cap) {
         return;
     }
 
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
-
     CostumeInf* packet = new CostumeInf(body, cap);
     packet->mUserID = sInstance->mUserID;
     sInstance->lastCostumeInfPacket = *packet;
@@ -773,8 +761,6 @@ void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
         Logger::log("Static Instance is Null!\n");
         return;
     }
-
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
 
     if (sInstance->isClientCaptured && !sInstance->isSentCaptureInf) {
         CaptureInf* packet = new CaptureInf();
@@ -801,8 +787,6 @@ void Client::sendShineCollectPacket(int shineID) {
         return;
     }
 
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
-
     if (sInstance->lastCollectedShine != shineID) {
         ShineCollect* packet = new ShineCollect();
         packet->mUserID = sInstance->mUserID;
@@ -826,8 +810,6 @@ void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, cons
         return;
     }
 
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
-
     CoinCollectCollect* packet = new CoinCollectCollect();
     packet->mUserID = sInstance->mUserID;
     strcpy(packet->placeID, placeID);
@@ -846,8 +828,6 @@ void Client::sendCheckpointGetPacket(const char* objId) {
         Logger::log("Static Instance is Null!\n");
         return;
     }
-
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
 
     CheckpointGet* packet = new CheckpointGet();
     packet->mUserID = sInstance->mUserID;
@@ -988,15 +968,6 @@ void Client::updateShineInfo(ShineCollect* packet) {
         PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
 
         if (PlayerEventLog::sInstance) {
-            if (packet->shineId >= 3000 && packet->shineId <= 3013) {
-                return;
-            }
-
-            if (packet->shineId == 2500) {
-                PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::START, "");
-                return;
-            }
-
             if (packet->shineId >= 2000 && packet->shineId <= 2060) {
                 PlayerEventLog::sInstance->addEvent(
                     player->puppetName, PlayerEventLog::SHINE,
@@ -1044,69 +1015,6 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
     }
 }
 
-/*const struct {
-    const char* stage;
-    s32 index;
-    const char* warpStage;
-    int possibleScenarios[5];
-    int noSyncScen = -1;
-
-} stageListForScenarioSync[] = {
-    {"CapWorldHomeStage", 0, "CapWorldHomeStage", {1, 2, 3, 4, 0}, 1},
-    {"WaterfallWorldHomeStage", 1, "WaterfallWorldHomeStage", {1, 2, 3, 4, 0}},
-    {"SandWorldHomeStage", 2, "SandWorldHomeStage", {1, 2, 3, 4, 5}},
-    {"SandWorldUnderground001Stage", 2, "SandWorldHomeStage", {1, 2, 3, 4, 5}},
-    {"ForestWorldHomeStage", 3, "ForestWorldHomeStage", {1, 2, 3, 4, 5}},
-    {"ForestWorldBossStage", 3, "ForestWorldHomeStage", {1, 2, 3, 4, 5}},
-    {"LakeWorldHomeStage", 4, "LakeWorldHomeStage", {1, 2, 3, 4, 0}},
-    {"CloudWorldHomeStage", 5, "CloudWorldHomeStage", {1, 3, 4, 0, 0}, 1},
-    {"ClashWorldHomeStage", 6, "ClashWorldHomeStage", {1, 2, 3, 4, 0}},
-    {"CityWorldHomeStage", 7, "CityWorldHomeStage", {1, 2, 4, 5, 8}},
-    {"SeaWorldHomeStage", 8, "SeaWorldHomeStage", {1, 2, 3, 4, 0}},
-    {"SnowWorldHomeStage", 9, "SnowWorldHomeStage", {1, 2, 3, 4, 0}},
-    {"SnowWorldLobby001Stage", 9, "SnowWorldHomeStage", {1, 2, 3, 4, 0}},
-    {"LavaWorldHomeStage", 10, "LavaWorldHomeStage", {1, 2, 3, 4, 8}},
-    {"BossRaidWorldHomeStage", 11, "BossRaidWorldHomeStage", {1, 2, 3, 4, 0}},
-    {"SkyWorldHomeStage", 12, "SkyWorldHomeStage", {1, 2, 3, 4, 0}},
-    {"MoonWorldHomeStage", 13, "MoonWorldHomeStage", {1, 2, 3, 0, 0}},
-    {"PeachWorldHomeStage", 14, "PeachWorldHomeStage", {2, 0, 0, 0, 0}},
-    {"Special1WorldHomeStage", 15, "Special1WorldHomeStage", {1, 2, 0, 0, 0}},
-    {"Special2WorldHomeStage", 16, "Special2WorldHomeStage", {1, 2, 0, 0, 0}},
-};
-
-static s32 findWorldIdFromStageName(const char* stageName) {
-    for (s32 i = 0; i < hk::util::arraySize(stageListForScenarioSync); i++) {
-        if (al::isEqualString(stageListForScenarioSync[i].stage, stageName)) {
-            return stageListForScenarioSync[i].index;
-        }
-    }
-    return -1;
-}
-
-static bool validateScenarioFromStageName(const char* stageName, s32 scenario, s32 curscen) {
-    for (s32 i = 0; i < hk::util::arraySize(stageListForScenarioSync); i++) {
-        if (al::isEqualString(stageListForScenarioSync[i].stage, stageName)) {
-            if (curscen == stageListForScenarioSync[i].noSyncScen)
-                return false;
-
-            for (s32 j = 0; j < hk::util::arraySize(stageListForScenarioSync[i].possibleScenarios); j++) {
-                if (stageListForScenarioSync[i].possibleScenarios[j] == scenario)
-                    return true;
-            }
-        }
-    }
-    return false;
-}
-
-static const char* findWarpStageFromStageName(const char* stageName) {
-    for (s32 i = 0; i < hk::util::arraySize(stageListForScenarioSync); i++) {
-        if (al::isEqualString(stageListForScenarioSync[i].stage, stageName)) {
-            return stageListForScenarioSync[i].warpStage;
-        }
-    }
-    return nullptr;
-}*/
-
 /**
  * @brief Updates game info from packet, and handles scenario sync.
  * @param packet
@@ -1127,28 +1035,11 @@ void Client::updateGameInfo(GameInf* packet) {
 
         curInfo->is2D = packet->is2D;
         curInfo->gameMode = packet->gameMode;
-    }
 
-    /*if (findWorldIdFromStageName(packet->stageName) == -1)
-        return;
-    GameDataFile::FixedHeapArray<s32, sNumWorlds>& scenNumArr =
-        Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
-    GameDataFile::FixedHeapArray<s32, sNumWorlds>& mainSenNumArr =
-        Client::sInstance->getHolder()->getGameDataFile()->getMainScenarioNumArr();
-
-    int curScen = scenNumArr[findWorldIdFromStageName(packet->stageName)];
-    if (packet->scenarioNo < 15 &&
-        (packet->scenarioNo > curScen || (curScen == 7 && packet->scenarioNo != 7) HACK) &&
-        (validateScenarioFromStageName(packet->stageName, packet->scenarioNo, curScen) ||
-         (packet->scenarioNo == 7 && strcmp(packet->stageName, "WaterfallWorldHomeStage") == 0) HACK)) {
-        scenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->scenarioNo;
-        mainSenNumArr[findWorldIdFromStageName(packet->stageName)] = packet->mainScenarioNo;
-        const char* warpStage = findWarpStageFromStageName(packet->stageName);
-        if (warpStage && strcmp(GameDataFunction::getCurrentStageName(Client::getHolder()), warpStage) == 0) {
-            ChangeStageInfo info(Client::getHolder(), "start", warpStage, false, packet->scenarioNo);
-            Client::getHolder()->changeNextStage(&info);
+        if (packet->isGameStart && PlayerEventLog::sInstance) {
+            PlayerEventLog::sInstance->addEvent(curInfo->puppetName, PlayerEventLog::START, "");
         }
-    }*/
+    }
 }
 
 /**
@@ -1156,17 +1047,15 @@ void Client::updateGameInfo(GameInf* packet) {
  * @param packet
  */
 void Client::sendToStage(ChangeStagePacket* packet) {
-    if (mSceneInfo && mSceneInfo->sceneObjHolder) {
-        GameDataHolderWriter accessor(mSceneInfo->sceneObjHolder);
+    GameDataHolderWriter accessor(mHolder);
 
-        Logger::log("Sending Player to %s at Entrance %s in Scenario %d\n", packet->changeStage,
-                    packet->changeID, packet->scenarioNo);
+    Logger::log("Sending Player to %s at Entrance %s in Scenario %d\n", packet->changeStage, packet->changeID,
+                packet->scenarioNo);
 
-        ChangeStageInfo info(accessor.mData, packet->changeID, packet->changeStage, false, packet->scenarioNo,
-                             static_cast<ChangeStageInfo::SubScenarioType>(packet->subScenarioType));
-        info.setWipeType("FadeBlack");
-        GameDataFunction::tryChangeNextStage(accessor, &info);
-    }
+    ChangeStageInfo info(accessor.mData, packet->changeID, packet->changeStage, false, packet->scenarioNo,
+                         static_cast<ChangeStageInfo::SubScenarioType>(packet->subScenarioType));
+    info.setWipeType("FadeBlack");
+    GameDataFunction::tryChangeNextStage(accessor, &info);
 }
 
 /**
@@ -1240,10 +1129,11 @@ PuppetInfo* Client::findPuppetInfo(const nn::account::Uid& id, bool isFindAvaila
  * @brief Sets the current stage name and scenario number, and updates the puppet holder.
  * @param holder
  */
-void Client::setStageInfo(GameDataHolderAccessor holder) {
+void Client::setStageInfo(HakoniwaSequence* sequence) {
     if (sInstance) {
-        sInstance->mStageName = GameDataFunction::getCurrentStageName(holder);
-        sInstance->mScenario = holder.mData->getGameDataFile()->getScenarioNo();
+        sInstance->mCurStageScene = (StageScene*)sequence->mCurrentScene;
+        sInstance->mStageName = sequence->mStageName;
+        sInstance->mScenario = sInstance->mHolder->getGameDataFile()->getScenarioNo();
 
         sInstance->mPuppetHolder->setStageInfo(sInstance->mStageName.cstr(), sInstance->mScenario);
     }
@@ -1319,8 +1209,6 @@ struct storyShine {
     s32 worldId;
     const char* homeStage;
     s32 scenario;
-    bool isNeedWarp;
-    const char* stage;
 };
 
 struct moonRock {
@@ -1329,22 +1217,14 @@ struct moonRock {
 };
 
 inline constexpr storyShine scenarioSyncList[16] = {
-    {218, 1, "WaterfallWorldHomeStage", 2, false},
-    {495, 2, "SandWorldHomeStage", 2, false},
-    {560, 2, "SandWorldHomeStage", 3, true, "SandWorldUnderground001Stage"},
-    {130, 3, "ForestWorldHomeStage", 2, false},
-    {181, 3, "ForestWorldHomeStage", 3, true, "ForestWorldBossStage"},
-    {424, 4, "LakeWorldHomeStage", 2, false},
-    {37, 7, "CityWorldHomeStage", 2, false},
-    {95, 7, "CityWorldHomeStage", 4, false},
-    {437, 8, "SeaWorldHomeStage", 2, false},
-    {1020, 9, "SnowWorldHomeStage", 2, true, "SnowWorldLobby001Stage"},
-    {292, 10, "LavaWorldHomeStage", 2, false},
-    {290, 10, "LavaWorldHomeStage", 3, false},
-    {795, 11, "BossRaidWorldHomeStage", 2, false},
-    {332, 12, "SkyWorldHomeStage", 2, false},
-    {1055, 15, "Special1WorldHomeStage", 2, false},
-    {1061, 16, "Special2WorldHomeStage", 2, false}};
+    {218, 1, "WaterfallWorldHomeStage", 2},  {495, 2, "SandWorldHomeStage", 2},
+    {560, 2, "SandWorldHomeStage", 3},       {130, 3, "ForestWorldHomeStage", 2},
+    {181, 3, "ForestWorldHomeStage", 3},     {424, 4, "LakeWorldHomeStage", 2},
+    {37, 7, "CityWorldHomeStage", 2},        {95, 7, "CityWorldHomeStage", 4},
+    {437, 8, "SeaWorldHomeStage", 2},        {1020, 9, "SnowWorldHomeStage", 2},
+    {292, 10, "LavaWorldHomeStage", 2},      {290, 10, "LavaWorldHomeStage", 3},
+    {795, 11, "BossRaidWorldHomeStage", 2},  {332, 12, "SkyWorldHomeStage", 2},
+    {1055, 15, "Special1WorldHomeStage", 2}, {1061, 16, "Special2WorldHomeStage", 2}};
 
 inline constexpr s32 postGameScenarios[14] = {3, 3, 4, 4, 3, 3, 3, 5, 3, 3, 4, 3, 3, 2};
 
@@ -1400,12 +1280,12 @@ void Client::saveMoonRocks(al::ByamlWriter* writer) {
 }
 
 void Client::readMoonRocks(const al::ByamlIter& save) {
-    al::ByamlIter iter;
-    al::tryGetByamlIterByKey(&iter, save, "ScenarioSyncMoonRockData");
-
-    for (s32 i = 0; i < SNumMoonRocks; i++) {
-        mPendingMoonRocks[i] = false;
-        iter.tryGetBoolByIndex(&mPendingMoonRocks[i], i);
+    al::ByamlIter moonRockIter;
+    if (al::tryGetByamlIterByKey(&moonRockIter, save, "ScenarioSyncMoonRockData")) {
+        for (s32 i = 0; i < SNumMoonRocks; i++) {
+            mPendingMoonRocks[i] = false;
+            moonRockIter.tryGetBoolByIndex(&mPendingMoonRocks[i], i);
+        }
     }
 }
 
@@ -1414,8 +1294,6 @@ void Client::sendMoonRockHitPacket(int worldId) {
         Logger::log("Static Instance is Null!\n");
         return;
     }
-
-    sead::ScopedCurrentHeapSetter setter(sInstance->mHeap);
 
     MoonRockHit* packet = new MoonRockHit();
     packet->mUserID = sInstance->mUserID;
@@ -1465,7 +1343,7 @@ void Client::updateShines() {
 
                     scenarioNum = shine.scenario;
 
-                    if (!isSubScenario && shine.isNeedWarp &&
+                    if (!isSubScenario &&
                         al::isEqualString(shine.homeStage, GameDataFunction::getCurrentStageName(accessor))) {
                         ChangeStageInfo info(accessor, "start",
                                              GameDataFunction::getCurrentStageName(accessor));
@@ -1793,33 +1671,6 @@ void Client::setLastUsedPort(const int port) {
     if (sInstance) {
         sInstance->mServerPort = port;
     }
-}
-
-/**
- * @brief Creates new scene info from initInfo and stores a pointer to the current stage scene.
- *        Also clears mCurStageScene first so that any in-flight packets on the read thread
- *        will queue rather than touch a half-initialized scene.
- *
- * @param initInfo
- * @param stageScene
- */
-void Client::setSceneInfo(const al::ActorInitInfo& initInfo, const StageScene* stageScene) {
-    if (!sInstance) {
-        Logger::log("Client Null!\n");
-        return;
-    }
-
-    // Clear the scene pointer first so the read thread queues packets during the transition
-    sInstance->mCurStageScene = nullptr;
-
-    if (sInstance->mSceneInfo) {
-        delete sInstance->mSceneInfo;
-    }
-
-    sInstance->mSceneInfo = new (sInstance->mHeap) al::ActorSceneInfo();
-    memcpy(sInstance->mSceneInfo, &initInfo.actorSceneInfo, sizeof(al::ActorSceneInfo));
-
-    sInstance->mCurStageScene = stageScene;
 }
 
 bool Client::tryRegisterShine(Shine* shine) {

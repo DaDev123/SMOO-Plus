@@ -31,9 +31,9 @@ public:
 private:
     sead::PtrArray<PuppetActor> mPuppetArr = sead::PtrArray<PuppetActor>();
 
-    PuppetActor* mDebugPuppet;
+    PuppetActor* mDebugPuppet = nullptr;
 
     sead::FixedSafeString<0x40> mStageName;
 
-    u8 mScenarioNo;
+    u8 mScenarioNo = 0;
 };

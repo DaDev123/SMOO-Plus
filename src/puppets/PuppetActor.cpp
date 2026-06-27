@@ -17,6 +17,7 @@
 #include "al/Library/LiveActor/ActorResourceFunction.h"
 #include "al/Library/LiveActor/ActorSensorUtil.h"
 #include "al/Library/LiveActor/LiveActor.h"
+#include "al/Library/LiveActor/LiveActorFunction.h"
 #include "al/Library/LiveActor/LiveActorKeeper.h"
 #include "al/Library/Nerve/NerveUtil.h"
 #include "al/Library/Obj/PartsModel.h"
@@ -34,10 +35,14 @@
 
 #include "algorithms/CaptureTypes.h"
 #include "helpers.hpp"
+#include "Library/Light/ModelMaterialCategory.h"
+#include "Library/Resource/ActorResource.h"
 #include "logger.hpp"
 #include "math/seadQuat.h"
 #include "Project/HitSensor/HitSensor.h"
+#include "PuppetMain.hpp"
 #include "Scene/StageSceneStateModConfig.hpp"
+#include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "Util/SensorMsgFunction.h"
 
@@ -50,14 +55,33 @@ static const char* subActorNames[] = {
 };
 
 PuppetActor::PuppetActor(const char* name) : al::LiveActor(name) {
-    mPuppetCap = new PuppetCapActor(name);
-    mCaptures = new HackModelHolder();
-    mModelHolder = new PlayerModelHolder(3);  // Regular Model, 2D Model, 2D Mini Model
+    mPuppetCap = new (Client::instance()->mHakkunSceneHeap) PuppetCapActor(name);
+    mCaptures = new (Client::instance()->mHakkunSceneHeap) HackModelHolder();
+    mModelHolder = new (Client::instance()->mHakkunSceneHeap)
+        PlayerModelHolder(3);  // Regular Model, 2D Model, 2D Mini Model
+    // what is a 2d mini model? i feel like we could get rid of that but w/e
+}
+
+PuppetActor::~PuppetActor() {
+    delete mCostumeInfo;
+    delete mInfo;
+    delete mPuppetCap;
+    delete mModelHolder;
+    delete mCaptures;
+    delete mNameTag;
 }
 
 void PuppetActor::init(al::ActorInitInfo const& initInfo) {
+    Logger::log("start\n");
+    logHakkunHeapUsage();
+    Logger::log("cap is %s null\n", mPuppetCap == nullptr ? "" : "not");
+
     mPuppetCap->init(initInfo);
+    Logger::log("init cap\n");
+    logHakkunHeapUsage();
     al::initActorWithArchiveName(this, initInfo, "PlayerActorHakoniwa", nullptr);
+    Logger::log("init actor with archive name\n");
+    logHakkunHeapUsage();
 
     const char* bodyName = "Mario";
     const char* capName = "Mario";
@@ -66,56 +90,102 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
         bodyName = tryGetPuppetBodyName(mInfo);
         capName = tryGetPuppetCapName(mInfo);
 
-        mNameTag = new NameTag(this, al::getLayoutInitInfo(initInfo), 4900.0f, 5000.0f, mInfo->puppetName);
+        mNameTag = new (Client::instance()->mHakkunSceneHeap)
+            NameTag(this, al::getLayoutInitInfo(initInfo), 4900.0f, 5000.0f, mInfo->puppetName);
     }
 
-    al::LiveActor* normalModel = new al::LiveActor("Normal");
+    Logger::log("made nametag and stuff\n");
+    logHakkunHeapUsage();
+
+    al::LiveActor* normalModel = new (Client::instance()->mHakkunSceneHeap) al::LiveActor("Normal");
+    Logger::log("made normalModel\n");
+    logHakkunHeapUsage();
 
     mCostumeInfo = initMarioModelPuppet(normalModel, initInfo, bodyName, capName, 0, nullptr);
+    Logger::log("inited normal model\n");
+    logHakkunHeapUsage();
 
     normalModel->mActionKeeper->mPadAndCameraCtrl->mRumbleCount = 0;
 
     mModelHolder->registerModel(normalModel, "Normal");
+    Logger::log("registered normal model\n");
+    logHakkunHeapUsage();
 
-    al::LiveActor* normal2DModel = new al::LiveActor("Normal2D");
+    al::LiveActor* normal2DModel = new (Client::instance()->mHakkunSceneHeap) al::LiveActor("Normal2D");
+    Logger::log("created normal 2d model\n");
+    logHakkunHeapUsage();
 
     PlayerFunction::initMarioModelActor2D(
         normal2DModel, initInfo, al::StringTmp<0x40>("%s2D", mCostumeInfo->mBodyInfo->costumeName).cstr(),
         PlayerFunction::isInvisibleCap(mCostumeInfo));
+    Logger::log("inited 2d model\n");
+    logHakkunHeapUsage();
 
     mModelHolder->registerModel(normal2DModel, "Normal2D");
+    Logger::log("registered 2d model\n");
+    logHakkunHeapUsage();
 
     al::setClippingInfo(normalModel, 999999999.0f, 0);
     al::setClippingNearDistance(normalModel, 999999999.0f);
+    Logger::log("set clipping stuff for model\n");
+    logHakkunHeapUsage();
 
     al::setClippingInfo(normal2DModel, 999999999.0f, 0);
     al::setClippingNearDistance(normal2DModel, 999999999.0f);
+    Logger::log("set clipping stuff for 2d model\n");
+    logHakkunHeapUsage();
 
     al::hideSilhouetteModelIfShow(normalModel);
+    Logger::log("hide silhouette model\n");
+    logHakkunHeapUsage();
 
     al::LiveActor* headModel = al::getSubActor(normalModel, "頭");
+    Logger::log("head model\n");
+    logHakkunHeapUsage();
     al::getSubActor(headModel, "キャップの目")->kill();
+    Logger::log("kill some head model sub actor\n");
+    logHakkunHeapUsage();
     al::startVisAnimForAction(headModel, "CapOn");
+    Logger::log("start vis anim for action\n");
+    logHakkunHeapUsage();
 
     mModelHolder->changeModel("Normal");
+    Logger::log("set model to normal\n");
+    logHakkunHeapUsage();
 
     startAction("Wait");
+    Logger::log("start action wait\n");
+    logHakkunHeapUsage();
 
     // Clear existing sensors loaded from BYML
     if (mHitSensorKeeper) {
         mHitSensorKeeper->clear();
     }
+    Logger::log("clear hit sensors\n");
+    logHakkunHeapUsage();
 
     initHitSensor(3);
+    Logger::log("init hit sensor\n");
+    logHakkunHeapUsage();
     al::addHitSensor(this, initInfo, "Body", static_cast<u32>(al::HitSensorType::Npc), 50.0f, 16,
                      sead::Vector3f(0.0f, 75.0f, 0.0f));
+    Logger::log("body\n");
+    logHakkunHeapUsage();
     al::addHitSensor(this, initInfo, "Head", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 16,
                      sead::Vector3f(0.0f, 110.0f, 0.0f));
+    Logger::log("head\n");
+    logHakkunHeapUsage();
     al::addHitSensor(this, initInfo, "Foot", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 1,
                      sead::Vector3f(0.0f, 40.0f, 0.0f));
+    Logger::log("foot\n");
+    logHakkunHeapUsage();
 
     al::validateClipping(normalModel);
+    Logger::log("validate clipping normal\n");
+    logHakkunHeapUsage();
     al::validateClipping(normal2DModel);
+    Logger::log("validate clipping 2d\n");
+    logHakkunHeapUsage();
 }
 
 void PuppetActor::initAfterPlacement() {
@@ -557,13 +627,13 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
 
     // Logger::log("Creating Costume Info.\n");
 
-    PlayerCostumeInfo* costumeInfo = new PlayerCostumeInfo();
+    PlayerCostumeInfo* costumeInfo = new (Client::instance()->mHakkunSceneHeap) PlayerCostumeInfo();
     costumeInfo->init(bodyInfo, headInfo);
 
     if (costumeInfo->isNeedBodyHair()) {
         Logger::log("Creating Body Hair Parts Model.\n");
 
-        al::PartsModel* partsModel = new al::PartsModel("髪");
+        al::PartsModel* partsModel = new (Client::instance()->mHakkunSceneHeap) al::PartsModel("髪");
 
         partsModel->initPartsFixFile(
             player, initInfo,
@@ -598,7 +668,7 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
 PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player, const al::ActorInitInfo& initInfo,
                                                 const char* headModelName, const char* capModelName,
                                                 const char* headType, const char* headSuffix) {
-    al::PartsModel* headModel = new al::PartsModel(headModelName);
+    al::PartsModel* headModel = new (Client::instance()->mHakkunSceneHeap) al::PartsModel(headModelName);
 
     al::StringTmp<0x80> headArcName("%sHead%s", capModelName, headType);
     al::StringTmp<0x100> arcSuffix("Head");
@@ -618,7 +688,7 @@ PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player, const al:
     al::onSyncAlphaMaskSubActor(player, headModel);
     al::onSyncHideSubActor(player, headModel);
 
-    al::PartsModel* capEyesModel = new al::PartsModel("キャップの目");
+    al::PartsModel* capEyesModel = new (Client::instance()->mHakkunSceneHeap) al::PartsModel("キャップの目");
     capEyesModel->initPartsFixFile(headModel, initInfo, "CapManHeroEyes", "", 0);
 
     al::onSyncClippingSubActor(headModel, capEyesModel);

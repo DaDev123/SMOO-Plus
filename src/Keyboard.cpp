@@ -3,17 +3,17 @@
 #include "nn/swkbd/swkbd.h"
 
 Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
-    this->mThread = new al::AsyncFunctorThread(
-        "Swkbd", al::FunctorV0M<Keyboard*, void (Keyboard::*)(void)>(this, &Keyboard::keyboardThread), 0,
-        0x2000, {0});
+    mThread = new al::AsyncFunctorThread(
+        "Swkbd", al::FunctorV0M<Keyboard*, KeyboardThreadFunc>(this, &Keyboard::keyboardThread), 0, 0x2000,
+        {0});
 
     mWorkBufSize = nn::swkbd::GetRequiredWorkBufferSize(false);
-    mWorkBuf = (char*)malloc(mWorkBufSize);
+    mWorkBuf = (char*)aligned_alloc(0x1000, mWorkBufSize);
 
-    mTextCheckSize = 0x400;
+    mTextCheckSize = 0x1000;
     mTextCheckBuf = (char*)malloc(mTextCheckSize);
 
-    mCustomizeDicSize = 0x400;
+    mCustomizeDicSize = 0x1000;
     mCustomizeDicBuf = (char*)malloc(mCustomizeDicSize);
 
     mResultString.allocate();
@@ -40,7 +40,8 @@ void Keyboard::keyboardThread() {
         nn::swkbd::SetInitialTextUtf8(&keyboardArg, mInitialText.cstr());
     }
 
-    mIsCancelled = nn::swkbd::ShowKeyboard(&mResultString, keyboardArg) == 671;  // no idea what 671 could be
+    mIsCancelled = nn::swkbd::ShowKeyboard(&mResultString, keyboardArg) ==
+                   671;  // 671 = exit code for pressing x to cancel keyboard
 }
 
 void Keyboard::openKeyboard(const char* initialText, KeyboardSetup setupFunc) {

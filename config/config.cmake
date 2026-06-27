@@ -28,5 +28,6 @@ set(BAKE_SYMBOLS FALSE)
 
 set(USE_ADVANCED_RESULT 1)
 
-set(HAKKUN_ADDONS Nvn ImGui DebugRenderer HeapSourceDynamic)
+set(HAKKUN_ADDONS Nvn ImGui DebugRenderer HeapSourceBss ExpHeap)
 set(HAKKUN_DEBUGRENDERER_VTXBUFFER_SIZE 0x2000)
+set(HAKKUN_BSS_HEAP_SIZE 4194304)

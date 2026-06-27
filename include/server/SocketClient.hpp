@@ -6,17 +6,15 @@
 
 #include <netinet/in.h>
 
-#include "heap/seadHeap.h"
 #include "packets/Packet.h"
 #include "SocketBase.hpp"
 #include "syssocket/sockdefines.h"
 #include "thread/seadMessageQueue.h"
-#include "thread/seadMutex.h"
 #include "types.h"
 
 class SocketClient : public SocketBase {
 public:
-    SocketClient(const char* name, sead::Heap* heap);
+    SocketClient(const char* name);
     nn::Result init(const char* ip, u16 port) override;
     bool tryReconnect() override;
     bool closeSocket() override;
@@ -34,8 +32,8 @@ public:
     void sendFunc();
     void recvFunc();
 
-    void setLogState(SockState state) { this->socket_log_state = state; };
-    void startEndThread() { this->mEndThread->start(); };
+    void setLogState(SockState state) { socket_log_state = state; };
+    void startEndThread() { mEndThread->start(); };
 
     void printPacket(Packet* packet);
     bool isConnected() { return socket_log_state == SockState::CONNECTED; }
@@ -49,8 +47,6 @@ public:
     void setIsFirstConn(bool value) { mIsFirstConnect = value; }
 
 private:
-    sead::Heap* mHeap = nullptr;
-
     al::AsyncFunctorThread* mRecvThread = nullptr;
     al::AsyncFunctorThread* mSendThread = nullptr;
     al::AsyncFunctorThread* mEndThread = nullptr;

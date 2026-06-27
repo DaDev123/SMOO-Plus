@@ -9,7 +9,7 @@
 #include "hk/hook/a64/Assembler.h"
 #include "hk/hook/InstrUtil.h"
 #include "hk/hook/Trampoline.h"
-#include "hk/util/Math.h"
+#include "hk/mem/BssHeap.h"
 
 #include "nn/hid.h"  // IWYU pragma: keep
 #include "nn/socket.h"
@@ -17,6 +17,7 @@
 #include <sead/gfx/seadCamera.h>
 #include <sead/gfx/seadPrimitiveRenderer.h>
 #include <sead/gfx/seadProjection.h>
+#include <sead/heap/seadHakkunHeap.h>
 #include <sead/heap/seadHeap.h>
 #include <sead/prim/seadStringUtil.h>
 
@@ -58,8 +59,8 @@
 #include <math.h>
 
 #include "actors/PuppetActor.h"
-#include "factoryPatches.h"
 #include "gfx/seadColor.h"
+#include "heap/seadFrameHeap.h"
 #include "helpers.hpp"
 #include "hooks.hpp"
 #include "imgui.h"
@@ -67,11 +68,13 @@
 #include "layouts/PlayerEventLog.h"
 #include "layouts/SpeedrunIcon.h"
 #include "Library/Base/StringUtil.h"
+#include "Library/LiveActor/ActorInitInfo.h"
 #include "logger.hpp"
 #include "MapObj/CheckpointFlag.h"
 #include "prim/seadSafeString.h"
 #include "puppetHooks.hpp"
 #include "puppets/PuppetInfo.h"
+#include "puppets/PuppetMain.hpp"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
@@ -89,27 +92,27 @@ static int pageIndex = 0;
 static const int maxPages = 4;
 static char chatInput[256] = "";
 
-al::SequenceInitInfo* initInfo;
-
 static constexpr int socketPoolSize = 0x600000;
 static constexpr int socketAllocPoolSize = 0x20000;
 char socketPool[socketPoolSize + socketAllocPoolSize] __attribute__((aligned(0x1000)));
 HkTrampoline disableSocketInit = [](TrampolineStatic()) -> void {};
+sead::HakkunHeap* sead::HakkunHeap::sInstance = nullptr;
 
 // ===== HOOKS =====
 
 HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
+    sead::HakkunHeap::sInstance = new sead::HakkunHeap();
+
     imgui::setup();
 
     nn::socket::Initialize(socketPool, socketPoolSize, socketAllocPoolSize, 0xE);
     disableSocketInit.installAtSym<"_ZN2nn6socket10InitializeEPvmmi">();
+
 #if DEBUGLOG
     Logger::createInstance();
 #endif
 
-    Client::mHeap = sead::ExpHeap::create(500_KB, "ClientHeap", sead::HeapMgr::instance()->getCurrentHeap(),
-                                          8, sead::Heap::cHeapDirection_Forward, false);
-    Client::createInstance(Client::mHeap);
+    Client::sInstance = new Client();
 
     orig(gameSystem);
 
@@ -204,7 +207,7 @@ HkTrampoline sendCheckpointGetPacketHook = [](TrampolineStatic(), CheckpointFlag
 HkTrampoline hakoniwaSequenceInitHook = [](TrampolineStatic(), HakoniwaSequence* sequence,
                                            al::SequenceInitInfo* initInfo) -> void {
     orig(sequence, initInfo);
-    // was threadInit ( hook for initializing client class)
+    // was threadInit (hook for initializing client class)
     al::LayoutInitInfo lytInfo;
 
     al::initLayoutInitInfo(&lytInfo, sequence->mLayoutKit, 0, sequence->mAudioDirector,
@@ -226,19 +229,33 @@ HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* i
         return;
 
     // was stage init hook
+
+    Logger::log("init actor init info hook\n");
+    logHakkunHeapUsage();
     Client::clearArrays();
+    Logger::log("cleared arrays\n");
+    logHakkunHeapUsage();
 
-    Client::setSceneInfo(*initInfo, (StageScene*)scene);
+    Client::sendGameInfPacket(scene);
+    Logger::log("sent game inf packet\n");
+    logHakkunHeapUsage();
 
-    Client::sendGameInfPacket(initInfo->actorSceneInfo.sceneObjHolder);
+    if (Client::instance()->mHakkunSceneHeap)
+        Client::instance()->mHakkunSceneHeap->destroy();
+    Client::instance()->mHakkunSceneHeap =
+        sead::FrameHeap::create(1_MB, "HakkunSceneHeap", sead::HakkunHeap::sInstance);
+    Logger::log("cleaned up hakkun scene heap\n");
+    logHakkunHeapUsage();
+
+    for (s32 i = 0; i < (Client::getMaxPlayerCount() - 1); i++) {
+        createPuppetActorFromFactory(*initInfo, false);
+    }
 };
 
 HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* sequence) -> void {
     StageScene* stageScene = (StageScene*)sequence->mCurrentScene;
 
     static bool isCameraActive = false;
-
-    bool isFirstStep = al::isFirstStep(sequence);
 
     al::PlayerHolder* pHolder = al::getScenePlayerHolder(stageScene);
     PlayerActorBase* playerBase = (PlayerActorBase*)al::tryGetPlayerActor(pHolder, 0);
@@ -253,7 +270,7 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
 
     isInGame = !stageScene->isPause();
 
-    Client::setStageInfo(GameDataHolderWriter(stageScene));
+    Client::setStageInfo(sequence);
 
     Client::update();
 
@@ -389,50 +406,12 @@ void drawMain(al::Sequence* curSequence) {
     SocketClient* socket = client->mSocket;
     bool isConnected = socket->isConnected();
 
+    // ===== NON-DEBUG MODE EXIT =====
     if (!debugMode) {
         if (PlayerEventLog::sInstance)
             PlayerEventLog::sInstance->update();
-    }
-
-    // ===== CHAT RENDERING (Non-debug mode, in-game only) =====
-    if (!debugMode && curScene && isInGame) {
-        auto* renderer = hk::gfx::DebugRenderer::instance();
-        auto* drawContext = Application::instance()->mDrawSystemInfo->drawContext;
-
-        float deltaTime = Time::deltaTime;
-        float baseY = (dispHeight * 7.f / 10.f) + 95.f - 5.f;
-        float lineHeight = 30.f;
-
-        // renderer->begin(drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
-        // renderer->clear();
-
-        // renderer->end();
-
-        isInGame = false;
-
         return;
     }
-
-    // ===== CHAT WINDOW (always visible when connected) =====
-    // if (isConnected && isInGame) {
-    //     ImGui::Begin("Chat", nullptr,
-    //                  ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove |
-    //                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-    //                      ImGuiWindowFlags_NoNavFocus);
-    //     ImGui::SetWindowPos(ImVec2(0, dispHeight - 200), ImGuiCond_FirstUseEver);
-    //     ImGui::SetWindowSize(ImVec2(400, 150));
-    //     ImGui::Text("Chat:");
-    //     if (ImGui::InputText("##chat", chatInput, IM_ARRAYSIZE(chatInput),
-    //     ImGuiInputTextFlags_EnterReturnsTrue)) {
-    //         Client::sendMessagePacket(chatInput, 0);
-    //         chatInput[0] = '\0';  // Clear the input
-    //     }
-    //     ImGui::End();
-    // }
-
-    // ===== NON-DEBUG MODE EXIT =====
-    if (!debugMode)
-        return;
 
     ImGui::Begin(
         "Debug Menu", nullptr,
@@ -456,27 +435,6 @@ void drawMain(al::Sequence* curSequence) {
     }
     ImGui::Text("Your TCP status: %s\n", socket->getStateChar());
 
-    // Heap info
-    // sead::Heap* clientHeap = Client::getClientHeap();
-    // if (clientHeap) {
-    //     sead::Heap* gmHeap = gmm->getHeap();
-    //     if (gmHeap && clientHeap->getSize() > 0 && gmHeap->getSize() > 0) {
-    //         float clientUsed = clientHeap->getSize() - clientHeap->getFreeSize();
-    //         float clientTotal = clientHeap->getSize();
-    //         float gmUsed = gmHeap->getSize() - gmHeap->getFreeSize();
-    //         float gmTotal = gmHeap->getSize();
-    //         float ImguiUsed = imgui::sImGuiHeap->getSize() - imgui::sImGuiHeap->getFreeSize();
-    //         float ImguiTotal = imgui::sImGuiHeap->getSize();
-
-    //         ImGui::Text("Heap Use: %.1f/%.0f (Client) %.1f/%.0f (Gmode)\n", clientUsed / 1_KB, clientTotal
-    //         / 1_KB, gmUsed / 1_KB, gmTotal / 1_KB);
-    //     } else {
-    //         ImGui::Text("Heap Use: Invalid heap sizes\n");
-    //     }
-    // } else {
-    //     ImGui::Text("Heap Use: Client heap unavailable\n");
-    // }
-
     // Queue info
     ImGui::Text("Queue Count: %d/%d (Send) %d/%d (Receive)\n", socket->getSendCount(),
                 socket->getSendMaxCount(), socket->getRecvCount(), socket->getRecvMaxCount());
@@ -486,7 +444,7 @@ void drawMain(al::Sequence* curSequence) {
     ImGui::Text("Server is running version: %s\n", Client::getServerVersion());
 
     // ===== 3D DEBUG RENDERING =====
-    if (curScene && isInGame) {
+    if (curScene) {
         sead::LookAtCamera* cam = &const_cast<sead::LookAtCamera&>(al::getLookAtCamera(curScene, 0));
         sead::Projection* projection =
             cam ? &const_cast<sead::Projection&>(al::getProjectionSead(curScene, 0)) : nullptr;
@@ -607,18 +565,6 @@ void drawMain(al::Sequence* curSequence) {
                     ImGui::Text("%s   ", heapName);
                     ImGui::SameLine();
 
-                    ImVec2 pos = ImGui::GetCursorScreenPos();
-                    pos.x -= 10;
-                    ImVec2 size(300, 24);
-
-                    f32 const progress = 1.0f - static_cast<float>(heap->getFreeSize()) / heap->getSize();
-
-                    ImGui::GetWindowDrawList()->AddRectFilled(pos, ImVec2(pos.x + size.x, pos.y + size.y),
-                                                              0xFF966C52);  // fill
-                    ImGui::GetWindowDrawList()->AddRectFilled(
-                        pos, ImVec2(pos.x + size.x * progress, pos.y + size.y),
-                        0xFF13869D);  // fill
-
                     float used = isKB ? (heap->getSize() - heap->getFreeSize()) / 1024.f :
                                         (heap->getSize() - heap->getFreeSize()) / (1024.f * 1024.f);
                     float max = isKB ? heap->getSize() / 1024.f : heap->getSize() / (1024.f * 1024.f);
@@ -630,8 +576,8 @@ void drawMain(al::Sequence* curSequence) {
                     ImGui::ProgressBar(percentUsed / 100, ImVec2(-FLT_MIN, 0), buf);
                 };
 
-                displayHeapInfo(Client::getClientHeap(), "Client", true);
-                displayHeapInfo(imgui::sImGuiHeap, "ImGui");
+                displayHeapInfo(sead::HakkunHeap::sInstance, "Hakkun");
+                displayHeapInfo(Client::instance()->mHakkunSceneHeap, "HakkunScene", true);
                 displayHeapInfo(al::getStationedHeap(), "Stationed");
                 displayHeapInfo(al::getSequenceHeap(), "Sequence");
                 displayHeapInfo(al::getSceneHeap(), "Scene");
@@ -687,11 +633,9 @@ void seadPrintHook(const char* fmt, ...) {
 
 extern "C" void hkMain() {
     // Init Stuff
+    hk::mem::initializeMainHeap();
     gameSystemInit.installAtSym<"_ZN10GameSystem4initEv">();
     hakoniwaSequenceInitHook.installAtSym<"_ZN16HakoniwaSequence4initERKN2al16SequenceInitInfoE">();
-    insertCustomThingsInFactory();
-    drawTableHook.installAtSym<"_ZN2al15ExecuteDirector4initERKNS_21ExecuteSystemInitInfoE">();
-
     initActorInitInfoHook.installAtSym<"R_ZN2al17initActorInitInfo">();
 
     // Debug Stuff
@@ -701,9 +645,6 @@ extern "C" void hkMain() {
     // Main Stuff
     hakoniwaSequenceHook.installAtSym<"_ZN16HakoniwaSequence12exePlayStageEv">();
     initMarioModelActorHook.installAtSym<"R_ZN14PlayerFunction19initMarioModelActor">();
-
-    // Puppet Actor Setup
-    initPuppetActorsHook.installAtSym<"_ZN2al22initPlacementObjectMapEPNS_5SceneERKNS_13ActorInitInfoEPKc">();
 
     // Shine Syncing
     sendShinePacketHook

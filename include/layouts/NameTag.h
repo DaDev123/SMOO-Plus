@@ -27,11 +27,11 @@ public:
     void exeEnd(void);
     void exeHide(void);
 
-    PuppetActor* mPuppet;   // 0x130
-    const char* mPaneName;  // 0x138
-    float mStartDist;       // 0x140
-    float mEndDist;         // 0x144
-    float mNormalizedDist;  // 0x148
+    PuppetActor* mPuppet = nullptr;   // 0x130
+    const char* mPaneName = nullptr;  // 0x138
+    float mStartDist = 0.0f;          // 0x140
+    float mEndDist = 0.0f;            // 0x144
+    float mNormalizedDist = 0.0f;     // 0x148
 };
 
 namespace {
