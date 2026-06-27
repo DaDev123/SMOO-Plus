@@ -41,7 +41,7 @@ setup:
 	python sys/tools/setup_sail.py
 
 format:
-	clear
+	-clear
 	find src include lib/custom -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | xargs clang-format -i
 
 clean:
