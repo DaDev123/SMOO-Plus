@@ -11,10 +11,10 @@ Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
     mWorkBuf = (char*)aligned_alloc(0x1000, mWorkBufSize);
 
     mTextCheckSize = 0x1000;
-    mTextCheckBuf = (char*)aligned_alloc(0x1000, mTextCheckSize);
+    mTextCheckBuf = (char*)malloc(mTextCheckSize);
 
     mCustomizeDicSize = 0x1000;
-    mCustomizeDicBuf = (char*)aligned_alloc(0x1000, mCustomizeDicSize);
+    mCustomizeDicBuf = (char*)malloc(mCustomizeDicSize);
 
     mResultString.allocate();
 }

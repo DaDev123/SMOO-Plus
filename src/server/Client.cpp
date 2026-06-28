@@ -29,7 +29,6 @@
 #include <sys/socket.h>
 
 #include "account.h"
-#include "CheckpointMasterList.h"
 #include "helpers.hpp"
 #include "layouts/ConnectionStatus.h"
 #include "layouts/PlayerEventLog.h"
@@ -272,7 +271,7 @@ bool Client::startConnection() {
                     mPuppetHolder->resizeHolder(maxPuppets);
 
                     if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
-                        sInstance->mIsAllowReconnect = true;
+                        sInstance->mIsAllowReconnect = false;
                     } else {
                         sInstance->mIsAllowReconnect = false;
                     }
@@ -533,7 +532,7 @@ void Client::readFunc() {
                 maxPuppets = initPacket->maxPlayers - 1;
                 mPuppetHolder->resizeHolder(maxPuppets);
                 if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
-                    sInstance->mIsAllowReconnect = true;
+                    sInstance->mIsAllowReconnect = false;
                 } else {
                     sInstance->mIsAllowReconnect = false;
                 }

@@ -7,7 +7,6 @@
 #include <prim/seadSafeString.h>
 #include <stream/seadStream.h>
 
-#include "CheckpointMasterList.h"
 #include "Library/Base/StringUtil.h"
 #include "Library/Placement/PlacementId.h"
 #include "Npc/SessionEventProgress.h"
@@ -755,52 +754,33 @@ public:
         UniqObjInfo* result = nullptr;
         al::StringTmp<128> obj_id = "";
         placement_id->makeString(&obj_id);
-        if (CheckpointInfo* info = tryFindCheckpointInfoImpl(mCheckpointTable.begin(),
-                                                             mCurrentStageName.cstr(), obj_id.cstr())) {
+        if (CheckpointInfo* info = customTryFindCheckpointInfoImpl(mCheckpointTable.begin(), obj_id.cstr())) {
             info->isGet = true;
-            if (UniqObjInfo* got_info = addGotCheckpoint(mGotCheckpoint.begin(), info->objInfo.getStageName(),
-                                                         info->objInfo.getObjId())) {
+            if (UniqObjInfo* got_info =
+                    customAddGotCheckpoint(mGotCheckpoint.begin(), info->objInfo.getObjId())) {
                 got_info->setStageName(info->objInfo.getStageName());
                 got_info->mObjId.copy(info->objInfo.getObjId());
                 mGotCheckpointNum++;
                 result = got_info;
             }
-        } else {
-            CheckpointMasterList::CheckpointData data =
-                CheckpointMasterList::getCheckpointDataFromMasterList(obj_id.cstr());
-            if (UniqObjInfo* got_info =
-                    addGotCheckpoint(mGotCheckpoint.begin(), data.stageName, data.objId)) {
-                got_info->setStageName(data.stageName);
-                got_info->mObjId.copy(data.objId);
-                mGotCheckpointNum++;
-                result = got_info;
-            }
         }
-        // mCheckpointName.copy(obj_id, 128);
-        // _290.format("%s", mCurrentStageName.cstr());
-        // _908.clear();
-        // mPlayerStartId.clear();
-        // _160.clear();
         return result;
     }
 
-    static UniqObjInfo* addGotCheckpoint(UniqObjInfo* list, const char* stage_name, const char* obj_id) {
+    static UniqObjInfo* customAddGotCheckpoint(UniqObjInfo* list, const char* obj_id) {
         for (s32 i = 0; i < 320; i++) {
             if (list[i].mStageName.isEmpty() && list[i].mObjId.isEmpty())
                 return &list[i];
-            if (al::isEqualString(list[i].getStageName(), stage_name) &&
-                al::isEqualString(list[i].getObjId(), obj_id))
+            if (al::isEqualString(list[i].getObjId(), obj_id))
                 break;
         }
         return nullptr;
     }
 
-    static CheckpointInfo* tryFindCheckpointInfoImpl(CheckpointInfo** table, const char* stage_name,
-                                                     const char* obj_id) {
+    static CheckpointInfo* customTryFindCheckpointInfoImpl(CheckpointInfo** table, const char* obj_id) {
         for (s32 i = 0; i < sNumWorlds; i++)
             for (s32 j = 0; j < 16; j++)
-                if (al::isEqualString(stage_name, table[i][j].objInfo.mStageName) &&
-                    al::isEqualString(obj_id, table[i][j].objInfo.getObjId()))
+                if (al::isEqualString(obj_id, table[i][j].objInfo.getObjId()))
                     return &table[i][j];
         return nullptr;
     }

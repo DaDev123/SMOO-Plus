@@ -2,10 +2,7 @@
 #include "hk/hook/Replace.h"
 #include "hk/hook/Trampoline.h"
 
-#include "nn/fs/fs_directories.h"
 #include "nn/fs/fs_mount.h"
-
-#include "sead/heap/seadHakkunHeap.h"
 
 #include "al/Library/Camera/CameraDirector.h"
 #include "al/Library/Controller/InputFunction.h"
@@ -19,7 +16,6 @@
 #include "al/Library/Scene/Scene.h"
 #include "al/Library/Scene/SceneUtil.h"
 #include "al/Library/Yaml/ByamlIter.h"
-#include "al/Library/Yaml/ByamlUtil.h"
 #include "al/Library/Yaml/Writer/ByamlWriter.h"
 
 #include "game/Item/Shine.h"
@@ -32,11 +28,8 @@
 #include <cstring>
 #include <sys/types.h>
 
-#include "CheckpointMasterList.h"
 #include "filedevice/nin/seadNinFileDeviceBaseNin.h"
 #include "filedevice/seadFileDeviceMgr.h"
-#include "fsHelper.h"
-#include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "Item/CoinCollect.h"
 #include "layouts/ConnectionStatus.h"
@@ -44,10 +37,10 @@
 #include "Library/Collision/CollisionPartsTriangle.h"
 #include "Library/Nerve/Nerve.h"
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
-#include "Library/Thread/AsyncFunctorThread.h"
 #include "Library/Thread/FunctorV0M.h"
 #include "MapObj/ChangeStageInfo.h"
 #include "MapObj/MoonRock.h"
+#include "saveManager.h"
 #include "Scene/StageScene.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "Sequence/HakoniwaSequence.h"
@@ -58,29 +51,13 @@
 #include "System/GameDataHolderAccessor.h"
 #include "System/UniqObjInfo.h"
 
-static al::AsyncFunctorThread* saveWriteThread = nullptr;
-
 static HkTrampoline saveWriteHook = [](TrampolineStatic(), GameConfigData* cfgData,
                                        al::ByamlWriter* origWriter) -> void {
     Client::instance()->saveMoonRocks(origWriter);
 
     orig(cfgData, origWriter);
 
-    sead::ScopedCurrentHeapSetter setter(sead::HakkunHeap::sInstance);
-
-    if (!saveWriteThread)
-        saveWriteThread =
-            new al::AsyncFunctorThread("SaveWriteThread",
-                                       al::FunctorV0M<GameConfigData*, GameConfigData::SaveWriteThreadFunc>(
-                                           cfgData, &GameConfigData::writeToSd),
-                                       16, 0x1000, {0});
-    else
-        static_cast<al::FunctorV0M<GameConfigData*, GameConfigData::SaveWriteThreadFunc>*>(
-            saveWriteThread->mFunctor)
-            ->mObjPointer = cfgData;
-
-    if (saveWriteThread->isDone())
-        saveWriteThread->start();
+    SaveManager::instance()->startThread(cfgData);
 };
 
 static HkTrampoline saveReadHook = [](TrampolineStatic(), GameConfigData* cfgData,
@@ -89,76 +66,7 @@ static HkTrampoline saveReadHook = [](TrampolineStatic(), GameConfigData* cfgDat
 
     orig(cfgData, origIter);
 
-    if (!FsHelper::isFileExist(sSettingsPath)) {
-        nn::fs::CreateDirectory(sModFolder);
-        return;
-    }
-
-    const char* serverIP = "";
-    s32 serverPort = 0;
-    bool serverHidden = false;
-    bool capCollision = false;
-    bool capBounce = false;
-    bool playerCollision = true;
-    bool playerBounce = true;
-    bool costumeDoorsUnlocked = true;
-    bool lowLatency = false;
-    s32 logLife = 0;
-    bool log = true;
-    bool shineCount = true;
-    bool music = true;
-
-    FsHelper::LoadData data = {.path = sSettingsPath};
-    FsHelper::loadFileFromPath(data);
-
-    al::ByamlIter rootIter((u8*)data.buffer);
-    al::ByamlIter smooIter;
-    al::ByamlIter gameIter;
-
-    if (al::tryGetByamlIterByKey(&smooIter, rootIter, "SMOOData")) {
-        if (al::tryGetByamlString(&serverIP, smooIter, "ServerIP"))
-            Client::setLastUsedIP(serverIP);
-        if (al::tryGetByamlS32(&serverPort, smooIter, "ServerPort"))
-            Client::setLastUsedPort(serverPort);
-        if (al::tryGetByamlBool(&serverHidden, smooIter, "ServerHidden"))
-            Client::setServerHidden(serverHidden);
-        if (al::tryGetByamlBool(&capCollision, smooIter, "CapCollision"))
-            StageSceneStateModConfig::setCapCollisionEnabled(capCollision);
-        if (al::tryGetByamlBool(&capBounce, smooIter, "CapBounce"))
-            StageSceneStateModConfig::setCapBounceEnabled(capBounce);
-        if (al::tryGetByamlBool(&playerCollision, smooIter, "PlayerCollision"))
-            StageSceneStateModConfig::setPuppetCollisionEnabled(playerCollision);
-        if (al::tryGetByamlBool(&playerBounce, smooIter, "PlayerBounce"))
-            StageSceneStateModConfig::setPuppetBounceEnabled(playerBounce);
-        if (al::tryGetByamlBool(&costumeDoorsUnlocked, smooIter, "CostumeDoorsUnlocked"))
-            StageSceneStateModConfig::setCostumeDoorsUnlocked(costumeDoorsUnlocked);
-        if (al::tryGetByamlBool(&lowLatency, smooIter, "LowLatency"))
-            StageSceneStateModConfig::setLowLatencyEnabled(lowLatency);
-        if (al::tryGetByamlS32(&logLife, smooIter, "LogLife"))
-            StageSceneStateModConfig::setSpeedrunLogLife((StageSceneStateModConfig::SpeedrunLogLife)logLife);
-        if (al::tryGetByamlBool(&log, smooIter, "Log"))
-            PlayerEventLog::setShow(log);
-        if (al::tryGetByamlBool(&shineCount, smooIter, "ShineCount"))
-            StageSceneStateModConfig::setShineCountEnabled(shineCount);
-        if (al::tryGetByamlBool(&music, smooIter, "Music")) {
-            if (Client::isMusicDisabled() != !music) {
-                Client::toggleMusicDisabled();
-            }
-        }
-    }
-    if (al::tryGetByamlIterByKey(&gameIter, rootIter, "GameConfigData")) {
-        al::tryGetByamlS32(&cfgData->mCameraStickSensitivityLevel, gameIter, "CameraStickSensitivityLevel");
-        al::tryGetByamlBool(&cfgData->mIsCameraReverseInputH, gameIter, "IsCameraReverseInputH");
-        al::tryGetByamlBool(&cfgData->mIsCameraReverseInputV, gameIter, "IsCameraReverseInputV");
-        al::tryGetByamlBool(&cfgData->mIsValidCameraGyro, gameIter, "IsValidCameraGyro");
-        al::tryGetByamlS32(&cfgData->mCameraGyroSensitivityLevel, gameIter, "CameraGyroSensitivityLevel");
-        al::tryGetByamlBool(&cfgData->mIsUseOpenListAdditionalButton, gameIter,
-                            "IsUseOpenListAdditionalButton");
-        al::tryGetByamlBool(&cfgData->mIsValidPadRumble, gameIter, "IsPadRumble");
-        al::tryGetByamlS32(&cfgData->mPadRumbleLevel, gameIter, "PadRumbleLevel");
-    }
-
-    free(data.buffer);
+    SaveManager::instance()->read(cfgData);
 };
 
 static HkTrampoline registerShineToListHook = [](TrampolineStatic(), Shine* shine) -> void {
@@ -187,7 +95,7 @@ static HkReplace<bool, GameDataFile*, s32> isGotCheckpointInWorldHook =
             return false;
         const char* checkpointName =
             gdf->getCheckpointTable()[gdf->getCurrentWorldIdNoDevelop()][index2].objInfo.getObjId();
-        for (s32 i = 0; i < CheckpointMasterList::sNumCheckpoints; i++) {
+        for (s32 i = 0; i < 85; i++) {
             UniqObjInfo info = gdf->getGotCheckpointTable()[i];
             if (al::isEqualString(checkpointName, info.getObjId())) {
                 return true;

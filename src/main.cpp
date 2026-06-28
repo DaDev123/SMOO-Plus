@@ -75,6 +75,7 @@
 #include "puppetHooks.hpp"
 #include "puppets/PuppetInfo.h"
 #include "puppets/PuppetMain.hpp"
+#include "saveManager.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
@@ -113,6 +114,8 @@ HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> 
 #endif
 
     Client::sInstance = new Client();
+
+    SaveManager::sInstance = new SaveManager();
 
     orig(gameSystem);
 
@@ -234,8 +237,11 @@ HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* i
 
     Client::sendGameInfPacket(scene);
 
-    if (Client::instance()->mHakkunSceneHeap)
+    if (Client::instance()->mHakkunSceneHeap) {
         Client::instance()->mHakkunSceneHeap->destroy();
+        Client::instance()->mHakkunSceneHeap = nullptr;
+    }
+
     Client::instance()->mHakkunSceneHeap =
         sead::FrameHeap::create(1_MB, "HakkunSceneHeap", sead::HakkunHeap::sInstance);
 
