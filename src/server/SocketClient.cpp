@@ -81,7 +81,7 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
         return nn::Result(-1);
     }
 
-    if (!this->stringToIPAddress(this->sock_ip, &hostAddress)) {
+    if (!this->stringToIPAddress(this->sock_ip.cstr(), &hostAddress)) {
         strcpy(mAppErr.dialog_message, "Invalid IP");
         strcpy(mAppErr.fullscreen_message, "IP address is invalid or hostname not resolveable");
         nn::err::ShowApplicationError(mAppErr);
@@ -283,7 +283,7 @@ bool SocketClient::tryReconnect() {
 
     if (closeSocket()) {  // unfortunately we cannot use the same fd from the previous connection,
                           // so close the socket entirely and attempt a new connection.
-        if (init(sock_ip, port).IsSuccess()) {  // call init again
+        if (init(sock_ip.cstr(), port).IsSuccess()) {  // call init again
             Logger::log("Reconnect Successful.\n");
             return true;
         }

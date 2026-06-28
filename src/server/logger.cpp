@@ -54,7 +54,7 @@ nn::Result Logger::init(const char* ip, u16 port) {
         return nn::Result(nn::socket::GetLastErrno());
     }
 
-    nn::socket::InetAton(this->sock_ip, &hostAddress);
+    nn::socket::InetAton(this->sock_ip.cstr(), &hostAddress);
 
     serverAddress.sin_addr = hostAddress;
     serverAddress.sin_port = nn::socket::InetHtons(this->port);

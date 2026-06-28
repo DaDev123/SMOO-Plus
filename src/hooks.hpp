@@ -46,10 +46,8 @@
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
 #include "Library/Thread/AsyncFunctorThread.h"
 #include "Library/Thread/FunctorV0M.h"
-#include "logger.hpp"
 #include "MapObj/ChangeStageInfo.h"
 #include "MapObj/MoonRock.h"
-#include "puppets/PuppetMain.hpp"
 #include "Scene/StageScene.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "Sequence/HakoniwaSequence.h"
@@ -87,9 +85,6 @@ static HkTrampoline saveWriteHook = [](TrampolineStatic(), GameConfigData* cfgDa
 
 static HkTrampoline saveReadHook = [](TrampolineStatic(), GameConfigData* cfgData,
                                       const al::ByamlIter& origIter) -> void {
-    Logger::log("save read hook\n");
-    logHakkunHeapUsage();
-
     Client::instance()->readMoonRocks(origIter);
 
     orig(cfgData, origIter);
@@ -164,9 +159,6 @@ static HkTrampoline saveReadHook = [](TrampolineStatic(), GameConfigData* cfgDat
     }
 
     free(data.buffer);
-
-    Logger::log("end save read hook\n");
-    logHakkunHeapUsage();
 };
 
 static HkTrampoline registerShineToListHook = [](TrampolineStatic(), Shine* shine) -> void {
@@ -219,8 +211,6 @@ static HkTrampoline initStateHook =
     orig(thisPtr, stateName, host, initInfo, footer, data, unkBool);
     sceneStateModConfig = new (Client::instance()->mHakkunSceneHeap)
         StageSceneStateModConfig("ModConfig", host, initInfo, footer, data, unkBool);
-    Logger::log("created new mod menu\n");
-    logHakkunHeapUsage();
 };
 
 static HkTrampoline initNerveStateHook =

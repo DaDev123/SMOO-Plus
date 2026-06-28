@@ -1650,12 +1650,14 @@ const int Client::getCurrentPort() {
     return -1;
 }
 
-const bool Client::hasServerChanged() {
+bool Client::hasServerChanged() {
     if (!sInstance) {
         return false;
     }
+    Logger::log("client port: %d\n socket port: %d\n client ip: %s\n socket ip: %s\n", getCurrentPort(),
+                sInstance->mSocket->getPort(), getCurrentIP(), sInstance->mSocket->getIP());
     return (getCurrentPort() != sInstance->mSocket->getPort() ||
-            strcmp(getCurrentIP(), sInstance->mSocket->getIP()) != 0);
+            !al::isEqualString(getCurrentIP(), sInstance->mSocket->getIP()));
 }
 
 void Client::setLastUsedIP(const char* ip) {

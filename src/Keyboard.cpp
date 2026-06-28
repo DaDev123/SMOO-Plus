@@ -4,43 +4,43 @@
 
 Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
     mThread = new al::AsyncFunctorThread(
-        "Swkbd", al::FunctorV0M<Keyboard*, KeyboardThreadFunc>(this, &Keyboard::keyboardThread), 0, 0x2000,
+        "Swkbd", al::FunctorV0M<Keyboard*, KeyboardThreadFunc>(this, &Keyboard::keyboardThread), 0, 0x4000,
         {0});
 
     mWorkBufSize = nn::swkbd::GetRequiredWorkBufferSize(false);
     mWorkBuf = (char*)aligned_alloc(0x1000, mWorkBufSize);
 
     mTextCheckSize = 0x1000;
-    mTextCheckBuf = (char*)malloc(mTextCheckSize);
+    mTextCheckBuf = (char*)aligned_alloc(0x1000, mTextCheckSize);
 
     mCustomizeDicSize = 0x1000;
-    mCustomizeDicBuf = (char*)malloc(mCustomizeDicSize);
+    mCustomizeDicBuf = (char*)aligned_alloc(0x1000, mCustomizeDicSize);
 
     mResultString.allocate();
 }
 
 void Keyboard::keyboardThread() {
-    nn::swkbd::ShowKeyboardArg keyboardArg = nn::swkbd::ShowKeyboardArg();
-    nn::swkbd::MakePreset(&keyboardArg.keyboardConfig, nn::swkbd::Preset::Default);
+    memset(&mKeyboardArg, 0, sizeof(mKeyboardArg));
+    nn::swkbd::MakePreset(&mKeyboardArg.keyboardConfig, nn::swkbd::Preset::Default);
 
-    mSetupFunc(keyboardArg.keyboardConfig);
+    mSetupFunc(mKeyboardArg.keyboardConfig);
 
-    nn::swkbd::SetHeaderText(&keyboardArg.keyboardConfig, mHeaderText);
-    nn::swkbd::SetSubText(&keyboardArg.keyboardConfig, mSubText);
+    nn::swkbd::SetHeaderText(&mKeyboardArg.keyboardConfig, mHeaderText);
+    nn::swkbd::SetSubText(&mKeyboardArg.keyboardConfig, mSubText);
 
-    keyboardArg.workBufSize = mWorkBufSize;
-    keyboardArg.textCheckWorkBufSize = mTextCheckSize;
-    keyboardArg._customizeDicBufSize = mCustomizeDicSize;
+    mKeyboardArg.workBufSize = mWorkBufSize;
+    mKeyboardArg.textCheckWorkBufSize = mTextCheckSize;
+    mKeyboardArg._customizeDicBufSize = mCustomizeDicSize;
 
-    keyboardArg.workBuf = mWorkBuf;
-    keyboardArg.textCheckWorkBuf = mTextCheckBuf;
-    keyboardArg._customizeDicBuf = mCustomizeDicBuf;
+    mKeyboardArg.workBuf = mWorkBuf;
+    mKeyboardArg.textCheckWorkBuf = mTextCheckBuf;
+    mKeyboardArg._customizeDicBuf = mCustomizeDicBuf;
 
     if (mInitialText.calcLength() > 0) {
-        nn::swkbd::SetInitialTextUtf8(&keyboardArg, mInitialText.cstr());
+        nn::swkbd::SetInitialTextUtf8(&mKeyboardArg, mInitialText.cstr());
     }
 
-    mIsCancelled = nn::swkbd::ShowKeyboard(&mResultString, keyboardArg) ==
+    mIsCancelled = nn::swkbd::ShowKeyboard(&mResultString, mKeyboardArg) ==
                    671;  // 671 = exit code for pressing x to cancel keyboard
 }
 

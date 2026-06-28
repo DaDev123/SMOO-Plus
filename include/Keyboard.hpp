@@ -34,6 +34,7 @@ public:
 private:
     al::AsyncFunctorThread* mThread;
     nn::swkbd::String mResultString;
+    nn::swkbd::ShowKeyboardArg mKeyboardArg;
 
     hostname mInitialText;
     KeyboardSetup mSetupFunc;

@@ -9,18 +9,8 @@
 #include "logger.hpp"
 #include "server/Client.hpp"
 
-inline auto logHakkunHeapUsage = []() -> void {
-    size size = hk::mem::sMainHeap.getTotalSize() - hk::mem::sMainHeap.getFreeSize();
-    Logger::log("Hakkun Heap Usage: %zu\n", size);
-};
-
 inline al::LiveActor* createPuppetActorFromFactory(const al::ActorInitInfo& initInfo, bool isDebug) {
-    Logger::log("creating actor\n");
-    logHakkunHeapUsage();
     PuppetActor* newActor = new (Client::sInstance->mHakkunSceneHeap) PuppetActor("PuppetActor");
-    Logger::log("created actor\n");
-    logHakkunHeapUsage();
-
     if (!isDebug) {
         if (Client::tryAddPuppet(newActor)) {
             PuppetInfo* curInfo = Client::getLatestInfo();

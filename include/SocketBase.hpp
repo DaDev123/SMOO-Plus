@@ -4,6 +4,7 @@
 
 #include <cstring>
 
+#include "prim/seadSafeString.h"
 #include "types.h"
 
 class SocketBase {
@@ -21,7 +22,7 @@ public:
 
     void set_sock_flags(int flags);
 
-    const char* getIP() { return this->sock_ip; }
+    const char* getIP() { return this->sock_ip.cstr(); }
     u16 getPort() { return this->port; }
     void setName(const char* name) { strcpy(sockName, name); };
     u32 socket_errno;
@@ -31,7 +32,7 @@ protected:
     s32 socket_read_char(char* out);
 
     char sockName[0x10] = {};
-    const char* sock_ip;
+    sead::FixedSafeString<64> sock_ip;
 
     u16 port;
     SockState socket_log_state = SockState::UNINITIALIZED;

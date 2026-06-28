@@ -230,22 +230,14 @@ HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* i
 
     // was stage init hook
 
-    Logger::log("init actor init info hook\n");
-    logHakkunHeapUsage();
     Client::clearArrays();
-    Logger::log("cleared arrays\n");
-    logHakkunHeapUsage();
 
     Client::sendGameInfPacket(scene);
-    Logger::log("sent game inf packet\n");
-    logHakkunHeapUsage();
 
     if (Client::instance()->mHakkunSceneHeap)
         Client::instance()->mHakkunSceneHeap->destroy();
     Client::instance()->mHakkunSceneHeap =
         sead::FrameHeap::create(1_MB, "HakkunSceneHeap", sead::HakkunHeap::sInstance);
-    Logger::log("cleaned up hakkun scene heap\n");
-    logHakkunHeapUsage();
 
     for (s32 i = 0; i < (Client::getMaxPlayerCount() - 1); i++) {
         createPuppetActorFromFactory(*initInfo, false);

@@ -175,7 +175,7 @@ public:
     // ===== SERVER CONFIGURATION =====
     static const int getCurrentPort();
     static const char* getCurrentIP();
-    static const bool hasServerChanged();
+    static bool hasServerChanged();
     static void setLastUsedIP(const char* ip);
     static void setLastUsedPort(const int port);
     static void setServerIP(const char* ip);

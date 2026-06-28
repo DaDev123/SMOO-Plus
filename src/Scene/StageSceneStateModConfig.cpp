@@ -294,11 +294,7 @@ void StageSceneStateModConfig::exeOpenKeyboardIP() {
         mCurrentList->deactivate();
         Client::getKeyboard()->setHeaderText(u"Enter Server IP Address");
         Client::getKeyboard()->setSubText(u"");
-        bool isSave = Client::openKeyboardIP();
-
-        if (isSave) {
-            SaveDataAccessFunction::startSaveDataWrite(mGameDataHolder);
-        }
+        Client::openKeyboardIP();
 
         al::startHitReaction(mCurrentMenu, "リセット", 0);
         mCurrentList->activate();
@@ -312,11 +308,7 @@ void StageSceneStateModConfig::exeOpenKeyboardPort() {
         mCurrentList->deactivate();
         Client::getKeyboard()->setHeaderText(u"Enter Server Port");
         Client::getKeyboard()->setSubText(u"");
-        bool isSave = Client::openKeyboardPort();
-
-        if (isSave) {
-            SaveDataAccessFunction::startSaveDataWrite(mGameDataHolder);
-        }
+        Client::openKeyboardPort();
 
         al::startHitReaction(mCurrentMenu, "リセット", 0);
         mCurrentList->activate();
