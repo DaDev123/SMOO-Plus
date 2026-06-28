@@ -216,6 +216,7 @@ public:
     static void update();
     static void clearArrays();
     static Keyboard* getKeyboard();
+    static PuppetInfo* findPuppetInfo(const nn::account::Uid& id, bool isFindAvailable);
 
     // ===== STAGE MANAGEMENT =====
     static void setStageInfo(HakoniwaSequence* sequence);
@@ -271,7 +272,6 @@ private:
     void updateMoonRocks(MoonRockHit* packet);
 
     // ===== UTILITY METHODS =====
-    PuppetInfo* findPuppetInfo(const nn::account::Uid& id, bool isFindAvailable);
 
     /**
      * @brief Core logic for applying a coin collect to game state and killing the actor.

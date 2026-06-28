@@ -3,6 +3,8 @@
 #include <basis/seadTypes.h>
 #include <prim/seadSafeString.h>
 
+#include "account.h"
+
 constexpr s32 sNumEntries = 8;
 
 class PlayerEventLog {
@@ -11,9 +13,12 @@ public:
 
     struct Entry {
         Entry();
-        Entry(sead::FixedSafeString<16> player, Event event, sead::FixedSafeString<128> text);
+        Entry(nn::account::Uid player, Event event, sead::FixedSafeString<128> text);
+        Entry(Event event, sead::FixedSafeString<128> text);
 
-        sead::FixedSafeString<16> mPlayer;
+        nn::account::Uid mPlayerId;
+        sead::FixedSafeString<16> mPlayerName;
+        bool mIsPlayerName = false;
         Event mEvent = SHINE;
         sead::FixedSafeString<128> mText;
         s32 mNumPurples = 1;
@@ -22,8 +27,10 @@ public:
 
     PlayerEventLog();
 
-    void addEvent(sead::SafeString player, Event event, sead::SafeString text);
+    void addEvent(nn::account::Uid player, Event event, sead::SafeString text);
+    void addSelfEvent(Event event, sead::SafeString text);
     void update();
+    void tryUpdateNames();
 
     static s32 calculateLife();
 

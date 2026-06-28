@@ -153,8 +153,8 @@ HkTrampoline sendShinePacketHook = [](TrampolineStatic(), GameDataHolderWriter w
             if (info->mStageName == curInfo->stageName && info->mObjId == curInfo->objId) {
                 Client::sendShineCollectPacket(curInfo->uniqueId);
                 if (PlayerEventLog::sInstance) {
-                    PlayerEventLog::sInstance->addEvent(
-                        "You", PlayerEventLog::SHINE,
+                    PlayerEventLog::sInstance->addSelfEvent(
+                        PlayerEventLog::SHINE,
                         PlayerEventLog::getShineMessage(curInfo->stageName, curInfo->objId));
                 }
             }
@@ -169,8 +169,8 @@ HkTrampoline sendShinePacketHook2 = [](TrampolineStatic(), GameDataFile* file, c
             if (strcmp(toadetteMoons[i], name) == 0) {
                 Client::sendShineCollectPacket(2000 + i);
                 if (PlayerEventLog::sInstance) {
-                    PlayerEventLog::sInstance->addEvent(
-                        "You", PlayerEventLog::SHINE, PlayerEventLog::sInstance->getAchievementMessage(name));
+                    PlayerEventLog::sInstance->addSelfEvent(
+                        PlayerEventLog::SHINE, PlayerEventLog::sInstance->getAchievementMessage(name));
                 }
             }
         }
@@ -186,8 +186,8 @@ HkTrampoline sendCoinCollectCollectPacketHook = [](TrampolineStatic(), GameDataF
     Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(),
                                          file->getStageNameCurrent());
     if (PlayerEventLog::sInstance) {
-        PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::PURPLE,
-                                            worldNames[file->getCurrentWorldIdNoDevelop()]);
+        PlayerEventLog::sInstance->addSelfEvent(PlayerEventLog::PURPLE,
+                                                worldNames[file->getCurrentWorldIdNoDevelop()]);
     }
     orig(file, placeID);
 };
@@ -197,8 +197,8 @@ HkTrampoline sendCheckpointGetPacketHook = [](TrampolineStatic(), CheckpointFlag
         al::StringTmp<128> placementId = al::makeStringPlacementId(checkpoint->getPlacementId());
         Client::sendCheckpointGetPacket(placementId.cstr());
         if (PlayerEventLog::sInstance) {
-            PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::CHECKPOINT,
-                                                PlayerEventLog::getCheckpointMessage(placementId));
+            PlayerEventLog::sInstance->addSelfEvent(PlayerEventLog::CHECKPOINT,
+                                                    PlayerEventLog::getCheckpointMessage(placementId));
         }
     }
     orig(checkpoint);

@@ -3,10 +3,13 @@
 #include <basis/seadTypes.h>
 #include <prim/seadSafeString.h>
 
+#include "account.h"
 #include "imgui.h"
 #include "Library/Base/StringUtil.h"
 #include "MessageMasterList.h"
+#include "puppets/PuppetInfo.h"
 #include "Scene/StageSceneStateModConfig.hpp"
+#include "server/Client.hpp"
 
 PlayerEventLog* PlayerEventLog::sInstance = nullptr;
 bool PlayerEventLog::mIsShow = true;
@@ -17,14 +20,23 @@ PlayerEventLog::Entry::Entry() {
     mLife = 0;
 }
 
-PlayerEventLog::Entry::Entry(sead::FixedSafeString<16> player, Event event, sead::FixedSafeString<128> text) {
-    mPlayer = player;
+PlayerEventLog::Entry::Entry(nn::account::Uid player, Event event, sead::FixedSafeString<128> text) {
+    mPlayerId = player;
+    mPlayerName = "???";
     mEvent = event;
     mText = text;
     mLife = calculateLife();
 }
 
-void PlayerEventLog::addEvent(sead::SafeString player, PlayerEventLog::Event event, sead::SafeString text) {
+PlayerEventLog::Entry::Entry(Event event, sead::FixedSafeString<128> text) {
+    mPlayerName = "You";
+    mIsPlayerName = true;
+    mEvent = event;
+    mText = text;
+    mLife = calculateLife();
+}
+
+void PlayerEventLog::addEvent(nn::account::Uid player, PlayerEventLog::Event event, sead::SafeString text) {
     // prevent duplicate entries for shines
     if (event == SHINE) {
         for (s32 i = 0; i < sNumEntries; i++) {
@@ -37,7 +49,7 @@ void PlayerEventLog::addEvent(sead::SafeString player, PlayerEventLog::Event eve
     if (event == PURPLE) {
         for (s32 i = 0; i < sNumEntries; i++) {
             if (mLog[i].mEvent == PURPLE) {
-                if (al::isEqualString(mLog[i].mPlayer, player) && al::isEqualString(mLog[i].mText, text)) {
+                if (mLog[i].mPlayerId == player && al::isEqualString(mLog[i].mText, text)) {
                     s32 numPurples = mLog[i].mNumPurples + 1;
                     for (s32 j = i; j > 0; j--) {
                         mLog[j] = mLog[j - 1];
@@ -57,8 +69,43 @@ void PlayerEventLog::addEvent(sead::SafeString player, PlayerEventLog::Event eve
     mLog[0] = Entry(player, event, text);
 }
 
+void PlayerEventLog::addSelfEvent(PlayerEventLog::Event event, sead::SafeString text) {
+    // prevent duplicate entries for shines
+    if (event == SHINE) {
+        for (s32 i = 0; i < sNumEntries; i++) {
+            if (mLog[i].mEvent == SHINE && al::isEqualString(mLog[i].mText, text))
+                return;
+        }
+    }
+
+    // if an entry already exists for purples, increase the number
+    if (event == PURPLE) {
+        for (s32 i = 0; i < sNumEntries; i++) {
+            if (mLog[i].mEvent == PURPLE) {
+                if (mLog[i].mPlayerName == "You" && al::isEqualString(mLog[i].mText, text)) {
+                    s32 numPurples = mLog[i].mNumPurples + 1;
+                    for (s32 j = i; j > 0; j--) {
+                        mLog[j] = mLog[j - 1];
+                    }
+                    mLog[0] = Entry(event, text);
+                    mLog[0].mNumPurples = numPurples;
+                    return;
+                }
+            }
+        }
+    }
+
+    for (s32 i = sNumEntries - 1; i > 0; i--) {
+        mLog[i] = mLog[i - 1];
+    }
+
+    mLog[0] = Entry(event, text);
+}
+
 void PlayerEventLog::update() {
     if (mIsShow) {
+        tryUpdateNames();
+
         f32 width = ImGui::GetIO().DisplaySize.x;
         f32 height = ImGui::GetIO().DisplaySize.y;
         ImGuiStyle& style = ImGui::GetStyle();
@@ -83,37 +130,37 @@ void PlayerEventLog::update() {
                 case CONNECT: {
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                    ImGui::Text("%s connected", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s connected", mLog[i].mPlayerName.cstr());
                     ImGui::PopStyleColor();
 
                     ImGui::SetCursorPos(originalCursor);
-                    ImGui::Text("%s connected", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s connected", mLog[i].mPlayerName.cstr());
                     break;
                 }
                 case DISCONNECT: {
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                    ImGui::Text("%s disconnected", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s disconnected", mLog[i].mPlayerName.cstr());
                     ImGui::PopStyleColor();
 
                     ImGui::SetCursorPos(originalCursor);
-                    ImGui::Text("%s disconnected", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s disconnected", mLog[i].mPlayerName.cstr());
                     break;
                 }
                 case START: {
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                    ImGui::Text("%s started", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s started", mLog[i].mPlayerName.cstr());
                     ImGui::PopStyleColor();
 
                     ImGui::SetCursorPos(originalCursor);
-                    ImGui::Text("%s started", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s started", mLog[i].mPlayerName.cstr());
                     break;
                 }
                 case SHINE: {
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s ", mLog[i].mPlayerName.cstr());
                     ImGui::SameLine(0.0f, 0.0f);
                     ImGui::Text("got the moon ");
                     ImGui::SameLine(0.0f, 0.0f);
@@ -122,7 +169,7 @@ void PlayerEventLog::update() {
                     ImGui::PopStyleColor();
 
                     ImGui::SetCursorPos(originalCursor);
-                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s ", mLog[i].mPlayerName.cstr());
 
                     ImGui::SameLine(0.0f, 0.0f);
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
@@ -140,7 +187,7 @@ void PlayerEventLog::update() {
 
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s ", mLog[i].mPlayerName.cstr());
                     ImGui::SameLine(0.0f, 0.0f);
                     ImGui::Text("got ");
                     ImGui::SameLine(0.0f, 0.0f);
@@ -150,7 +197,7 @@ void PlayerEventLog::update() {
                     ImGui::PopStyleColor();
 
                     ImGui::SetCursorPos(originalCursor);
-                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s ", mLog[i].mPlayerName.cstr());
 
                     ImGui::SameLine(0.0f, 0.0f);
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
@@ -171,7 +218,7 @@ void PlayerEventLog::update() {
                 case CHECKPOINT: {
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s ", mLog[i].mPlayerName.cstr());
                     ImGui::SameLine(0.0f, 0.0f);
                     ImGui::Text("got the checkpoint ");
                     ImGui::SameLine(0.0f, 0.0f);
@@ -179,7 +226,7 @@ void PlayerEventLog::update() {
                     ImGui::PopStyleColor();
 
                     ImGui::SetCursorPos(originalCursor);
-                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s ", mLog[i].mPlayerName.cstr());
 
                     ImGui::SameLine(0.0f, 0.0f);
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
@@ -195,7 +242,7 @@ void PlayerEventLog::update() {
                 case MOONROCK: {
                     ImGui::SetCursorPos(ImVec2(originalCursor.x + 1.0f, originalCursor.y + 1.0f));
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
-                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s ", mLog[i].mPlayerName.cstr());
                     ImGui::SameLine(0.0f, 0.0f);
                     ImGui::Text("hit the moon rock in ");
                     ImGui::SameLine(0.0f, 0.0f);
@@ -204,7 +251,7 @@ void PlayerEventLog::update() {
                     ImGui::PopStyleColor();
 
                     ImGui::SetCursorPos(originalCursor);
-                    ImGui::Text("%s ", mLog[i].mPlayer.cstr());
+                    ImGui::Text("%s ", mLog[i].mPlayerName.cstr());
 
                     ImGui::SameLine(0.0f, 0.0f);
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.8f, 0.8f, 1.0f));
@@ -227,6 +274,20 @@ void PlayerEventLog::update() {
     for (s32 i = 0; i < sNumEntries; i++) {
         if (mLog[i].mLife > 0)
             mLog[i].mLife--;
+    }
+}
+
+void PlayerEventLog::tryUpdateNames() {
+    for (s32 i = 0; i < sNumEntries; i++) {
+        if (mLog[i].mIsPlayerName)
+            continue;
+
+        PuppetInfo* player = Client::findPuppetInfo(mLog[i].mPlayerId, false);
+        if (!player)
+            continue;
+
+        mLog[i].mPlayerName = player->puppetName;
+        mLog[i].mIsPlayerName = true;
     }
 }
 

@@ -281,7 +281,7 @@ static HkTrampoline startNewGameHook = [](TrampolineStatic(), HakoniwaSequence* 
     orig(seq);
 
     if (PlayerEventLog::sInstance)
-        PlayerEventLog::sInstance->addEvent("You", PlayerEventLog::START, "");
+        PlayerEventLog::sInstance->addSelfEvent(PlayerEventLog::START, "");
 
     Client::sendGameInfPacket(seq->mGameDataHolderAccessor, true);
 };
@@ -291,9 +291,8 @@ static HkTrampoline moonRockHook = [](TrampolineStatic(), MoonRock* moonRock) ->
         Client::sendMoonRockHitPacket(GameDataFunction::getCurrentWorldIdNoDevelop(moonRock));
 
         if (PlayerEventLog::sInstance) {
-            PlayerEventLog::sInstance->addEvent(
-                "You", PlayerEventLog::MOONROCK,
-                worldNames[GameDataFunction::getCurrentWorldIdNoDevelop(moonRock)]);
+            PlayerEventLog::sInstance->addSelfEvent(
+                PlayerEventLog::MOONROCK, worldNames[GameDataFunction::getCurrentWorldIdNoDevelop(moonRock)]);
         }
     }
 

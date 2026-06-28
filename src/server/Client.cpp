@@ -965,12 +965,10 @@ void Client::updateShineInfo(ShineCollect* packet) {
         curCollectedShines[collectedShineCount] = packet->shineId;
         collectedShineCount++;
 
-        PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
-
         if (PlayerEventLog::sInstance) {
             if (packet->shineId >= 2000 && packet->shineId <= 2060) {
                 PlayerEventLog::sInstance->addEvent(
-                    player->puppetName, PlayerEventLog::SHINE,
+                    packet->mUserID, PlayerEventLog::SHINE,
                     PlayerEventLog::getAchievementMessage(toadetteMoons[packet->shineId - 2000]));
                 return;
             }
@@ -978,7 +976,7 @@ void Client::updateShineInfo(ShineCollect* packet) {
             GameDataFile::HintInfo* hintInfo =
                 CustomGameDataFunction::getHintInfoByUniqueID(mHolder, packet->shineId);
             PlayerEventLog::sInstance->addEvent(
-                player->puppetName, PlayerEventLog::SHINE,
+                packet->mUserID, PlayerEventLog::SHINE,
                 PlayerEventLog::getShineMessage(hintInfo->stageName, hintInfo->objId));
         }
     }
@@ -1010,7 +1008,7 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
         mConnectCount++;
 
         if (PlayerEventLog::sInstance) {
-            PlayerEventLog::sInstance->addEvent(packet->clientName, PlayerEventLog::CONNECT, "");
+            PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::CONNECT, "");
         }
     }
 }
@@ -1037,7 +1035,7 @@ void Client::updateGameInfo(GameInf* packet) {
         curInfo->gameMode = packet->gameMode;
 
         if (packet->isGameStart && PlayerEventLog::sInstance) {
-            PlayerEventLog::sInstance->addEvent(curInfo->puppetName, PlayerEventLog::START, "");
+            PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::START, "");
         }
     }
 }
@@ -1079,7 +1077,7 @@ void Client::disconnectPlayer(PlayerDC* packet) {
     mShouldStopRumble = true;
 
     if (PlayerEventLog::sInstance) {
-        PlayerEventLog::sInstance->addEvent(curInfo->puppetName, PlayerEventLog::DISCONNECT, "");
+        PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::DISCONNECT, "");
     }
 }
 
@@ -1105,10 +1103,13 @@ bool Client::isShineCollected(int shineId) {
  * @param isFindAvailable if true, returns first free slot when no match found
  */
 PuppetInfo* Client::findPuppetInfo(const nn::account::Uid& id, bool isFindAvailable) {
+    if (!sInstance)
+        return nullptr;
+
     PuppetInfo* firstAvailable = nullptr;
 
     for (size_t i = 0; i < getMaxPlayerCount() - 1; i++) {
-        PuppetInfo* curInfo = mPuppetInfoArr[i];
+        PuppetInfo* curInfo = sInstance->mPuppetInfoArr[i];
 
         if (curInfo->playerID == id) {
             return curInfo;
@@ -1234,10 +1235,8 @@ void Client::updateMoonRocks(MoonRockHit* packet) {
     if (!sInstance)
         return;
 
-    PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
-
     if (PlayerEventLog::sInstance) {
-        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::MOONROCK,
+        PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::MOONROCK,
                                             worldNames[packet->worldId]);
     }
 
@@ -1440,8 +1439,7 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
     }
 
     if (PlayerEventLog::sInstance) {
-        PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
-        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::PURPLE,
+        PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::PURPLE,
                                             worldNames[packet->worldID]);
     }
 
@@ -1502,8 +1500,7 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
         return;
 
     if (PlayerEventLog::sInstance) {
-        PuppetInfo* player = findPuppetInfo(packet->mUserID, false);
-        PlayerEventLog::sInstance->addEvent(player->puppetName, PlayerEventLog::CHECKPOINT,
+        PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::CHECKPOINT,
                                             PlayerEventLog::getCheckpointMessage(packet->objId));
     }
 
