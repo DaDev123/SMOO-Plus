@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Library/Thread/AsyncFunctorThread.h"
+#include "System/GameConfigData.h"
 
 namespace sead {
 class FrameHeap;
@@ -26,5 +27,6 @@ public:
 
     al::AsyncFunctorThread mThread;
     sead::FrameHeap* mHeap = nullptr;
-    GameConfigData* mConfig = nullptr;
+    GameConfigData mConfig;
+    u8* mBuffer = nullptr;
 };

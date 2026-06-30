@@ -49,7 +49,6 @@
 #include "System/GameDataFunction.h"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
-#include "System/UniqObjInfo.h"
 
 static HkTrampoline saveWriteHook = [](TrampolineStatic(), GameConfigData* cfgData,
                                        al::ByamlWriter* origWriter) -> void {
@@ -87,22 +86,6 @@ static HkTrampoline registerCoinCollect2DToListHook = [](TrampolineStatic(), Coi
     orig(h, coin);
     Client::tryRegisterCoinCollect2D(coin);
 };
-
-static HkReplace<bool, GameDataFile*, s32> isGotCheckpointInWorldHook =
-    hk::hook::replace([](GameDataFile* gdf, s32 index) -> bool {
-        s32 index2 = gdf->calcCheckpointIndexInScenario(index);
-        if (index2 < 0)
-            return false;
-        const char* checkpointName =
-            gdf->getCheckpointTable()[gdf->getCurrentWorldIdNoDevelop()][index2].objInfo.getObjId();
-        for (s32 i = 0; i < 85; i++) {
-            UniqObjInfo info = gdf->getGotCheckpointTable()[i];
-            if (al::isEqualString(checkpointName, info.getObjId())) {
-                return true;
-            }
-        }
-        return false;
-    });
 
 static HkReplace<void, StageSceneStatePauseMenu*> overrideHelpFadeNerve =
     hk::hook::replace([](StageSceneStatePauseMenu* state) -> void {

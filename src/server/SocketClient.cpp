@@ -18,8 +18,10 @@
 
 #include "logger.hpp"
 #include "packets/Packet.h"
+#include "prim/seadScopedLock.h"
 #include "server/Client.hpp"
 #include "syssocket/sockdefines.h"
+#include "thread/seadCriticalSection.h"
 #include "types.h"
 
 SocketClient::SocketClient(const char* name) : SocketBase(name) {
@@ -164,7 +166,8 @@ bool SocketClient::send(Packet* packet) {
         Logger::log("Failed to Fully Send Packet! Result: %d Type: %s Packet Size: %d\n", valread,
                     packetNames[packet->mType], packet->mPacketSize);
         this->socket_errno = nn::socket::GetLastErrno();
-        this->tryReconnect();
+        if (packet->mType != PacketType::PLAYERCON)  // prevent recursion in reconnect
+            this->tryReconnect();
         return false;
     }
     return true;
@@ -279,6 +282,8 @@ void SocketClient::printPacket(Packet* packet) {
 }
 
 bool SocketClient::tryReconnect() {
+    sead::ScopedLock<sead::CriticalSection> lock(&mReconnectLock);
+
     Logger::log("Attempting to Reconnect.\n");
 
     if (closeSocket()) {  // unfortunately we cannot use the same fd from the previous connection,

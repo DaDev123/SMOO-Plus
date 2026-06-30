@@ -13,7 +13,7 @@ namespace speedboot {
 // Constructor
 HakoniwaSequenceSpeedboot::HakoniwaSequenceSpeedboot(HakoniwaSequence* sequence)
     : al::NerveStateBase("Speedboot"), mSequence(sequence) {
-    initNerve(&NrvHakoniwaSequenceSpeedboot.LoadStage, 0);
+    initNerve(&NrvHakoniwaSequenceSpeedboot.InitThread, 0);
 }
 
 // Initialize loading thread
@@ -30,8 +30,6 @@ void HakoniwaSequenceSpeedboot::exeInitThread() {
 // Load stage resources
 void HakoniwaSequenceSpeedboot::exeLoadStage() {
     if (al::isFirstStep(this)) {
-        mSequence->mInitThread->start();
-
         // Get stage name from game data - mGameDataHolder is an accessor (not a pointer)
         const char* stageName = GameDataFunction::getNextStageName(mSequence->mGameDataHolderAccessor);
         if (!stageName) {

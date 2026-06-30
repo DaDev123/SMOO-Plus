@@ -233,14 +233,7 @@ HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* i
 
     // was stage init hook
 
-    Client::clearArrays();
-
     Client::sendGameInfPacket(scene);
-
-    if (Client::instance()->mHakkunSceneHeap) {
-        Client::instance()->mHakkunSceneHeap->destroy();
-        Client::instance()->mHakkunSceneHeap = nullptr;
-    }
 
     Client::instance()->mHakkunSceneHeap =
         sead::FrameHeap::create(1_MB, "HakkunSceneHeap", sead::HakkunHeap::sInstance);
@@ -248,6 +241,19 @@ HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* i
     for (s32 i = 0; i < (Client::getMaxPlayerCount() - 1); i++) {
         createPuppetActorFromFactory(*initInfo, false);
     }
+};
+
+HkTrampoline sceneKillHook = [](TrampolineStatic(), StageScene* scene) -> void {
+    // this hook should prevent crashes on scene transitions
+    Client::clearStageScene();
+    Client::clearArrays();
+
+    if (Client::instance()->mHakkunSceneHeap) {
+        Client::instance()->mHakkunSceneHeap->destroy();
+        Client::instance()->mHakkunSceneHeap = nullptr;
+    }
+
+    orig(scene);
 };
 
 HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* sequence) -> void {
@@ -343,7 +349,7 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
             }
 
             Logger::log("Current Scenario: %d\n",
-                        GameDataHolderAccessor(stageScene)->getGameDataFile()->getScenarioNo());
+                        Client::instance()->getHolder()->getGameDataFile()->getScenarioNo());
         }
     }
     if (Client::isMusicDisabled()) {
@@ -659,7 +665,6 @@ extern "C" void hkMain() {
 
     // CheckpointFlag Syncing
     sendCheckpointGetPacketHook.installAtSym<"_ZN14CheckpointFlag6exeGetEv">();
-    isGotCheckpointInWorldHook.installAtSym<"_ZNK12GameDataFile22isGotCheckpointInWorldEi">();
 
     // Amiibo Button Disabling
     hk::hook::replace([]() -> void {
@@ -728,6 +733,9 @@ extern "C" void hkMain() {
     moonRockHook.installAtSym<"_ZN8MoonRock11exeReactionEv">();
 
     mountSdCardHook.installAtSym<"_ZN4sead13FileDeviceMgrC1Ev">();
+
+    sceneKillHook.installAtSym<"_ZN10StageScene4killEv">();
+    // sceneKillHook.installAtSym<"_ZN10StageSceneD1Ev">();
 
     hk::hook::a64::assemble<"mov x0, #1\nsvc #0x28">().installAtOffset(hk::ro::getRtldModule(), 0);
 

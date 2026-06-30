@@ -23,7 +23,8 @@ SaveManager::SaveManager()
               {0}) {}
 
 void SaveManager::startThread(GameConfigData* config) {
-    mConfig = config;
+    if (config)
+        mConfig = *config;
 
     if (mThread.isDone())
         mThread.start();
@@ -76,35 +77,33 @@ void SaveManager::write() {
     writer.pop();
 
     writer.pushHash("GameConfigData");
-    writer.addInt("CameraStickSensitivityLevel", mConfig->mCameraStickSensitivityLevel);
-    writer.addBool("IsCameraReverseInputH", mConfig->mIsCameraReverseInputH);
-    writer.addBool("IsCameraReverseInputV", mConfig->mIsCameraReverseInputV);
-    writer.addBool("IsValidCameraGyro", mConfig->mIsValidCameraGyro);
-    writer.addInt("CameraGyroSensitivityLevel", mConfig->mCameraGyroSensitivityLevel);
-    writer.addBool("IsUseOpenListAdditionalButton", mConfig->mIsUseOpenListAdditionalButton);
-    writer.addBool("IsPadRumble", mConfig->mIsValidPadRumble);
-    writer.addInt("PadRumbleLevel", mConfig->mPadRumbleLevel);
+    writer.addInt("CameraStickSensitivityLevel", mConfig.mCameraStickSensitivityLevel);
+    writer.addBool("IsCameraReverseInputH", mConfig.mIsCameraReverseInputH);
+    writer.addBool("IsCameraReverseInputV", mConfig.mIsCameraReverseInputV);
+    writer.addBool("IsValidCameraGyro", mConfig.mIsValidCameraGyro);
+    writer.addInt("CameraGyroSensitivityLevel", mConfig.mCameraGyroSensitivityLevel);
+    writer.addBool("IsUseOpenListAdditionalButton", mConfig.mIsUseOpenListAdditionalButton);
+    writer.addBool("IsPadRumble", mConfig.mIsValidPadRumble);
+    writer.addInt("PadRumbleLevel", mConfig.mPadRumbleLevel);
     writer.pop();
 
     writer.pop();
     u32 size = writer.calcPackSize();
-    u8 buffer[size];
-    sead::RamStreamSrc ramStream(&buffer, sizeof(buffer));
+    mBuffer = (u8*)mHeap->alloc(size);
+    sead::RamStreamSrc ramStream(mBuffer, size);
     sead::WriteStream writeStream;
     writeStream.setSrc(&ramStream);
     writeStream.setMode(sead::Stream::Modes::Binary);
     writer.write(&writeStream);
     if (!FsHelper::isFileExist(sSettingsPath))
         nn::fs::CreateDirectory(sModFolder);
-    FsHelper::writeFileToPath(buffer, size, sSettingsPath);
+    FsHelper::writeFileToPath(mBuffer, size, sSettingsPath);
 
     mHeap->destroy();
     mHeap = nullptr;
 }
 
 void SaveManager::read(GameConfigData* config) {
-    mConfig = config;
-
     if (!FsHelper::isFileExist(sSettingsPath)) {
         nn::fs::CreateDirectory(sModFolder);
         return;
@@ -126,6 +125,9 @@ void SaveManager::read(GameConfigData* config) {
 
     FsHelper::LoadData data = {.path = sSettingsPath};
     FsHelper::loadFileFromPath(data);
+
+    if (!data.buffer)
+        return;
 
     al::ByamlIter rootIter((u8*)data.buffer);
     al::ByamlIter smooIter;
@@ -163,15 +165,15 @@ void SaveManager::read(GameConfigData* config) {
         }
     }
     if (al::tryGetByamlIterByKey(&gameIter, rootIter, "GameConfigData")) {
-        al::tryGetByamlS32(&mConfig->mCameraStickSensitivityLevel, gameIter, "CameraStickSensitivityLevel");
-        al::tryGetByamlBool(&mConfig->mIsCameraReverseInputH, gameIter, "IsCameraReverseInputH");
-        al::tryGetByamlBool(&mConfig->mIsCameraReverseInputV, gameIter, "IsCameraReverseInputV");
-        al::tryGetByamlBool(&mConfig->mIsValidCameraGyro, gameIter, "IsValidCameraGyro");
-        al::tryGetByamlS32(&mConfig->mCameraGyroSensitivityLevel, gameIter, "CameraGyroSensitivityLevel");
-        al::tryGetByamlBool(&mConfig->mIsUseOpenListAdditionalButton, gameIter,
+        al::tryGetByamlS32(&config->mCameraStickSensitivityLevel, gameIter, "CameraStickSensitivityLevel");
+        al::tryGetByamlBool(&config->mIsCameraReverseInputH, gameIter, "IsCameraReverseInputH");
+        al::tryGetByamlBool(&config->mIsCameraReverseInputV, gameIter, "IsCameraReverseInputV");
+        al::tryGetByamlBool(&config->mIsValidCameraGyro, gameIter, "IsValidCameraGyro");
+        al::tryGetByamlS32(&config->mCameraGyroSensitivityLevel, gameIter, "CameraGyroSensitivityLevel");
+        al::tryGetByamlBool(&config->mIsUseOpenListAdditionalButton, gameIter,
                             "IsUseOpenListAdditionalButton");
-        al::tryGetByamlBool(&mConfig->mIsValidPadRumble, gameIter, "IsPadRumble");
-        al::tryGetByamlS32(&mConfig->mPadRumbleLevel, gameIter, "PadRumbleLevel");
+        al::tryGetByamlBool(&config->mIsValidPadRumble, gameIter, "IsPadRumble");
+        al::tryGetByamlS32(&config->mPadRumbleLevel, gameIter, "PadRumbleLevel");
     }
 
     free(data.buffer);

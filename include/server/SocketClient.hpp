@@ -9,6 +9,7 @@
 #include "packets/Packet.h"
 #include "SocketBase.hpp"
 #include "syssocket/sockdefines.h"
+#include "thread/seadCriticalSection.h"
 #include "thread/seadMessageQueue.h"
 #include "types.h"
 
@@ -53,6 +54,8 @@ private:
 
     sead::MessageQueue mRecvQueue;
     sead::MessageQueue mSendQueue;
+
+    sead::CriticalSection mReconnectLock;
 
     int maxBufSize = 100;
     bool mIsFirstConnect = true;

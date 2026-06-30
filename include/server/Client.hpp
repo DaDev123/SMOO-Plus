@@ -220,6 +220,7 @@ public:
 
     // ===== STAGE MANAGEMENT =====
     static void setStageInfo(HakoniwaSequence* sequence);
+    static void clearStageScene();
     static void setTagState(bool state);
 
     // ===== UI METHODS =====

@@ -648,7 +648,8 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
         packet->capQuat.w = hackCap->mJointKeeper->mSkew;
         packet->capRotQuat = al::getQuat(hackCap);
 
-        strcpy(packet->capAnim, al::getActionName(hackCap));
+        strncpy(packet->capAnim, al::getActionName(hackCap), sizeof(HackCapInf::capAnim) - 1);
+        packet->capAnim[sizeof(HackCapInf::capAnim) - 1] = '\0';
 
         sInstance->mSocket->queuePacket(packet);
 
@@ -688,7 +689,8 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
 
     packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
 
-    strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
+    strncpy(packet->stageName, GameDataFunction::getCurrentStageName(holder), sizeof(GameInf::stageName) - 1);
+    packet->stageName[sizeof(GameInf::stageName) - 1] = '\0';
 
     packet->gameMode = -1;
 
@@ -722,7 +724,9 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart) 
     } else {
         packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
 
-        strcpy(packet->stageName, GameDataFunction::getCurrentStageName(holder));
+        strncpy(packet->stageName, GameDataFunction::getCurrentStageName(holder),
+                sizeof(GameInf::stageName) - 1);
+        packet->stageName[sizeof(GameInf::stageName) - 1] = '\0';
     }
 
     packet->gameMode = -1;
@@ -764,7 +768,9 @@ void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
     if (sInstance->isClientCaptured && !sInstance->isSentCaptureInf) {
         CaptureInf* packet = new CaptureInf();
         packet->mUserID = sInstance->mUserID;
-        strcpy(packet->hackName, tryConvertName(player->mHackKeeper->getCurrentHackName()));
+        strncpy(packet->hackName, tryConvertName(player->mHackKeeper->getCurrentHackName()),
+                sizeof(CaptureInf::hackName) - 1);
+        packet->hackName[sizeof(CaptureInf::hackName) - 1] = '\0';
         sInstance->mSocket->queuePacket(packet);
         sInstance->isSentCaptureInf = true;
     } else if (!sInstance->isClientCaptured && sInstance->isSentCaptureInf) {
@@ -811,9 +817,11 @@ void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, cons
 
     CoinCollectCollect* packet = new CoinCollectCollect();
     packet->mUserID = sInstance->mUserID;
-    strcpy(packet->placeID, placeID);
+    strncpy(packet->placeID, placeID, sizeof(CoinCollectCollect::placeID) - 1);
+    packet->placeID[sizeof(CoinCollectCollect::placeID) - 1] = '\0';
     packet->worldID = worldID;
-    strcpy(packet->stage, stage);
+    strncpy(packet->stage, stage, sizeof(CoinCollectCollect::stage) - 1);
+    packet->stage[sizeof(CoinCollectCollect::stage) - 1] = '\0';
 
     sInstance->mSocket->queuePacket(packet);
 }
@@ -830,7 +838,8 @@ void Client::sendCheckpointGetPacket(const char* objId) {
 
     CheckpointGet* packet = new CheckpointGet();
     packet->mUserID = sInstance->mUserID;
-    strcpy(packet->objId, objId);
+    strncpy(packet->objId, objId, sizeof(CheckpointGet::objId) - 1);
+    packet->objId[sizeof(CheckpointGet::objId) - 1] = '\0';
 
     sInstance->mSocket->queuePacket(packet);
 }
@@ -861,7 +870,9 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
     }
 
     if (packet->actName != PlayerAnims::Type::Unknown) {
-        strcpy(curInfo->curAnimStr, PlayerAnims::FindStr(packet->actName));
+        strncpy(curInfo->curAnimStr, PlayerAnims::FindStr(packet->actName),
+                sizeof(PuppetInfo::curAnimStr) - 1);
+        curInfo->curAnimStr[sizeof(PuppetInfo::curAnimStr) - 1] = '\0';
         if (curInfo->curAnimStr[0] == '\0')
             Logger::log("[ERROR] %s: actName was out of bounds: %d\n", __func__, packet->actName);
     } else {
@@ -869,7 +880,9 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
     }
 
     if (packet->subActName != PlayerAnims::Type::Unknown) {
-        strcpy(curInfo->curSubAnimStr, PlayerAnims::FindStr(packet->subActName));
+        strncpy(curInfo->curSubAnimStr, PlayerAnims::FindStr(packet->subActName),
+                sizeof(PuppetInfo::curSubAnimStr) - 1);
+        curInfo->curSubAnimStr[sizeof(PuppetInfo::curSubAnimStr) - 1] = '\0';
         if (curInfo->curSubAnimStr[0] == '\0')
             Logger::log("[ERROR] %s: subActName was out of bounds: %d\n", __func__, packet->subActName);
     } else {
@@ -913,12 +926,14 @@ void Client::updateHackCapInfo(HackCapInf* packet) {
         curInfo->capRot = old->capQuat;
         curInfo->capQuat = {0.f, 0.f, 0.f, 0.f};
         curInfo->isCapThrow = old->isCapVisible;
-        strcpy(curInfo->capAnim, old->capAnim);
+        strncpy(curInfo->capAnim, old->capAnim, sizeof(PuppetInfo::capAnim) - 1);
+        curInfo->capAnim[sizeof(PuppetInfo::capAnim) - 1] = '\0';
     } else {
         curInfo->capRot = packet->capQuat;
         curInfo->capQuat = packet->capRotQuat;
         curInfo->isCapThrow = packet->isCapVisible;
-        strcpy(curInfo->capAnim, packet->capAnim);
+        strncpy(curInfo->capAnim, packet->capAnim, sizeof(PuppetInfo::capAnim) - 1);
+        curInfo->capAnim[sizeof(PuppetInfo::capAnim) - 1] = '\0';
     }
 }
 
@@ -936,7 +951,8 @@ void Client::updateCaptureInfo(CaptureInf* packet) {
     curInfo->isCaptured = strlen(packet->hackName) > 0;
 
     if (curInfo->isCaptured) {
-        strcpy(curInfo->curHack, packet->hackName);
+        strncpy(curInfo->curHack, packet->hackName, sizeof(PuppetInfo::curHack) - 1);
+        curInfo->curHack[sizeof(PuppetInfo::curHack) - 1] = '\0';
     }
 }
 
@@ -951,8 +967,10 @@ void Client::updateCostumeInfo(CostumeInf* packet) {
         return;
     }
 
-    strcpy(curInfo->costumeBody, packet->bodyModel);
-    strcpy(curInfo->costumeHead, packet->capModel);
+    strncpy(curInfo->costumeBody, packet->bodyModel, sizeof(PuppetInfo::costumeBody) - 1);
+    curInfo->costumeBody[sizeof(PuppetInfo::costumeBody) - 1] = '\0';
+    strncpy(curInfo->costumeHead, packet->capModel, sizeof(PuppetInfo::costumeHead) - 1);
+    curInfo->costumeHead[sizeof(PuppetInfo::costumeHead) - 1] = '\0';
 }
 
 /**
@@ -1002,7 +1020,8 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
 
         curInfo->playerID = packet->mUserID;
         curInfo->isConnected = true;
-        strcpy(curInfo->puppetName, packet->clientName);
+        strncpy(curInfo->puppetName, packet->clientName, sizeof(PuppetInfo::puppetName) - 1);
+        curInfo->puppetName[sizeof(PuppetInfo::puppetName) - 1] = '\0';
 
         mConnectCount++;
 
@@ -1027,7 +1046,8 @@ void Client::updateGameInfo(GameInf* packet) {
         curInfo->scenarioNo = packet->scenarioNo;
 
         if (strcmp(packet->stageName, "") != 0 && strlen(packet->stageName) > 3) {
-            strcpy(curInfo->stageName, packet->stageName);
+            strncpy(curInfo->stageName, packet->stageName, sizeof(PuppetInfo::stageName) - 1);
+            curInfo->stageName[sizeof(PuppetInfo::stageName) - 1] = '\0';
         }
 
         curInfo->is2D = packet->is2D;
@@ -1136,6 +1156,12 @@ void Client::setStageInfo(HakoniwaSequence* sequence) {
         sInstance->mScenario = sInstance->mHolder->getGameDataFile()->getScenarioNo();
 
         sInstance->mPuppetHolder->setStageInfo(sInstance->mStageName.cstr(), sInstance->mScenario);
+    }
+}
+
+void Client::clearStageScene() {
+    if (sInstance) {
+        sInstance->mCurStageScene = nullptr;
     }
 }
 
@@ -1346,7 +1372,13 @@ void Client::updateShines() {
                         ChangeStageInfo info(accessor, "start",
                                              GameDataFunction::getCurrentStageName(accessor));
                         info.mWipeType = "FadeWhite";
-                        GameDataFunction::tryChangeNextStage(accessor.mData, &info);
+                        // avoid setting mIsStageChanging because we want to allow checkpoint warps to
+                        // override the scenario sync warp. this is why we aren't using
+                        // GameDataFunction::tryChangeNextStage()
+                        if (!accessor->mIsStageChanging) {
+                            accessor->getGameDataFile()->changeNextStage(&info, 0);
+                            accessor->resetLocationName();
+                        }
                     }
                 }
 
@@ -1356,9 +1388,7 @@ void Client::updateShines() {
 
         if (shineID >= 2000 && shineID <= 2060) {
             if (!rs::checkGetAchievement(sInstance->mCurStageScene, toadetteMoons[shineID - 2000])) {
-                GameDataHolderAccessor(sInstance->mCurStageScene)
-                    ->getGameDataFile()
-                    ->getAchievement(toadetteMoons[shineID - 2000]);
+                sInstance->getHolder()->getGameDataFile()->getAchievement(toadetteMoons[shineID - 2000]);
             }
             continue;
         }
@@ -1379,7 +1409,7 @@ void Client::updateShines() {
                     stageShine->onSwitchGet();
                 }
 
-                GameDataHolderAccessor(accessor)->getGameDataFile()->setGotShine(shineInfo);
+                accessor->getGameDataFile()->setGotShine(shineInfo);
             }
         }
     }
@@ -1400,7 +1430,7 @@ void Client::updateShines() {
  */
 void Client::applyOneCoinCollect(const char* placeID, int worldID, const char* stage) {
     al::PlacementId pid(placeID, nullptr, nullptr);
-    GameDataFile* gdf = GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile();
+    GameDataFile* gdf = sInstance->getHolder()->getGameDataFile();
     if (!gdf) {
         Logger::log("applyOneCoinCollect: GameDataFile null, dropping\n");
         return;
@@ -1447,9 +1477,11 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
         if (sInstance->mPendingCoinCollectCount < sMaxPendingCoinCollects) {
             PendingCoinCollect& pending =
                 sInstance->mPendingCoinCollects[sInstance->mPendingCoinCollectCount++];
-            strcpy(pending.placeID, packet->placeID);
+            strncpy(pending.placeID, packet->placeID, sizeof(PendingCoinCollect::placeID) - 1);
+            pending.placeID[sizeof(PendingCoinCollect::placeID) - 1] = '\0';
             pending.worldID = packet->worldID;
-            strcpy(pending.stage, packet->stage);
+            strncpy(pending.stage, packet->stage, sizeof(PendingCoinCollect::stage) - 1);
+            pending.stage[sizeof(PendingCoinCollect::stage) - 1] = '\0';
             Logger::log("updateCoinCollects: scene not ready, queued (total pending: %d)\n",
                         sInstance->mPendingCoinCollectCount);
         } else {
@@ -1468,7 +1500,7 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
  * @param objId
  */
 void Client::getOneCheckpoint(const char* objId) {
-    GameDataFile* gdf = GameDataHolderAccessor(sInstance->mCurStageScene)->getGameDataFile();
+    GameDataFile* gdf = sInstance->getHolder()->getGameDataFile();
 
     if (!gdf) {
         Logger::log("updateCheckpoints: GameDataFile null, dropping\n");
@@ -1506,7 +1538,8 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
     if (!sInstance->mCurStageScene) {
         if (sInstance->mPendingCheckpointCount < sMaxPendingCheckpoints) {
             PendingCheckpoint& pending = sInstance->mPendingCheckpoints[sInstance->mPendingCheckpointCount++];
-            strcpy(pending.objId, packet->objId);
+            strncpy(pending.objId, packet->objId, sizeof(PendingCheckpoint::objId) - 1);
+            pending.objId[sizeof(PendingCheckpoint::objId) - 1] = '\0';
             Logger::log("updateCheckpoints: scene not ready, queued (total pending: %d)\n",
                         sInstance->mPendingCoinCollectCount);
         } else {
