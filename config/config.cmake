@@ -6,7 +6,7 @@ set(OPTIMIZE_OPTIONS_RELEASE -O3 -ffast-math -flto)
 set(WARN_OPTIONS -Werror=return-type -Wno-unqualified-std-cast-call -Wno-invalid-offsetof -Wno-macro-redefined -Wno-deprecated-declarations)
 
 set(INCLUDES include lib/OdysseyHeaders/agl)
-set(DEFINITIONS IMGUI_DISABLE_TTY_FUNCTIONS IMGUI_DISABLE_FILE_FUNCTIONS)
+set(DEFINITIONS IMGUI_DISABLE_TTY_FUNCTIONS IMGUI_DISABLE_FILE_FUNCTIONS IMGUI_DISABLE_TIME_FUNCTIONS)
 set(EXCEPTION_FLAGS -fno-exceptions)
 
 set(ASM_OPTIONS "")
