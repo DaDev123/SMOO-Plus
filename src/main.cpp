@@ -5,6 +5,7 @@
 
 #include "main.hpp"
 
+#include "hk/diag/diag.h"
 #include "hk/gfx/DebugRenderer.h"
 #include "hk/hook/a64/Assembler.h"
 #include "hk/hook/InstrUtil.h"
@@ -12,6 +13,7 @@
 #include "hk/mem/BssHeap.h"
 
 #include "nn/hid.h"  // IWYU pragma: keep
+#include "nn/nifm.h"
 #include "nn/socket.h"
 
 #include <sead/gfx/seadCamera.h>
@@ -53,7 +55,6 @@
 #include "game/System/GameDataFile.h"
 #include "game/System/GameDataFunction.h"
 #include "game/System/GameDataHolderAccessor.h"
-#include "game/System/PlayerHitPointData.h"
 
 #include <cstring>
 #include <math.h>
@@ -105,6 +106,12 @@ HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> 
     sead::HakkunHeap::sInstance = new sead::HakkunHeap();
 
     imgui::setup();
+
+    nn::nifm::Initialize();
+    nn::nifm::SubmitNetworkRequest();
+
+    while (nn::nifm::IsNetworkRequestOnHold()) {
+    }
 
     nn::socket::Initialize(socketPool, socketPoolSize, socketAllocPoolSize, 0xE);
     disableSocketInit.installAtSym<"_ZN2nn6socket10InitializeEPvmmi">();
@@ -232,6 +239,7 @@ HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* i
         return;
 
     // was stage init hook
+    gIsSceneAlive = true;
 
     Client::sendGameInfPacket(scene);
 
@@ -245,7 +253,8 @@ HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* i
 
 HkTrampoline sceneKillHook = [](TrampolineStatic(), StageScene* scene) -> void {
     // this hook should prevent crashes on scene transitions
-    Client::clearStageScene();
+    gIsSceneAlive = false;
+
     Client::clearArrays();
 
     if (Client::instance()->mHakkunSceneHeap) {
@@ -285,7 +294,8 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
         Client::clearStopRumble();
     }
 
-    updatePlayerInfo(GameDataHolderWriter(stageScene), playerBase, isYukimaru);
+    if (gIsSceneAlive)
+        updatePlayerInfo(GameDataHolderWriter(stageScene), playerBase, isYukimaru);
 
     if (SpeedrunIcon::sInstance) {
         if (StageSceneStateModConfig::isSpeedrunModeEnabled()) {
@@ -302,6 +312,7 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
     if (al::isPadHoldZR(-1)) {
         if (al::isPadTriggerUp(-1)) {  // ZR + Up => Debug menu
             debugMode = !debugMode;
+            hk::diag::logLine("hi from hakkun");
         }
         if (debugMode) {
             if (al::isPadTriggerLeft(-1)) {  // [Debug menu] ZR + Left => Previous page
@@ -383,12 +394,12 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
             Client::sendGameInfPacket((PlayerActorHakoniwa*)playerBase, holder);
         }
 
-        if (Client::isNeedUpdateHealthCoins()) {
-            PlayerHitPointData* data = holder.mData->getGameDataFile()->getPlayerHitPointData();
+        /*if (Client::isNeedUpdateHealthCoins()) {
+            PlayerHitPointData* data = holder->getGameDataFile()->getPlayerHitPointData();
             data->mIsKidsMode = Client::shouldKids();
             data->mCurrentHealth = Client::getHealth();
             Client::setNeedUpdateHealthCoins(false);
-        }
+        }*/
 
         gameInfSendTimer = 0;
     }
@@ -448,7 +459,7 @@ void drawMain(al::Sequence* curSequence) {
     ImGui::Text("Server is running version: %s\n", Client::getServerVersion());
 
     // ===== 3D DEBUG RENDERING =====
-    if (curScene) {
+    if (curScene && gIsSceneAlive) {
         sead::LookAtCamera* cam = &const_cast<sead::LookAtCamera&>(al::getLookAtCamera(curScene, 0));
         sead::Projection* projection =
             cam ? &const_cast<sead::Projection&>(al::getProjectionSead(curScene, 0)) : nullptr;
@@ -735,7 +746,6 @@ extern "C" void hkMain() {
     mountSdCardHook.installAtSym<"_ZN4sead13FileDeviceMgrC1Ev">();
 
     sceneKillHook.installAtSym<"_ZN10StageScene4killEv">();
-    // sceneKillHook.installAtSym<"_ZN10StageSceneD1Ev">();
 
     hk::hook::a64::assemble<"mov x0, #1\nsvc #0x28">().installAtOffset(hk::ro::getRtldModule(), 0);
 

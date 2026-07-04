@@ -1,7 +1,5 @@
 #pragma once
 
-#include "vapours/results/results_common.hpp"
-
 #include <cstring>
 
 #include "prim/seadSafeString.h"
@@ -10,11 +8,6 @@
 class SocketBase {
 public:
     SocketBase(const char* name);
-
-    virtual nn::Result init(const char* ip, u16 port) = 0;
-    virtual bool closeSocket();
-    virtual bool tryReconnect() { return true; };
-    virtual struct Packet* tryGetPacket() { return nullptr; };
 
     const char* getStateChar();
     SockState getLogState();

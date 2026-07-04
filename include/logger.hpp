@@ -6,7 +6,7 @@
 class Logger : public SocketBase {
 public:
     Logger(const char* ip, u16 port, const char* name) : SocketBase(name) { this->init(ip, port); };
-    nn::Result init(const char* ip, u16 port) override;
+    bool init(const char* ip, u16 port);
 
     static void createInstance();
     static void setLogName(const char* name) {

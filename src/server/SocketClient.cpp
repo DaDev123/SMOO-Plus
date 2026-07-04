@@ -1,107 +1,116 @@
 #include "server/SocketClient.hpp"
 
-#include "nn/err.h"
 #include "nn/nifm.h"
 #include "nn/os.h"
-#include "nn/settings.h"
 #include "nn/socket.h"
 #include "vapours/results/results_common.hpp"
 
 #include "sead/heap/seadHakkunHeap.h"
-#include "sead/thread/seadDelegateThread.h"
-
-#include "al/Library/Thread/FunctorV0M.h"
 
 #include <cstring>
 #include <netinet/in.h>
 #include <sys/socket.h>
 
+#include "Library/Thread/AsyncFunctorThread.h"
+#include "Library/Thread/FunctorV0M.h"
 #include "logger.hpp"
 #include "packets/Packet.h"
-#include "prim/seadScopedLock.h"
 #include "server/Client.hpp"
 #include "syssocket/sockdefines.h"
-#include "thread/seadCriticalSection.h"
 #include "types.h"
 
-SocketClient::SocketClient(const char* name) : SocketBase(name) {
+SocketClient::SocketClient() : SocketBase("SocketClient") {
+    mRecvQueue.allocate(100, sead::HakkunHeap::sInstance);
+    mSendQueue.allocate(100, sead::HakkunHeap::sInstance);
+
+    mSocketThread = new al::AsyncFunctorThread(
+        "SocketMainThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::update), 0,
+        16_KB, {0});
     mRecvThread = new al::AsyncFunctorThread(
-        "SocketRecvThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::recvFunc),
-        16, 0x1000, {0});
+        "SocketRecvThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::recvFunc), 0,
+        16_KB, {0});
     mSendThread = new al::AsyncFunctorThread(
-        "SocketSendThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::sendFunc),
-        16, 0x1000, {0});
-    mEndThread = new al::AsyncFunctorThread(
-        "SocketEndThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::endThreads),
-        16, 0x1000, {0});
+        "SocketSendThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::sendFunc), 0,
+        16_KB, {0});
+}
 
-    mRecvQueue.allocate(maxBufSize, sead::HakkunHeap::sInstance);
-    mSendQueue.allocate(maxBufSize, sead::HakkunHeap::sInstance);
-    mAppErr = nn::err::ApplicationErrorArg(0, "", "",
-                                           nn::settings::LanguageCode::Make(nn::settings::Language_English));
-};
-
-nn::Result SocketClient::init(const char* ip, u16 port) {
-    nn::nifm::Initialize();
-    nn::nifm::SubmitNetworkRequest();
-
-    while (nn::nifm::IsNetworkRequestOnHold()) {
+void SocketClient::update() {
+    // didnt use al nerves to be safe but idk maybe that couldve worked too
+    while (true) {
+        switch (mState) {
+        case WAIT:
+            break;
+        case INIT:
+            exeInit();
+            break;
+        case RESET:
+            exeReset();
+            break;
+        case RECONNECT:
+            if (!exeInit())
+                mState = RECONNECT;
+            break;
+        }
+        nn::os::YieldThread();
+        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
     }
+}
+
+void SocketClient::init(const char* ip, u16 port) {
+    this->sock_ip = ip;
+    this->port = port;
+
+    if (mSocketThread->isDone())
+        mSocketThread->start();
+}
+
+bool SocketClient::exeInit() {
+    Logger::log("socket client init\n");
 
 // emulators (ryujinx) make this return false always, so skip it during init
 #ifndef EMU
     if (!nn::nifm::IsNetworkAvailable()) {
-        strcpy(mAppErr.dialog_message, "No network available");
-        strcpy(mAppErr.fullscreen_message, "You must be connected to a network to play with friends");
-        nn::err::ShowApplicationError(mAppErr);
-
-        Logger::log("Network Unavailable.\n");
         this->socket_log_state = SockState::NONET;
         this->socket_errno = nn::socket::GetLastErrno();
 
-        return nn::Result(-1);
+        mState = WAIT;
+        return false;
     }
 #endif
-
-    this->sock_ip = ip;
-    this->port = port;
 
     in_addr hostAddress = {0};
     sockaddr_in serverAddress = {0};
 
-    Logger::log("SocketClient::init: %s:%d sock %s\n", ip, port, getStateChar());
-
-    if ((this->socket_log_socket = nn::socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-        strcpy(mAppErr.dialog_message, "Can not create socket");
-        strcpy(mAppErr.fullscreen_message, "Something has gone terribly wrong");
-        nn::err::ShowApplicationError(mAppErr);
-
-        Logger::log("Socket Unavailable.\n");
-        this->socket_errno = nn::socket::GetLastErrno();
-        this->socket_log_state = SockState::UNAVAILABLE;
-
-        return nn::Result(-1);
-    }
+    Logger::log("SocketClient::exeInit: %s:%d sock %s\n", getIP(), this->port, getStateChar());
 
     if (!this->stringToIPAddress(this->sock_ip.cstr(), &hostAddress)) {
-        strcpy(mAppErr.dialog_message, "Invalid IP");
-        strcpy(mAppErr.fullscreen_message, "IP address is invalid or hostname not resolveable");
-        nn::err::ShowApplicationError(mAppErr);
-
         Logger::log("IP address is invalid or hostname not resolveable.\n");
         this->socket_errno = nn::socket::GetLastErrno();
         this->socket_log_state = SockState::INVALIP;
 
-        return nn::Result(-1);
+        mState = WAIT;
+        return false;
+    }
+
+    if ((this->socket_log_socket = nn::socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+        Logger::log("Socket Unavailable.\n");
+        this->socket_errno = nn::socket::GetLastErrno();
+        this->socket_log_state = SockState::UNAVAILABLE;
+
+        mState = WAIT;
+        return false;
     }
 
     serverAddress.sin_addr = hostAddress;
     serverAddress.sin_port = nn::socket::InetHtons(this->port);
     serverAddress.sin_family = nn::socket::InetHtons(AF_INET);
 
-    int sockOptValue = true;
-
+    s32 sockOptValue = 1;
     nn::socket::SetSockOpt(this->socket_log_socket, 6, TCP_NODELAY, &sockOptValue, sizeof(sockOptValue));
+    nn::socket::SetSockOpt(this->socket_log_socket, SOL_SOCKET, SO_REUSEADDR, &sockOptValue,
+                           sizeof(sockOptValue));
+    nn::socket::SetSockOpt(this->socket_log_socket, SOL_SOCKET, SO_REUSEPORT, &sockOptValue,
+                           sizeof(sockOptValue));
 
     nn::Result result;
 
@@ -112,40 +121,55 @@ nn::Result SocketClient::init(const char* ip, u16 port) {
         this->socket_errno = nn::socket::GetLastErrno();
         this->socket_log_state = SockState::CONNFAIL;
 
-        // strcpy(mAppErr.dialog_message, "Connection Failed");
-        // strcpy(mAppErr.fullscreen_message, "Failed to connect to server");
-        // nn::err::ShowApplicationError(mAppErr);
-
-        return result;
+        nn::socket::Close(this->socket_log_socket);
+        mState = WAIT;
+        return false;
     }
 
     this->socket_log_state = SockState::CONNECTED;
 
     Logger::log("Socket fd: %d\n", socket_log_socket);
 
-    startThreads();  // start recv and send threads after sucessful connection
+    // startThreads();  // start recv and send threads after sucessful connection
 
     // send init packet to server once we connect (an issue with the server prevents this from
     // working properly, waiting for a fix to implement)
 
     PlayerConnect initPacket;
+
     initPacket.mUserID = Client::getClientId();
     strcpy(initPacket.clientName, Client::getUsername().cstr());
 
-    if (mIsFirstConnect) {
-        initPacket.conType = ConnectionTypes::INIT;
-        mIsFirstConnect = false;
-    } else {
-        initPacket.conType = ConnectionTypes::RECONNECT;
-    }
+    initPacket.conType = mIsFirstConnect ? ConnectionTypes::INIT : ConnectionTypes::RECONNECT;
+    mIsFirstConnect = false;
 
     send(&initPacket);
 
-    // strcpy(mAppErr.dialog_message, "Connected");
-    // strcpy(mAppErr.fullscreen_message, "Successfully connected");
-    // nn::err::ShowApplicationError(mAppErr);
+    if (mRecvThread->isDone())
+        mRecvThread->start();
+    if (mSendThread->isDone())
+        mSendThread->start();
 
-    return result;
+    mState = WAIT;
+    return true;
+}
+
+void SocketClient::exeReset() {
+    closeSocket();
+
+    nn::os::YieldThread();
+    nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
+
+    // Free up all blocked threads
+    mSendQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
+    mRecvQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
+
+    while (!(mRecvThread->isDone() && mSendThread->isDone())) {
+        nn::os::YieldThread();
+        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
+    }
+
+    mState = RECONNECT;
 }
 
 bool SocketClient::send(Packet* packet) {
@@ -159,15 +183,14 @@ bool SocketClient::send(Packet* packet) {
     if (packet->mType != PLAYERINF && packet->mType != HACKCAPINF)
         Logger::log("Sending packet: %s\n", packetNames[packet->mType]);
 
-    if ((valread = nn::socket::Send(this->socket_log_socket, buffer, packet->mPacketSize + sizeof(Packet),
-                                    0) > 0)) {
+    valread = nn::socket::Send(this->socket_log_socket, buffer, packet->mPacketSize + sizeof(Packet), 0);
+
+    if (valread > 0) {
         return true;
     } else {
         Logger::log("Failed to Fully Send Packet! Result: %d Type: %s Packet Size: %d\n", valread,
                     packetNames[packet->mType], packet->mPacketSize);
         this->socket_errno = nn::socket::GetLastErrno();
-        if (packet->mType != PacketType::PLAYERCON)  // prevent recursion in reconnect
-            this->tryReconnect();
         return false;
     }
     return true;
@@ -177,7 +200,7 @@ bool SocketClient::recv() {
     if (this->socket_log_state != SockState::CONNECTED) {
         Logger::log("Unable To Receive! Socket Not Connected.\n");
         this->socket_errno = nn::socket::GetLastErrno();
-        return this->tryReconnect();
+        return false;
     }
 
     int headerSize = sizeof(Packet);
@@ -198,7 +221,7 @@ bool SocketClient::recv() {
                 return true;
             } else {
                 Logger::log("Header Read Failed! Value: %d Total Read: %d\n", result, valread);
-                return this->tryReconnect();  // if we sucessfully reconnect, we dont want
+                return false;
             }
         }
     }
@@ -238,7 +261,7 @@ bool SocketClient::recv() {
                         free(packetBuf);
                         Logger::log("Packet Read Failed! Value: %d\nPacket Size: %d\nPacket Type: %s\n",
                                     result, header->mPacketSize, packetNames[header->mType]);
-                        return this->tryReconnect();
+                        return false;
                     }
                 }
 
@@ -259,7 +282,7 @@ bool SocketClient::recv() {
     } else {  // if we error'd, close the socket
         Logger::log("valread was zero! Disconnecting.\n");
         this->socket_errno = nn::socket::GetLastErrno();
-        return this->tryReconnect();
+        return false;
     }
 }
 
@@ -281,33 +304,23 @@ void SocketClient::printPacket(Packet* packet) {
     }
 }
 
-bool SocketClient::tryReconnect() {
-    sead::ScopedLock<sead::CriticalSection> lock(&mReconnectLock);
-
-    Logger::log("Attempting to Reconnect.\n");
-
-    if (closeSocket()) {  // unfortunately we cannot use the same fd from the previous connection,
-                          // so close the socket entirely and attempt a new connection.
-        if (init(sock_ip.cstr(), port).IsSuccess()) {  // call init again
-            Logger::log("Reconnect Successful.\n");
-            return true;
-        }
-    }
-    Logger::log("Reconnect Failed.\n");
-
-    return false;
-}
-
 bool SocketClient::closeSocket() {
     Logger::log("Closing Socket.\n");
 
-    bool result = false;
+    nn::Result result(-1);
 
-    if (!(result = SocketBase::closeSocket())) {
-        Logger::log("Failed to close socket!\n");
+    while (result.IsFailure()) {
+        result = nn::socket::Close(this->socket_log_socket);
+
+        if (result.IsFailure()) {
+            Logger::log("Failed to close socket!\n");
+            nn::os::YieldThread();
+            nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
+        }
     }
 
-    return result;
+    this->socket_log_state = SockState::DISCONNECTED;
+    return true;
 }
 
 bool SocketClient::stringToIPAddress(const char* str, in_addr* out) {
@@ -332,41 +345,19 @@ bool SocketClient::stringToIPAddress(const char* str, in_addr* out) {
     return false;
 }
 
-/**
- * @brief starts client read thread
- *
- * @return true if read thread was sucessfully started
- * @return false if read thread was unable to start, or thread was already started.
- */
-bool SocketClient::startThreads() {
-    Logger::log("Recv Thread isDone: %s\n", BTOC(this->mRecvThread->isDone()));
-    Logger::log("Send Thread isDone: %s\n", BTOC(this->mSendThread->isDone()));
-
-    if (this->mRecvThread->isDone() && this->mSendThread->isDone()) {
-        this->mRecvThread->start();
-        this->mSendThread->start();
-        Logger::log("Socket threads sucessfully started.\n");
-        return true;
-    } else {
-        Logger::log("Socket threads failed to start.\n");
-        return false;
-    }
-}
-
-void SocketClient::endThreads() {
-    nn::os::SleepThread(nn::TimeSpan::FromMilliSeconds(500));
-    mSendThread->mDelegateThread->destroy();
-    mRecvThread->mDelegateThread->destroy();
-}
-
 void SocketClient::sendFunc() {
     Logger::log("Starting Send Thread.\n");
 
-    while (trySendQueue() || socket_log_state != SockState::DISCONNECTED) {
+    while (trySendQueue() && socket_log_state != SockState::DISCONNECTED) {
     }
+
+    this->socket_log_state = SockState::DISCONNECTED;
 
     Logger::log("Sending packet failed!\n");
     Logger::log("Ending Send Thread.\n");
+
+    if (mState != RESET && mState != RECONNECT)
+        mState = RESET;
 }
 
 void SocketClient::recvFunc() {
@@ -374,15 +365,16 @@ void SocketClient::recvFunc() {
 
     Logger::log("Starting Recv Thread.\n");
 
-    while (recv() || socket_log_state != SockState::DISCONNECTED) {
+    while (recv() && socket_log_state != SockState::DISCONNECTED) {
     }
 
-    // Free up all blocked threads
-    mSendQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
-    mRecvQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
+    this->socket_log_state = SockState::DISCONNECTED;
 
     Logger::log("Receiving Packet Failed!\n");
     Logger::log("Ending Recv Thread.\n");
+
+    if (mState != RESET && mState != RECONNECT)
+        mState = RESET;
 }
 
 bool SocketClient::queuePacket(Packet* packet) {

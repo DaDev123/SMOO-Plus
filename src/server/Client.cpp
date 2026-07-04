@@ -1,5 +1,7 @@
 #include "server/Client.hpp"
 
+#include "hk/diag/diag.h"
+
 #include "nn/os.h"
 #include "nn/socket.h"
 
@@ -38,6 +40,7 @@
 #include "Library/Yaml/ByamlIter.h"
 #include "Library/Yaml/ByamlUtil.h"
 #include "logger.hpp"
+#include "main.hpp"
 #include "packets/MoonRockHit.h"
 #include "packets/Packet.h"
 #include "prim/seadSafeString.h"
@@ -63,12 +66,12 @@ typedef void (Client::*ClientThreadFunc)(void);
  */
 Client::Client() {
     mReadThread = new al::AsyncFunctorThread(
-        "ClientReadThread", al::FunctorV0M<Client*, ClientThreadFunc>(this, &Client::readFunc), 16, 0x1000,
+        "ClientReadThread", al::FunctorV0M<Client*, ClientThreadFunc>(this, &Client::readFunc), 0, 16_KB,
         {0});
 
     mKeyboard = new Keyboard(nn::swkbd::GetRequiredStringBufferSize());
 
-    mSocket = new SocketClient("SocketClient");
+    mSocket = new SocketClient();
 
     mPuppetHolder = new PuppetHolder(maxPuppets);
 
@@ -167,7 +170,7 @@ bool Client::startThread() {
 }
 
 void Client::restartConnection() {
-    if (!sInstance->mIsAllowReconnect)
+    /*if (!sInstance->mIsAllowReconnect)
         return;
 
     // send disconnect packet
@@ -216,7 +219,7 @@ void Client::restartConnection() {
     }
 
     sInstance->lastCaptureInfPacket.mUserID = sInstance->mUserID;
-    sInstance->mSocket->send(&sInstance->lastCaptureInfPacket);
+    sInstance->mSocket->send(&sInstance->lastCaptureInfPacket);*/
 }
 
 /**
@@ -232,16 +235,16 @@ bool Client::startConnection() {
     bool isOverride = al::isPadHoldZL(-1);
 
     if (mServerIP.isEmpty() || isOverride) {
-        mKeyboard->setHeaderText(u"Save File does not contain an IP!");
-        mKeyboard->setSubText(u"Please set a Server IP Below.");
+        mKeyboard->setHeaderText(u"IP Address");
+        mKeyboard->setSubText(u"Please set a server IP address below.");
         mServerIP = "127.0.0.1";
         Client::openKeyboardIP();
         isNeedSave = true;
     }
 
     if (!mServerPort || isOverride) {
-        mKeyboard->setHeaderText(u"Save File does not contain a port!");
-        mKeyboard->setSubText(u"Please set a Server Port Below.");
+        mKeyboard->setHeaderText(u"Port");
+        mKeyboard->setSubText(u"Please set a server port below.");
         mServerPort = 1027;
         Client::openKeyboardPort();
         isNeedSave = true;
@@ -251,7 +254,15 @@ bool Client::startConnection() {
         SaveDataAccessFunction::startSaveDataWrite(mHolder.mData);
     }
 
-    mIsConnectionActive = mSocket->init(mServerIP.cstr(), mServerPort).IsSuccess();
+    mSocket->init(mServerIP.cstr(), mServerPort);
+
+    while (mSocket->getSocketClientState() == SocketClient::INIT) {
+        Logger::log("log state: %s\n", mSocket->getStateChar());
+        nn::os::YieldThread();
+        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
+    }
+
+    mIsConnectionActive = mSocket->getLogState() == SockState::CONNECTED;
 
     if (mIsConnectionActive) {
         Logger::log("Sucessful Connection. Waiting to recieve init packet.\n");
@@ -325,7 +336,7 @@ bool Client::openKeyboardIP() {
 
     bool isFirstConnect = prevIp != sInstance->mServerIP;
 
-    sInstance->mSocket->setIsFirstConn(isFirstConnect);
+    // sInstance->mSocket->setIsFirstConn(isFirstConnect);
 
     return isFirstConnect;
 }
@@ -364,7 +375,7 @@ bool Client::openKeyboardPort() {
 
     bool isFirstConnect = prevPort != sInstance->mServerPort;
 
-    sInstance->mSocket->setIsFirstConn(isFirstConnect);
+    // sInstance->mSocket->setIsFirstConn(isFirstConnect);
 
     return isFirstConnect;
 }
@@ -383,7 +394,7 @@ void Client::setServerIP(const char* ip) {
     sInstance->mServerIP = ip;
 
     bool isFirstConnect = prevIp != sInstance->mServerIP;
-    sInstance->mSocket->setIsFirstConn(isFirstConnect);
+    // sInstance->mSocket->setIsFirstConn(isFirstConnect);
 }
 
 /**
@@ -400,7 +411,7 @@ void Client::setServerPort(int port) {
     sInstance->mServerPort = port;
 
     bool isFirstConnect = prevPort != sInstance->mServerPort;
-    sInstance->mSocket->setIsFirstConn(isFirstConnect);
+    // sInstance->mSocket->setIsFirstConn(isFirstConnect);
 }
 
 void Client::showUIMessage(const char16_t* msg) {
@@ -461,6 +472,7 @@ void Client::readFunc() {
     mConnectStatus->end();
 
     while (mIsConnectionActive) {
+        HK_ABORT_UNLESS(mSocket != nullptr, "Client::mSocket was nullptr");
         Packet* curPacket = mSocket->tryGetPacket();
 
         if (curPacket) {
@@ -514,7 +526,9 @@ void Client::readFunc() {
                 sendToStage((ChangeStagePacket*)curPacket);
                 break;
             case PacketType::HEALTHCOINS:
-                updateHealthCoins((HealthCoins*)curPacket);
+                Logger::log("Received unused health/coins packet (?)\n");
+                nn::os::YieldThread();
+                nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
                 break;
             case PacketType::COINCOLLECTCOLL:
                 updateCoinCollects((CoinCollectCollect*)curPacket);
@@ -542,13 +556,18 @@ void Client::readFunc() {
             }
             default:
                 Logger::log("Discarding Unknown Packet Type.\n");
+                nn::os::YieldThread();
+                nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
                 break;
             }
 
             delete curPacket;
 
         } else {
-            Logger::log("Client Socket Encountered an Error! Errno: 0x%x\n", mSocket->socket_errno);
+            Logger::log("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x\n",
+                        mSocket->socket_errno);
+            nn::os::YieldThread();
+            nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
         }
     }
 
@@ -1127,7 +1146,7 @@ PuppetInfo* Client::findPuppetInfo(const nn::account::Uid& id, bool isFindAvaila
 
     PuppetInfo* firstAvailable = nullptr;
 
-    for (size_t i = 0; i < getMaxPlayerCount() - 1; i++) {
+    for (s32 i = 0; i < getMaxPlayerCount() - 1; i++) {
         PuppetInfo* curInfo = sInstance->mPuppetInfoArr[i];
 
         if (curInfo->playerID == id) {
@@ -1156,12 +1175,6 @@ void Client::setStageInfo(HakoniwaSequence* sequence) {
         sInstance->mScenario = sInstance->mHolder->getGameDataFile()->getScenarioNo();
 
         sInstance->mPuppetHolder->setStageInfo(sInstance->mStageName.cstr(), sInstance->mScenario);
-    }
-}
-
-void Client::clearStageScene() {
-    if (sInstance) {
-        sInstance->mCurStageScene = nullptr;
     }
 }
 
@@ -1336,7 +1349,7 @@ void Client::updateShines() {
         return;
     }
 
-    if (!sInstance->mCurStageScene) {
+    if (!(sInstance->mCurStageScene && gIsSceneAlive)) {
         Logger::log("updateShines: scene not ready, skipping\n");
         return;
     }
@@ -1472,7 +1485,7 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
                                             worldNames[packet->worldID]);
     }
 
-    if (!sInstance->mCurStageScene) {
+    if (!(sInstance->mCurStageScene && gIsSceneAlive)) {
         // Scene not ready — queue for later processing in update()
         if (sInstance->mPendingCoinCollectCount < sMaxPendingCoinCollects) {
             PendingCoinCollect& pending =
@@ -1535,7 +1548,7 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
                                             PlayerEventLog::getCheckpointMessage(packet->objId));
     }
 
-    if (!sInstance->mCurStageScene) {
+    if (!(sInstance->mCurStageScene && gIsSceneAlive)) {
         if (sInstance->mPendingCheckpointCount < sMaxPendingCheckpoints) {
             PendingCheckpoint& pending = sInstance->mPendingCheckpoints[sInstance->mPendingCheckpointCount++];
             strncpy(pending.objId, packet->objId, sizeof(PendingCheckpoint::objId) - 1);
@@ -1563,7 +1576,7 @@ void Client::update() {
             updateShines();
         }
 
-        if (sInstance->mCurStageScene) {
+        if (sInstance->mCurStageScene && gIsSceneAlive) {
             // Drain coin collects that arrived while the scene was loading
             if (sInstance->mPendingCoinCollectCount > 0) {
                 Logger::log("update: draining %d pending coin collect(s)\n",
@@ -1583,6 +1596,7 @@ void Client::update() {
                     PendingCheckpoint& c = sInstance->mPendingCheckpoints[i];
                     getOneCheckpoint(c.objId);
                 }
+                sInstance->mPendingCheckpointCount = 0;
             }
         }
 
@@ -1610,7 +1624,7 @@ void Client::clearArrays() {
     }
 }
 
-void Client::setNeedUpdateHealthCoins(bool value) {
+/*void Client::setNeedUpdateHealthCoins(bool value) {
     if (!sInstance) {
         return;
     }
@@ -1627,7 +1641,7 @@ void Client::updateHealthCoins(HealthCoins* packet) {
     sInstance->mCoins = packet->coins;
     sInstance->isKids = packet->isKids;
     sInstance->mNeedsUpdateHealthCoins = true;
-}
+}*/
 
 void Client::setServerVersion(const char* serverVersion) {
     if (!sInstance) {

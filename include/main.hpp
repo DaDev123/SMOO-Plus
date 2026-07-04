@@ -3,9 +3,11 @@
 
 #include "game/Player/PlayerActorBase.h"
 #include "game/System/GameDataHolderAccessor.h"
-static bool isInGame = false;
+inline bool isInGame = false;
 
-static bool debugMode = false;
+inline bool debugMode = false;
+
+inline bool gIsSceneAlive = false;
 
 void drawMain(al::Sequence* seq);
 void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru);

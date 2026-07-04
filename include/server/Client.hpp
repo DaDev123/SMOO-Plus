@@ -164,11 +164,11 @@ public:
     static sead::FixedSafeString<0x20> getUsername() {
         return sInstance ? sInstance->mUsername : sead::FixedSafeString<0x20>::cEmptyString;
     }
-    static bool shouldKids() { return sInstance ? sInstance->isKids : false; }
-    static u8 getHealth() { return sInstance ? sInstance->mHealth : 3; }
-    static int getCoins() { return sInstance ? sInstance->mCoins : 0; }
-    static bool isNeedUpdateHealthCoins() { return sInstance ? sInstance->mNeedsUpdateHealthCoins : false; }
-    static void setNeedUpdateHealthCoins(bool value);
+    // static bool shouldKids() { return sInstance ? sInstance->isKids : false; }
+    // static u8 getHealth() { return sInstance ? sInstance->mHealth : 3; }
+    // static int getCoins() { return sInstance ? sInstance->mCoins : 0; }
+    // static bool isNeedUpdateHealthCoins() { return sInstance ? sInstance->mNeedsUpdateHealthCoins : false;
+    // } static void setNeedUpdateHealthCoins(bool value);
     static void setServerVersion(const char* serverVersion);
     static const char* getServerVersion();
 
@@ -220,7 +220,6 @@ public:
 
     // ===== STAGE MANAGEMENT =====
     static void setStageInfo(HakoniwaSequence* sequence);
-    static void clearStageScene();
     static void setTagState(bool state);
 
     // ===== UI METHODS =====
@@ -267,7 +266,7 @@ private:
     void updateCaptureInfo(CaptureInf* packet);
     void sendToStage(ChangeStagePacket* packet);
     void disconnectPlayer(PlayerDC* packet);
-    void updateHealthCoins(HealthCoins* packet);
+    // void updateHealthCoins(HealthCoins* packet);
     void updateCoinCollects(CoinCollectCollect* packet);
     void updateCheckpoints(CheckpointGet* packet);
     void updateMoonRocks(MoonRockHit* packet);
@@ -303,7 +302,7 @@ private:
     bool isKids = false;
     u8 mHealth = 3;
     int mCoins = 0;
-    bool mNeedsUpdateHealthCoins = false;
+    // bool mNeedsUpdateHealthCoins = false;
 
     // ===== SHINE SYNCHRONIZATION MEMBERS =====
     sead::SafeArray<int, 128> curCollectedShines;

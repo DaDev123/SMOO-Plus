@@ -22,7 +22,7 @@ void Logger::createInstance() {
 #endif
 }
 
-nn::Result Logger::init(const char* ip, u16 port) {
+bool Logger::init(const char* ip, u16 port) {
     sock_ip = ip;
 
     this->port = port;
@@ -31,27 +31,21 @@ nn::Result Logger::init(const char* ip, u16 port) {
     sockaddr_in serverAddress = {0};
 
     if (this->socket_log_state != SockState::UNINITIALIZED)
-        return nn::Result(-1);
-
-    nn::nifm::Initialize();
-    nn::nifm::SubmitNetworkRequest();
-
-    while (nn::nifm::IsNetworkRequestOnHold()) {
-    }
+        return false;
 
 // emulators make this return false always, so skip it during init
 #ifndef EMU
 
     if (!nn::nifm::IsNetworkAvailable()) {
         this->socket_log_state = SockState::UNAVAILABLE;
-        return nn::Result(-1);
+        return false;
     }
 
 #endif
 
     if ((this->socket_log_socket = nn::socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_IP)) < 0) {
         this->socket_log_state = SockState::UNAVAILABLE;
-        return nn::Result(nn::socket::GetLastErrno());
+        return false;
     }
 
     nn::socket::InetAton(this->sock_ip.cstr(), &hostAddress);
@@ -76,10 +70,10 @@ nn::Result Logger::init(const char* ip, u16 port) {
     if (connected) {
         this->socket_log_state = SockState::CONNECTED;
         this->isDisableName = false;
-        return nn::Result(0);
+        return true;
     } else {
         this->socket_log_state = SockState::UNAVAILABLE;
-        return result;
+        return false;
     }
 }
 

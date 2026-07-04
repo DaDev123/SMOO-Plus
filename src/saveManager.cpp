@@ -31,6 +31,11 @@ void SaveManager::startThread(GameConfigData* config) {
 }
 
 void SaveManager::write() {
+    if (mHeap) {
+        mHeap->destroy();
+        mHeap = nullptr;
+    }
+
     mHeap = sead::FrameHeap::create(10_KB, "SaveManagerHeap", sead::HakkunHeap::sInstance);
 
     al::ByamlWriter writer(mHeap, false);

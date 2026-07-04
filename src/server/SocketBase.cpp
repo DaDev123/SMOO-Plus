@@ -18,7 +18,7 @@ const char* SocketBase::getStateChar() {
     case SockState::UNAVAILABLE:
         return "Socket Unavailable";
     case SockState::UNINITIALIZED:
-        return "Socket Unitialized";
+        return "Socket Uninitialized";
     case SockState::DISCONNECTED:
         return "Socket Disconnected";
     case SockState::CONNFAIL:
@@ -68,12 +68,4 @@ s32 SocketBase::getFd() {
     } else {
         return -1;
     }
-}
-
-bool SocketBase::closeSocket() {
-    this->socket_log_state = SockState::DISCONNECTED;  // probably not safe to assume socket will be closed
-
-    nn::Result result = nn::socket::Close(this->socket_log_socket);
-
-    return result.IsSuccess();
 }

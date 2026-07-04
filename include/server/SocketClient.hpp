@@ -1,25 +1,29 @@
 #pragma once
 
-#include "nn/err.h"
-
 #include "al/Library/Thread/AsyncFunctorThread.h"
 
+#include <atomic>
 #include <netinet/in.h>
 
 #include "packets/Packet.h"
 #include "SocketBase.hpp"
 #include "syssocket/sockdefines.h"
-#include "thread/seadCriticalSection.h"
 #include "thread/seadMessageQueue.h"
 #include "types.h"
 
 class SocketClient : public SocketBase {
 public:
-    SocketClient(const char* name);
-    nn::Result init(const char* ip, u16 port) override;
-    bool tryReconnect() override;
-    bool closeSocket() override;
-    Packet* tryGetPacket() override;
+    enum SocketClientState { WAIT = 0, INIT = 1, RESET = 2, RECONNECT = 3 };
+
+    SocketClient();
+
+    void update();
+    bool exeInit();
+    void exeReset();
+
+    void init(const char* ip, u16 port);
+    bool closeSocket();
+    Packet* tryGetPacket();
 
     bool startThreads();
     void endThreads();
@@ -34,7 +38,6 @@ public:
     void recvFunc();
 
     void setLogState(SockState state) { socket_log_state = state; };
-    void startEndThread() { mEndThread->start(); };
 
     void printPacket(Packet* packet);
     bool isConnected() { return socket_log_state == SockState::CONNECTED; }
@@ -45,23 +48,19 @@ public:
     u32 getRecvCount() { return mRecvQueue.mMessageQueueInner._count; }
     u32 getRecvMaxCount() { return mRecvQueue.mMessageQueueInner._maxCount; }
 
-    void setIsFirstConn(bool value) { mIsFirstConnect = value; }
+    SocketClientState getSocketClientState() { return mState; }
 
 private:
+    al::AsyncFunctorThread* mSocketThread = nullptr;
     al::AsyncFunctorThread* mRecvThread = nullptr;
     al::AsyncFunctorThread* mSendThread = nullptr;
-    al::AsyncFunctorThread* mEndThread = nullptr;
 
     sead::MessageQueue mRecvQueue;
     sead::MessageQueue mSendQueue;
 
-    sead::CriticalSection mReconnectLock;
-
-    int maxBufSize = 100;
     bool mIsFirstConnect = true;
 
-    nn::err::ApplicationErrorArg mAppErr;
-    ;
+    std::atomic<SocketClientState> mState = INIT;
 
     /**
      * @param str a string containing an IPv4 address or a hostname that can be resolved via DNS

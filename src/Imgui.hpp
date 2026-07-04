@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hk/gfx/ImGuiBackendNvn.h"
+#include "hk/mem/BssHeap.h"
 
 #include "nn/hid.h"
 
@@ -256,9 +257,10 @@ static void updateImGuiInput() {
 static void setup() {
     hk::gfx::ImGuiBackendNvn* imgui = hk::gfx::ImGuiBackendNvn::instance();
 
-    imgui->setAllocator(
-        {[](size allocSize, size alignment) -> void* { return aligned_alloc(alignment, allocSize); },
-         [](void* ptr) -> void { free(ptr); }});
+    imgui->setAllocator({[](size allocSize, size alignment) -> void* {
+                             return hk::mem::sMainHeap.allocate(allocSize, alignment);
+                         },
+                         [](void* ptr) -> void { hk::mem::sMainHeap.free(ptr); }});
 
     imgui->tryInitialize();
     setupFont();
