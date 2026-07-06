@@ -25,9 +25,6 @@ public:
             sInstance->isDisableName = true;
     }
 
-    int read(char* out);
-    bool pingSocket();
-
 private:
     static Logger* sInstance;
     bool isDisableName;

@@ -381,18 +381,18 @@ void StageSceneStateModConfig::initGameplayMenu(const al::LayoutInitInfo& initIn
     setMenuItemCheck(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_MUSIC + 1]);
 
     optionsList[MENU_GAMEPLAY]->startLoopActionAll("Loop", "Loop");
-    RollPartsData* dataColPlayer = new (Client::instance()->mHakkunSceneHeap)
-        RollPartsData(4,
-                      new (Client::instance()->mHakkunSceneHeap)
-                          const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                      (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), true);
-    RollPartsData* dataColCap = new (Client::instance()->mHakkunSceneHeap)
-        RollPartsData(4,
-                      new (Client::instance()->mHakkunSceneHeap)
-                          const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                      (sCapCollisionEnabled + (sCapBounceEnabled << 1)), true);
+    RollPartsData* dataColPlayer = new (Client::instance()->mHakkunSceneHeap) RollPartsData(
+        4,
+        new (Client::instance()->mHakkunSceneHeap)
+            const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" },
+        (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), true);
+    RollPartsData* dataColCap = new (Client::instance()->mHakkunSceneHeap) RollPartsData(
+        4,
+        new (Client::instance()->mHakkunSceneHeap)
+            const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" },
+        (sCapCollisionEnabled + (sCapBounceEnabled << 1)), true);
     RollPartsData* dataEmpty = new (Client::instance()->mHakkunSceneHeap)
-        RollPartsData(0, new (Client::instance()->mHakkunSceneHeap) const char16_t*[]{u""});
+        RollPartsData(0, new (Client::instance()->mHakkunSceneHeap) const char16_t* [] { u"" });
     optionsList[MENU_GAMEPLAY]->setRollPartsData(new (Client::instance()->mHakkunSceneHeap) RollPartsData[]{
         *dataColPlayer, *dataColCap, *dataEmpty, *dataEmpty, *dataEmpty});
 
@@ -467,10 +467,10 @@ void StageSceneStateModConfig::initSpeedrunConfigMenu(const al::LayoutInitInfo& 
     RollPartsData* dataLogLife = new (Client::instance()->mHakkunSceneHeap) RollPartsData(
         4,
         new (Client::instance()->mHakkunSceneHeap)
-            const char16_t*[]{u"Never", u"After 15 Seconds", u"After 10 Seconds", u"After 5 Seconds"},
+            const char16_t* [] { u"Never", u"After 15 Seconds", u"After 10 Seconds", u"After 5 Seconds" },
         sLogLife, true);
     RollPartsData* dataEmpty = new (Client::instance()->mHakkunSceneHeap)
-        RollPartsData(0, new (Client::instance()->mHakkunSceneHeap) const char16_t*[]{u""});
+        RollPartsData(0, new (Client::instance()->mHakkunSceneHeap) const char16_t* [] { u"" });
 
     optionsList[MENU_SPEEDRUN_CONFIG]->setRollPartsData(
         new (Client::instance()->mHakkunSceneHeap) RollPartsData[]{*dataLogLife, *dataEmpty, *dataEmpty});

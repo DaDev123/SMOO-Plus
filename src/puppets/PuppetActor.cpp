@@ -1,5 +1,7 @@
 #include "actors/PuppetActor.h"
 
+#include "hk/diag/diag.h"
+
 #include "al/Library/Action/ActorActionKeeper.h"
 #include "al/Library/Base/StringUtil.h"
 #include "al/Library/Draw/GraphicsSystemInfo.h"
@@ -450,18 +452,18 @@ const char* executorName = "ＮＰＣ";
 PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo,
                                         const char* bodyName, const char* capName, int subActorNum,
                                         al::AudioKeeper* audioKeeper) {
-    // Logger::log("Loading Resources for Mario Puppet Model.\n");
+    // hk::diag::logLine("Loading Resources for Mario Puppet Model.");
 
     al::ActorResource* modelRes = al::findOrCreateActorResourceWithAnimResource(
         initInfo.actorResourceHolder, al::StringTmp<0x100>("ObjectData/%s", bodyName).cstr(),
         al::StringTmp<0x100>("ObjectData/%s", "PlayerAnimation").cstr(), 0, false);
 
-    // Logger::log("Creating Body Costume Info.\n");
+    // hk::diag::logLine("Creating Body Costume Info.");
 
     PlayerBodyCostumeInfo* bodyInfo =
         PlayerCostumeFunction::createBodyCostumeInfo(modelRes->mModelRes, bodyName);
 
-    // Logger::log("Initializing Basic Actor Data.\n");
+    // hk::diag::logLine("Initializing Basic Actor Data.");
 
     al::initActorSceneInfo(player, initInfo);
     al::initActorPoseTQGSV(player);
@@ -470,41 +472,41 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
     al::initActorModelKeeper(player, initInfo, al::StringTmp<0x100>("ObjectData/%s", bodyName).cstr(), 6,
                              al::StringTmp<0x100>("ObjectData/%s", "PlayerAnimation").cstr());
 
-    // Logger::log("Creating Material Category for Player Type\n");
+    // hk::diag::logLine("Creating Material Category for Player Type");
 
     al::ModelMaterialCategory::tryCreate(player->mModelKeeper->mModelCtrl, "Player",
                                          initInfo.actorSceneInfo.graphicsSystemInfo->mMaterialCategoryKeeper);
 
-    // Logger::log("Initing Skeleton.\n");
+    // hk::diag::logLine("Initing Skeleton.");
 
     al::initPartialSklAnim(player, 1, 1, 32);
     al::addPartialSklAnimPartsListRecursive(player, "Spine1", 0);
 
-    // Logger::log("Setting Up Executor Info.\n");
+    // hk::diag::logLine("Setting Up Executor Info.");
 
     al::initExecutorUpdate(player, initInfo, executorName);
     al::initExecutorDraw(player, initInfo, executorName);
     al::initExecutorModelUpdate(player, initInfo);
 
-    // Logger::log("Getting InitEffect Byml from resource.\n");
+    // hk::diag::logLine("Getting InitEffect Byml from resource.");
 
     al::ByamlIter iter;
     if (al::tryGetActorInitFileIter(&iter, modelRes->mModelRes, "InitEffect", 0)) {
         const char* effectKeeperName;
         if (iter.tryGetStringByKey(&effectKeeperName, "Name")) {
-            // Logger::log("Initializing Effect Keeper.\n");
+            // hk::diag::logLine("Initializing Effect Keeper.");
 
             al::initActorEffectKeeper(player, initInfo, effectKeeperName);
         }
     }
 
-    // Logger::log("Initing Player Audio.\n");
+    // hk::diag::logLine("Initing Player Audio.");
 
     PlayerFunction::initMarioAudio(player, initInfo, modelRes->mModelRes, false, audioKeeper);
     al::initActorActionKeeper(player, modelRes, bodyName, 0);
     al::setMaterialProgrammable(player);
 
-    // Logger::log("Creating Sub-Actor Keeper.\n");
+    // hk::diag::logLine("Creating Sub-Actor Keeper.");
 
     al::SubActorKeeper* actorKeeper = al::SubActorKeeper::tryCreate(player, 0, subActorNum);
 
@@ -514,7 +516,7 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
 
     actorKeeper->init(initInfo, 0, subActorNum);
 
-    // Logger::log("Initializing Sub-Actors.\n");
+    // hk::diag::logLine("Initializing Sub-Actors.");
 
     int subModelNum = al::getSubActorNum(player);
 
@@ -531,12 +533,12 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
         }
     }
 
-    // Logger::log("Creating Clipping.\n");
+    // hk::diag::logLine("Creating Clipping.");
 
     al::initActorClipping(player, initInfo);
     al::invalidateClipping(player);
 
-    // Logger::log("Getting Cap Model/Head Model Name.\n");
+    // hk::diag::logLine("Getting Cap Model/Head Model Name.");
 
     const char* capModelName;
 
@@ -566,19 +568,19 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
         headType = "Other";
     }
 
-    // Logger::log("Creating Head Costume Info. Cap Model: %s. Head Type: %s. Cap Name: %s.\n",
+    // hk::diag::logLine("Creating Head Costume Info. Cap Model: %s. Head Type: %s. Cap Name: %s.",
     // capModelName, headType, capName);
 
     PlayerHeadCostumeInfo* headInfo =
         initMarioHeadCostumeInfo(player, initInfo, "頭", capName, headType, capModelName);
 
-    // Logger::log("Creating Costume Info.\n");
+    // hk::diag::logLine("Creating Costume Info.");
 
     PlayerCostumeInfo* costumeInfo = new (Client::instance()->mHakkunSceneHeap) PlayerCostumeInfo();
     costumeInfo->init(bodyInfo, headInfo);
 
     if (costumeInfo->isNeedBodyHair()) {
-        Logger::log("Creating Body Hair Parts Model.\n");
+        hk::diag::logLine("Creating Body Hair Parts Model.");
 
         al::PartsModel* partsModel = new (Client::instance()->mHakkunSceneHeap) al::PartsModel("髪");
 
@@ -598,15 +600,15 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
         al::onSyncHideSubActor(player, partsModel);
     }
 
-    // Logger::log("Initing Depth Model.\n");
+    // hk::diag::logLine("Initing Depth Model.");
 
     PlayerFunction::initMarioDepthModel(player, false, false);
 
-    // Logger::log("Creating Retarget Info.\n");
+    // hk::diag::logLine("Creating Retarget Info.");
 
     rs::createPlayerSklRetargettingInfo(player, sead::Vector3f::ones);
 
-    // Logger::log("Making Player Model Dead.\n");
+    // hk::diag::logLine("Making Player Model Dead.");
 
     player->makeActorDead();
     return costumeInfo;

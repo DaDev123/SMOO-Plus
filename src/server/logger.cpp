@@ -1,9 +1,12 @@
 #include "logger.hpp"
 
+#include "hk/diag/diag.h"
+
 #include "nn/nifm.h"
 #include "nn/socket.h"
 #include "vapours/results/results_common.hpp"
 
+#include <cstdio>
 #include <cstdlib>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -13,6 +16,10 @@
 constexpr u32 ADDITIONAL_LOG_PORT_COUNT = 2;
 
 Logger* Logger::sInstance = nullptr;
+
+void hk::diag::hkLogSink(const char* msg, size len) {
+    Logger::log(msg);
+}
 
 void Logger::createInstance() {
 #ifdef SERVERIP
@@ -78,16 +85,15 @@ bool Logger::init(const char* ip, u16 port) {
 }
 
 void Logger::log(const char* fmt, va_list args) {  // impl for replacing seads system::print
-    if (!sInstance)
+    if (!sInstance || sInstance->socket_log_state != SockState::CONNECTED)
         return;
-    char* buf = (char*)malloc(0x500);
-    if (nn::util::VSNPrintf(buf, 0x500, fmt, args) > 0) {
+
+    size len = vsnprintf(nullptr, 0, fmt, args) + 1;
+
+    char buf[len];
+    if (vsnprintf(buf, sizeof(buf), fmt, args) > 0) {
         sInstance->socket_log(buf);
     }
-}
-
-s32 Logger::read(char* out) {
-    return this->socket_read_char(out);
 }
 
 void Logger::log(const char* fmt, ...) {
@@ -96,35 +102,20 @@ void Logger::log(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
-    size_t buf_size = 0x500;
+    size_t buf_size = vsnprintf(nullptr, 0, fmt, args) + 1;
     size_t prefix_size = buf_size + 0x10;
 
-    char* buf = (char*)malloc(buf_size);
+    char buf[buf_size];
 
-    if (nn::util::VSNPrintf(buf, buf_size, fmt, args) > 0) {
+    if (vsnprintf(buf, buf_size, fmt, args) > 0) {
         if (!sInstance->isDisableName) {
-            char* prefix = (char*)malloc(prefix_size);
-            nn::util::SNPrintf(prefix, prefix_size, "[%s] %s", sInstance->sockName, buf);
+            char prefix[prefix_size];
+            snprintf(prefix, prefix_size, "[%s] %s", sInstance->sockName, buf);
             sInstance->socket_log(prefix);
-            free(prefix);
         } else {
             sInstance->socket_log(buf);
         }
     }
 
     va_end(args);
-
-    free(buf);
-}
-
-bool Logger::pingSocket() {
-    return socket_log("ping") > 0;  // if value is greater than zero, than the socket recieved our
-                                    // message, otherwise the connection was lost.
-}
-
-void tryInitSocket() {
-    __asm("STR X20, [X8,#0x18]");
-#if DEBUGLOG
-    Logger::createInstance();  // creates a static instance for debug logger
-#endif
 }

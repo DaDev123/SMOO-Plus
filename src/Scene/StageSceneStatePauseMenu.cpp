@@ -1,5 +1,7 @@
 #include "game/Scene/StageSceneStatePauseMenu.h"
 
+#include "hk/diag/diag.h"
+
 #include "al/Library/Message/MessageHolder.h"
 #include "al/Library/Nerve/NerveUtil.h"
 #include "al/Library/Scene/SceneUtil.h"
@@ -11,7 +13,7 @@
 
 void StageSceneStatePauseMenu::exeModConfig(void) {
     if (al::isFirstStep(this)) {
-        Logger::log("Start Server Config Nerve.\n");
+        hk::diag::logLine("Start Server Config Nerve.");
     }
 
     al::updateKitListPrev(mHost);

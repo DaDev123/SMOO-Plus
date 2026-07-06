@@ -1,5 +1,7 @@
 #include "helpers.hpp"
 
+#include "hk/diag/diag.h"
+
 #include "al/Library/LiveActor/ActorMovementFunction.h"
 #include "al/Library/LiveActor/LiveActor.h"
 #include "al/Library/Math/MathUtil.h"
@@ -73,11 +75,11 @@ sead::Vector3f QuatToEuler(sead::Quatf* quat) {
 }
 
 void logVector(const char* vectorName, sead::Vector3f vector) {
-    Logger::log("%s: \nX: %f\nY: %f\nZ: %f\n", vectorName, vector.x, vector.y, vector.z);
+    hk::diag::logLine("%s: \nX: %f\nY: %f\nZ: %f", vectorName, vector.x, vector.y, vector.z);
 }
 
 void logQuat(const char* quatName, sead::Quatf& quat) {
-    Logger::log("%s: \nX: %f\nY: %f\nZ: %f\nW: %f\n", quatName, quat.x, quat.y, quat.z, quat.w);
+    hk::diag::logLine("%s: \nX: %f\nY: %f\nZ: %f\nW: %f", quatName, quat.x, quat.y, quat.z, quat.w);
 }
 
 float vecMagnitude(sead::Vector3f const& input) {

@@ -1,4 +1,5 @@
 #pragma once
+#include "hk/diag/diag.h"
 #include "hk/mem/BssHeap.h"
 
 #include "al/Library/LiveActor/ActorFactory.h"
@@ -6,7 +7,6 @@
 #include "al/Library/Scene/SceneUtil.h"
 
 #include "actors/PuppetActor.h"
-#include "logger.hpp"
 #include "server/Client.hpp"
 
 inline al::LiveActor* createPuppetActorFromFactory(const al::ActorInitInfo& initInfo, bool isDebug) {
@@ -15,30 +15,30 @@ inline al::LiveActor* createPuppetActorFromFactory(const al::ActorInitInfo& init
         if (Client::tryAddPuppet(newActor)) {
             PuppetInfo* curInfo = Client::getLatestInfo();
             if (!curInfo) {
-                Logger::log("[Factory] ERROR: Puppet Info is Null!\n");
+                hk::diag::logLine("[Factory] ERROR: Puppet Info is Null!");
                 delete newActor;
                 return nullptr;
             } else {
-                Logger::log("[Factory] Creating puppet for player: %s\n", curInfo->puppetName);
+                hk::diag::logLine("[Factory] Creating puppet for player: %s", curInfo->puppetName);
 
                 // set puppet info first before calling init so we can get costume info from the
                 // info
                 newActor->initOnline(curInfo);
                 newActor->init(initInfo);
 
-                Logger::log("[Factory] Puppet initialized successfully for %s\n", curInfo->puppetName);
+                hk::diag::logLine("[Factory] Puppet initialized successfully for %s", curInfo->puppetName);
             }
         } else {
-            Logger::log("[Factory] ERROR: Failed to add puppet to client\n");
+            hk::diag::logLine("[Factory] ERROR: Failed to add puppet to client");
             delete newActor;
             return nullptr;
         }
     } else {
-        // Logger::log("[Factory] Creating Debug/Test Puppet\n");
+        // hk::diag::logLine("[Factory] Creating Debug/Test Puppet");
 
         PuppetInfo* debugInfo = Client::getDebugPuppetInfo();
         if (!debugInfo) {
-            // Logger::log("[Factory] ERROR: Debug puppet info is null!\n");
+            // hk::diag::logLine("[Factory] ERROR: Debug puppet info is null!");
             delete newActor;
             return nullptr;
         }
@@ -49,9 +49,9 @@ inline al::LiveActor* createPuppetActorFromFactory(const al::ActorInitInfo& init
         newActor->makeActorAlive();
 
         if (Client::tryAddDebugPuppet(newActor)) {
-            // Logger::log("[Factory] Debug Puppet Created Successfully!\n");
+            // hk::diag::logLine("[Factory] Debug Puppet Created Successfully!");
         } else {
-            // Logger::log("[Factory] WARNING: Failed to register debug puppet\n");
+            // hk::diag::logLine("[Factory] WARNING: Failed to register debug puppet");
         }
     }
 

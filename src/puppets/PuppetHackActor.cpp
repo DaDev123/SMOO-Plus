@@ -1,5 +1,7 @@
 #include "actors/PuppetHackActor.h"
 
+#include "hk/diag/diag.h"
+
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorAnimFunction.h"
 #include "al/Library/LiveActor/ActorClippingFunction.h"
@@ -12,19 +14,19 @@
 PuppetHackActor::PuppetHackActor(const char* name) : al::LiveActor(name) {}
 
 void PuppetHackActor::init(al::ActorInitInfo const& initInfo) {
-    // Logger::log("Creating Hack Puppet: %s\n", mHackType.cstr());
+    // hk::diag::logLine("Creating Hack Puppet: %s", mHackType.cstr());
 
     al::initActorWithArchiveName(this, initInfo, mHackType, nullptr);
 
     al::hideSilhouetteModelIfShow(this);
 
     if (al::isExistDitherAnimator(this)) {
-        // Logger::log("Disabling Dither Animator.\n");
+        // hk::diag::logLine("Disabling Dither Animator.");
         al::invalidateDitherAnim(this);
     }
 
     if (al::isExistCollisionParts(this)) {
-        // Logger::log(("Disabling Collision.\n"));
+        // hk::diag::logLine("Disabling Collision.");
         al::invalidateCollisionParts(this);
     }
 

@@ -356,11 +356,11 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
                 Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
 
             for (s32 i = 0; i < 17; i++) {
-                Logger::log("%s: Scenario: %d\n", worldNames[i], scenNumArr[i]);
+                hk::diag::logLine("%s: Scenario: %d", worldNames[i], scenNumArr[i]);
             }
 
-            Logger::log("Current Scenario: %d\n",
-                        Client::instance()->getHolder()->getGameDataFile()->getScenarioNo());
+            hk::diag::logLine("Current Scenario: %d",
+                              Client::instance()->getHolder()->getGameDataFile()->getScenarioNo());
         }
     }
     if (Client::isMusicDisabled()) {
@@ -641,7 +641,7 @@ void seadPrintHook(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
-    Logger::log(fmt, args);
+    hk::diag::log(fmt, args);
 
     va_end(args);
 }
@@ -746,8 +746,6 @@ extern "C" void hkMain() {
     mountSdCardHook.installAtSym<"_ZN4sead13FileDeviceMgrC1Ev">();
 
     sceneKillHook.installAtSym<"_ZN10StageScene4killEv">();
-
-    hk::hook::a64::assemble<"mov x0, #1\nsvc #0x28">().installAtOffset(hk::ro::getRtldModule(), 0);
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
 }

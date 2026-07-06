@@ -1,5 +1,7 @@
 #include "server/SocketClient.hpp"
 
+#include "hk/diag/diag.h"
+
 #include "nn/nifm.h"
 #include "nn/os.h"
 #include "nn/socket.h"
@@ -62,7 +64,7 @@ void SocketClient::init(const char* ip, u16 port) {
 }
 
 bool SocketClient::exeInit() {
-    Logger::log("socket client init\n");
+    hk::diag::logLine("socket client init");
 
 // emulators (ryujinx) make this return false always, so skip it during init
 #ifndef EMU
@@ -78,10 +80,10 @@ bool SocketClient::exeInit() {
     in_addr hostAddress = {0};
     sockaddr_in serverAddress = {0};
 
-    Logger::log("SocketClient::exeInit: %s:%d sock %s\n", getIP(), this->port, getStateChar());
+    hk::diag::logLine("SocketClient::exeInit: %s:%d sock %s", getIP(), this->port, getStateChar());
 
     if (!this->stringToIPAddress(this->sock_ip.cstr(), &hostAddress)) {
-        Logger::log("IP address is invalid or hostname not resolveable.\n");
+        hk::diag::logLine("IP address is invalid or hostname not resolveable.");
         this->socket_errno = nn::socket::GetLastErrno();
         this->socket_log_state = SockState::INVALIP;
 
@@ -90,7 +92,7 @@ bool SocketClient::exeInit() {
     }
 
     if ((this->socket_log_socket = nn::socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-        Logger::log("Socket Unavailable.\n");
+        hk::diag::logLine("Socket Unavailable.");
         this->socket_errno = nn::socket::GetLastErrno();
         this->socket_log_state = SockState::UNAVAILABLE;
 
@@ -114,7 +116,7 @@ bool SocketClient::exeInit() {
     if ((result =
              nn::socket::Connect(this->socket_log_socket, (sockaddr*)&serverAddress, sizeof(serverAddress)))
             .IsFailure()) {
-        Logger::log("Socket Connection Failed!\n");
+        hk::diag::logLine("Socket Connection Failed!");
         this->socket_errno = nn::socket::GetLastErrno();
         this->socket_log_state = SockState::CONNFAIL;
 
@@ -125,7 +127,7 @@ bool SocketClient::exeInit() {
 
     this->socket_log_state = SockState::CONNECTED;
 
-    Logger::log("Socket fd: %d\n", socket_log_socket);
+    hk::diag::logLine("Socket fd: %d", socket_log_socket);
 
     // startThreads();  // start recv and send threads after sucessful connection
 
@@ -178,15 +180,15 @@ bool SocketClient::send(Packet* packet) {
     int valread = 0;
 
     if (packet->mType != PLAYERINF && packet->mType != HACKCAPINF)
-        Logger::log("Sending packet: %s\n", packetNames[packet->mType]);
+        hk::diag::logLine("Sending packet: %s", packetNames[packet->mType]);
 
     valread = nn::socket::Send(this->socket_log_socket, buffer, packet->mPacketSize + sizeof(Packet), 0);
 
     if (valread > 0) {
         return true;
     } else {
-        Logger::log("Failed to Fully Send Packet! Result: %d Type: %s Packet Size: %d\n", valread,
-                    packetNames[packet->mType], packet->mPacketSize);
+        hk::diag::logLine("Failed to Fully Send Packet! Result: %d Type: %s Packet Size: %d", valread,
+                          packetNames[packet->mType], packet->mPacketSize);
         this->socket_errno = nn::socket::GetLastErrno();
         return false;
     }
@@ -195,7 +197,7 @@ bool SocketClient::send(Packet* packet) {
 
 bool SocketClient::recv() {
     if (this->socket_log_state != SockState::CONNECTED) {
-        Logger::log("Unable To Receive! Socket Not Connected.\n");
+        hk::diag::logLine("Unable To Receive! Socket Not Connected.");
         this->socket_errno = nn::socket::GetLastErrno();
         return false;
     }
@@ -217,7 +219,7 @@ bool SocketClient::recv() {
             if (this->socket_errno == 11) {
                 return true;
             } else {
-                Logger::log("Header Read Failed! Value: %d Total Read: %d\n", result, valread);
+                hk::diag::logLine("Header Read Failed! Value: %d Total Read: %d", result, valread);
                 return false;
             }
         }
@@ -231,13 +233,13 @@ bool SocketClient::recv() {
         if (header->mType > PacketType::UNKNOWN && header->mType < PacketType::End &&
             fullSize <= MAXPACKSIZE && fullSize > 0 && valread == sizeof(Packet)) {
             if (header->mType != PLAYERINF && header->mType != HACKCAPINF) {
-                Logger::log("Received packet (from %02X%02X):", header->mUserID.data[0],
-                            header->mUserID.data[1]);
+                hk::diag::log("Received packet (from %02X%02X):", header->mUserID.data[0],
+                              header->mUserID.data[1]);
                 Logger::disableName();
-                Logger::log(" Size: %d", header->mPacketSize);
-                Logger::log(" Type: %d", header->mType);
+                hk::diag::log(" Size: %d", header->mPacketSize);
+                hk::diag::log(" Type: %d", header->mType);
                 if (packetNames[header->mType])
-                    Logger::log(" Type String: %s\n", packetNames[header->mType]);
+                    hk::diag::logLine(" Type String: %s", packetNames[header->mType]);
                 Logger::enableName();
             }
 
@@ -256,8 +258,8 @@ bool SocketClient::recv() {
                         valread += result;
                     } else {
                         free(packetBuf);
-                        Logger::log("Packet Read Failed! Value: %d\nPacket Size: %d\nPacket Type: %s\n",
-                                    result, header->mPacketSize, packetNames[header->mType]);
+                        hk::diag::logLine("Packet Read Failed! Value: %d\nPacket Size: %d\nPacket Type: %s",
+                                          result, header->mPacketSize, packetNames[header->mType]);
                         return false;
                     }
                 }
@@ -268,13 +270,14 @@ bool SocketClient::recv() {
                     free(packetBuf);
             }
         } else {
-            Logger::log("Failed to aquire valid data! Packet Type: %d Full Packet Size %d valread size: %d\n",
-                        header->mType, fullSize, valread);
+            hk::diag::logLine(
+                "Failed to aquire valid data! Packet Type: %d Full Packet Size %d valread size: %d",
+                header->mType, fullSize, valread);
         }
 
         return true;
     } else {  // if we error'd, close the socket
-        Logger::log("valread was zero! Disconnecting.\n");
+        hk::diag::logLine("valread was zero! Disconnecting.");
         this->socket_errno = nn::socket::GetLastErrno();
         return false;
     }
@@ -283,15 +286,15 @@ bool SocketClient::recv() {
 // prints packet to debug logger
 void SocketClient::printPacket(Packet* packet) {
     packet->mUserID.print();
-    Logger::log("Type: %s\n", packetNames[packet->mType]);
+    hk::diag::logLine("Type: %s", packetNames[packet->mType]);
 
     switch (packet->mType) {
     case PacketType::PLAYERINF:
-        Logger::log("Pos X: %f Pos Y: %f Pos Z: %f\n", ((PlayerInf*)packet)->playerPos.x,
-                    ((PlayerInf*)packet)->playerPos.y, ((PlayerInf*)packet)->playerPos.z);
-        Logger::log("Rot X: %f Rot Y: %f Rot Z: %f\nRot W: %f\n", ((PlayerInf*)packet)->playerRot.x,
-                    ((PlayerInf*)packet)->playerRot.y, ((PlayerInf*)packet)->playerRot.z,
-                    ((PlayerInf*)packet)->playerRot.w);
+        hk::diag::logLine("Pos X: %f Pos Y: %f Pos Z: %f", ((PlayerInf*)packet)->playerPos.x,
+                          ((PlayerInf*)packet)->playerPos.y, ((PlayerInf*)packet)->playerPos.z);
+        hk::diag::logLine("Rot X: %f Rot Y: %f Rot Z: %f\nRot W: %f", ((PlayerInf*)packet)->playerRot.x,
+                          ((PlayerInf*)packet)->playerRot.y, ((PlayerInf*)packet)->playerRot.z,
+                          ((PlayerInf*)packet)->playerRot.w);
         break;
     default:
         break;
@@ -299,7 +302,7 @@ void SocketClient::printPacket(Packet* packet) {
 }
 
 bool SocketClient::closeSocket() {
-    Logger::log("Closing Socket.\n");
+    hk::diag::logLine("Closing Socket.");
 
     nn::Result result(-1);
 
@@ -307,7 +310,7 @@ bool SocketClient::closeSocket() {
         result = nn::socket::Close(this->socket_log_socket);
 
         if (result.IsFailure()) {
-            Logger::log("Failed to close socket!\n");
+            hk::diag::logLine("Failed to close socket!");
             nn::os::YieldThread();
             nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
         }
@@ -340,15 +343,15 @@ bool SocketClient::stringToIPAddress(const char* str, in_addr* out) {
 }
 
 void SocketClient::sendFunc() {
-    Logger::log("Starting Send Thread.\n");
+    hk::diag::logLine("Starting Send Thread.");
 
     while (trySendQueue() && socket_log_state != SockState::DISCONNECTED) {
     }
 
     this->socket_log_state = SockState::DISCONNECTED;
 
-    Logger::log("Sending packet failed!\n");
-    Logger::log("Ending Send Thread.\n");
+    hk::diag::logLine("Sending packet failed!");
+    hk::diag::logLine("Ending Send Thread.");
 
     if (mState != RESET && mState != RECONNECT)
         mState = RESET;
@@ -357,15 +360,15 @@ void SocketClient::sendFunc() {
 void SocketClient::recvFunc() {
     nn::socket::Recv(this->socket_log_socket, nullptr, 0, 0);
 
-    Logger::log("Starting Recv Thread.\n");
+    hk::diag::logLine("Starting Recv Thread.");
 
     while (recv() && socket_log_state != SockState::DISCONNECTED) {
     }
 
     this->socket_log_state = SockState::DISCONNECTED;
 
-    Logger::log("Receiving Packet Failed!\n");
-    Logger::log("Ending Recv Thread.\n");
+    hk::diag::logLine("Receiving Packet Failed!");
+    hk::diag::logLine("Ending Recv Thread.");
 
     if (mState != RESET && mState != RECONNECT)
         mState = RESET;

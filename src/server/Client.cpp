@@ -106,9 +106,9 @@ Client::Client() {
 
     mUserID.print();
 
-    Logger::log("Player Name: %s\n", playerName.name);
+    hk::diag::logLine("Player Name: %s", playerName.name);
 
-    Logger::log("%s Build Number: %s\n", playerName.name, TOSTRING(BUILDVERSTR));
+    hk::diag::logLine("%s Build Number: %s", playerName.name, TOSTRING(BUILDVERSTR));
 }
 
 /**
@@ -142,7 +142,7 @@ void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor hol
 
     startThread();
 
-    // Logger::log("Heap Free Size: %f/%f\n", mHeap->getFreeSize() * 0.001f, mHeap->getSize() * 0.001f);
+    // hk::diag::logLine("Heap Free Size: %f/%f", mHeap->getFreeSize() * 0.001f, mHeap->getSize() * 0.001f);
 }
 
 Client* Client::get() {
@@ -158,10 +158,10 @@ Client* Client::get() {
 bool Client::startThread() {
     if (mReadThread->isDone()) {
         mReadThread->start();
-        Logger::log("Read Thread Sucessfully Started.\n");
+        hk::diag::logLine("Read Thread Sucessfully Started.");
         return true;
     } else {
-        Logger::log("Read Thread has already started! Or other unknown reason.\n");
+        hk::diag::logLine("Read Thread has already started! Or other unknown reason.");
         return false;
     }
 }
@@ -179,7 +179,7 @@ void Client::restartConnection() {
 
     // close socket
     if (sInstance->mSocket->closeSocket()) {
-        Logger::log("Successfully Closed Socket.\n");
+        hk::diag::logLine("Successfully Closed Socket.");
     }
 
     sInstance->mConnectCount = 0;
@@ -254,7 +254,7 @@ bool Client::startConnection() {
     mSocket->init(mServerIP.cstr(), mServerPort);
 
     while (mSocket->getSocketClientState() == SocketClient::INIT) {
-        Logger::log("log state: %s\n", mSocket->getStateChar());
+        hk::diag::logLine("log state: %s", mSocket->getStateChar());
         nn::os::YieldThread();
         nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
     }
@@ -262,7 +262,7 @@ bool Client::startConnection() {
     mIsConnectionActive = mSocket->getLogState() == SockState::CONNECTED;
 
     if (mIsConnectionActive) {
-        Logger::log("Sucessful Connection. Waiting to recieve init packet.\n");
+        hk::diag::logLine("Sucessful Connection. Waiting to recieve init packet.");
 
         bool waitingForInitPacket = true;
 
@@ -273,7 +273,7 @@ bool Client::startConnection() {
                 if (curPacket->mType == PacketType::CLIENTINIT) {
                     InitPacket* initPacket = (InitPacket*)curPacket;
 
-                    Logger::log("Server Max Player Size: %d\n", initPacket->maxPlayers);
+                    hk::diag::logLine("Server Max Player Size: %d", initPacket->maxPlayers);
 
                     maxPuppets = initPacket->maxPlayers - 1;
                     mPuppetHolder->resizeHolder(maxPuppets);
@@ -285,14 +285,14 @@ bool Client::startConnection() {
                     }
 
                     setServerVersion(initPacket->ServerVersion);
-                    Logger::log("Server version: %s\n", initPacket->ServerVersion);
+                    hk::diag::logLine("Server version: %s", initPacket->ServerVersion);
 
                     waitingForInitPacket = false;
                 }
 
                 delete curPacket;
             } else {
-                Logger::log("Recieve failed! Stopping Connection.\n");
+                hk::diag::logLine("Recieve failed! Stopping Connection.");
                 mIsConnectionActive = false;
                 waitingForInitPacket = false;
             }
@@ -308,7 +308,7 @@ bool Client::startConnection() {
  */
 bool Client::openKeyboardIP() {
     if (!sInstance) {
-        Logger::log("Static Instance is null!\n");
+        hk::diag::logLine("Static Instance is null!");
         return false;
     }
 
@@ -344,7 +344,7 @@ bool Client::openKeyboardIP() {
  */
 bool Client::openKeyboardPort() {
     if (!sInstance) {
-        Logger::log("Static Instance is null!\n");
+        hk::diag::logLine("Static Instance is null!");
         return false;
     }
 
@@ -383,7 +383,7 @@ bool Client::openKeyboardPort() {
  */
 void Client::setServerIP(const char* ip) {
     if (!sInstance) {
-        Logger::log("Static Instance is null!\n");
+        hk::diag::logLine("Static Instance is null!");
         return;
     }
 
@@ -400,7 +400,7 @@ void Client::setServerIP(const char* ip) {
  */
 void Client::setServerPort(int port) {
     if (!sInstance) {
-        Logger::log("Static Instance is null!\n");
+        hk::diag::log("Static Instance is null!\n");
         return;
     }
 
@@ -442,7 +442,7 @@ void Client::hideUIMessage() {
  *
  */
 void Client::readFunc() {
-    Logger::log("Starting Client read thread\n");
+    hk::diag::logLine("Starting Client read thread");
 
     if (waitForGameInit) {
         nn::os::YieldThread();
@@ -455,7 +455,7 @@ void Client::readFunc() {
     al::startAction(mConnectStatus, "Loop", "Loop");
 
     if (!startConnection()) {
-        Logger::log("Failed to Connect to Server.\n");
+        hk::diag::logLine("Failed to Connect to Server.");
 
         nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(250000000));
 
@@ -515,7 +515,7 @@ void Client::readFunc() {
                 updateShineInfo((ShineCollect*)curPacket);
                 break;
             case PacketType::PLAYERDC:
-                Logger::log("Received Player Disconnect!\n");
+                hk::diag::logLine("Received Player Disconnect!");
                 curPacket->mUserID.print();
                 disconnectPlayer((PlayerDC*)curPacket);
                 break;
@@ -523,7 +523,7 @@ void Client::readFunc() {
                 sendToStage((ChangeStagePacket*)curPacket);
                 break;
             case PacketType::HEALTHCOINS:
-                Logger::log("Received unused health/coins packet (?)\n");
+                hk::diag::logLine("Received unused health/coins packet (?)");
                 break;
             case PacketType::COINCOLLECTCOLL:
                 updateCoinCollects((CoinCollectCollect*)curPacket);
@@ -537,7 +537,7 @@ void Client::readFunc() {
 
             case PacketType::CLIENTINIT: {
                 InitPacket* initPacket = (InitPacket*)curPacket;
-                Logger::log("Server Max Player Size: %d\n", initPacket->maxPlayers);
+                hk::diag::logLine("Server Max Player Size: %d", initPacket->maxPlayers);
                 maxPuppets = initPacket->maxPlayers - 1;
                 mPuppetHolder->resizeHolder(maxPuppets);
                 if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
@@ -546,33 +546,33 @@ void Client::readFunc() {
                     sInstance->mIsAllowReconnect = false;
                 }
                 setServerVersion(initPacket->ServerVersion);
-                Logger::log("Server version: ", initPacket->ServerVersion);
+                hk::diag::logLine("Server version: %s", initPacket->ServerVersion);
                 break;
             }
             default:
-                Logger::log("Discarding Unknown Packet Type.\n");
+                hk::diag::logLine("Discarding Unknown Packet Type.");
                 break;
             }
 
             delete curPacket;
 
         } else {
-            Logger::log("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x\n",
-                        mSocket->socket_errno);
+            hk::diag::logLine("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x",
+                              mSocket->socket_errno);
         }
     }
 
-    Logger::log("Client Read Thread ending.\n");
+    hk::diag::logLine("Client Read Thread ending.");
 }
 
 void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukimaru) {
     if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
+        hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
     if (!playerBase) {
-        Logger::log("Error: Null Player Reference\n");
+        hk::diag::logLine("Error: Null Player Reference");
         return;
     }
 
@@ -639,7 +639,7 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
  */
 void Client::sendHackCapInfPacket(const HackCap* hackCap) {
     if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
+        hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
@@ -684,7 +684,7 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
  */
 void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolderAccessor holder) {
     if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
+        hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
@@ -718,7 +718,7 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
  */
 void Client::sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart) {
     if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
+        hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
@@ -755,7 +755,7 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart) 
  */
 void Client::sendCostumeInfPacket(const char* body, const char* cap) {
     if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
+        hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
@@ -771,7 +771,7 @@ void Client::sendCostumeInfPacket(const char* body, const char* cap) {
  */
 void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
     if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
+        hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
@@ -798,7 +798,7 @@ void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
  */
 void Client::sendShineCollectPacket(int shineID) {
     if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
+        hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
@@ -821,7 +821,7 @@ void Client::sendShineCollectPacket(int shineID) {
  */
 void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage) {
     if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
+        hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
@@ -842,7 +842,7 @@ void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, cons
  */
 void Client::sendCheckpointGetPacket(const char* objId) {
     if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
+        hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
@@ -884,7 +884,7 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
                 sizeof(PuppetInfo::curAnimStr) - 1);
         curInfo->curAnimStr[sizeof(PuppetInfo::curAnimStr) - 1] = '\0';
         if (curInfo->curAnimStr[0] == '\0')
-            Logger::log("[ERROR] %s: actName was out of bounds: %d\n", __func__, packet->actName);
+            hk::diag::logLine("[ERROR] %s: actName was out of bounds: %d", __func__, packet->actName);
     } else {
         strcpy(curInfo->curAnimStr, "Wait");
     }
@@ -894,7 +894,7 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
                 sizeof(PuppetInfo::curSubAnimStr) - 1);
         curInfo->curSubAnimStr[sizeof(PuppetInfo::curSubAnimStr) - 1] = '\0';
         if (curInfo->curSubAnimStr[0] == '\0')
-            Logger::log("[ERROR] %s: subActName was out of bounds: %d\n", __func__, packet->subActName);
+            hk::diag::logLine("[ERROR] %s: subActName was out of bounds: %d", __func__, packet->subActName);
     } else {
         strcpy(curInfo->curSubAnimStr, "");
     }
@@ -1021,7 +1021,7 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
     }
 
     if (curInfo->isConnected) {
-        Logger::log("Info is already being used by another connected player!\n");
+        hk::diag::logLine("Info is already being used by another connected player!");
         packet->mUserID.print("Connection ID");
         curInfo->playerID.print("Target Info");
 
@@ -1076,8 +1076,8 @@ void Client::updateGameInfo(GameInf* packet) {
 void Client::sendToStage(ChangeStagePacket* packet) {
     GameDataHolderWriter accessor(mHolder);
 
-    Logger::log("Sending Player to %s at Entrance %s in Scenario %d\n", packet->changeStage, packet->changeID,
-                packet->scenarioNo);
+    hk::diag::logLine("Sending Player to %s at Entrance %s in Scenario %d", packet->changeStage,
+                      packet->changeID, packet->scenarioNo);
 
     ChangeStageInfo info(accessor.mData, packet->changeID, packet->changeStage, false, packet->scenarioNo,
                          static_cast<ChangeStageInfo::SubScenarioType>(packet->subScenarioType));
@@ -1148,7 +1148,7 @@ PuppetInfo* Client::findPuppetInfo(const nn::account::Uid& id, bool isFindAvaila
     }
 
     if (!firstAvailable) {
-        Logger::log("Unable to find Assigned Puppet for Player!\n");
+        hk::diag::logLine("Unable to find Assigned Puppet for Player!");
         id.print("User ID");
     }
 
@@ -1206,7 +1206,7 @@ PuppetInfo* Client::getPuppetInfo(int idx) {
         PuppetInfo* curInfo = sInstance->mPuppetInfoArr[idx];
 
         if (!curInfo) {
-            Logger::log("Attempting to Access Puppet Out of Bounds! Value: %d\n", idx);
+            hk::diag::logLine("Attempting to Access Puppet Out of Bounds! Value: %d", idx);
             return nullptr;
         }
 
@@ -1277,7 +1277,7 @@ void Client::updateMoonRocks(MoonRockHit* packet) {
     GameDataFile* gdf = Client::instance()->getHolder()->getGameDataFile();
 
     if (!gdf) {
-        Logger::log("hitOneMoonRock: GameDataFile null, dropping\n");
+        hk::diag::logLine("hitOneMoonRock: GameDataFile null, dropping");
         return;
     }
 
@@ -1319,7 +1319,7 @@ void Client::readMoonRocks(const al::ByamlIter& save) {
 
 void Client::sendMoonRockHitPacket(int worldId) {
     if (!sInstance) {
-        Logger::log("Static Instance is Null!\n");
+        hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
@@ -1336,12 +1336,12 @@ void Client::sendMoonRockHitPacket(int worldId) {
  */
 void Client::updateShines() {
     if (!sInstance) {
-        Logger::log("Client Null!\n");
+        hk::diag::logLine("Client Null!");
         return;
     }
 
     if (!(sInstance->mCurStageScene && gIsSceneAlive)) {
-        Logger::log("updateShines: scene not ready, skipping\n");
+        hk::diag::logLine("updateShines: scene not ready, skipping");
         return;
     }
 
@@ -1359,7 +1359,7 @@ void Client::updateShines() {
         if (shineID < 0)
             continue;
 
-        Logger::log("Shine UID: %d\n", shineID);
+        hk::diag::logLine("Shine UID: %d", shineID);
 
         for (const storyShine& shine : scenarioSyncList) {
             if (shine.uid == shineID) {
@@ -1436,7 +1436,7 @@ void Client::applyOneCoinCollect(const char* placeID, int worldID, const char* s
     al::PlacementId pid(placeID, nullptr, nullptr);
     GameDataFile* gdf = sInstance->getHolder()->getGameDataFile();
     if (!gdf) {
-        Logger::log("applyOneCoinCollect: GameDataFile null, dropping\n");
+        hk::diag::logLine("applyOneCoinCollect: GameDataFile null, dropping");
         return;
     }
 
@@ -1486,10 +1486,10 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
             pending.worldID = packet->worldID;
             strncpy(pending.stage, packet->stage, sizeof(PendingCoinCollect::stage) - 1);
             pending.stage[sizeof(PendingCoinCollect::stage) - 1] = '\0';
-            Logger::log("updateCoinCollects: scene not ready, queued (total pending: %d)\n",
-                        sInstance->mPendingCoinCollectCount);
+            hk::diag::logLine("updateCoinCollects: scene not ready, queued (total pending: %d)",
+                              sInstance->mPendingCoinCollectCount);
         } else {
-            Logger::log("updateCoinCollects: pending queue full, dropping packet\n");
+            hk::diag::logLine("updateCoinCollects: pending queue full, dropping packet");
         }
         return;
     }
@@ -1507,7 +1507,7 @@ void Client::getOneCheckpoint(const char* objId) {
     GameDataFile* gdf = sInstance->getHolder()->getGameDataFile();
 
     if (!gdf) {
-        Logger::log("updateCheckpoints: GameDataFile null, dropping\n");
+        hk::diag::logLine("updateCheckpoints: GameDataFile null, dropping");
         return;
     }
 
@@ -1544,10 +1544,10 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
             PendingCheckpoint& pending = sInstance->mPendingCheckpoints[sInstance->mPendingCheckpointCount++];
             strncpy(pending.objId, packet->objId, sizeof(PendingCheckpoint::objId) - 1);
             pending.objId[sizeof(PendingCheckpoint::objId) - 1] = '\0';
-            Logger::log("updateCheckpoints: scene not ready, queued (total pending: %d)\n",
-                        sInstance->mPendingCoinCollectCount);
+            hk::diag::logLine("updateCheckpoints: scene not ready, queued (total pending: %d)",
+                              sInstance->mPendingCoinCollectCount);
         } else {
-            Logger::log("updateCheckpoints: pending queue full, dropping packet\n");
+            hk::diag::logLine("updateCheckpoints: pending queue full, dropping packet");
         }
         return;
     }
@@ -1570,8 +1570,8 @@ void Client::update() {
         if (sInstance->mCurStageScene && gIsSceneAlive) {
             // Drain coin collects that arrived while the scene was loading
             if (sInstance->mPendingCoinCollectCount > 0) {
-                Logger::log("update: draining %d pending coin collect(s)\n",
-                            sInstance->mPendingCoinCollectCount);
+                hk::diag::logLine("update: draining %d pending coin collect(s)",
+                                  sInstance->mPendingCoinCollectCount);
                 for (s32 i = 0; i < sInstance->mPendingCoinCollectCount; i++) {
                     PendingCoinCollect& p = sInstance->mPendingCoinCollects[i];
                     applyOneCoinCollect(p.placeID, p.worldID, p.stage);
@@ -1581,8 +1581,8 @@ void Client::update() {
 
             // Drain checkpoints that arrived while the scene was loading
             if (sInstance->mPendingCheckpointCount > 0) {
-                Logger::log("update: draining %d pending checkpoint(s)\n",
-                            sInstance->mPendingCheckpointCount);
+                hk::diag::log("update: draining %d pending checkpoint(s)\n",
+                              sInstance->mPendingCheckpointCount);
                 for (s32 i = 0; i < sInstance->mPendingCheckpointCount; i++) {
                     PendingCheckpoint& c = sInstance->mPendingCheckpoints[i];
                     getOneCheckpoint(c.objId);
@@ -1691,8 +1691,8 @@ bool Client::hasServerChanged() {
     if (!sInstance) {
         return false;
     }
-    Logger::log("client port: %d\n socket port: %d\n client ip: %s\n socket ip: %s\n", getCurrentPort(),
-                sInstance->mSocket->getPort(), getCurrentIP(), sInstance->mSocket->getIP());
+    hk::diag::logLine("client port: %d\n socket port: %d\n client ip: %s\n socket ip: %s", getCurrentPort(),
+                      sInstance->mSocket->getPort(), getCurrentIP(), sInstance->mSocket->getIP());
     return (getCurrentPort() != sInstance->mSocket->getPort() ||
             !al::isEqualString(getCurrentIP(), sInstance->mSocket->getIP()));
 }

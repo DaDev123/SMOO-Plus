@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "hk/diag/diag.h"
+
 #include "nn/os.h"
 
 #include "logger.hpp"
@@ -32,22 +34,22 @@ struct Uid {
     inline bool isEmpty() const { return *this == EmptyId; }
 
     inline void print() const {
-        Logger::log("Player ID: 0x");
+        hk::diag::log("Player ID: 0x");
         Logger::disableName();
         for (size_t i = 0; i < 0x10; i++) {
-            Logger::log("%02X", data[i]);
+            hk::diag::log("%02X", data[i]);
         }
-        Logger::log("\n");
+        hk::diag::log("\n");
         Logger::enableName();
     }
 
     inline void print(const char* prefix) const {
-        Logger::log("%s: 0x", prefix);
+        hk::diag::log("%s: 0x", prefix);
         Logger::disableName();
         for (size_t i = 0; i < 0x10; i++) {
-            Logger::log("%02X", data[i]);
+            hk::diag::log("%02X", data[i]);
         }
-        Logger::log("\n");
+        hk::diag::log("\n");
         Logger::enableName();
     }
 
