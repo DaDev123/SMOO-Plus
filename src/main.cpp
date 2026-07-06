@@ -222,8 +222,6 @@ HkTrampoline hakoniwaSequenceInitHook = [](TrampolineStatic(), HakoniwaSequence*
                            initInfo->mSystemInfo->gamePadSystem);
 
     Client::instance()->init(lytInfo, sequence->mGameDataHolderAccessor);
-
-    speedrun::createHooks();
 };
 
 HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* initInfo, al::Scene* scene,
@@ -297,10 +295,8 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
     if (SpeedrunIcon::sInstance) {
         if (StageSceneStateModConfig::isSpeedrunModeEnabled()) {
             SpeedrunIcon::sInstance->tryStart();
-            speedrun::uninstallHooks();
         } else {
             SpeedrunIcon::sInstance->tryEnd();
-            speedrun::installHooks();
         }
     }
 
@@ -719,8 +715,9 @@ extern "C" void hkMain() {
     hk::hook::writeBranchLinkAtSym<"R_metroCostumeDoor">(unlockCostumeDoorMetroHook);   // metro
 
     // QOL Patches
-    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
-    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C); // Notes Demo Skip
+    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
+    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);  // Notes Demo Skip
+
     hk::hook::trampoline([]() -> void {
     }).installAtSym<"_ZN2rs21requestShowHtmlViewerEPKN2al18IUseSceneObjHolderE">();  // Disable Action Guide /
                                                                                      // HtmlViewer

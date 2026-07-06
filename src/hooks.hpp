@@ -1,4 +1,3 @@
-#include "hk/hook/a64/Assembler.h"
 #include "hk/hook/Replace.h"
 #include "hk/hook/Trampoline.h"
 
@@ -187,37 +186,3 @@ static HkTrampoline mountSdCardHook = [](TrampolineStatic(), sead::FileDeviceMgr
     sead::NinFileDeviceBase* sdFileDevice = new sead::NinFileDeviceBase("sd", "sd");
     fileDeviceMgr->mount(sdFileDevice);
 };
-
-namespace speedrun {
-
-static bool isHooksCreated = false;
-
-static constexpr u32 listPtrNop[] = {
-    0x4DB934,
-    0x2D250C,
-};
-
-static hk::hook::a64::AsmBlock<true, 1>* listNop[hk::util::arraySize(listPtrNop)];
-
-static void uninstallHooks() {
-    for (int i = 0; i < hk::util::arraySize(listPtrNop); i++) {
-        listNop[i]->uninstall();
-    }
-}
-
-static void createHooks() {
-    if (!isHooksCreated) {
-        for (int i = 0; i < hk::util::arraySize(listPtrNop); i++) {
-            listNop[i] = new hk::hook::a64::AsmBlock<true, 1>(hk::hook::a64::assemble<"nop", true>());
-        }
-        isHooksCreated = true;
-    }
-}
-
-static void installHooks() {
-    for (int i = 0; i < hk::util::arraySize(listPtrNop); i++) {
-        listNop[i]->installAtMainOffset(listPtrNop[i]);
-    }
-}
-
-}  // namespace speedrun
