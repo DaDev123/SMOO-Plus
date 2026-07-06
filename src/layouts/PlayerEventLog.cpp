@@ -37,10 +37,12 @@ PlayerEventLog::Entry::Entry(Event event, sead::FixedSafeString<128> text) {
 }
 
 void PlayerEventLog::addEvent(nn::account::Uid player, PlayerEventLog::Event event, sead::SafeString text) {
+    if (!sInstance)
+        return;
     // prevent duplicate entries for shines
     if (event == SHINE) {
         for (s32 i = 0; i < sNumEntries; i++) {
-            if (mLog[i].mEvent == SHINE && al::isEqualString(mLog[i].mText, text))
+            if (sInstance->mLog[i].mEvent == SHINE && al::isEqualString(sInstance->mLog[i].mText, text))
                 return;
         }
     }
@@ -48,14 +50,15 @@ void PlayerEventLog::addEvent(nn::account::Uid player, PlayerEventLog::Event eve
     // if an entry already exists for purples, increase the number
     if (event == PURPLE) {
         for (s32 i = 0; i < sNumEntries; i++) {
-            if (mLog[i].mEvent == PURPLE) {
-                if (mLog[i].mPlayerId == player && al::isEqualString(mLog[i].mText, text)) {
-                    s32 numPurples = mLog[i].mNumPurples + 1;
+            if (sInstance->mLog[i].mEvent == PURPLE) {
+                if (sInstance->mLog[i].mPlayerId == player &&
+                    al::isEqualString(sInstance->mLog[i].mText, text)) {
+                    s32 numPurples = sInstance->mLog[i].mNumPurples + 1;
                     for (s32 j = i; j > 0; j--) {
-                        mLog[j] = mLog[j - 1];
+                        sInstance->mLog[j] = sInstance->mLog[j - 1];
                     }
-                    mLog[0] = Entry(player, event, text);
-                    mLog[0].mNumPurples = numPurples;
+                    sInstance->mLog[0] = Entry(player, event, text);
+                    sInstance->mLog[0].mNumPurples = numPurples;
                     return;
                 }
             }
@@ -63,17 +66,19 @@ void PlayerEventLog::addEvent(nn::account::Uid player, PlayerEventLog::Event eve
     }
 
     for (s32 i = sNumEntries - 1; i > 0; i--) {
-        mLog[i] = mLog[i - 1];
+        sInstance->mLog[i] = sInstance->mLog[i - 1];
     }
 
-    mLog[0] = Entry(player, event, text);
+    sInstance->mLog[0] = Entry(player, event, text);
 }
 
 void PlayerEventLog::addSelfEvent(PlayerEventLog::Event event, sead::SafeString text) {
+    if (!sInstance)
+        return;
     // prevent duplicate entries for shines
     if (event == SHINE) {
         for (s32 i = 0; i < sNumEntries; i++) {
-            if (mLog[i].mEvent == SHINE && al::isEqualString(mLog[i].mText, text))
+            if (sInstance->mLog[i].mEvent == SHINE && al::isEqualString(sInstance->mLog[i].mText, text))
                 return;
         }
     }
@@ -81,14 +86,15 @@ void PlayerEventLog::addSelfEvent(PlayerEventLog::Event event, sead::SafeString 
     // if an entry already exists for purples, increase the number
     if (event == PURPLE) {
         for (s32 i = 0; i < sNumEntries; i++) {
-            if (mLog[i].mEvent == PURPLE) {
-                if (mLog[i].mPlayerName == "You" && al::isEqualString(mLog[i].mText, text)) {
-                    s32 numPurples = mLog[i].mNumPurples + 1;
+            if (sInstance->mLog[i].mEvent == PURPLE) {
+                if (sInstance->mLog[i].mPlayerName == "You" &&
+                    al::isEqualString(sInstance->mLog[i].mText, text)) {
+                    s32 numPurples = sInstance->mLog[i].mNumPurples + 1;
                     for (s32 j = i; j > 0; j--) {
-                        mLog[j] = mLog[j - 1];
+                        sInstance->mLog[j] = sInstance->mLog[j - 1];
                     }
-                    mLog[0] = Entry(event, text);
-                    mLog[0].mNumPurples = numPurples;
+                    sInstance->mLog[0] = Entry(event, text);
+                    sInstance->mLog[0].mNumPurples = numPurples;
                     return;
                 }
             }
@@ -96,10 +102,10 @@ void PlayerEventLog::addSelfEvent(PlayerEventLog::Event event, sead::SafeString 
     }
 
     for (s32 i = sNumEntries - 1; i > 0; i--) {
-        mLog[i] = mLog[i - 1];
+        sInstance->mLog[i] = sInstance->mLog[i - 1];
     }
 
-    mLog[0] = Entry(event, text);
+    sInstance->mLog[0] = Entry(event, text);
 }
 
 void PlayerEventLog::update() {

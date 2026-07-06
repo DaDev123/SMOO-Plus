@@ -159,11 +159,9 @@ HkTrampoline sendShinePacketHook = [](TrampolineStatic(), GameDataHolderWriter w
             GameDataFile::HintInfo* curInfo = &writer->getGameDataFile()->getHintList()[x];
             if (info->mStageName == curInfo->stageName && info->mObjId == curInfo->objId) {
                 Client::sendShineCollectPacket(curInfo->uniqueId);
-                if (PlayerEventLog::sInstance) {
-                    PlayerEventLog::sInstance->addSelfEvent(
-                        PlayerEventLog::SHINE,
-                        PlayerEventLog::getShineMessage(curInfo->stageName, curInfo->objId));
-                }
+
+                PlayerEventLog::addSelfEvent(PlayerEventLog::SHINE, PlayerEventLog::getShineMessage(
+                                                                        curInfo->stageName, curInfo->objId));
             }
         }
     }
@@ -175,10 +173,9 @@ HkTrampoline sendShinePacketHook2 = [](TrampolineStatic(), GameDataFile* file, c
         for (int i = 0; i < hk::util::arraySize(toadetteMoons); i++) {
             if (strcmp(toadetteMoons[i], name) == 0) {
                 Client::sendShineCollectPacket(2000 + i);
-                if (PlayerEventLog::sInstance) {
-                    PlayerEventLog::sInstance->addSelfEvent(
-                        PlayerEventLog::SHINE, PlayerEventLog::sInstance->getAchievementMessage(name));
-                }
+
+                PlayerEventLog::addSelfEvent(PlayerEventLog::SHINE,
+                                             PlayerEventLog::getAchievementMessage(name));
             }
         }
     }
@@ -192,10 +189,9 @@ HkTrampoline sendCoinCollectCollectPacketHook = [](TrampolineStatic(), GameDataF
     placeID->makeString(&placeIDString);
     Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(),
                                          file->getStageNameCurrent());
-    if (PlayerEventLog::sInstance) {
-        PlayerEventLog::sInstance->addSelfEvent(PlayerEventLog::PURPLE,
-                                                worldNames[file->getCurrentWorldIdNoDevelop()]);
-    }
+
+    PlayerEventLog::addSelfEvent(PlayerEventLog::PURPLE, worldNames[file->getCurrentWorldIdNoDevelop()]);
+
     orig(file, placeID);
 };
 
@@ -203,10 +199,9 @@ HkTrampoline sendCheckpointGetPacketHook = [](TrampolineStatic(), CheckpointFlag
     if (al::isFirstStep(checkpoint)) {
         al::StringTmp<128> placementId = al::makeStringPlacementId(checkpoint->getPlacementId());
         Client::sendCheckpointGetPacket(placementId.cstr());
-        if (PlayerEventLog::sInstance) {
-            PlayerEventLog::sInstance->addSelfEvent(PlayerEventLog::CHECKPOINT,
-                                                    PlayerEventLog::getCheckpointMessage(placementId));
-        }
+
+        PlayerEventLog::addSelfEvent(PlayerEventLog::CHECKPOINT,
+                                     PlayerEventLog::getCheckpointMessage(placementId));
     }
     orig(checkpoint);
 };
@@ -421,10 +416,9 @@ void drawMain(al::Sequence* curSequence) {
         return;
     }
 
-    ImGui::Begin(
-        "Debug Menu", nullptr,
-        ImGuiWindowFlags_NoSavedSettings /*| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse*/ |
-            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoScrollbar);
+    ImGui::Begin("Debug Menu", nullptr,
+                 ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
+                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoScrollbar);
 
     ImGui::SetWindowPos(ImVec2(0, dispHeight / 3.f), ImGuiCond_FirstUseEver);
     ImGui::SetWindowSize(ImVec2(al::getLayoutDisplayWidth() / 3.f, dispHeight - (dispHeight / 4.f)));
@@ -715,8 +709,8 @@ extern "C" void hkMain() {
     hk::hook::writeBranchLinkAtSym<"R_metroCostumeDoor">(unlockCostumeDoorMetroHook);   // metro
 
     // QOL Patches
-    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
-    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);  // Notes Demo Skip
+    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
+    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);  // Notes Demo Skip
 
     hk::hook::trampoline([]() -> void {
     }).installAtSym<"_ZN2rs21requestShowHtmlViewerEPKN2al18IUseSceneObjHolderE">();  // Disable Action Guide /

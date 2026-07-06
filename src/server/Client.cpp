@@ -992,20 +992,17 @@ void Client::updateShineInfo(ShineCollect* packet) {
         curCollectedShines[collectedShineCount] = packet->shineId;
         collectedShineCount++;
 
-        if (PlayerEventLog::sInstance) {
-            if (packet->shineId >= 2000 && packet->shineId <= 2060) {
-                PlayerEventLog::sInstance->addEvent(
-                    packet->mUserID, PlayerEventLog::SHINE,
-                    PlayerEventLog::getAchievementMessage(toadetteMoons[packet->shineId - 2000]));
-                return;
-            }
-
-            GameDataFile::HintInfo* hintInfo =
-                CustomGameDataFunction::getHintInfoByUniqueID(mHolder, packet->shineId);
-            PlayerEventLog::sInstance->addEvent(
+        if (packet->shineId >= 2000 && packet->shineId <= 2060) {
+            PlayerEventLog::addEvent(
                 packet->mUserID, PlayerEventLog::SHINE,
-                PlayerEventLog::getShineMessage(hintInfo->stageName, hintInfo->objId));
+                PlayerEventLog::getAchievementMessage(toadetteMoons[packet->shineId - 2000]));
+            return;
         }
+
+        GameDataFile::HintInfo* hintInfo =
+            CustomGameDataFunction::getHintInfoByUniqueID(mHolder, packet->shineId);
+        PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::SHINE,
+                                 PlayerEventLog::getShineMessage(hintInfo->stageName, hintInfo->objId));
     }
 }
 
@@ -1035,9 +1032,7 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
 
         mConnectCount++;
 
-        if (PlayerEventLog::sInstance) {
-            PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::CONNECT, "");
-        }
+        PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::CONNECT, "");
     }
 }
 
@@ -1063,8 +1058,8 @@ void Client::updateGameInfo(GameInf* packet) {
         curInfo->is2D = packet->is2D;
         curInfo->gameMode = packet->gameMode;
 
-        if (packet->isGameStart && PlayerEventLog::sInstance) {
-            PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::START, "");
+        if (packet->isGameStart) {
+            PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::START, "");
         }
     }
 }
@@ -1105,9 +1100,7 @@ void Client::disconnectPlayer(PlayerDC* packet) {
     mConnectCount--;
     mShouldStopRumble = true;
 
-    if (PlayerEventLog::sInstance) {
-        PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::DISCONNECT, "");
-    }
+    PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::DISCONNECT, "");
 }
 
 /**
@@ -1264,10 +1257,7 @@ void Client::updateMoonRocks(MoonRockHit* packet) {
     if (!sInstance)
         return;
 
-    if (PlayerEventLog::sInstance) {
-        PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::MOONROCK,
-                                            worldNames[packet->worldId]);
-    }
+    PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::MOONROCK, worldNames[packet->worldId]);
 
     if (!GameDataFunction::isGameClear(mHolder)) {
         mPendingMoonRocks[packet->worldId] = true;
@@ -1471,10 +1461,7 @@ void Client::updateCoinCollects(CoinCollectCollect* packet) {
         return;
     }
 
-    if (PlayerEventLog::sInstance) {
-        PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::PURPLE,
-                                            worldNames[packet->worldID]);
-    }
+    PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::PURPLE, worldNames[packet->worldID]);
 
     if (!(sInstance->mCurStageScene && gIsSceneAlive)) {
         // Scene not ready — queue for later processing in update()
@@ -1534,10 +1521,8 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
     if (!sInstance)
         return;
 
-    if (PlayerEventLog::sInstance) {
-        PlayerEventLog::sInstance->addEvent(packet->mUserID, PlayerEventLog::CHECKPOINT,
-                                            PlayerEventLog::getCheckpointMessage(packet->objId));
-    }
+    PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::CHECKPOINT,
+                             PlayerEventLog::getCheckpointMessage(packet->objId));
 
     if (!(sInstance->mCurStageScene && gIsSceneAlive)) {
         if (sInstance->mPendingCheckpointCount < sMaxPendingCheckpoints) {

@@ -27,8 +27,8 @@ public:
 
     PlayerEventLog();
 
-    void addEvent(nn::account::Uid player, Event event, sead::SafeString text);
-    void addSelfEvent(Event event, sead::SafeString text);
+    static void addEvent(nn::account::Uid player, Event event, sead::SafeString text);
+    static void addSelfEvent(Event event, sead::SafeString text);
     void update();
     void tryUpdateNames();
 
