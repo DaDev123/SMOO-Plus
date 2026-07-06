@@ -14,7 +14,6 @@ public:
             sInstance->setName(name);
     }
     static void log(const char* fmt, ...);
-    static void log(const char* fmt, va_list args);
 
     static void enableName() {
         if (sInstance)

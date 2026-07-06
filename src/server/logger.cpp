@@ -84,18 +84,6 @@ bool Logger::init(const char* ip, u16 port) {
     }
 }
 
-void Logger::log(const char* fmt, va_list args) {  // impl for replacing seads system::print
-    if (!sInstance || sInstance->socket_log_state != SockState::CONNECTED)
-        return;
-
-    size len = vsnprintf(nullptr, 0, fmt, args) + 1;
-
-    char buf[len];
-    if (vsnprintf(buf, sizeof(buf), fmt, args) > 0) {
-        sInstance->socket_log(buf);
-    }
-}
-
 void Logger::log(const char* fmt, ...) {
     if (!sInstance || sInstance->socket_log_state != SockState::CONNECTED)
         return;
