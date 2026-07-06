@@ -23,15 +23,12 @@ SocketClient::SocketClient() : SocketBase("SocketClient") {
     mRecvQueue.allocate(100, sead::HakkunHeap::sInstance);
     mSendQueue.allocate(100, sead::HakkunHeap::sInstance);
 
-    mSocketThread = new al::AsyncFunctorThread(
-        "SocketMainThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::update), 0,
-        16_KB, {0});
-    mRecvThread = new al::AsyncFunctorThread(
-        "SocketRecvThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::recvFunc), 0,
-        16_KB, {0});
-    mSendThread = new al::AsyncFunctorThread(
-        "SocketSendThread", al::FunctorV0M<SocketClient*, SocketThreadFunc>(this, &SocketClient::sendFunc), 0,
-        16_KB, {0});
+    mSocketThread = new al::AsyncFunctorThread("SocketMainThread",
+                                               al::FunctorV0M(this, &SocketClient::update), 0, 16_KB, {0});
+    mRecvThread = new al::AsyncFunctorThread("SocketRecvThread",
+                                             al::FunctorV0M(this, &SocketClient::recvFunc), 0, 16_KB, {0});
+    mSendThread = new al::AsyncFunctorThread("SocketSendThread",
+                                             al::FunctorV0M(this, &SocketClient::sendFunc), 0, 16_KB, {0});
 }
 
 void SocketClient::update() {

@@ -51,5 +51,3 @@ private:
     char* mCustomizeDicBuf;
     int mCustomizeDicSize;
 };
-
-typedef void (Keyboard::*KeyboardThreadFunc)(void);

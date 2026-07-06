@@ -19,8 +19,6 @@ public:
     void write();
     void read(GameConfigData* config);
 
-    typedef void (SaveManager::*ThreadFunc)(void);
-
 public:
     static SaveManager* sInstance;
     static SaveManager* instance() { return sInstance; }

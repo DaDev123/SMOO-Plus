@@ -6,9 +6,9 @@
 #include "main.hpp"
 
 #include "hk/diag/diag.h"
-#include "hk/gfx/DebugRenderer.h"
 #include "hk/hook/a64/Assembler.h"
 #include "hk/hook/InstrUtil.h"
+#include "hk/hook/Replace.h"
 #include "hk/hook/Trampoline.h"
 #include "hk/mem/BssHeap.h"
 
@@ -97,7 +97,7 @@ static char chatInput[256] = "";
 static constexpr int socketPoolSize = 0x600000;
 static constexpr int socketAllocPoolSize = 0x20000;
 char socketPool[socketPoolSize + socketAllocPoolSize] __attribute__((aligned(0x1000)));
-HkTrampoline disableSocketInit = [](TrampolineStatic()) -> void {};
+HkReplace<void> disableSocketInit = [] {};
 sead::HakkunHeap* sead::HakkunHeap::sInstance = nullptr;
 
 // ===== HOOKS =====
@@ -750,5 +750,4 @@ extern "C" void hkMain() {
     hk::hook::a64::assemble<"mov x0, #1\nsvc #0x28">().installAtOffset(hk::ro::getRtldModule(), 0);
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
-    hk::gfx::DebugRenderer::instance()->installHooks();
 }

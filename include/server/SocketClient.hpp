@@ -69,5 +69,3 @@ private:
      */
     bool stringToIPAddress(const char* str, in_addr* out);
 };
-
-typedef void (SocketClient::*SocketThreadFunc)(void);

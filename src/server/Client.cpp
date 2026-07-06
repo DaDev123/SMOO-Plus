@@ -57,17 +57,14 @@
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
-typedef void (Client::*ClientThreadFunc)(void);
-
 /**
  * @brief Construct a new Client:: Client object
  *
  * @param bufferSize defines the maximum amount of puppets the client can handle
  */
 Client::Client() {
-    mReadThread = new al::AsyncFunctorThread(
-        "ClientReadThread", al::FunctorV0M<Client*, ClientThreadFunc>(this, &Client::readFunc), 0, 16_KB,
-        {0});
+    mReadThread = new al::AsyncFunctorThread("ClientReadThread", al::FunctorV0M(this, &Client::readFunc), 0,
+                                             16_KB, {0});
 
     mKeyboard = new Keyboard(nn::swkbd::GetRequiredStringBufferSize());
 
@@ -527,8 +524,6 @@ void Client::readFunc() {
                 break;
             case PacketType::HEALTHCOINS:
                 Logger::log("Received unused health/coins packet (?)\n");
-                nn::os::YieldThread();
-                nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
                 break;
             case PacketType::COINCOLLECTCOLL:
                 updateCoinCollects((CoinCollectCollect*)curPacket);
@@ -556,8 +551,6 @@ void Client::readFunc() {
             }
             default:
                 Logger::log("Discarding Unknown Packet Type.\n");
-                nn::os::YieldThread();
-                nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
                 break;
             }
 
@@ -566,8 +559,6 @@ void Client::readFunc() {
         } else {
             Logger::log("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x\n",
                         mSocket->socket_errno);
-            nn::os::YieldThread();
-            nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
         }
     }
 
