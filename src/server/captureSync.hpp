@@ -20,8 +20,8 @@ static PuppetHackActor* createPuppetHackActor(const al::ActorInitInfo& initInfo,
                                                          // as creating a single hack actor per puppet that
                                                          // can dynamically switch models
 
-    // only use this if player count is 8
-    if (serverMaxPlayers == 8) {
+    // only use this if player count is >= 7
+    if (serverMaxPlayers >= 7) {
         const char* stageName = "";
         if (placementInfo->mPlacementIter.tryGetStringByKey(&stageName, "PlacementFileName")) {
             if (al::isEqualString(stageName, "ForestWorldHomeStage")) {

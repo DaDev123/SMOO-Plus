@@ -24,7 +24,7 @@ static HkTrampoline initObjHook = [](TrampolineStatic(), al::ActorInitInfo& init
 
     const char* className;
 
-    if (al::tryGetClassName(&className, initInfo) && isInCaptureList(className)) {
+    if (al::tryGetClassName(&className, *placement) && isInCaptureList(className)) {
         int serverMaxPlayers = Client::getMaxPlayerCount();
 
         for (size_t i = 0; i < serverMaxPlayers - 1; i++) {
