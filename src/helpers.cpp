@@ -15,7 +15,6 @@
 #include "game/System/GameDataFunction.h"
 #include "game/System/GameSystem.h"
 
-#include "logger.hpp"
 #include "System/GameDataHolderWriter.h"
 
 bool isPartOf(const char* w1, const char* w2) {

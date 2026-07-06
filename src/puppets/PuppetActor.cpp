@@ -39,7 +39,6 @@
 #include "helpers.hpp"
 #include "Library/Light/ModelMaterialCategory.h"
 #include "Library/Resource/ActorResource.h"
-#include "logger.hpp"
 #include "math/seadQuat.h"
 #include "Project/HitSensor/HitSensor.h"
 #include "PuppetMain.hpp"

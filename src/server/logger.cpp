@@ -17,7 +17,7 @@ constexpr u32 ADDITIONAL_LOG_PORT_COUNT = 2;
 
 Logger* Logger::sInstance = nullptr;
 
-void hk::diag::hkLogSink(const char* msg, size len) {
+extern "C" void hk::diag::hkLogSink(const char* msg, size len) {
     Logger::log(msg);
 }
 

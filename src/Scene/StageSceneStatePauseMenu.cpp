@@ -9,8 +9,6 @@
 #include "game/Layout/FooterParts.h"
 #include "game/Scene/StageScene.h"
 
-#include "logger.hpp"
-
 void StageSceneStatePauseMenu::exeModConfig(void) {
     if (al::isFirstStep(this)) {
         hk::diag::logLine("Start Server Config Nerve.");

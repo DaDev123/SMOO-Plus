@@ -70,7 +70,6 @@
 #include "layouts/SpeedrunIcon.h"
 #include "Library/Base/StringUtil.h"
 #include "Library/LiveActor/ActorInitInfo.h"
-#include "logger.hpp"
 #include "MapObj/CheckpointFlag.h"
 #include "prim/seadSafeString.h"
 #include "puppetHooks.hpp"
@@ -136,8 +135,6 @@ HkTrampoline drawMainHookHk = [](TrampolineStatic(), GameSystem* gameSystem) -> 
     auto* drawContext = Application::instance()->mDrawSystemInfo->drawContext;
 
     /* ImGui */
-
-    // imgui::updateImGuiInput();
 
     ImGui::NewFrame();
     drawMain(gameSystem->mSequence);

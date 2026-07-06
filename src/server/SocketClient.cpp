@@ -184,14 +184,13 @@ bool SocketClient::send(Packet* packet) {
 
     valread = nn::socket::Send(this->socket_log_socket, buffer, packet->mPacketSize + sizeof(Packet), 0);
 
-    if (valread > 0) {
-        return true;
-    } else {
+    if (valread <= 0) {
         hk::diag::logLine("Failed to Fully Send Packet! Result: %d Type: %s Packet Size: %d", valread,
                           packetNames[packet->mType], packet->mPacketSize);
         this->socket_errno = nn::socket::GetLastErrno();
         return false;
     }
+
     return true;
 }
 
