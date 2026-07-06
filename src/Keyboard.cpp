@@ -1,10 +1,12 @@
 #include "Keyboard.hpp"
 
+#include "hk/prim/traits/Integer.h"
+
 #include "nn/swkbd/swkbd.h"
 
 Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
     mThread =
-        new al::AsyncFunctorThread("Swkbd", al::FunctorV0M(this, &Keyboard::keyboardThread), 0, 0x4000, {0});
+        new al::AsyncFunctorThread("Swkbd", al::FunctorV0M(this, &Keyboard::keyboardThread), 0, 16_KB, {0});
 
     mWorkBufSize = nn::swkbd::GetRequiredWorkBufferSize(false);
     mWorkBuf = (char*)aligned_alloc(0x1000, mWorkBufSize);

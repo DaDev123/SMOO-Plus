@@ -18,7 +18,7 @@
 SaveManager* SaveManager::sInstance = nullptr;
 
 SaveManager::SaveManager()
-    : mThread("SaveManagerThread", al::FunctorV0M(this, &SaveManager::write), 0, 0x4000, {0}) {}
+    : mThread("SaveManagerThread", al::FunctorV0M(this, &SaveManager::write), 20, 16_KB, {0}) {}
 
 void SaveManager::startThread(GameConfigData* config) {
     if (config)

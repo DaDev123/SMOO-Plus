@@ -264,11 +264,8 @@ bool SocketClient::recv() {
 
                 Packet* packet = reinterpret_cast<Packet*>(packetBuf);
 
-                if (!(mRecvQueue.mMessageQueueInner._count == mRecvQueue.mMessageQueueInner._maxCount)) {
-                    mRecvQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking);
-                } else {
+                if (!mRecvQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking))
                     free(packetBuf);
-                }
             }
         } else {
             Logger::log("Failed to aquire valid data! Packet Type: %d Full Packet Size %d valread size: %d\n",
@@ -327,15 +324,15 @@ bool SocketClient::stringToIPAddress(const char* str, in_addr* out) {
     }
 
     // get IPs via DNS
-    struct hostent* he = nn::socket::GetHostByName(str);
+    hostent* he = nn::socket::GetHostByName(str);
     if (!he) {
         return false;
     }
 
     // might give us multiple IP addresses, so pick the first one
-    struct in_addr** addr_list = (struct in_addr**)he->h_addr_list;
-    for (int i = 0; addr_list[i] != NULL; i++) {
-        *out = *addr_list[i];
+    in_addr** addr_list = (in_addr**)he->h_addr_list;
+    if (addr_list[0]) {
+        *out = *addr_list[0];
         return true;
     }
 
@@ -375,15 +372,12 @@ void SocketClient::recvFunc() {
 }
 
 bool SocketClient::queuePacket(Packet* packet) {
-    if (socket_log_state == SockState::CONNECTED &&
-        !(mSendQueue.mMessageQueueInner._count == mSendQueue.mMessageQueueInner._maxCount)) {
-        // as this is non-blocking, it will always return true.
-        mSendQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking);
-        return true;
-    } else {
-        delete packet;
-        return false;
-    }
+    if (socket_log_state == SockState::CONNECTED)
+        if (mSendQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking))
+            return true;
+
+    delete packet;
+    return false;
 }
 
 bool SocketClient::trySendQueue() {
