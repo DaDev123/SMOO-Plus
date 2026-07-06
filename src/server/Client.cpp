@@ -559,6 +559,9 @@ void Client::readFunc() {
         } else {
             hk::diag::logLine("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x",
                               mSocket->socket_errno);
+            nn::os::YieldThread();
+            nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
+            // we need to sleep thread to prevent a spin lock when connection is lost
         }
     }
 
