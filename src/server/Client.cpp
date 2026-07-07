@@ -63,8 +63,7 @@ SEAD_SINGLETON_DISPOSER_IMPL(Client)
  * @param bufferSize defines the maximum amount of puppets the client can handle
  */
 Client::Client() {
-    mReadThread = new al::AsyncFunctorThread("ClientReadThread", al::FunctorV0M(this, &Client::readFunc), 0,
-                                             16_KB, {0});
+    mReadThread = new al::AsyncFunctorThread("ClientReadThread", al::FunctorV0M(this, &Client::readFunc), 0, 16_KB, sead::CoreId::cMain);
 
     mKeyboard = new Keyboard(nn::swkbd::GetRequiredStringBufferSize());
 

@@ -5,8 +5,7 @@
 #include "nn/swkbd/swkbd.h"
 
 Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
-    mThread =
-        new al::AsyncFunctorThread("Swkbd", al::FunctorV0M(this, &Keyboard::keyboardThread), 0, 16_KB, {0});
+    mThread = new al::AsyncFunctorThread("Swkbd", al::FunctorV0M(this, &Keyboard::keyboardThread), 0, 16_KB, sead::CoreId::cMain);
 
     mWorkBufSize = nn::swkbd::GetRequiredWorkBufferSize(false);
     mWorkBuf = (char*)aligned_alloc(0x1000, mWorkBufSize);
