@@ -24,12 +24,12 @@ SocketClient::SocketClient() : SocketBase("SocketClient") {
     mRecvQueue.allocate(100, sead::HakkunHeap::sInstance);
     mSendQueue.allocate(100, sead::HakkunHeap::sInstance);
 
-    mSocketThread = new al::AsyncFunctorThread("SocketMainThread",
-                                               al::FunctorV0M(this, &SocketClient::update), 0, 16_KB, sead::CoreId::cMain);
-    mRecvThread = new al::AsyncFunctorThread("SocketRecvThread",
-                                             al::FunctorV0M(this, &SocketClient::recvFunc), 0, 16_KB, sead::CoreId::cMain);
-    mSendThread = new al::AsyncFunctorThread("SocketSendThread",
-                                             al::FunctorV0M(this, &SocketClient::sendFunc), 0, 16_KB, sead::CoreId::cMain);
+    mSocketThread = new al::AsyncFunctorThread(
+        "SocketMainThread", al::FunctorV0M(this, &SocketClient::update), 0, 16_KB, sead::CoreId::cMain);
+    mRecvThread = new al::AsyncFunctorThread(
+        "SocketRecvThread", al::FunctorV0M(this, &SocketClient::recvFunc), 0, 16_KB, sead::CoreId::cMain);
+    mSendThread = new al::AsyncFunctorThread(
+        "SocketSendThread", al::FunctorV0M(this, &SocketClient::sendFunc), 0, 16_KB, sead::CoreId::cMain);
 }
 
 void SocketClient::update() {
@@ -104,7 +104,8 @@ bool SocketClient::exeInit() {
     serverAddress.sin_family = nn::socket::InetHtons(AF_INET);
 
     s32 sockOptValue = 1;
-    nn::socket::SetSockOpt(this->socket_log_socket, 6, TCP_NODELAY, &sockOptValue, sizeof(sockOptValue));
+    nn::socket::SetSockOpt(this->socket_log_socket, IPPROTO_TCP, TCP_NODELAY, &sockOptValue,
+                           sizeof(sockOptValue));
     nn::socket::SetSockOpt(this->socket_log_socket, SOL_SOCKET, SO_REUSEADDR, &sockOptValue,
                            sizeof(sockOptValue));
     nn::socket::SetSockOpt(this->socket_log_socket, SOL_SOCKET, SO_REUSEPORT, &sockOptValue,
@@ -128,10 +129,10 @@ bool SocketClient::exeInit() {
 
     hk::diag::logLine("Socket fd: %d", socket_log_socket);
 
-    // startThreads();  // start recv and send threads after sucessful connection
-
-    // send init packet to server once we connect (an issue with the server prevents this from
-    // working properly, waiting for a fix to implement)
+    if (mRecvThread->isDone())
+        mRecvThread->start();
+    if (mSendThread->isDone())
+        mSendThread->start();
 
     PlayerConnect initPacket;
 
@@ -142,11 +143,6 @@ bool SocketClient::exeInit() {
     mIsFirstConnect = false;
 
     send(&initPacket);
-
-    if (mRecvThread->isDone())
-        mRecvThread->start();
-    if (mSendThread->isDone())
-        mSendThread->start();
 
     mState = WAIT;
     return true;
@@ -165,6 +161,12 @@ void SocketClient::exeReset() {
     while (!(mRecvThread->isDone() && mSendThread->isDone())) {
         nn::os::YieldThread();
         nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
+    }
+
+    // clear send and recv queue (idk man)
+    for (s32 i = 0; i < 100; i++) {
+        mSendQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
+        mRecvQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
     }
 
     mState = RECONNECT;

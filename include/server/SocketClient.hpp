@@ -1,13 +1,12 @@
 #pragma once
 
-#include "al/Library/Thread/AsyncFunctorThread.h"
-
-#include <atomic>
 #include <netinet/in.h>
+#include <thread/seadAtomic.h>
+#include <thread/seadMessageQueue.h>
 
+#include "Library/Thread/AsyncFunctorThread.h"
 #include "packets/Packet.h"
 #include "SocketBase.hpp"
-#include "thread/seadMessageQueue.h"
 #include "types.h"
 
 class SocketClient : public SocketBase {
@@ -59,7 +58,7 @@ private:
 
     bool mIsFirstConnect = true;
 
-    std::atomic<SocketClientState> mState = INIT;
+    sead::Atomic<SocketClientState> mState = INIT;
 
     /**
      * @param str a string containing an IPv4 address or a hostname that can be resolved via DNS
