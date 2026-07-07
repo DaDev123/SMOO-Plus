@@ -148,7 +148,7 @@ public:
     al::WindowConfirm* mWindowConfirm = nullptr;
     MiniGameMenu* mMiniGameMenu = nullptr;
     bool mIsExistShineOrCoinCollectInStage = false;
-    char _359[7];
+    char _359[0x7];
     bool _360 = false;
     void* _368 = nullptr;
     MapLayout* mMapLayout = nullptr;

@@ -348,8 +348,8 @@ bool Client::openKeyboardPort() {
         return false;
     }
 
-    char buf[6];
-    nn::util::SNPrintf(buf, 6, "%u", sInstance->mServerPort);
+    char buf[0x6];
+    nn::util::SNPrintf(buf, 0x6, "%u", sInstance->mServerPort);
 
     sInstance->mKeyboard->openKeyboard(buf, [](nn::swkbd::KeyboardConfig& config) {
         config.keyboardMode = nn::swkbd::KeyboardMode::ModeNumeric;

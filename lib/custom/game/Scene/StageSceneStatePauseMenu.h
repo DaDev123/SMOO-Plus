@@ -88,7 +88,7 @@ public:
     StageSceneStateEndSeparatePlay* mStateEndSeperatePlay;
     StageSceneStateOption* mStateOption;
     al::LiveActor* mMarioHigh;
-    unsigned char field_0x80[39];
+    unsigned char field_0x80[0x27];
     GameDataHolder* mDataHolder;
     void* field_0xb0;
     al::WindowConfirm* field_0xb8;

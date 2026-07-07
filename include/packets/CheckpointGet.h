@@ -7,5 +7,5 @@ struct PACKED CheckpointGet : Packet {
         this->mType = PacketType::CHECKPOINTGET;
         mPacketSize = sizeof(CheckpointGet) - sizeof(Packet);
     };
-    char objId[64] = {};
+    char objId[0x40] = {};
 };

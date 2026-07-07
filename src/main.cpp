@@ -91,7 +91,7 @@ static int debugPuppetIndex = 0;
 static int debugCaptureIndex = 0;
 static int pageIndex = 0;
 static const int maxPages = 4;
-static char chatInput[256] = "";
+static char chatInput[0x100] = "";
 
 static constexpr int socketPoolSize = 0x600000;
 static constexpr int socketAllocPoolSize = 0x20000;
@@ -567,15 +567,15 @@ void drawMain(al::Sequence* curSequence) {
                     ImGui::Text("%s   ", heapName);
                     ImGui::SameLine();
 
-                    float used = isKB ? (heap->getSize() - heap->getFreeSize()) / 1024.f :
-                                        (heap->getSize() - heap->getFreeSize()) / (1024.f * 1024.f);
-                    float max = isKB ? heap->getSize() / 1024.f : heap->getSize() / (1024.f * 1024.f);
+                    float used = isKB ? (heap->getSize() - heap->getFreeSize()) / 1_KB :
+                                        (heap->getSize() - heap->getFreeSize()) / 1_MB;
+                    float max = isKB ? heap->getSize() / 1_KB : heap->getSize() / 1_MB;
                     float percentUsed =
                         (heap->getSize() - heap->getFreeSize()) / (float(heap->getSize()) / 100);
-                    char buf[32];
+                    char buf[0x20];
                     snprintf(buf, sizeof(buf), "%.3f/%.3f %s", used, max, isKB ? "KB" : "MB");
 
-                    ImGui::ProgressBar(percentUsed / 100, ImVec2(-FLT_MIN, 0), buf);
+                    ImGui::ProgressBar(percentUsed / 100, ImVec2(-1, 0), buf);
                 };
 
                 displayHeapInfo(sead::HakkunHeap::sInstance, "Hakkun");

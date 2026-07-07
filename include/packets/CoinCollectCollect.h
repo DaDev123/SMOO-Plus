@@ -7,7 +7,7 @@ struct PACKED CoinCollectCollect : Packet {
         this->mType = PacketType::COINCOLLECTCOLL;
         mPacketSize = sizeof(CoinCollectCollect) - sizeof(Packet);
     };
-    char placeID[64] = {};
+    char placeID[0x40] = {};
     int worldID = 0;
-    char stage[64] = {};
+    char stage[0x40] = {};
 };

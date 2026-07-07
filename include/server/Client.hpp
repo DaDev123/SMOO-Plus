@@ -69,13 +69,13 @@ struct UIDIndexNode {
  *        Drained each frame in Client::update() once mCurStageScene is valid.
  */
 struct PendingCoinCollect {
-    char placeID[64];
+    char placeID[0x40];
     int worldID;
-    char stage[64];
+    char stage[0x40];
 };
 
 struct PendingCheckpoint {
-    char objId[64];
+    char objId[0x40];
 };
 
 // ===== MAIN CLASS =====
