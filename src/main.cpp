@@ -567,9 +567,9 @@ void drawMain(al::Sequence* curSequence) {
                     ImGui::Text("%s   ", heapName);
                     ImGui::SameLine();
 
-                    float used = isKB ? (heap->getSize() - heap->getFreeSize()) / 1_KB :
-                                        (heap->getSize() - heap->getFreeSize()) / 1_MB;
-                    float max = isKB ? heap->getSize() / 1_KB : heap->getSize() / 1_MB;
+                    float used = isKB ? (heap->getSize() - heap->getFreeSize()) / float(1_KB) :
+                                        (heap->getSize() - heap->getFreeSize()) / float(1_MB);
+                    float max = isKB ? heap->getSize() / float(1_KB) : heap->getSize() / float(1_MB);
                     float percentUsed =
                         (heap->getSize() - heap->getFreeSize()) / (float(heap->getSize()) / 100);
                     char buf[0x20];
