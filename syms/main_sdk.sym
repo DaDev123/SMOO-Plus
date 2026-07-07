@@ -30,3 +30,13 @@ _ZN2nn2fs10DeleteFileEPKc
 _ZN2nn2fs10CreateFileEPKcl
 _ZN2nn2fs9WriteFileENS0_10FileHandleElPKvmRKNS0_11WriteOptionE
 _ZN2nn2fs15CreateDirectoryEPKc
+
+_ZN2nn2os17SetMemoryHeapSizeEm
+_ZN2nn2os19AllocateMemoryBlockEPmm
+_ZN2nn2oe23EnableGamePlayRecordingEPvm
+
+_init_libc0
+_init_libc1
+_init_libc2
+nnosInitialize
+nnosQuickExit

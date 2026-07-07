@@ -13,7 +13,9 @@
 #include "hk/mem/BssHeap.h"
 
 #include "nn/hid.h"  // IWYU pragma: keep
+#include "nn/init.h"
 #include "nn/nifm.h"
+#include "nn/oe.h"
 #include "nn/socket.h"
 
 #include <sead/gfx/seadCamera.h>
@@ -84,19 +86,6 @@
 #include "System/GameSystem.h"
 #include "Util/AchievementUtil.h"
 
-// ===== GLOBAL VARIABLES =====
-static int pInfSendTimer = 0;
-static int gameInfSendTimer = 0;
-static int debugPuppetIndex = 0;
-static int debugCaptureIndex = 0;
-static int pageIndex = 0;
-static const int maxPages = 4;
-static char chatInput[0x100] = "";
-
-static constexpr int socketPoolSize = 0x600000;
-static constexpr int socketAllocPoolSize = 0x20000;
-char socketPool[socketPoolSize + socketAllocPoolSize] __attribute__((aligned(0x1000)));
-HkReplace<void> disableSocketInit = [] {};
 sead::HakkunHeap* sead::HakkunHeap::sInstance = nullptr;
 
 // ===== HOOKS =====
@@ -300,7 +289,6 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
     if (al::isPadHoldZR(-1)) {
         if (al::isPadTriggerUp(-1)) {  // ZR + Up => Debug menu
             debugMode = !debugMode;
-            hk::diag::logLine("hi from hakkun");
         }
         if (debugMode) {
             if (al::isPadTriggerLeft(-1)) {  // [Debug menu] ZR + Left => Previous page
@@ -627,11 +615,13 @@ void drawMain(al::Sequence* curSequence) {
 void seadPrintHook(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-
+    Logger::disableName();
     hk::diag::log(fmt, args);
-
+    Logger::enableName();
     va_end(args);
 }
+
+HkReplaceVarArgs replaceSeadPrintHook = seadPrintHook;
 
 extern "C" void hkMain() {
     // Init Stuff
@@ -642,7 +632,7 @@ extern "C" void hkMain() {
 
     // Debug Stuff
     drawMainHookHk.installAtSym<"_ZN10GameSystem8drawMainEv">();
-    hk::hook::writeBranchAtSym<"_ZN4sead6system5PrintEPKcz">(seadPrintHook);
+    replaceSeadPrintHook.installAtSym<"_ZN4sead6system5PrintEPKcz">();
 
     // Main Stuff
     hakoniwaSequenceHook.installAtSym<"_ZN16HakoniwaSequence12exePlayStageEv">();
@@ -737,3 +727,55 @@ extern "C" void hkMain() {
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
 }
+
+namespace nn::init {
+
+extern "C" void _init_libc0();
+extern "C" void nnosInitialize(hk::Handle threadHandle, ptr argumentAddr);
+extern "C" void _init_libc1();
+extern "C" void _init_libc2();
+extern "C" void nnMain();
+extern "C" void nnosQuickExit();
+
+extern "C" __attribute__((weak)) void nninitInitializeSdkModule(void);
+extern "C" __attribute__((weak)) void nninitInitializeAbortObserver(void);
+extern "C" __attribute__((weak)) void nninitFinalizeSdkModule(void);
+
+using FuncPtr = void (*)();
+
+void nninitStartup() {  // Copied straight from OdysseyDecomp with some slight adjustments
+    uintptr_t allocatorHeap;
+    uintptr_t recordingHeap;
+
+    nn::os::SetMemoryHeapSize(3200_MB + extraRAMAmount);
+    nn::os::AllocateMemoryBlock(&allocatorHeap, 36_MB);
+    nn::init::InitializeAllocator(reinterpret_cast<void*>(allocatorHeap), 36_MB);
+    nn::os::AllocateMemoryBlock(&recordingHeap, 96_MB);
+    nn::oe::EnableGamePlayRecording(reinterpret_cast<void*>(recordingHeap), 96_MB);
+}
+
+void Start(size threadHandle, size argumentAddr, FuncPtr notifyExceptionHandlerReady,
+           FuncPtr callInitializers) {
+    _init_libc0();
+    nnosInitialize(threadHandle, argumentAddr);
+
+    // (*notifyExceptionHandlerReady)();
+
+    _init_libc1();
+    nninitInitializeSdkModule();
+
+    nninitStartup();
+    _init_libc2();
+    (*callInitializers)();
+
+    uint s2 = 3068_MB + extraRAMAmount;
+    hk::hook::a64::assemble<"mov w8,{}">().arg(s2).installAtMainOffset(0x005157b8);
+
+    nnMain();
+
+    nninitFinalizeSdkModule();
+    nnosQuickExit();
+    return;
+}
+
+}  // namespace nn::init
