@@ -11,14 +11,13 @@
 
 #include <cstring>
 #include <netinet/in.h>
-#include <sys/socket.h>
+#include <netinet/tcp.h>
 
 #include "Library/Thread/AsyncFunctorThread.h"
 #include "Library/Thread/FunctorV0M.h"
 #include "logger.hpp"
 #include "packets/Packet.h"
 #include "server/Client.hpp"
-#include "syssocket/sockdefines.h"
 #include "types.h"
 
 SocketClient::SocketClient() : SocketBase("SocketClient") {

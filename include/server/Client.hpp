@@ -49,7 +49,6 @@
 #include "puppets/PuppetHolder.hpp"
 #include "puppets/PuppetInfo.h"
 #include "server/SocketClient.hpp"
-#include "syssocket/sockdefines.h"
 #include "types.h"
 
 // ===== CONSTANTS =====
