@@ -2,18 +2,16 @@
 
 #include "hk/diag/diag.h"
 
-#include "sead/heap/seadHakkunHeap.h"
-
 #include "al/Library/LiveActor/ActorFlagFunction.h"
 
 #include <math.h>
 
 #include "actors/PuppetActor.h"
 #include "container/seadPtrArray.h"
-#include "heap/seadHeap.h"
+#include "main.hpp"
 
 PuppetHolder::PuppetHolder(int size) {
-    if (!mPuppetArr.tryAllocBuffer(size, sead::HakkunHeap::sInstance)) {
+    if (!mPuppetArr.tryAllocBuffer(size, gHeap)) {
         hk::diag::logLine("[PuppetHolder] ERROR: Buffer Alloc Failed on Puppet Holder!");
     } else {
         hk::diag::logLine("[PuppetHolder] Successfully allocated buffer for %d puppets", size);
@@ -33,10 +31,8 @@ bool PuppetHolder::resizeHolder(int size) {
         return true;  // no need to resize if we're already at the same capacity
     }
 
-    sead::Heap* hkHeap = sead::HakkunHeap::sInstance;
-
     if (!mPuppetArr.isBufferReady()) {
-        bool result = mPuppetArr.tryAllocBuffer(size, hkHeap);
+        bool result = mPuppetArr.tryAllocBuffer(size, gHeap);
         hk::diag::logLine("[PuppetHolder] Initial buffer allocation %s for size %d",
                           result ? "succeeded" : "FAILED", size);
         return result;
@@ -44,7 +40,7 @@ bool PuppetHolder::resizeHolder(int size) {
 
     sead::PtrArray<PuppetActor> newPuppets = sead::PtrArray<PuppetActor>();
 
-    if (newPuppets.tryAllocBuffer(size, hkHeap)) {
+    if (newPuppets.tryAllocBuffer(size, gHeap)) {
         int curPupCount = mPuppetArr.size();
         int copyCount = (curPupCount > size) ? size : curPupCount;
 

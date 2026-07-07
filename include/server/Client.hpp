@@ -44,7 +44,6 @@
 #include "Sequence/HakoniwaSequence.h"
 
 // ===== PROJECT INCLUDES =====
-#include "heap/seadFrameHeap.h"
 #include "Keyboard.hpp"
 #include "puppets/PuppetHolder.hpp"
 #include "puppets/PuppetInfo.h"
@@ -247,8 +246,6 @@ public:
     }
 
     bool mIsAllowReconnect = false;
-
-    sead::FrameHeap* mHakkunSceneHeap = nullptr;
 
 private:
     // ===== CORE FUNCTIONALITY =====

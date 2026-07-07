@@ -7,22 +7,24 @@
 #include "nn/socket.h"
 #include "vapours/results/results_common.hpp"
 
-#include "sead/heap/seadHakkunHeap.h"
-
 #include <cstring>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
+#include "heap/seadHeapMgr.h"
 #include "Library/Thread/AsyncFunctorThread.h"
 #include "Library/Thread/FunctorV0M.h"
 #include "logger.hpp"
+#include "main.hpp"
 #include "packets/Packet.h"
 #include "server/Client.hpp"
 #include "types.h"
 
 SocketClient::SocketClient() : SocketBase("SocketClient") {
-    mRecvQueue.allocate(100, sead::HakkunHeap::sInstance);
-    mSendQueue.allocate(100, sead::HakkunHeap::sInstance);
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
+    mRecvQueue.allocate(100, gHeap);
+    mSendQueue.allocate(100, gHeap);
 
     mSocketThread = new al::AsyncFunctorThread(
         "SocketMainThread", al::FunctorV0M(this, &SocketClient::update), 0, 16_KB, sead::CoreId::cMain);
@@ -34,6 +36,8 @@ SocketClient::SocketClient() : SocketBase("SocketClient") {
 
 void SocketClient::update() {
     // didnt use al nerves to be safe but idk maybe that couldve worked too
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     while (true) {
         switch (mState) {
         case WAIT:
@@ -343,6 +347,8 @@ bool SocketClient::stringToIPAddress(const char* str, in_addr* out) {
 }
 
 void SocketClient::sendFunc() {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     hk::diag::logLine("Starting Send Thread.");
 
     while (trySendQueue() && socket_log_state != SockState::DISCONNECTED) {
@@ -358,6 +364,9 @@ void SocketClient::sendFunc() {
 }
 
 void SocketClient::recvFunc() {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
+    // ???
     nn::socket::Recv(this->socket_log_socket, nullptr, 0, 0);
 
     hk::diag::logLine("Starting Recv Thread.");

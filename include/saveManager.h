@@ -1,5 +1,6 @@
 #pragma once
 
+#include "heap/seadDisposer.h"
 #include "Library/Thread/AsyncFunctorThread.h"
 #include "System/GameConfigData.h"
 
@@ -12,6 +13,8 @@ constexpr const char* sModFolder = "sd:/SMOO-Plus";
 constexpr const char* sSettingsPath = "sd:/SMOO-Plus/settings.byml";
 
 class SaveManager {
+    SEAD_SINGLETON_DISPOSER(SaveManager)
+
 public:
     SaveManager();
 
@@ -20,9 +23,6 @@ public:
     void read(GameConfigData* config);
 
 public:
-    static SaveManager* sInstance;
-    static SaveManager* instance() { return sInstance; }
-
     al::AsyncFunctorThread mThread;
     sead::FrameHeap* mHeap = nullptr;
     GameConfigData mConfig;

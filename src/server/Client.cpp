@@ -31,6 +31,7 @@
 #include <sys/socket.h>
 
 #include "account.h"
+#include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "layouts/ConnectionStatus.h"
 #include "layouts/PlayerEventLog.h"
@@ -63,6 +64,8 @@ SEAD_SINGLETON_DISPOSER_IMPL(Client)
  * @param bufferSize defines the maximum amount of puppets the client can handle
  */
 Client::Client() {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     mReadThread = new al::AsyncFunctorThread("ClientReadThread", al::FunctorV0M(this, &Client::readFunc), 0,
                                              16_KB, sead::CoreId::cMain);
 
@@ -86,11 +89,11 @@ Client::Client() {
 
     collectedShineCount = 0;
 
-    mShineArray.allocBuffer(100, nullptr);  // max of 100 shine actors in buffer
+    mShineArray.allocBuffer(100, gHeap);  // max of 100 shine actors in buffer
 
-    mCoinCollectArray.allocBuffer(100, nullptr);
+    mCoinCollectArray.allocBuffer(100, gHeap);
 
-    mCoinCollect2DArray.allocBuffer(25, nullptr);
+    mCoinCollect2DArray.allocBuffer(25, gHeap);
 
     mPendingCoinCollectCount = 0;
 
@@ -117,6 +120,8 @@ Client::Client() {
  * @param initInfo init info used to create layouts used by client
  */
 void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor holder) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     delete mUIMessage;
     mUIMessage = new al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
 
@@ -129,8 +134,8 @@ void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor hol
     delete SpeedrunIcon::sInstance;
     SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", initInfo);
 
-    delete PlayerEventLog::sInstance;
-    PlayerEventLog::sInstance = new PlayerEventLog();
+    PlayerEventLog::deleteInstance();
+    PlayerEventLog::createInstance(gHeap);
 
     mUIMessage->setTxtMessage(u"Connecting to Server.");
     mUIMessage->setTxtMessageConfirm(u"Failed to Connect!");
@@ -569,6 +574,8 @@ void Client::readFunc() {
 }
 
 void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukimaru) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -641,6 +648,8 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
  * @param hackCap pointer to cap actor, used to get translation, animation, and state info
  */
 void Client::sendHackCapInfPacket(const HackCap* hackCap) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -686,6 +695,8 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
  * @param holder
  */
 void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolderAccessor holder) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -720,6 +731,8 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
  * @param holder
  */
 void Client::sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -757,6 +770,8 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart) 
  * @param cap
  */
 void Client::sendCostumeInfPacket(const char* body, const char* cap) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -773,6 +788,8 @@ void Client::sendCostumeInfPacket(const char* body, const char* cap) {
  * @param player
  */
 void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -800,6 +817,8 @@ void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
  * @param shineID
  */
 void Client::sendShineCollectPacket(int shineID) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -823,6 +842,8 @@ void Client::sendShineCollectPacket(int shineID) {
  * @param stage
  */
 void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -844,6 +865,8 @@ void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, cons
  * @param objId
  */
 void Client::sendCheckpointGetPacket(const char* objId) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -1311,6 +1334,8 @@ void Client::readMoonRocks(const al::ByamlIter& save) {
 }
 
 void Client::sendMoonRockHitPacket(int worldId) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;

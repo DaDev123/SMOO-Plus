@@ -16,8 +16,6 @@
 #include "game/Layout/SimpleLayoutMenu.h"
 #include "game/System/GameDataHolder.h"
 
-#include <vector>
-
 #include "prim/seadSafeString.h"
 
 class FooterParts;

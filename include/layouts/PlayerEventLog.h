@@ -1,6 +1,7 @@
 #pragma once
 
 #include <basis/seadTypes.h>
+#include <heap/seadDisposer.h>
 #include <prim/seadSafeString.h>
 
 #include "account.h"
@@ -8,6 +9,8 @@
 constexpr s32 sNumEntries = 8;
 
 class PlayerEventLog {
+    SEAD_SINGLETON_DISPOSER(PlayerEventLog)
+
 public:
     enum Event { CONNECT, DISCONNECT, START, SHINE, PURPLE, CHECKPOINT, MOONROCK };
 
@@ -41,9 +44,6 @@ public:
     static void toggleShow() { mIsShow = !mIsShow; }
     static bool isShow() { return mIsShow; }
     static void setShow(bool isShow) { mIsShow = isShow; }
-
-public:
-    static PlayerEventLog* sInstance;
 
 private:
     Entry mLog[8];

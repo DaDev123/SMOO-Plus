@@ -25,7 +25,10 @@
 
 #include "container/seadPtrArray.h"
 #include "fsHelper.h"
+#include "heap/seadHeapMgr.h"
 #include "layouts/PlayerEventLog.h"
+#include "Library/Memory/HeapUtil.h"
+#include "main.hpp"
 #include "server/Client.hpp"
 
 // ============================================================================
@@ -47,15 +50,13 @@ bool StageSceneStateModConfig::sSpeedrunNonStopEnabled = false;
 // ServerBrowser Implementation
 // ============================================================================
 
-ServerBrowser::ServerBrowser()
-    : name(Client::instance()->mHakkunSceneHeap, ""), ip(Client::instance()->mHakkunSceneHeap, ""), port(0) {}
+ServerBrowser::ServerBrowser() : name(al::getSceneHeap(), ""), ip(al::getSceneHeap(), ""), port(0) {}
 
 ServerBrowser::ServerBrowser(const char* n, const char* i, int p)
-    : name(Client::instance()->mHakkunSceneHeap, n), ip(Client::instance()->mHakkunSceneHeap, i), port(p) {}
+    : name(al::getSceneHeap(), n), ip(al::getSceneHeap(), i), port(p) {}
 
 ServerBrowser::ServerBrowser(const ServerBrowser& other)
-    : name(Client::instance()->mHakkunSceneHeap, other.name),
-      ip(Client::instance()->mHakkunSceneHeap, other.ip), port(other.port) {}
+    : name(al::getSceneHeap(), other.name), ip(al::getSceneHeap(), other.ip), port(other.port) {}
 
 ServerBrowser& ServerBrowser::operator=(const ServerBrowser& other) {
     if (this != &other) {
@@ -71,10 +72,10 @@ ServerBrowser& ServerBrowser::operator=(const ServerBrowser& other) {
 // ============================================================================
 
 void StageSceneStateModConfig::loadServersFromFile() {
-    mServerBrowserServers.allocBuffer(256, Client::instance()->mHakkunSceneHeap);
+    mServerBrowserServers.allocBuffer(256, al::getSceneHeap());
     FsHelper::LoadData loadData = {.path = "sd:/SMOO-Plus/ServerList.txt"};
     if (!FsHelper::isFileExist(loadData.path)) {
-        mServerBrowserServers.pushBack(new (Client::instance()->mHakkunSceneHeap)
+        mServerBrowserServers.pushBack(new (al::getSceneHeap())
                                            ServerBrowser("No ServerList.txt found.", "", 0));
         return;
     }
@@ -102,8 +103,7 @@ void StageSceneStateModConfig::loadServersFromFile() {
         if (name && ip && portStr) {
             int port = atoi(portStr);
             if (port > 0 && port < 65536) {
-                mServerBrowserServers.pushBack(new (Client::instance()->mHakkunSceneHeap)
-                                                   ServerBrowser(name, ip, port));
+                mServerBrowserServers.pushBack(new (al::getSceneHeap()) ServerBrowser(name, ip, port));
             }
         }
 
@@ -113,7 +113,7 @@ void StageSceneStateModConfig::loadServersFromFile() {
     free(loadData.buffer);
 
     if (mServerBrowserServers.isEmpty()) {
-        mServerBrowserServers.pushBack(new (Client::instance()->mHakkunSceneHeap)
+        mServerBrowserServers.pushBack(new (al::getSceneHeap())
                                            ServerBrowser("ERROR: Empty or Invalid File", "", 0));
     }
 }
@@ -152,18 +152,19 @@ StageSceneStateModConfig::StageSceneStateModConfig(const char* name, al::Scene* 
                                                    const al::LayoutInitInfo& initInfo,
                                                    FooterParts* footerParts, GameDataHolder* dataHolder, bool)
     : al::HostStateBase<al::Scene>(name, scene) {
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
     mFooterParts = footerParts;
     mGameDataHolder = dataHolder;
     mMsgSystem = initInfo.getMessageSystem();
-    mInput = new (Client::instance()->mHakkunSceneHeap) InputSeparator(mHost, true);
+    mInput = new InputSeparator(mHost, true);
 
     // Load server list
     loadServersFromFile();
     mServerBrowserCount = mServerBrowserServers.size();
 
     for (int i = 0; i < menuCount; i++) {
-        msgList[i] = new (Client::instance()->mHakkunSceneHeap)
-            sead::SafeArray<sead::WFixedSafeString<0x200>, maxMsgCount>();
+        msgList[i] = new sead::SafeArray<sead::WFixedSafeString<0x200>, maxMsgCount>();
     }
 
     // Initialize all menus
@@ -182,10 +183,10 @@ StageSceneStateModConfig::StageSceneStateModConfig(const char* name, al::Scene* 
 // ============================================================================
 
 void StageSceneStateModConfig::initMainMenu(const al::LayoutInitInfo& initInfo) {
-    menuList[MENU_MAIN] = new (Client::instance()->mHakkunSceneHeap)
-        SimpleLayoutMenu("ModConfigMenu", "OptionModCheck", initInfo, 0, false);
-    optionsList[MENU_MAIN] =
-        new (Client::instance()->mHakkunSceneHeap) CommonVerticalList(menuList[MENU_MAIN], initInfo, true);
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
+    menuList[MENU_MAIN] = new SimpleLayoutMenu("ModConfigMenu", "OptionModCheck", initInfo, 0, false);
+    optionsList[MENU_MAIN] = new CommonVerticalList(menuList[MENU_MAIN], initInfo, true);
     al::setPaneString(menuList[MENU_MAIN], "TxtOption", u"Mod Configuration", 0);
     optionsList[MENU_MAIN]->initDataNoResetSelected(mMainMenuOptionsCount);
     updateMainMenuOptions();
@@ -238,10 +239,10 @@ void StageSceneStateModConfig::exeMainMenu() {
 // ============================================================================
 
 void StageSceneStateModConfig::initNetworkMenu(const al::LayoutInitInfo& initInfo) {
-    menuList[MENU_NETWORK] = new (Client::instance()->mHakkunSceneHeap)
-        SimpleLayoutMenu("NetworkMenu", "OptionModCheck", initInfo, 0, false);
-    optionsList[MENU_NETWORK] =
-        new (Client::instance()->mHakkunSceneHeap) CommonVerticalList(menuList[MENU_NETWORK], initInfo, true);
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
+    menuList[MENU_NETWORK] = new SimpleLayoutMenu("NetworkMenu", "OptionModCheck", initInfo, 0, false);
+    optionsList[MENU_NETWORK] = new CommonVerticalList(menuList[MENU_NETWORK], initInfo, true);
     al::setPaneString(menuList[MENU_NETWORK], "TxtOption", u"Network Settings", 0);
     optionsList[MENU_NETWORK]->initDataNoResetSelected(mNetworkMenuOptionsCount);
     updateNetworkSettingsOptions();
@@ -322,16 +323,16 @@ void StageSceneStateModConfig::exeOpenKeyboardPort() {
 // ============================================================================
 
 void StageSceneStateModConfig::initServerBrowserMenu(const al::LayoutInitInfo& initInfo) {
-    menuList[MENU_SERVERBROWSER] = new (Client::instance()->mHakkunSceneHeap)
-        SimpleLayoutMenu("ServerBrowserMenu", "OptionModCheck", initInfo, 0, false);
-    optionsList[MENU_SERVERBROWSER] = new (Client::instance()->mHakkunSceneHeap)
-        CommonVerticalList(menuList[MENU_SERVERBROWSER], initInfo, true);
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
+    menuList[MENU_SERVERBROWSER] =
+        new SimpleLayoutMenu("ServerBrowserMenu", "OptionModCheck", initInfo, 0, false);
+    optionsList[MENU_SERVERBROWSER] = new CommonVerticalList(menuList[MENU_SERVERBROWSER], initInfo, true);
     al::setPaneString(menuList[MENU_SERVERBROWSER], "TxtOption", u"Server List (SMOO-Plus/ServerList.txt)",
                       0);
     optionsList[MENU_SERVERBROWSER]->initDataNoResetSelected(mServerBrowserCount);
 
-    mServerBrowserOptions =
-        new (Client::instance()->mHakkunSceneHeap) sead::WFixedSafeString<0x200>[mServerBrowserCount];
+    mServerBrowserOptions = new sead::WFixedSafeString<0x200>[mServerBrowserCount];
     for (int i = 0; i < mServerBrowserCount; i++) {
         mServerBrowserOptions[i].convertFromMultiByteString(mServerBrowserServers[i]->name,
                                                             (mServerBrowserServers[i]->name.calcLength()));
@@ -367,10 +368,10 @@ void StageSceneStateModConfig::exeServerBrowserSelect() {
 // ============================================================================
 
 void StageSceneStateModConfig::initGameplayMenu(const al::LayoutInitInfo& initInfo) {
-    menuList[MENU_GAMEPLAY] = new (Client::instance()->mHakkunSceneHeap)
-        SimpleLayoutMenu("GameplayMenu", "OptionModCheck", initInfo, 0, false);
-    optionsList[MENU_GAMEPLAY] = new (Client::instance()->mHakkunSceneHeap)
-        CommonVerticalList(menuList[MENU_GAMEPLAY], initInfo, true);
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
+    menuList[MENU_GAMEPLAY] = new SimpleLayoutMenu("GameplayMenu", "OptionModCheck", initInfo, 0, false);
+    optionsList[MENU_GAMEPLAY] = new CommonVerticalList(menuList[MENU_GAMEPLAY], initInfo, true);
     al::setPaneString(menuList[MENU_GAMEPLAY], "TxtOption", u"Gameplay Settings", 0);
     optionsList[MENU_GAMEPLAY]->initDataNoResetSelected(mGameplayMenuOptionsCount);
 
@@ -381,20 +382,15 @@ void StageSceneStateModConfig::initGameplayMenu(const al::LayoutInitInfo& initIn
     setMenuItemCheck(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_MUSIC + 1]);
 
     optionsList[MENU_GAMEPLAY]->startLoopActionAll("Loop", "Loop");
-    RollPartsData* dataColPlayer = new (Client::instance()->mHakkunSceneHeap)
-        RollPartsData(4,
-                      new (Client::instance()->mHakkunSceneHeap)
-                          const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                      (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), true);
-    RollPartsData* dataColCap = new (Client::instance()->mHakkunSceneHeap)
-        RollPartsData(4,
-                      new (Client::instance()->mHakkunSceneHeap)
-                          const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                      (sCapCollisionEnabled + (sCapBounceEnabled << 1)), true);
-    RollPartsData* dataEmpty = new (Client::instance()->mHakkunSceneHeap)
-        RollPartsData(0, new (Client::instance()->mHakkunSceneHeap) const char16_t*[]{u""});
-    optionsList[MENU_GAMEPLAY]->setRollPartsData(new (Client::instance()->mHakkunSceneHeap) RollPartsData[]{
-        *dataColPlayer, *dataColCap, *dataEmpty, *dataEmpty, *dataEmpty});
+    RollPartsData* dataColPlayer =
+        new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
+                          (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), true);
+    RollPartsData* dataColCap =
+        new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
+                          (sCapCollisionEnabled + (sCapBounceEnabled << 1)), true);
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
+    optionsList[MENU_GAMEPLAY]->setRollPartsData(
+        new RollPartsData[]{*dataColPlayer, *dataColCap, *dataEmpty, *dataEmpty, *dataEmpty});
 
     optionsList[MENU_GAMEPLAY]->addStringData(msgList[MENU_GAMEPLAY]->mBuffer, "TxtContent");
     updateGameplaySettingsOptions();
@@ -448,10 +444,12 @@ void StageSceneStateModConfig::exeGameplaySettings() {
 // ============================================================================
 
 void StageSceneStateModConfig::initSpeedrunConfigMenu(const al::LayoutInitInfo& initInfo) {
-    menuList[MENU_SPEEDRUN_CONFIG] = new (Client::instance()->mHakkunSceneHeap)
-        SimpleLayoutMenu("SpeedrunMenu", "OptionModCheck", initInfo, nullptr, false);
-    optionsList[MENU_SPEEDRUN_CONFIG] = new (Client::instance()->mHakkunSceneHeap)
-        CommonVerticalList(menuList[MENU_SPEEDRUN_CONFIG], initInfo, true);
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
+    menuList[MENU_SPEEDRUN_CONFIG] =
+        new SimpleLayoutMenu("SpeedrunMenu", "OptionModCheck", initInfo, nullptr, false);
+    optionsList[MENU_SPEEDRUN_CONFIG] =
+        new CommonVerticalList(menuList[MENU_SPEEDRUN_CONFIG], initInfo, true);
     al::setPaneString(menuList[MENU_SPEEDRUN_CONFIG], "TxtOption", u"Speedrun Settings", 0);
     optionsList[MENU_SPEEDRUN_CONFIG]->initDataNoResetSelected(mSpeedrunConfigOptionsCount);
 
@@ -464,16 +462,13 @@ void StageSceneStateModConfig::initSpeedrunConfigMenu(const al::LayoutInitInfo& 
 
     optionsList[MENU_SPEEDRUN_CONFIG]->startLoopActionAll("Loop", "Loop");
 
-    RollPartsData* dataLogLife = new (Client::instance()->mHakkunSceneHeap) RollPartsData(
-        4,
-        new (Client::instance()->mHakkunSceneHeap)
-            const char16_t*[]{u"Never", u"After 15 Seconds", u"After 10 Seconds", u"After 5 Seconds"},
+    RollPartsData* dataLogLife = new RollPartsData(
+        4, new const char16_t*[]{u"Never", u"After 15 Seconds", u"After 10 Seconds", u"After 5 Seconds"},
         sLogLife, true);
-    RollPartsData* dataEmpty = new (Client::instance()->mHakkunSceneHeap)
-        RollPartsData(0, new (Client::instance()->mHakkunSceneHeap) const char16_t*[]{u""});
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
 
     optionsList[MENU_SPEEDRUN_CONFIG]->setRollPartsData(
-        new (Client::instance()->mHakkunSceneHeap) RollPartsData[]{*dataLogLife, *dataEmpty, *dataEmpty});
+        new RollPartsData[]{*dataLogLife, *dataEmpty, *dataEmpty});
 
     optionsList[MENU_SPEEDRUN_CONFIG]->addStringData(msgList[MENU_SPEEDRUN_CONFIG]->mBuffer, "TxtContent");
     updateSpeedrunConfig();
@@ -696,8 +691,8 @@ void StageSceneStateModConfig::updateDataFromRollParts() {
                        ->mSelectedIdx;
         // recreate log in case its settings were adjusted
         if (PlayerEventLog::sInstance) {
-            delete PlayerEventLog::sInstance;
-            PlayerEventLog::sInstance = new (Client::instance()->mHakkunSceneHeap) PlayerEventLog();
+            PlayerEventLog::deleteInstance();
+            PlayerEventLog::createInstance(gHeap);
         }
     }
 }

@@ -8,6 +8,8 @@
 
 #include <cstring>
 
+#include "main.hpp"
+
 namespace BloodMoon {
 
 u8* loadFile(const char* filePath, size_t* outSize) {
@@ -45,7 +47,7 @@ u8* loadFile(const char* filePath, size_t* outSize) {
     }
 
     // Copy to null-terminated buffer
-    u8* buffer = new u8[loadArg.read_size + 1];
+    u8* buffer = new (gHeap) u8[loadArg.read_size + 1];
     memcpy(buffer, fileData, loadArg.read_size);
     buffer[loadArg.read_size] = '\0';
 

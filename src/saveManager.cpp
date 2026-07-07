@@ -2,8 +2,6 @@
 
 #include <nn/fs.h>
 
-#include <sead/heap/seadHakkunHeap.h>
-
 #include <heap/seadFrameHeap.h>
 #include <stream/seadRamStream.h>
 
@@ -12,14 +10,17 @@
 #include "layouts/PlayerEventLog.h"
 #include "Library/Thread/FunctorV0M.h"
 #include "Library/Yaml/ByamlUtil.h"
+#include "main.hpp"
+#include "mc/seadCoreInfo.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
 #include "System/GameConfigData.h"
 
-SaveManager* SaveManager::sInstance = nullptr;
+SEAD_SINGLETON_DISPOSER_IMPL(SaveManager)
 
 SaveManager::SaveManager()
-    : mThread("SaveManagerThread", al::FunctorV0M(this, &SaveManager::write), 20, 16_KB, {0}) {}
+    : mThread("SaveManagerThread", al::FunctorV0M(this, &SaveManager::write), 20, 16_KB,
+              sead::CoreId::cMain) {}
 
 void SaveManager::startThread(GameConfigData* config) {
     if (config)
@@ -35,10 +36,11 @@ void SaveManager::write() {
         mHeap = nullptr;
     }
 
-    mHeap = sead::FrameHeap::create(100_KB, "SaveManagerHeap", sead::HakkunHeap::sInstance);
+    mHeap = sead::FrameHeap::create(16_KB, "SaveManagerHeap", gHeap);
     if (!mHeap)
         return;
-    sead::ScopedCurrentHeapSetter s(mHeap);
+
+    sead::ScopedCurrentHeapSetter setter(mHeap);
 
     al::ByamlWriter writer(mHeap, false);
 

@@ -36,14 +36,14 @@
 #include <cstddef>
 
 #include "algorithms/CaptureTypes.h"
+#include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "Library/Light/ModelMaterialCategory.h"
+#include "Library/Memory/HeapUtil.h"
 #include "Library/Resource/ActorResource.h"
 #include "math/seadQuat.h"
 #include "Project/HitSensor/HitSensor.h"
-#include "PuppetMain.hpp"
 #include "Scene/StageSceneStateModConfig.hpp"
-#include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "Util/SensorMsgFunction.h"
 
@@ -56,10 +56,11 @@ static const char* subActorNames[] = {
 };
 
 PuppetActor::PuppetActor(const char* name) : al::LiveActor(name) {
-    mPuppetCap = new (Client::instance()->mHakkunSceneHeap) PuppetCapActor(name);
-    mCaptures = new (Client::instance()->mHakkunSceneHeap) HackModelHolder();
-    mModelHolder = new (Client::instance()->mHakkunSceneHeap)
-        PlayerModelHolder(3);  // Regular Model, 2D Model, 2D Mini Model
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
+    mPuppetCap = new PuppetCapActor(name);
+    mCaptures = new HackModelHolder();
+    mModelHolder = new PlayerModelHolder(3);  // Regular Model, 2D Model, 2D Mini Model
     // what is a 2d mini model? i feel like we could get rid of that but w/e
 }
 
@@ -73,6 +74,8 @@ PuppetActor::~PuppetActor() {
 }
 
 void PuppetActor::init(al::ActorInitInfo const& initInfo) {
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
     mPuppetCap->init(initInfo);
     al::initActorWithArchiveName(this, initInfo, "PlayerActorHakoniwa", nullptr);
 
@@ -83,11 +86,10 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
         bodyName = tryGetPuppetBodyName(mInfo);
         capName = tryGetPuppetCapName(mInfo);
 
-        mNameTag = new (Client::instance()->mHakkunSceneHeap)
-            NameTag(this, al::getLayoutInitInfo(initInfo), 4900.0f, 5000.0f, mInfo->puppetName);
+        mNameTag = new NameTag(this, al::getLayoutInitInfo(initInfo), 4900.0f, 5000.0f, mInfo->puppetName);
     }
 
-    al::LiveActor* normalModel = new (Client::instance()->mHakkunSceneHeap) al::LiveActor("Normal");
+    al::LiveActor* normalModel = new al::LiveActor("Normal");
 
     mCostumeInfo = initMarioModelPuppet(normalModel, initInfo, bodyName, capName, 0, nullptr);
 
@@ -95,7 +97,7 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
 
     mModelHolder->registerModel(normalModel, "Normal");
 
-    al::LiveActor* normal2DModel = new (Client::instance()->mHakkunSceneHeap) al::LiveActor("Normal2D");
+    al::LiveActor* normal2DModel = new al::LiveActor("Normal2D");
 
     PlayerFunction::initMarioModelActor2D(
         normal2DModel, initInfo, al::StringTmp<0x40>("%s2D", mCostumeInfo->mBodyInfo->costumeName).cstr(),
@@ -451,6 +453,8 @@ const char* executorName = "ＮＰＣ";
 PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorInitInfo& initInfo,
                                         const char* bodyName, const char* capName, int subActorNum,
                                         al::AudioKeeper* audioKeeper) {
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
     // hk::diag::logLine("Loading Resources for Mario Puppet Model.");
 
     al::ActorResource* modelRes = al::findOrCreateActorResourceWithAnimResource(
@@ -575,13 +579,13 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
 
     // hk::diag::logLine("Creating Costume Info.");
 
-    PlayerCostumeInfo* costumeInfo = new (Client::instance()->mHakkunSceneHeap) PlayerCostumeInfo();
+    PlayerCostumeInfo* costumeInfo = new PlayerCostumeInfo();
     costumeInfo->init(bodyInfo, headInfo);
 
     if (costumeInfo->isNeedBodyHair()) {
         hk::diag::logLine("Creating Body Hair Parts Model.");
 
-        al::PartsModel* partsModel = new (Client::instance()->mHakkunSceneHeap) al::PartsModel("髪");
+        al::PartsModel* partsModel = new al::PartsModel("髪");
 
         partsModel->initPartsFixFile(
             player, initInfo,
@@ -616,7 +620,9 @@ PlayerCostumeInfo* initMarioModelPuppet(al::LiveActor* player, const al::ActorIn
 PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player, const al::ActorInitInfo& initInfo,
                                                 const char* headModelName, const char* capModelName,
                                                 const char* headType, const char* headSuffix) {
-    al::PartsModel* headModel = new (Client::instance()->mHakkunSceneHeap) al::PartsModel(headModelName);
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
+    al::PartsModel* headModel = new al::PartsModel(headModelName);
 
     al::StringTmp<0x80> headArcName("%sHead%s", capModelName, headType);
     al::StringTmp<0x100> arcSuffix("Head");
@@ -636,7 +642,7 @@ PlayerHeadCostumeInfo* initMarioHeadCostumeInfo(al::LiveActor* player, const al:
     al::onSyncAlphaMaskSubActor(player, headModel);
     al::onSyncHideSubActor(player, headModel);
 
-    al::PartsModel* capEyesModel = new (Client::instance()->mHakkunSceneHeap) al::PartsModel("キャップの目");
+    al::PartsModel* capEyesModel = new al::PartsModel("キャップの目");
     capEyesModel->initPartsFixFile(headModel, initInfo, "CapManHeroEyes", "", 0);
 
     al::onSyncClippingSubActor(headModel, capEyesModel);

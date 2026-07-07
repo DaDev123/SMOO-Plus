@@ -1,12 +1,12 @@
 #pragma once
 
 #include "hk/gfx/ImGuiBackendNvn.h"
-#include "hk/mem/BssHeap.h"
 
 #include <cstring>
 
 #include "fsHelper.h"
 #include "imgui.h"
+#include "main.hpp"
 
 namespace imgui {
 
@@ -41,10 +41,9 @@ static void setupFont() {
 static void setup() {
     hk::gfx::ImGuiBackendNvn* imgui = hk::gfx::ImGuiBackendNvn::instance();
 
-    imgui->setAllocator({[](size allocSize, size alignment) -> void* {
-                             return hk::mem::sMainHeap.allocate(allocSize, alignment);
-                         },
-                         [](void* ptr) -> void { hk::mem::sMainHeap.free(ptr); }});
+    imgui->setAllocator(
+        {[](size allocSize, size alignment) -> void* { return gHeap->alloc(allocSize, alignment); },
+         [](void* ptr) -> void { gHeap->free(ptr); }});
 
     imgui->tryInitialize();
     setupFont();

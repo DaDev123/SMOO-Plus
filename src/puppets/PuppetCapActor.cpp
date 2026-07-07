@@ -11,8 +11,10 @@
 #include "game/Player/PlayerFunction.h"
 #include "game/Util/SensorMsgFunction.h"
 
+#include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "Library/Math/MathUtil.h"
+#include "Library/Memory/HeapUtil.h"
 #include "math/seadQuat.h"
 #include "math/seadVectorFwd.h"
 #include "Project/HitSensor/HitSensor.h"
@@ -22,6 +24,8 @@
 PuppetCapActor::PuppetCapActor(const char* name) : al::LiveActor(name) {}
 
 void PuppetCapActor::init(const al::ActorInitInfo& initInfo) {
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
     sead::FixedSafeString<0x20> capModelName;
 
     PlayerFunction::createCapModelName(&capModelName, tryGetPuppetCapName(mInfo));
@@ -36,7 +40,7 @@ void PuppetCapActor::init(const al::ActorInitInfo& initInfo) {
     al::hideSilhouetteModelIfShow(this);
     al::initExecutorModelUpdate(this, initInfo);
 
-    mJointKeeper = new (Client::instance()->mHakkunSceneHeap) HackCapJointControlKeeper();
+    mJointKeeper = new HackCapJointControlKeeper();
     mJointKeeper->initCapJointControl(this);
 
     makeActorDead();

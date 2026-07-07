@@ -34,9 +34,11 @@
 #include "layouts/ConnectionStatus.h"
 #include "layouts/PlayerEventLog.h"
 #include "Library/Collision/CollisionPartsTriangle.h"
+#include "Library/Memory/HeapUtil.h"
 #include "Library/Nerve/Nerve.h"
 #include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
 #include "Library/Thread/FunctorV0M.h"
+#include "main.hpp"
 #include "MapObj/ChangeStageInfo.h"
 #include "MapObj/MoonRock.h"
 #include "saveManager.h"
@@ -99,8 +101,8 @@ static HkTrampoline initStateHook =
     [](TrampolineStatic(), StageSceneStateOption* thisPtr, const char* stateName, al::Scene* host,
        const al::LayoutInitInfo& initInfo, FooterParts* footer, GameDataHolder* data, bool unkBool) -> void {
     orig(thisPtr, stateName, host, initInfo, footer, data, unkBool);
-    sceneStateModConfig = new (Client::instance()->mHakkunSceneHeap)
-        StageSceneStateModConfig("ModConfig", host, initInfo, footer, data, unkBool);
+    sceneStateModConfig =
+        new (al::getSceneHeap()) StageSceneStateModConfig("ModConfig", host, initInfo, footer, data, unkBool);
 };
 
 static HkTrampoline initNerveStateHook =
@@ -180,6 +182,6 @@ static HkTrampoline mountSdCardHook = [](TrampolineStatic(), sead::FileDeviceMgr
     orig(fileDeviceMgr);
 
     fileDeviceMgr->mMountedSd = nn::fs::MountSdCardForDebug("sd") == 0;
-    sead::NinFileDeviceBase* sdFileDevice = new sead::NinFileDeviceBase("sd", "sd");
+    sead::NinFileDeviceBase* sdFileDevice = new (gHeap) sead::NinFileDeviceBase("sd", "sd");
     fileDeviceMgr->mount(sdFileDevice);
 };

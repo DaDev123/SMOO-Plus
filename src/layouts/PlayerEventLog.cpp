@@ -12,7 +12,7 @@
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
 
-PlayerEventLog* PlayerEventLog::sInstance = nullptr;
+SEAD_SINGLETON_DISPOSER_IMPL(PlayerEventLog)
 bool PlayerEventLog::mIsShow = true;
 
 PlayerEventLog::PlayerEventLog() {}
@@ -76,6 +76,7 @@ void PlayerEventLog::addEvent(nn::account::Uid player, PlayerEventLog::Event eve
 void PlayerEventLog::addSelfEvent(PlayerEventLog::Event event, sead::SafeString text) {
     if (!sInstance)
         return;
+
     // prevent duplicate entries for shines
     if (event == SHINE) {
         for (s32 i = 0; i < sNumEntries; i++) {

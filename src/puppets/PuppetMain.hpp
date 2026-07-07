@@ -1,16 +1,19 @@
 #pragma once
 #include "hk/diag/diag.h"
-#include "hk/mem/BssHeap.h"
 
 #include "al/Library/LiveActor/ActorFactory.h"
+#include "al/Library/Memory/HeapUtil.h"
 #include "al/Library/Placement/PlacementFunction.h"
 #include "al/Library/Scene/SceneUtil.h"
 
 #include "actors/PuppetActor.h"
+#include "heap/seadHeapMgr.h"
 #include "server/Client.hpp"
 
 inline al::LiveActor* createPuppetActorFromFactory(const al::ActorInitInfo& initInfo, bool isDebug) {
-    PuppetActor* newActor = new (Client::sInstance->mHakkunSceneHeap) PuppetActor("PuppetActor");
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
+    PuppetActor* newActor = new PuppetActor("PuppetActor");
     if (!isDebug) {
         if (Client::tryAddPuppet(newActor)) {
             PuppetInfo* curInfo = Client::getLatestInfo();

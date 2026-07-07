@@ -6,6 +6,8 @@
 
 #include "actors/PuppetHackActor.h"
 #include "algorithms/CaptureTypes.h"
+#include "heap/seadHeapMgr.h"
+#include "Library/Memory/HeapUtil.h"
 #include "server/Client.hpp"
 
 // Helper Methods
@@ -16,6 +18,8 @@ static bool isInCaptureList(const char* capture) {
 static PuppetHackActor* createPuppetHackActor(const al::ActorInitInfo& initInfo,
                                               const al::PlacementInfo* placementInfo, PuppetInfo* curInfo,
                                               const char* hackType) {
+    sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+
     int serverMaxPlayers = Client::getMaxPlayerCount();  // TODO: Find a way around needing to do this, such
                                                          // as creating a single hack actor per puppet that
                                                          // can dynamically switch models
@@ -34,7 +38,7 @@ static PuppetHackActor* createPuppetHackActor(const al::ActorInitInfo& initInfo,
         return nullptr;
     }
 
-    PuppetHackActor* newActor = new (Client::instance()->mHakkunSceneHeap) PuppetHackActor("PuppetHackActor");
+    PuppetHackActor* newActor = new PuppetHackActor("PuppetHackActor");
 
     newActor->initOnline(curInfo, hackType);  // set puppet info first before calling init so we
                                               // can get costume info from the info

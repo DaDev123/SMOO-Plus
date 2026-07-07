@@ -11,6 +11,8 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
+#include "main.hpp"
+
 // If connection fails, try X ports above the specified one
 // Useful for debugging multple clients on the same machine
 constexpr u32 ADDITIONAL_LOG_PORT_COUNT = 2;
@@ -23,9 +25,9 @@ extern "C" void hk::diag::hkLogSink(const char* msg, size len) {
 
 void Logger::createInstance() {
 #ifdef SERVERIP
-    sInstance = new Logger(TOSTRING(SERVERIP), 3080, "MainLogger");
+    sInstance = new (gHeap) Logger(TOSTRING(SERVERIP), 3080, "MainLogger");
 #else
-    sInstance = new Logger(0, 3080, "MainLogger");
+    sInstance = new (gHeap) Logger(0, 3080, "MainLogger");
 #endif
 }
 

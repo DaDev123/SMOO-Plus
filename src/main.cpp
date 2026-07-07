@@ -10,7 +10,6 @@
 #include "hk/hook/InstrUtil.h"
 #include "hk/hook/Replace.h"
 #include "hk/hook/Trampoline.h"
-#include "hk/mem/BssHeap.h"
 
 #include "nn/hid.h"  // IWYU pragma: keep
 #include "nn/init.h"
@@ -21,7 +20,6 @@
 #include <sead/gfx/seadCamera.h>
 #include <sead/gfx/seadPrimitiveRenderer.h>
 #include <sead/gfx/seadProjection.h>
-#include <sead/heap/seadHakkunHeap.h>
 #include <sead/heap/seadHeap.h>
 #include <sead/prim/seadStringUtil.h>
 
@@ -40,6 +38,7 @@
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Scene/SceneUtil.h"
 #include "al/Library/Screen/ScreenFunction.h"
+#include "al/Library/System/SystemKit.h"
 
 #include "agl/common/aglDrawContext.h"
 
@@ -63,7 +62,7 @@
 
 #include "actors/PuppetActor.h"
 #include "gfx/seadColor.h"
-#include "heap/seadFrameHeap.h"
+#include "heap/seadExpHeap.h"
 #include "helpers.hpp"
 #include "hooks.hpp"
 #include "imgui.h"
@@ -86,13 +85,16 @@
 #include "System/GameSystem.h"
 #include "Util/AchievementUtil.h"
 
-sead::HakkunHeap* sead::HakkunHeap::sInstance = nullptr;
-
 // ===== HOOKS =====
 
-HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
-    sead::HakkunHeap::sInstance = new sead::HakkunHeap();
+HkTrampoline createHeap = [](TrampolineStatic(), al::SystemKit* systemKit, sead::Heap* rootHeap) -> void {
+    orig(systemKit, rootHeap);
 
+    gHeap = sead::ExpHeap::create(2_MB, "SMOOPlusHeap", al::getStationedHeap());
+    al::addNamedHeap(gHeap, "SMOOPlusHeap");
+};
+
+HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
     imgui::setup();
 
     nn::nifm::Initialize();
@@ -108,14 +110,14 @@ HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> 
     Logger::createInstance();
 #endif
 
-    Client::sInstance = new Client();
+    Client::createInstance(gHeap);
+    SaveManager::createInstance(gHeap);
 
-    SaveManager::sInstance = new SaveManager();
+    hk::diag::logLine("origing gamesystem init");
 
     orig(gameSystem);
 
-    // nn::hid::InitializeMouse();
-    // nn::hid::InitializeKeyboard();
+    hk::diag::logLine("origed successfully yay");
 };
 
 HkTrampoline drawMainHookHk = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
@@ -222,9 +224,6 @@ HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* i
 
     Client::sendGameInfPacket(scene);
 
-    Client::instance()->mHakkunSceneHeap =
-        sead::FrameHeap::create(1_MB, "HakkunSceneHeap", sead::HakkunHeap::sInstance);
-
     for (s32 i = 0; i < (Client::getMaxPlayerCount() - 1); i++) {
         createPuppetActorFromFactory(*initInfo, false);
     }
@@ -235,11 +234,6 @@ HkTrampoline sceneKillHook = [](TrampolineStatic(), StageScene* scene) -> void {
     gIsSceneAlive = false;
 
     Client::clearArrays();
-
-    if (Client::instance()->mHakkunSceneHeap) {
-        Client::instance()->mHakkunSceneHeap->destroy();
-        Client::instance()->mHakkunSceneHeap = nullptr;
-    }
 
     orig(scene);
 };
@@ -566,8 +560,7 @@ void drawMain(al::Sequence* curSequence) {
                     ImGui::ProgressBar(percentUsed / 100, ImVec2(-1, 0), buf);
                 };
 
-                displayHeapInfo(sead::HakkunHeap::sInstance, "Hakkun");
-                displayHeapInfo(Client::instance()->mHakkunSceneHeap, "HakkunScene", true);
+                displayHeapInfo(gHeap, "SMOOPlus");
                 displayHeapInfo(al::getStationedHeap(), "Stationed");
                 displayHeapInfo(al::getSequenceHeap(), "Sequence");
                 displayHeapInfo(al::getSceneHeap(), "Scene");
@@ -625,7 +618,7 @@ HkReplaceVarArgs replaceSeadPrintHook = seadPrintHook;
 
 extern "C" void hkMain() {
     // Init Stuff
-    hk::mem::initializeMainHeap();
+    createHeap.installAtSym<"_ZN2al9SystemKit18createMemorySystemEPN4sead4HeapE">();
     gameSystemInit.installAtSym<"_ZN10GameSystem4initEv">();
     hakoniwaSequenceInitHook.installAtSym<"_ZN16HakoniwaSequence4initERKN2al16SequenceInitInfoE">();
     initActorInitInfoHook.installAtSym<"R_ZN2al17initActorInitInfo">();
@@ -698,7 +691,7 @@ extern "C" void hkMain() {
         "_ZN2al19listenStageSwitchOnEPNS_15IUseStageSwitchEPKcRKNS_11FunctorBaseE">();  // all except metro
     hk::hook::writeBranchLinkAtSym<"R_metroCostumeDoor">(unlockCostumeDoorMetroHook);   // metro
 
-    // QOL Patches
+    // QOL Patches (disabled because these cs skips arent in freeze tag)
     // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
     // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);  // Notes Demo Skip
 
