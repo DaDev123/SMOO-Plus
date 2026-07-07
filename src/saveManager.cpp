@@ -8,6 +8,7 @@
 #include <stream/seadRamStream.h>
 
 #include "fsHelper.h"
+#include "heap/seadHeapMgr.h"
 #include "layouts/PlayerEventLog.h"
 #include "Library/Thread/FunctorV0M.h"
 #include "Library/Yaml/ByamlUtil.h"
@@ -34,7 +35,10 @@ void SaveManager::write() {
         mHeap = nullptr;
     }
 
-    mHeap = sead::FrameHeap::create(10_KB, "SaveManagerHeap", sead::HakkunHeap::sInstance);
+    mHeap = sead::FrameHeap::create(100_KB, "SaveManagerHeap", sead::HakkunHeap::sInstance);
+    if (!mHeap)
+        return;
+    sead::ScopedCurrentHeapSetter s(mHeap);
 
     al::ByamlWriter writer(mHeap, false);
 
@@ -53,46 +57,58 @@ void SaveManager::write() {
     const bool music = !Client::isMusicDisabled();
 
     writer.pushHash();
-    writer.pushHash("SMOOData");
-    if (serverIP) {
-        writer.addString("ServerIP", serverIP);
-    } else {
-        writer.addString("ServerIP", "127.0.0.1");
+    {
+        writer.pushHash("SMOOData");
+        {
+            if (serverIP) {
+                writer.addString("ServerIP", serverIP);
+            } else {
+                writer.addString("ServerIP", "127.0.0.1");
+            }
+
+            if (serverPort != -1) {
+                writer.addInt("ServerPort", serverPort);
+            } else {
+                writer.addInt("ServerPort", 0);
+            }
+
+            writer.addBool("ServerHidden", serverHidden);
+            writer.addBool("CapCollision", capCollision);
+            writer.addBool("CapBounce", capBounce);
+            writer.addBool("PlayerCollision", playerCollision);
+            writer.addBool("PlayerBounce", playerBounce);
+            writer.addBool("CostumeDoorsUnlocked", costumeDoorsUnlocked);
+            writer.addBool("LowLatency", lowLatency);
+            writer.addInt("LogLife", logLife);
+            writer.addBool("Log", log);
+            writer.addBool("ShineCount", shineCount);
+            writer.addBool("Music", music);
+            writer.pop();
+        }
+
+        writer.pushHash("GameConfigData");
+        {
+            writer.addInt("CameraStickSensitivityLevel", mConfig.mCameraStickSensitivityLevel);
+            writer.addBool("IsCameraReverseInputH", mConfig.mIsCameraReverseInputH);
+            writer.addBool("IsCameraReverseInputV", mConfig.mIsCameraReverseInputV);
+            writer.addBool("IsValidCameraGyro", mConfig.mIsValidCameraGyro);
+            writer.addInt("CameraGyroSensitivityLevel", mConfig.mCameraGyroSensitivityLevel);
+            writer.addBool("IsUseOpenListAdditionalButton", mConfig.mIsUseOpenListAdditionalButton);
+            writer.addBool("IsPadRumble", mConfig.mIsValidPadRumble);
+            writer.addInt("PadRumbleLevel", mConfig.mPadRumbleLevel);
+            writer.pop();
+        }
+        writer.pop();
     }
 
-    if (serverPort) {
-        writer.addInt("ServerPort", serverPort);
-    } else {
-        writer.addInt("ServerPort", 0);
-    }
-
-    writer.addBool("ServerHidden", serverHidden);
-    writer.addBool("CapCollision", capCollision);
-    writer.addBool("CapBounce", capBounce);
-    writer.addBool("PlayerCollision", playerCollision);
-    writer.addBool("PlayerBounce", playerBounce);
-    writer.addBool("CostumeDoorsUnlocked", costumeDoorsUnlocked);
-    writer.addBool("LowLatency", lowLatency);
-    writer.addInt("LogLife", logLife);
-    writer.addBool("Log", log);
-    writer.addBool("ShineCount", shineCount);
-    writer.addBool("Music", music);
-    writer.pop();
-
-    writer.pushHash("GameConfigData");
-    writer.addInt("CameraStickSensitivityLevel", mConfig.mCameraStickSensitivityLevel);
-    writer.addBool("IsCameraReverseInputH", mConfig.mIsCameraReverseInputH);
-    writer.addBool("IsCameraReverseInputV", mConfig.mIsCameraReverseInputV);
-    writer.addBool("IsValidCameraGyro", mConfig.mIsValidCameraGyro);
-    writer.addInt("CameraGyroSensitivityLevel", mConfig.mCameraGyroSensitivityLevel);
-    writer.addBool("IsUseOpenListAdditionalButton", mConfig.mIsUseOpenListAdditionalButton);
-    writer.addBool("IsPadRumble", mConfig.mIsValidPadRumble);
-    writer.addInt("PadRumbleLevel", mConfig.mPadRumbleLevel);
-    writer.pop();
-
-    writer.pop();
     u32 size = writer.calcPackSize();
-    mBuffer = (u8*)mHeap->alloc(size);
+    mBuffer = (u8*)mHeap->tryAlloc(size, 4);
+    if (!mBuffer) {
+        mHeap->destroy();
+        mHeap = nullptr;
+        return;
+    }
+
     sead::RamStreamSrc ramStream(mBuffer, size);
     sead::WriteStream writeStream;
     writeStream.setSrc(&ramStream);
