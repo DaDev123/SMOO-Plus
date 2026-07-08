@@ -25,16 +25,16 @@ static PuppetHackActor* createPuppetHackActor(const al::ActorInitInfo& initInfo,
                                                          // can dynamically switch models
 
     // only use this if player count is >= 7
-    if (serverMaxPlayers >= 7) {
-        const char* stageName = "";
-        if (placementInfo->mPlacementIter.tryGetStringByKey(&stageName, "PlacementFileName")) {
-            if (al::isEqualString(stageName, "ForestWorldHomeStage")) {
-                return nullptr;
-            }
-        }
-    }
+    // if (serverMaxPlayers >= 7) {
+    //     const char* stageName = "";
+    //     if (placementInfo->mPlacementIter.tryGetStringByKey(&stageName, "PlacementFileName")) {
+    //         if (al::isEqualString(stageName, "ForestWorldHomeStage")) {
+    //             return nullptr;
+    //         }
+    //     }
+    // }
 
-    if (serverMaxPlayers > 8) {  // disable capture sync if dealing with more than 8 players
+    if (serverMaxPlayers > 10) {  // disable capture sync if dealing with more than 10 players
         return nullptr;
     }
 

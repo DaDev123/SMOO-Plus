@@ -640,8 +640,11 @@ extern "C" void hkMain() {
     }).installAtSym<"_ZN2rs19isTriggerAmiiboModeEPKN2al18IUseSceneObjHolderE">();
 
     // Capture Syncing
-    initObjHook
-        .installAtSym<"_ZN2al31createPlacementActorFromFactoryERKNS_13ActorInitInfoEPKNS_13PlacementInfoE">();
+    // initObjHook.installAtSym<"_ZN2al31createPlacementActorFromFactoryERKNS_13ActorInitInfoEPKNS_13PlacementInfoE">();
+    // patch GpuMemAllocator::init to have more space; fixes some crashes with capture sync
+    // hk::hook::a64::assemble<"mov w2, {}">().arg(0x1d00000 + 0x0200000).installAtMainOffset(0x00878708);
+    // hk::hook::a64::assemble<"mov w2, {}">().arg(0x3e00000 + 0x0200000).installAtMainOffset(0x00878730);
+    // hk::hook::a64::assemble<"mov w2, {}">().arg(0x0300000 + 0x0200000).installAtMainOffset(0x0087875c);
 
     // Save Data Edits
     saveWriteHook.installAtSym<"_ZN14GameConfigData5writeEPN2al11ByamlWriterE">();
