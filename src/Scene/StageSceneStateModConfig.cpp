@@ -216,7 +216,7 @@ void StageSceneStateModConfig::exeMainMenu() {
 
     if (rs::isTriggerUiCancel(mHost)) {
         kill();
-        SaveDataAccessFunction::startSaveDataWrite(mGameDataHolder);
+        GameDataFunction::setRequireSave(mGameDataHolder);
     }
 
     if (mIsDecideConfig && mCurrentList->isDecideEnd()) {
@@ -549,24 +549,6 @@ void StageSceneStateModConfig::kill() {
     }
     mCurrentMenu->startEnd("End");
     al::NerveStateBase::kill();
-}
-
-// ============================================================================
-// Option Update Methods
-// ============================================================================
-
-void StageSceneStateModConfig::exeSaveData() {
-    if (al::isFirstStep(this)) {
-        SaveDataAccessFunction::startSaveDataWrite(mGameDataHolder);
-    }
-
-    if (SaveDataAccessFunction::updateSaveDataAccess(mGameDataHolder, false)) {
-        al::startHitReaction(mCurrentMenu, "リセット", 0);
-
-        mCurrentList->activate();
-        mCurrentList->appearCursor();
-        al::setNerve(this, &NrvStageSceneStateModConfig.NetworkSettings);
-    }
 }
 
 // ============================================================================

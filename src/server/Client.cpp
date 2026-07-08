@@ -22,7 +22,6 @@
 #include "game/System/CustomGameDataFunction.h"
 #include "game/System/GameDataFile.h"
 #include "game/System/GameDataFunction.h"
-#include "game/System/SaveDataAccessFunction.h"
 #include "game/Util/ActorDimensionKeeper.h"
 
 #include <cmath>
@@ -255,7 +254,7 @@ bool Client::startConnection() {
     }
 
     if (isNeedSave) {
-        SaveDataAccessFunction::startSaveDataWrite(mHolder.mData);
+        GameDataFunction::setRequireSave(mHolder.mData);
     }
 
     mSocket->init(mServerIP.cstr(), mServerPort);

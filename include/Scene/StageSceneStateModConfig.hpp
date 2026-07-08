@@ -65,7 +65,6 @@ public:
     void exeGameModeSelect();
     void exeTwistsSettings();
     void exeSpeedrunConfig();
-    void exeSaveData();
 
     // Static getters for settings
     static bool isCapCollisionEnabled() { return sCapCollisionEnabled; }
@@ -214,8 +213,7 @@ NERVE_IMPL(StageSceneStateModConfig, OpenKeyboardIP)
 NERVE_IMPL(StageSceneStateModConfig, OpenKeyboardPort)
 NERVE_IMPL(StageSceneStateModConfig, GameplaySettings)
 NERVE_IMPL(StageSceneStateModConfig, SpeedrunConfig)
-NERVE_IMPL(StageSceneStateModConfig, SaveData)
 
 NERVES_MAKE_STRUCT(StageSceneStateModConfig, MainMenu, NetworkSettings, ServerBrowserSelect, OpenKeyboardIP,
-                   OpenKeyboardPort, GameplaySettings, SpeedrunConfig, SaveData)
+                   OpenKeyboardPort, GameplaySettings, SpeedrunConfig)
 }  // namespace
