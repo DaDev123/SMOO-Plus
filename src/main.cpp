@@ -672,8 +672,10 @@ extern "C" void hkMain() {
         .installAtSym<"R_ZN24StageSceneStatePauseMenuNrvStateCount">();     // increase nerve state count to 5
     initNerveStateHook.installAtSym<"R_ZN24StageSceneStatePauseMenuC1">();  // inits options nerve state and
                                                                             // server config state
-    pauseMenuWaitHook.installAtSym<"_ZN24StageSceneStatePauseMenu7exeWaitEv">();  // Change Action Guide Text
-                                                                                  // + Onine Indicator
+    pauseMenuAppearHook
+        .installAtSym<"_ZN24StageSceneStatePauseMenu9exeAppearEv">();  // Change Action Guide Text
+
+    pauseMenuWaitHook.installAtSym<"_ZN24StageSceneStatePauseMenu7exeWaitEv">();  // Onine Indicator
 
     // inits StageSceneStateOption and StageSceneStateModConfig
     initStateHook.installAtSym<"_ZN21StageSceneStateOptionC1EPKcPN2al5SceneERKNS2_"

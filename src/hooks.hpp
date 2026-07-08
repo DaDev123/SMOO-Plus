@@ -133,16 +133,20 @@ static bool unlockCostumeDoorMetroHook(const char* str1, const char* str2) {
     return al::isEqualString(str1, str2);
 }
 
-static HkTrampoline pauseMenuWaitHook = [](TrampolineStatic(), StageSceneStatePauseMenu* menu) -> void {
+static HkTrampoline pauseMenuAppearHook = [](TrampolineStatic(), StageSceneStatePauseMenu* menu) -> void {
     if (al::isFirstStep(menu))
         menu->mSelectParts->setSelectMessage(2, u"Mod Menu");
 
     orig(menu);
+};
+static HkTrampoline pauseMenuWaitHook = [](TrampolineStatic(), StageSceneStatePauseMenu* menu) -> void {
+    orig(menu);
 
-    if (!menu->isDrawLayout()) {
-        ConnectionStatus::sInstance->tryStart();
-    } else {
-        ConnectionStatus::sInstance->tryEnd();
+    if (ConnectionStatus::sInstance) {
+        if (!menu->isDrawLayout())
+            ConnectionStatus::sInstance->tryStart();
+        else
+            ConnectionStatus::sInstance->tryEnd();
     }
 };
 

@@ -781,3 +781,4 @@ _ZN2al18AsyncFunctorThreadD0Ev
 _ZN2al18AsyncFunctorThreadD1Ev
 _ZN2al18AsyncFunctorThreadD2Ev
 _ZN2al12addNamedHeapEPN4sead4HeapEPKc
+_ZN24StageSceneStatePauseMenu9exeAppearEv
