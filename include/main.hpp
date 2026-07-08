@@ -28,7 +28,7 @@ static constexpr int socketAllocPoolSize = 128_KB;
 static char socketPool[socketPoolSize + socketAllocPoolSize] __attribute__((aligned(4_KB)));
 static HkReplace<void> disableSocketInit = [] {};
 
-static constexpr size extraRAMAmount = 0_MB;
+static constexpr size extraRAMAmount = 4_MB;
 static_assert((extraRAMAmount / 1_MB) % 2 == 0, "Extra RAM amount must be multiple of 2");
 
 void drawMain(al::Sequence* seq);

@@ -89,8 +89,7 @@
 
 HkTrampoline createHeap = [](TrampolineStatic(), al::SystemKit* systemKit, sead::Heap* rootHeap) -> void {
     orig(systemKit, rootHeap);
-
-    gHeap = sead::ExpHeap::create(2_MB, "SMOOPlusHeap", al::getStationedHeap());
+    gHeap = sead::ExpHeap::create(4_MB, "SMOOPlusHeap", al::getStationedHeap());
     al::addNamedHeap(gHeap, "SMOOPlusHeap");
 };
 
@@ -113,11 +112,7 @@ HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> 
     Client::createInstance(gHeap);
     SaveManager::createInstance(gHeap);
 
-    hk::diag::logLine("origing gamesystem init");
-
     orig(gameSystem);
-
-    hk::diag::logLine("origed successfully yay");
 };
 
 HkTrampoline drawMainHookHk = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
