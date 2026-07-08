@@ -121,20 +121,24 @@ Client::Client() {
  */
 void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor holder) {
     sead::ScopedCurrentHeapSetter setter(gHeap);
-
-    delete mUIMessage;
+    if (mUIMessage)
+        delete mUIMessage;
     mUIMessage = new al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
 
-    delete mConnectStatus;
+    if (mConnectStatus)
+        delete mConnectStatus;
     mConnectStatus = new al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
 
-    delete ConnectionStatus::sInstance;
+    if (ConnectionStatus::sInstance)
+        delete ConnectionStatus::sInstance;
     ConnectionStatus::sInstance = new ConnectionStatus("Status", initInfo);
 
-    delete SpeedrunIcon::sInstance;
+    if (SpeedrunIcon::sInstance)
+        delete SpeedrunIcon::sInstance;
     SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", initInfo);
 
-    PlayerEventLog::deleteInstance();
+    if (PlayerEventLog::instance())
+        PlayerEventLog::deleteInstance();
     PlayerEventLog::createInstance(gHeap);
 
     mUIMessage->setTxtMessage(u"Connecting to Server.");

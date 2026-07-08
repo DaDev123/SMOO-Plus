@@ -36,6 +36,7 @@ static void setupFont() {
 
     hk::gfx::ImGuiBackendNvn::instance()->initTexture(false);
     ImGui::GetIO().FontDefault = font;
+    free(loadData.buffer);
 }
 
 static void setup() {

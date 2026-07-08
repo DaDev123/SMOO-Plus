@@ -4,7 +4,11 @@
 
 #include "nn/swkbd/swkbd.h"
 
+#include "heap/seadHeapMgr.h"
+#include "main.hpp"
+
 Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
     mThread = new al::AsyncFunctorThread("Swkbd", al::FunctorV0M(this, &Keyboard::keyboardThread), 0, 16_KB,
                                          sead::CoreId::cMain);
 
