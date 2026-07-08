@@ -81,8 +81,6 @@ Client::Client() {
         sprintf(mPuppetInfoArr[i]->puppetName, "Puppet%zu", i);
     }
 
-    strcpy(mDebugPuppetInfo.puppetName, "PuppetDebug");
-
     mConnectCount = 0;
 
     curCollectedShines.fill(-1);
@@ -1200,14 +1198,6 @@ bool Client::tryAddPuppet(PuppetActor* puppet) {
     }
 }
 
-bool Client::tryAddDebugPuppet(PuppetActor* puppet) {
-    if (sInstance) {
-        return sInstance->mPuppetHolder->tryRegisterDebugPuppet(puppet);
-    } else {
-        return false;
-    }
-}
-
 PuppetActor* Client::getPuppet(int idx) {
     if (sInstance) {
         return sInstance->mPuppetHolder->getPuppetActor(idx);
@@ -1665,22 +1655,6 @@ const char* Client::getServerVersion() {
     }
 
     return sInstance->mServerVersion.cstr();
-}
-
-PuppetInfo* Client::getDebugPuppetInfo() {
-    if (sInstance) {
-        return &sInstance->mDebugPuppetInfo;
-    } else {
-        return nullptr;
-    }
-}
-
-PuppetActor* Client::getDebugPuppet() {
-    if (sInstance) {
-        return sInstance->mPuppetHolder->getDebugPuppet();
-    } else {
-        return nullptr;
-    }
 }
 
 Keyboard* Client::getKeyboard() {

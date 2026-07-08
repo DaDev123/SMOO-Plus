@@ -74,19 +74,6 @@ bool PuppetHolder::tryRegisterPuppet(PuppetActor* puppet) {
     }
 }
 
-bool PuppetHolder::tryRegisterDebugPuppet(PuppetActor* puppet) {
-    mDebugPuppet = puppet;
-    // hk::diag::logLine("[PuppetHolder] Debug puppet registered");
-    return true;
-}
-
-PuppetActor* PuppetHolder::getDebugPuppet() {
-    if (mDebugPuppet) {
-        return mDebugPuppet;
-    }
-    return nullptr;
-}
-
 void PuppetHolder::update() {
     for (size_t i = 0; i < mPuppetArr.size(); i++) {
         PuppetActor* curPuppet = mPuppetArr[i];

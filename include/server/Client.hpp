@@ -144,12 +144,10 @@ public:
 
     // ===== PUPPET MANAGEMENT =====
     static bool tryAddPuppet(PuppetActor* puppet);
-    static bool tryAddDebugPuppet(PuppetActor* puppet);
+
     static PuppetActor* getPuppet(int idx);
     static PuppetInfo* getPuppetInfo(int idx);
     static PuppetInfo* getLatestInfo();
-    static PuppetInfo* getDebugPuppetInfo();
-    static PuppetActor* getDebugPuppet();
     static PuppetHolder* getPuppetHolder() {
         if (sInstance)
             return sInstance->mPuppetHolder;
@@ -355,7 +353,6 @@ private:
     int maxPuppets = 9;
     PuppetInfo* mPuppetInfoArr[MAXPUPINDEX] = {};
     PuppetHolder* mPuppetHolder = nullptr;
-    PuppetInfo mDebugPuppetInfo;
 
     // ===== SEQUENCE =====
     al::Sequence* mSequence = nullptr;  // current sequence, used for debug menu

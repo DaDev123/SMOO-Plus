@@ -42,19 +42,6 @@ static HkTrampoline initObjHook = [](TrampolineStatic(), al::ActorInitInfo& init
                 }
             }
         }
-
-        PuppetActor* debugPuppet = Client::getDebugPuppet();
-
-        if (debugPuppet) {
-            const char* hackName = tryConvertName(className);
-            if (!debugPuppet->isInCaptureList(hackName)) {
-                PuppetHackActor* dupliActor =
-                    createPuppetHackActor(initInfo, placement, debugPuppet->getInfo(), hackName);
-                if (dupliActor) {
-                    debugPuppet->addCapture(dupliActor, hackName);
-                }
-            }
-        }
     }
     return orig(initInfo, placement);
 };

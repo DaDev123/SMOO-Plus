@@ -91,19 +91,8 @@ static HkTrampoline registerCoinCollect2DToListHook = [](TrampolineStatic(), Coi
 static HkReplace<void, StageSceneStatePauseMenu*> overrideHelpFadeNerve =
     hk::hook::replace([](StageSceneStatePauseMenu* state) -> void {
         // Set label in menu inside LocalizedData/${lang}/MessageData/LayoutMessage.szs/Menu.msbt/Menu_Help
-        state->exeModConfig();
         al::setNerve(state, &NrvStageSceneStatePauseMenu.ModConfig);
     });
-
-static StageSceneStateModConfig* sceneStateModConfig = nullptr;
-
-static HkTrampoline initStateHook =
-    [](TrampolineStatic(), StageSceneStateOption* thisPtr, const char* stateName, al::Scene* host,
-       const al::LayoutInitInfo& initInfo, FooterParts* footer, GameDataHolder* data, bool unkBool) -> void {
-    orig(thisPtr, stateName, host, initInfo, footer, data, unkBool);
-    sceneStateModConfig =
-        new (al::getSceneHeap()) StageSceneStateModConfig("ModConfig", host, initInfo, footer, data, unkBool);
-};
 
 static HkTrampoline initNerveStateHook =
     [](TrampolineStatic(), StageSceneStatePauseMenu* state, const char* name, al::Scene* host,
@@ -114,6 +103,9 @@ static HkTrampoline initNerveStateHook =
        SceneAudioSystemPauseController* sceneAudioSystemPauseController) -> void {
     orig(state, name, host, menuLayout, gameDataHolder, sceneInitInfo, actorInitInfo, layoutInitInfo,
          windowConfirm, stageSceneLayout, isTitle, sceneAudioSystemPauseController);
+
+    StageSceneStateModConfig* sceneStateModConfig = new (al::getSceneHeap()) StageSceneStateModConfig(
+        "ModConfig", host, layoutInitInfo, state->mFooterParts, gameDataHolder, false);
 
     al::initNerveState(state, sceneStateModConfig, &NrvStageSceneStatePauseMenu.ModConfig,
                        "CustomNerveOverride");

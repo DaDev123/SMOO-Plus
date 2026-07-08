@@ -12,15 +12,11 @@ public:
 
     bool tryRegisterPuppet(PuppetActor* puppet);
 
-    bool tryRegisterDebugPuppet(PuppetActor* puppet);
-
     bool checkInfoIsInStage(PuppetInfo* info);
 
     int getSize() { return mPuppetArr.size(); }
 
     PuppetActor* getPuppetActor(int idx) { return mPuppetArr[idx]; };
-
-    PuppetActor* getDebugPuppet();
 
     void setStageInfo(const char* stageName, u8 scenarioNo);
 
@@ -30,8 +26,6 @@ public:
 
 private:
     sead::PtrArray<PuppetActor> mPuppetArr = sead::PtrArray<PuppetActor>();
-
-    PuppetActor* mDebugPuppet = nullptr;
 
     sead::FixedSafeString<0x40> mStageName;
 

@@ -220,7 +220,7 @@ HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* i
     Client::sendGameInfPacket(scene);
 
     for (s32 i = 0; i < (Client::getMaxPlayerCount() - 1); i++) {
-        createPuppetActorFromFactory(*initInfo, false);
+        createPuppetActorFromFactory(*initInfo);
     }
 };
 
@@ -359,13 +359,6 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
             Client::sendGameInfPacket((PlayerActorHakoniwa*)playerBase, holder);
         }
 
-        /*if (Client::isNeedUpdateHealthCoins()) {
-            PlayerHitPointData* data = holder->getGameDataFile()->getPlayerHitPointData();
-            data->mIsKidsMode = Client::shouldKids();
-            data->mCurrentHealth = Client::getHealth();
-            Client::setNeedUpdateHealthCoins(false);
-        }*/
-
         gameInfSendTimer = 0;
     }
 
@@ -431,11 +424,6 @@ void drawMain(al::Sequence* curSequence) {
         if (cam && projection) {
             PlayerActorBase* playerBase = (PlayerActorBase*)rs::getPlayerActor(curScene);
             PuppetActor* curPuppet = Client::getPuppet(debugPuppetIndex - 1);
-            PuppetActor* debugPuppet = Client::getDebugPuppet();
-
-            if (debugPuppet) {
-                curPuppet = debugPuppet;
-            }
 
             sead::PrimitiveRenderer* renderer = sead::PrimitiveRenderer::instance();
             renderer->mDrawer.setDrawContext(Application::instance()->mDrawSystemInfo->drawContext);
@@ -672,9 +660,6 @@ extern "C" void hkMain() {
 
     pauseMenuWaitHook.installAtSym<"_ZN24StageSceneStatePauseMenu7exeWaitEv">();  // Onine Indicator
 
-    // inits StageSceneStateOption and StageSceneStateModConfig
-    initStateHook.installAtSym<"_ZN21StageSceneStateOptionC1EPKcPN2al5SceneERKNS2_"
-                               "14LayoutInitInfoEP11FooterPartsP14GameDataHolderb">();
     overrideHelpFadeNerve.installAtSym<"_ZN24StageSceneStatePauseMenu17exeFadeBeforeHelpEv">();
 
     // custom bootscreen hooks
@@ -688,10 +673,6 @@ extern "C" void hkMain() {
         "_ZN2al19listenStageSwitchOnEPNS_15IUseStageSwitchEPKcRKNS_11FunctorBaseE">();  // all except metro
     hk::hook::writeBranchLinkAtSym<"R_metroCostumeDoor">(unlockCostumeDoorMetroHook);   // metro
 
-    // QOL Patches (disabled because these cs skips arent in freeze tag)
-    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x4DB934);  // LifeUpMaxItem demo skip
-    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x2D250C);  // Notes Demo Skip
-
     hk::hook::trampoline([]() -> void {
     }).installAtSym<"_ZN2rs21requestShowHtmlViewerEPKN2al18IUseSceneObjHolderE">();  // Disable Action Guide /
                                                                                      // HtmlViewer
@@ -702,10 +683,6 @@ extern "C" void hkMain() {
     hk::hook::trampoline([]() -> bool {
         return true;
     }).installAtSym<"_ZNK9MapLayout22isEnableCheckpointWarpEv">();
-
-    // World Resource Heap stuff
-    // hk::ro::getMainModule()->writeRo(0x5145c8, 0x7107D29F);  // cmp w20, #500
-    // hk::hook::a64::assemble<"ret">().installAtMainOffset(0x514710);
 
     startNewGameHook.installAtSym<"_ZN24HakoniwaStateDemoOpening7exeLoadEv">();
 
