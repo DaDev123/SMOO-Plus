@@ -108,6 +108,7 @@ HkTrampoline drawMainHookHk = [](TrampolineStatic(), GameSystem* gameSystem) -> 
     /* ImGui */
 
     ImGui::NewFrame();
+    ImGui::GetIO().DeltaTime = Time::deltaTime;
     drawMain(gameSystem->mSequence);
 
     ImGui::Render();

@@ -4,7 +4,7 @@
 
 sead::TickTime Time::prevTime;
 sead::TickSpan Time::deltaSpan;
-float Time::deltaTime;
+float Time::deltaTime = 1 / 60.f;
 
 void Time::calcTime() {
     Time::deltaSpan = Time::prevTime.diffToNow();

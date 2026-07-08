@@ -110,7 +110,8 @@ void StageSceneStateModConfig::loadServersFromFile() {
         line = strtok_r(nullptr, "\n\r", &savePtr);
     }
 
-    gHeap->free(loadData.buffer);
+    // gHeap->free(loadData.buffer);
+    delete[] loadData.buffer;
 
     if (mServerBrowserServers.isEmpty()) {
         mServerBrowserServers.pushBack(new (al::getSceneHeap())
