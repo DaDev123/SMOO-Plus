@@ -12,9 +12,7 @@
 #include "hk/hook/Trampoline.h"
 
 #include "nn/init.h"
-#include "nn/nifm.h"
 #include "nn/oe.h"
-#include "nn/socket.h"
 
 #include <sead/gfx/seadCamera.h>
 #include <sead/gfx/seadPrimitiveRenderer.h>
@@ -90,25 +88,16 @@ HkTrampoline createHeap = [](TrampolineStatic(), al::SystemKit* systemKit, sead:
 };
 
 HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
-    nn::nifm::Initialize();
-    nn::nifm::SubmitNetworkRequest();
-
-    while (nn::nifm::IsNetworkRequestOnHold()) {
-    }
-
-    nn::socket::Initialize(socketPool, socketPoolSize, socketAllocPoolSize, 0xE);
-    disableSocketInit.installAtSym<"_ZN2nn6socket10InitializeEPvmmi">();
-
-#if DEBUGLOG
-    Logger::createInstance();
-#endif
-
     imgui::setup();
 
     Client::createInstance(gHeap);
     SaveManager::createInstance(gHeap);
 
     orig(gameSystem);
+
+#if DEBUGLOG
+    Logger::createInstance();
+#endif
 };
 
 HkTrampoline drawMainHookHk = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
