@@ -197,5 +197,5 @@ void SaveManager::read(GameConfigData* config) {
         al::tryGetByamlS32(&config->mPadRumbleLevel, gameIter, "PadRumbleLevel");
     }
 
-    free(data.buffer);
+    gHeap->free(data.buffer);
 }

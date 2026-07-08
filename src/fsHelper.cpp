@@ -7,6 +7,8 @@
 
 #include <cstdlib>
 
+#include "main.hpp"
+
 namespace FsHelper {
 nn::Result writeFileToPath(void* buf, size_t size, const char* path) {
     nn::fs::FileHandle handle;
@@ -47,8 +49,8 @@ void loadFileFromPath(LoadData& loadData) {
 
     long size = 0;
     nn::fs::GetFileSize(&size, handle);
-    loadData.buffer = malloc(size);
     loadData.bufSize = size;
+    loadData.buffer = gHeap->alloc(size);
 
     HK_ABORT_UNLESS(loadData.buffer, "Failed to Allocate Buffer! File Size: %ld", size);
 
