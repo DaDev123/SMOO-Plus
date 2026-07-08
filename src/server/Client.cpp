@@ -233,6 +233,7 @@ void Client::restartConnection() {
  * @return false if connection was unable to establish
  */
 bool Client::startConnection() {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
     bool isNeedSave = false;
 
     bool isOverride = al::isPadHoldZL(-1);
@@ -301,7 +302,7 @@ bool Client::startConnection() {
                     waitingForInitPacket = false;
                 }
 
-                gHeap->free(curPacket);
+                delete curPacket;
             } else {
                 hk::diag::logLine("Recieve failed! Stopping Connection.");
                 mIsConnectionActive = false;
@@ -577,7 +578,7 @@ void Client::readFunc() {
                 break;
             }
 
-            gHeap->free(curPacket);
+            delete curPacket;
 
         } else {
             hk::diag::logLine("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x",
