@@ -575,6 +575,8 @@ void seadPrintHook(const char* fmt, ...) {
 HkReplaceVarArgs replaceSeadPrintHook = seadPrintHook;
 
 extern "C" void hkMain() {
+    shadowHook.installAtSym<"_ZN2al18ShadowMaskDirector9addSphereERKN4sead8Matrix34IfEERKNS1_7Color4fEfi">();
+
     // Init Stuff
     createHeap.installAtSym<"_ZN2al9SystemKit18createMemorySystemEPN4sead4HeapE">();
     gameSystemInit.installAtSym<"_ZN10GameSystem4initEv">();

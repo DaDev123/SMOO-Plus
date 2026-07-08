@@ -1,3 +1,4 @@
+#include "hk/diag/diag.h"
 #include "hk/hook/Replace.h"
 #include "hk/hook/Trampoline.h"
 
@@ -88,8 +89,11 @@ static HkTrampoline registerCoinCollect2DToListHook = [](TrampolineStatic(), Coi
     Client::tryRegisterCoinCollect2D(coin);
 };
 
+static bool isModMenu = false;
+
 static HkReplace<void, StageSceneStatePauseMenu*> overrideHelpFadeNerve =
     hk::hook::replace([](StageSceneStatePauseMenu* state) -> void {
+        isModMenu = true;
         // Set label in menu inside LocalizedData/${lang}/MessageData/LayoutMessage.szs/Menu.msbt/Menu_Help
         al::setNerve(state, &NrvStageSceneStatePauseMenu.ModConfig);
     });
@@ -131,8 +135,13 @@ static HkTrampoline pauseMenuAppearHook = [](TrampolineStatic(), StageSceneState
 
     orig(menu);
 };
+
 static HkTrampoline pauseMenuWaitHook = [](TrampolineStatic(), StageSceneStatePauseMenu* menu) -> void {
     orig(menu);
+
+    if (!al::isNerve(menu, &NrvStageSceneStatePauseMenu.ModConfig)) {
+        isModMenu = false;
+    }
 
     if (ConnectionStatus::sInstance) {
         if (!menu->isDrawLayout())
@@ -140,6 +149,12 @@ static HkTrampoline pauseMenuWaitHook = [](TrampolineStatic(), StageSceneStatePa
         else
             ConnectionStatus::sInstance->tryEnd();
     }
+};
+
+static HkTrampoline shadowHook = [](TrampolineStatic(), void* a, void* b, void* c, void* d, void* e) -> void {
+    if (isModMenu)
+        return;
+    orig(a, b, c, d, e);
 };
 
 static HkTrampoline disableAppearSwitchCameraHook =
