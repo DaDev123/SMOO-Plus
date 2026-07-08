@@ -536,12 +536,12 @@ void drawMain(al::Sequence* curSequence) {
             case 2: {
                 ImGui::Text("------------------- Heaps --------------------\n\n");
 
-                auto displayHeapInfo = [](sead::Heap* heap, const char* heapName, bool isKB = false) {
+                auto displayHeapInfo = [](sead::Heap* heap, bool isKB = false) {
                     if (!heap) {
                         return;
                     }
 
-                    ImGui::Text("%s   ", heapName);
+                    ImGui::Text("%s   ", heap->getName().cstr());
                     ImGui::SameLine();
 
                     float used = isKB ? (heap->getSize() - heap->getFreeSize()) / float(1_KB) :
@@ -555,12 +555,12 @@ void drawMain(al::Sequence* curSequence) {
                     ImGui::ProgressBar(percentUsed / 100, ImVec2(-1, 0), buf);
                 };
 
-                displayHeapInfo(gHeap, "SMOOPlus");
-                displayHeapInfo(al::getStationedHeap(), "Stationed");
-                displayHeapInfo(al::getSequenceHeap(), "Sequence");
-                displayHeapInfo(al::getSceneHeap(), "Scene");
-                displayHeapInfo(al::getSceneResourceHeap(), "SceneResource", true);
-                displayHeapInfo(al::getWorldResourceHeap(), "WorldResource");
+                displayHeapInfo(gHeap);
+                displayHeapInfo(al::getStationedHeap());
+                displayHeapInfo(al::getSequenceHeap());
+                displayHeapInfo(al::getSceneHeap());
+                displayHeapInfo(al::getSceneResourceHeap(), true);
+                displayHeapInfo(al::getWorldResourceHeap());
 
                 break;
             }
