@@ -448,6 +448,8 @@ void Client::hideUIMessage() {
  *
  */
 void Client::readFunc() {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     hk::diag::logLine("Starting Client read thread");
 
     if (waitForGameInit) {
@@ -575,8 +577,6 @@ void Client::readFunc() {
 }
 
 void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukimaru) {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -587,7 +587,7 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
         return;
     }
 
-    PlayerInf* packet = new PlayerInf();
+    PlayerInf* packet = new (gHeap) PlayerInf();
     packet->mUserID = sInstance->mUserID;
 
     packet->playerPos = al::getTrans(playerBase);
@@ -649,8 +649,6 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
  * @param hackCap pointer to cap actor, used to get translation, animation, and state info
  */
 void Client::sendHackCapInfPacket(const HackCap* hackCap) {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -659,7 +657,7 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
     bool isFlying = hackCap->isFlying();
 
     if (isFlying) {
-        HackCapInf* packet = new HackCapInf();
+        HackCapInf* packet = new (gHeap) HackCapInf();
         packet->mUserID = sInstance->mUserID;
         packet->capPos = al::getTrans(hackCap);
 
@@ -679,7 +677,7 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
         sInstance->isSentHackInf = true;
 
     } else if (sInstance->isSentHackInf) {
-        HackCapInf* packet = new HackCapInf();
+        HackCapInf* packet = new (gHeap) HackCapInf();
         packet->mUserID = sInstance->mUserID;
         packet->isCapVisible = false;
         packet->capPos = sead::Vector3f::zero;
@@ -696,14 +694,12 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
  * @param holder
  */
 void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolderAccessor holder) {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
-    GameInf* packet = new GameInf();
+    GameInf* packet = new (gHeap) GameInf();
     packet->mUserID = sInstance->mUserID;
 
     if (player) {
@@ -732,14 +728,12 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
  * @param holder
  */
 void Client::sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart) {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
-    GameInf* packet = new GameInf();
+    GameInf* packet = new (gHeap) GameInf();
     packet->mUserID = sInstance->mUserID;
 
     packet->is2D = false;
@@ -771,14 +765,12 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart) 
  * @param cap
  */
 void Client::sendCostumeInfPacket(const char* body, const char* cap) {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
-    CostumeInf* packet = new CostumeInf(body, cap);
+    CostumeInf* packet = new (gHeap) CostumeInf(body, cap);
     packet->mUserID = sInstance->mUserID;
     sInstance->lastCostumeInfPacket = *packet;
     sInstance->mSocket->queuePacket(packet);
@@ -789,15 +781,13 @@ void Client::sendCostumeInfPacket(const char* body, const char* cap) {
  * @param player
  */
 void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
     if (sInstance->isClientCaptured && !sInstance->isSentCaptureInf) {
-        CaptureInf* packet = new CaptureInf();
+        CaptureInf* packet = new (gHeap) CaptureInf();
         packet->mUserID = sInstance->mUserID;
         strncpy(packet->hackName, tryConvertName(player->mHackKeeper->getCurrentHackName()),
                 sizeof(CaptureInf::hackName) - 1);
@@ -805,7 +795,7 @@ void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
         sInstance->mSocket->queuePacket(packet);
         sInstance->isSentCaptureInf = true;
     } else if (!sInstance->isClientCaptured && sInstance->isSentCaptureInf) {
-        CaptureInf* packet = new CaptureInf();
+        CaptureInf* packet = new (gHeap) CaptureInf();
         packet->mUserID = sInstance->mUserID;
         strcpy(packet->hackName, "");
         sInstance->mSocket->queuePacket(packet);
@@ -818,15 +808,13 @@ void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
  * @param shineID
  */
 void Client::sendShineCollectPacket(int shineID) {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
     if (sInstance->lastCollectedShine != shineID) {
-        ShineCollect* packet = new ShineCollect();
+        ShineCollect* packet = new (gHeap) ShineCollect();
         packet->mUserID = sInstance->mUserID;
         packet->shineId = shineID;
 
@@ -843,14 +831,12 @@ void Client::sendShineCollectPacket(int shineID) {
  * @param stage
  */
 void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage) {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
-    CoinCollectCollect* packet = new CoinCollectCollect();
+    CoinCollectCollect* packet = new (gHeap) CoinCollectCollect();
     packet->mUserID = sInstance->mUserID;
     strncpy(packet->placeID, placeID, sizeof(CoinCollectCollect::placeID) - 1);
     packet->placeID[sizeof(CoinCollectCollect::placeID) - 1] = '\0';
@@ -866,14 +852,12 @@ void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, cons
  * @param objId
  */
 void Client::sendCheckpointGetPacket(const char* objId) {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
-    CheckpointGet* packet = new CheckpointGet();
+    CheckpointGet* packet = new (gHeap) CheckpointGet();
     packet->mUserID = sInstance->mUserID;
     strncpy(packet->objId, objId, sizeof(CheckpointGet::objId) - 1);
     packet->objId[sizeof(CheckpointGet::objId) - 1] = '\0';
@@ -1327,14 +1311,12 @@ void Client::readMoonRocks(const al::ByamlIter& save) {
 }
 
 void Client::sendMoonRockHitPacket(int worldId) {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
-    MoonRockHit* packet = new MoonRockHit();
+    MoonRockHit* packet = new (gHeap) MoonRockHit();
     packet->mUserID = sInstance->mUserID;
     packet->worldId = worldId;
 

@@ -21,8 +21,6 @@
 #include "types.h"
 
 SocketClient::SocketClient() : SocketBase("SocketClient") {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
     mRecvQueue.allocate(100, gHeap);
     mSendQueue.allocate(100, gHeap);
 

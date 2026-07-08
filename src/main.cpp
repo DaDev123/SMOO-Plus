@@ -89,6 +89,7 @@
 
 HkTrampoline createHeap = [](TrampolineStatic(), al::SystemKit* systemKit, sead::Heap* rootHeap) -> void {
     orig(systemKit, rootHeap);
+
     gHeap = sead::ExpHeap::create(4_MB, "SMOOPlusHeap", al::getStationedHeap());
     al::addNamedHeap(gHeap, "SMOOPlusHeap");
 };
