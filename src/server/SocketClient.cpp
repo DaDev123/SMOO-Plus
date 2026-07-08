@@ -259,7 +259,7 @@ bool SocketClient::recv() {
                     if (result > 0) {
                         valread += result;
                     } else {
-                        free(packetBuf);
+                        gHeap->free(packetBuf);
                         hk::diag::logLine("Packet Read Failed! Value: %d\nPacket Size: %d\nPacket Type: %s",
                                           result, header->mPacketSize, packetNames[header->mType]);
                         return false;
@@ -269,7 +269,7 @@ bool SocketClient::recv() {
                 Packet* packet = reinterpret_cast<Packet*>(packetBuf);
 
                 if (!mRecvQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking))
-                    free(packetBuf);
+                    gHeap->free(packetBuf);
             }
         } else {
             hk::diag::logLine(

@@ -301,7 +301,7 @@ bool Client::startConnection() {
                     waitingForInitPacket = false;
                 }
 
-                delete curPacket;
+                gHeap->free(curPacket);
             } else {
                 hk::diag::logLine("Recieve failed! Stopping Connection.");
                 mIsConnectionActive = false;
@@ -577,7 +577,7 @@ void Client::readFunc() {
                 break;
             }
 
-            delete curPacket;
+            gHeap->free(curPacket);
 
         } else {
             hk::diag::logLine("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x",
