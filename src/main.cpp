@@ -11,7 +11,6 @@
 #include "hk/hook/Replace.h"
 #include "hk/hook/Trampoline.h"
 
-#include "nn/hid.h"  // IWYU pragma: keep
 #include "nn/init.h"
 #include "nn/nifm.h"
 #include "nn/oe.h"
@@ -57,9 +56,6 @@
 #include "game/System/GameDataFunction.h"
 #include "game/System/GameDataHolderAccessor.h"
 
-#include <cstring>
-#include <math.h>
-
 #include "actors/PuppetActor.h"
 #include "gfx/seadColor.h"
 #include "heap/seadExpHeap.h"
@@ -73,7 +69,6 @@
 #include "Library/LiveActor/ActorInitInfo.h"
 #include "MapObj/CheckpointFlag.h"
 #include "prim/seadSafeString.h"
-#include "puppetHooks.hpp"
 #include "puppets/PuppetInfo.h"
 #include "puppets/PuppetMain.hpp"
 #include "saveManager.h"
@@ -86,17 +81,15 @@
 #include "Util/AchievementUtil.h"
 
 // ===== HOOKS =====
-
+#define MB(X) X * 1024.f * 1024.f
 HkTrampoline createHeap = [](TrampolineStatic(), al::SystemKit* systemKit, sead::Heap* rootHeap) -> void {
     orig(systemKit, rootHeap);
 
-    gHeap = sead::ExpHeap::create(4_MB, "SMOOPlusHeap", al::getStationedHeap());
+    gHeap = sead::ExpHeap::create(MB(2.1), "SMOOPlusHeap", al::getStationedHeap());
     al::addNamedHeap(gHeap, "SMOOPlusHeap");
 };
 
 HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
-    imgui::setup();
-
     nn::nifm::Initialize();
     nn::nifm::SubmitNetworkRequest();
 
@@ -109,6 +102,8 @@ HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> 
 #if DEBUGLOG
     Logger::createInstance();
 #endif
+
+    imgui::setup();
 
     Client::createInstance(gHeap);
     SaveManager::createInstance(gHeap);
@@ -316,17 +311,6 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
     } else if (al::isPadHoldL()) {
         if (al::isPadTriggerUp()) {
             Client::sInstance->setStopRumble();
-        }
-        if (debugMode && al::isPadTriggerLeft()) {
-            GameDataFile::FixedHeapArray<s32, sNumWorlds> scenNumArr =
-                Client::sInstance->getHolder()->getGameDataFile()->getScenarioNumArr();
-
-            for (s32 i = 0; i < 17; i++) {
-                hk::diag::logLine("%s: Scenario: %d", worldNames[i], scenNumArr[i]);
-            }
-
-            hk::diag::logLine("Current Scenario: %d",
-                              Client::instance()->getHolder()->getGameDataFile()->getScenarioNo());
         }
     }
     if (Client::isMusicDisabled()) {
@@ -682,7 +666,7 @@ extern "C" void hkMain() {
                                                                                      // HtmlViewer
     disableAppearSwitchCameraHook
         .installAtSym<"R_ZN17AppearSwitchTimer4init">();  // disables AppearSwitchTimer's camera switch
-    hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);  // Removes Assist Mode Ledge Grabs
+    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);  // Removes Assist Mode Ledge Grabs
 
     hk::hook::trampoline([]() -> bool {
         return true;
