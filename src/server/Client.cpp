@@ -42,6 +42,7 @@
 #include "Library/Yaml/ByamlUtil.h"
 #include "logger.hpp"
 #include "main.hpp"
+#include "packets/InitPacket.h"
 #include "packets/MoonRockHit.h"
 #include "packets/Packet.h"
 #include "prim/seadSafeString.h"
@@ -282,6 +283,11 @@ bool Client::startConnection() {
 
                     maxPuppets = initPacket->maxPlayers - 1;
                     mPuppetHolder->resizeHolder(maxPuppets);
+
+                    if (curPacket->mPacketSize != sizeof(InitPacket) - sizeof(Packet)) {
+                        setServerVersion("Legacy");
+                        break;
+                    }
 
                     if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
                         sInstance->mIsAllowReconnect = false;
@@ -551,6 +557,12 @@ void Client::readFunc() {
                 hk::diag::logLine("Server Max Player Size: %d", initPacket->maxPlayers);
                 maxPuppets = initPacket->maxPlayers - 1;
                 mPuppetHolder->resizeHolder(maxPuppets);
+
+                if (curPacket->mPacketSize != sizeof(InitPacket) - sizeof(Packet)) {
+                    setServerVersion("Legacy");
+                    break;
+                }
+
                 if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
                     sInstance->mIsAllowReconnect = false;
                 } else {
