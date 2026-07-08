@@ -15,11 +15,6 @@ public:
     void exeLoadStage();
     void exeWipeToKill();
 
-    /**
-     * Check if both world resources and initialization thread are complete
-     */
-    bool isDoneLoading() const;
-
 private:
     class HakoniwaSequence* mSequence;
 };
