@@ -306,16 +306,14 @@ void SocketClient::printPacket(Packet* packet) {
 bool SocketClient::closeSocket() {
     hk::diag::logLine("Closing Socket.");
 
-    nn::Result result(-1);
+    nn::Result result = nn::socket::Close(this->socket_log_socket);
 
     while (result.IsFailure()) {
-        result = nn::socket::Close(this->socket_log_socket);
-
-        if (result.IsFailure()) {
             hk::diag::logLine("Failed to close socket!");
             nn::os::YieldThread();
             nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
-        }
+
+        result = nn::socket::Close(this->socket_log_socket);
     }
 
     this->socket_log_state = SockState::DISCONNECTED;

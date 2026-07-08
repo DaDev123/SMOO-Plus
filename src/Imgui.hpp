@@ -10,8 +10,6 @@
 
 namespace imgui {
 
-static const float displayHeight = 720.f, displayWidth = 1280.f;
-
 static void setupFont() {
     FsHelper::LoadData loadData = {.path = "content:/DebugData/Font/ChironHeiHK-Regular.ttf"};
     FsHelper::loadFileFromPath(loadData);
@@ -42,9 +40,8 @@ static void setupFont() {
 static void setup() {
     hk::gfx::ImGuiBackendNvn* imgui = hk::gfx::ImGuiBackendNvn::instance();
 
-    imgui->setAllocator(
-        {[](size allocSize, size alignment) -> void* { return gHeap->alloc(allocSize, alignment); },
-         [](void* ptr) -> void { gHeap->free(ptr); }});
+    imgui->setAllocator({[](size allocSize, size alignment) { return gHeap->alloc(allocSize, alignment); },
+                         [](void* ptr) { gHeap->free(ptr); }});
 
     imgui->tryInitialize();
     setupFont();
