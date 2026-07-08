@@ -104,7 +104,7 @@ void SaveManager::write() {
     }
 
     u32 size = writer.calcPackSize();
-    mBuffer = (u8*)mHeap->tryAlloc(size, 4);
+    mBuffer = (u8*)mHeap->alloc(size);
     if (!mBuffer) {
         mHeap->destroy();
         mHeap = nullptr;
@@ -150,7 +150,7 @@ void SaveManager::read(GameConfigData* config) {
     if (!data.buffer)
         return;
 
-    al::ByamlIter rootIter((u8*)data.buffer);
+    al::ByamlIter rootIter(data.buffer);
     al::ByamlIter smooIter;
     al::ByamlIter gameIter;
 
@@ -197,5 +197,6 @@ void SaveManager::read(GameConfigData* config) {
         al::tryGetByamlS32(&config->mPadRumbleLevel, gameIter, "PadRumbleLevel");
     }
 
-    gHeap->free(data.buffer);
+    // gHeap->free(data.buffer);
+    delete[] data.buffer;
 }

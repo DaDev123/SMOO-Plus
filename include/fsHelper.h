@@ -1,10 +1,12 @@
 #pragma once
+#include "hk/prim/traits/Integer.h"
+
 #include "vapours/results/results_common.hpp"
 namespace FsHelper {
 
 struct LoadData {
     const char* path = nullptr;
-    void* buffer = nullptr;
+    u8* buffer = nullptr;
     long bufSize = 0;
 };
 

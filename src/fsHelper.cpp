@@ -50,7 +50,8 @@ void loadFileFromPath(LoadData& loadData) {
     long size = 0;
     nn::fs::GetFileSize(&size, handle);
     loadData.bufSize = size;
-    loadData.buffer = gHeap->alloc(size);
+    // loadData.buffer = gHeap->alloc(size);
+    loadData.buffer = new (gHeap) u8[size];
 
     HK_ABORT_UNLESS(loadData.buffer, "Failed to Allocate Buffer! File Size: %ld", size);
 

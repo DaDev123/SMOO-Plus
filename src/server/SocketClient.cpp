@@ -245,8 +245,8 @@ bool SocketClient::recv() {
                 Logger::enableName();
             }
 
-            char* packetBuf = (char*)gHeap->alloc(fullSize);
-
+            // char* packetBuf = (char*)gHeap->alloc(fullSize);
+            u8* packetBuf = new (gHeap) u8[fullSize];
             if (packetBuf) {
                 memcpy(packetBuf, headerBuf, sizeof(Packet));
 
@@ -259,7 +259,8 @@ bool SocketClient::recv() {
                     if (result > 0) {
                         valread += result;
                     } else {
-                        gHeap->free(packetBuf);
+                        // gHeap->free(packetBuf);
+                        delete[] packetBuf;
                         hk::diag::logLine("Packet Read Failed! Value: %d\nPacket Size: %d\nPacket Type: %s",
                                           result, header->mPacketSize, packetNames[header->mType]);
                         return false;
@@ -269,7 +270,8 @@ bool SocketClient::recv() {
                 Packet* packet = reinterpret_cast<Packet*>(packetBuf);
 
                 if (!mRecvQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking))
-                    gHeap->free(packetBuf);
+                    // gHeap->free(packetBuf);
+                    delete[] packetBuf;
             }
         } else {
             hk::diag::logLine(
