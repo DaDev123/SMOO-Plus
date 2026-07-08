@@ -332,8 +332,8 @@ private:
 
     // ===== UI COMPONENTS =====
     Keyboard* mKeyboard = nullptr;
-    al::WindowConfirmWait* mUIMessage;
-    al::SimpleLayoutAppearWaitEnd* mConnectStatus;
+    al::WindowConfirmWait* mUIMessage = nullptr;
+    al::SimpleLayoutAppearWaitEnd* mConnectStatus = nullptr;
 
     // ===== GAME STATE MEMBERS =====
     bool isClientCaptured = false;

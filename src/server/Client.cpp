@@ -37,6 +37,7 @@
 #include "layouts/SpeedrunIcon.h"
 #include "Library/Base/StringUtil.h"
 #include "Library/Layout/LayoutActorUtil.h"
+#include "Library/Memory/HeapUtil.h"
 #include "Library/Yaml/ByamlIter.h"
 #include "Library/Yaml/ByamlUtil.h"
 #include "logger.hpp"
@@ -117,32 +118,30 @@ Client::Client() {
  * @param initInfo init info used to create layouts used by client
  */
 void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor holder) {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-    if (mUIMessage)
-        delete mUIMessage;
+    sead::ScopedCurrentHeapSetter setter(al::getSequenceHeap());
+
     mUIMessage = new al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
 
-    if (mConnectStatus)
-        delete mConnectStatus;
     mConnectStatus = new al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
 
-    if (ConnectionStatus::sInstance)
-        delete ConnectionStatus::sInstance;
     ConnectionStatus::sInstance = new ConnectionStatus("Status", initInfo);
 
-    if (SpeedrunIcon::sInstance)
-        delete SpeedrunIcon::sInstance;
     SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", initInfo);
+
+    sead::ScopedCurrentHeapSetter setter2(gHeap);
 
     if (PlayerEventLog::instance())
         PlayerEventLog::deleteInstance();
     PlayerEventLog::createInstance(gHeap);
 
-    mUIMessage->setTxtMessage(u"Connecting to Server.");
-    mUIMessage->setTxtMessageConfirm(u"Failed to Connect!");
-
-    al::setPaneString(mConnectStatus, "TxtSave", u"Connecting to Server.", 0);
-    al::setPaneString(mConnectStatus, "TxtSaveSh", u"Connecting to Server.", 0);
+    if (mUIMessage) {
+        mUIMessage->setTxtMessage(u"Connecting to Server.");
+        mUIMessage->setTxtMessageConfirm(u"Failed to Connect!");
+    }
+    if (mConnectStatus) {
+        al::setPaneString(mConnectStatus, "TxtSave", u"Connecting to Server.", 0);
+        al::setPaneString(mConnectStatus, "TxtSaveSh", u"Connecting to Server.", 0);
+    }
 
     mHolder = holder;
 
@@ -418,7 +417,7 @@ void Client::setServerPort(int port) {
 }
 
 void Client::showUIMessage(const char16_t* msg) {
-    if (!sInstance) {
+    if (!sInstance || !sInstance->mUIMessage) {
         return;
     }
 
@@ -436,7 +435,7 @@ void Client::showUIMessage(const char16_t* msg) {
 }
 
 void Client::hideUIMessage() {
-    if (!sInstance) {
+    if (!sInstance || !sInstance->mUIMessage) {
         return;
     }
 
@@ -458,23 +457,27 @@ void Client::readFunc() {
         waitForGameInit = false;
     }
 
-    mConnectStatus->appear();
+    if (mConnectStatus)
+        mConnectStatus->appear();
 
-    al::startAction(mConnectStatus, "Loop", "Loop");
+    if (mConnectStatus)
+        al::startAction(mConnectStatus, "Loop", "Loop");
 
     if (!startConnection()) {
         hk::diag::logLine("Failed to Connect to Server.");
 
         nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(250000000));
 
-        mConnectStatus->end();
+        if (mConnectStatus)
+            mConnectStatus->end();
 
         return;
     }
 
     nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500000000));
 
-    mConnectStatus->end();
+    if (mConnectStatus)
+        mConnectStatus->end();
 
     while (mIsConnectionActive) {
         HK_ABORT_UNLESS(mSocket != nullptr, "Client::mSocket was nullptr");
@@ -1727,7 +1730,7 @@ Shine* Client::findStageShine(int shineID) {
 }
 
 void Client::showConnectError(const char16_t* msg) {
-    if (!sInstance)
+    if (!sInstance || !sInstance->mUIMessage)
         return;
 
     sInstance->mUIMessage->setTxtMessageConfirm(msg);
@@ -1744,7 +1747,7 @@ void Client::showConnectError(const char16_t* msg) {
 }
 
 void Client::showConnect() {
-    if (!sInstance)
+    if (!sInstance || !sInstance->mUIMessage)
         return;
 
     sInstance->mUIMessage->appear();
@@ -1753,7 +1756,7 @@ void Client::showConnect() {
 }
 
 void Client::hideConnect() {
-    if (!sInstance)
+    if (!sInstance || !sInstance->mUIMessage)
         return;
 
     sInstance->mUIMessage->tryEnd();
