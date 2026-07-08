@@ -245,7 +245,7 @@ bool SocketClient::recv() {
                 Logger::enableName();
             }
 
-            char* packetBuf = (char*)malloc(fullSize);
+            char* packetBuf = (char*)gHeap->alloc(fullSize);
 
             if (packetBuf) {
                 memcpy(packetBuf, headerBuf, sizeof(Packet));
@@ -309,9 +309,9 @@ bool SocketClient::closeSocket() {
     nn::Result result = nn::socket::Close(this->socket_log_socket);
 
     while (result.IsFailure()) {
-            hk::diag::logLine("Failed to close socket!");
-            nn::os::YieldThread();
-            nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
+        hk::diag::logLine("Failed to close socket!");
+        nn::os::YieldThread();
+        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
 
         result = nn::socket::Close(this->socket_log_socket);
     }

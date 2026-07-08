@@ -4,23 +4,28 @@
 
 #include "nn/swkbd/swkbd.h"
 
+#include "heap/seadHeapMgr.h"
+#include "main.hpp"
+
 Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
     mThread = new al::AsyncFunctorThread("Swkbd", al::FunctorV0M(this, &Keyboard::keyboardThread), 0, 16_KB,
                                          sead::CoreId::cMain);
 
     mWorkBufSize = nn::swkbd::GetRequiredWorkBufferSize(false);
-    mWorkBuf = (char*)aligned_alloc(0x1000, mWorkBufSize);
+    mWorkBuf = (char*)gHeap->alloc(mWorkBufSize, 0x1000);
 
     mTextCheckSize = 0x1000;
-    mTextCheckBuf = (char*)malloc(mTextCheckSize);
+    mTextCheckBuf = (char*)gHeap->alloc(mTextCheckSize);
 
     mCustomizeDicSize = 0x1000;
-    mCustomizeDicBuf = (char*)malloc(mCustomizeDicSize);
+    mCustomizeDicBuf = (char*)gHeap->alloc(mCustomizeDicSize);
 
     mResultString.allocate();
 }
 
 void Keyboard::keyboardThread() {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     memset(&mKeyboardArg, 0, sizeof(mKeyboardArg));
     nn::swkbd::MakePreset(&mKeyboardArg.keyboardConfig, nn::swkbd::Preset::Default);
 
