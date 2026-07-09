@@ -171,56 +171,8 @@ bool Client::startThread() {
 }
 
 void Client::restartConnection() {
-    /*if (!sInstance->mIsAllowReconnect)
-        return;
-
-    // send disconnect packet
-    Packet* dc = new Packet();
-    dc->mType = PacketType::PLAYERDC;
-    dc->mUserID = Client::getClientId();
-    sInstance->mSocket->send(dc);
-    delete dc;
-
-    // close socket
-    if (sInstance->mSocket->closeSocket()) {
-        hk::diag::logLine("Successfully Closed Socket.");
-    }
-
-    sInstance->mConnectCount = 0;
-    for (PuppetInfo* curInfo : sInstance->mPuppetInfoArr) {
-        curInfo->isConnected = false;
-
-        curInfo->scenarioNo = -1;
-        strcpy(curInfo->stageName, "");
-        curInfo->isInSameStage = false;
-    }
-
-    sInstance->mSocket->setLogState(SockState::DISCONNECTED);
-    sInstance->mSocket->startEndThread();
-
-    sInstance->mIsConnectionActive =
-        sInstance->mSocket->init(sInstance->mServerIP.cstr(), sInstance->mServerPort).IsSuccess();
-
-    nn::os::SleepThread(nn::TimeSpan::FromMilliSeconds(10));  // BAD
-
-    if (sInstance->lastGameInfPacket != sInstance->emptyGameInfPacket) {
-        if (sInstance->lastGameInfPacket.mUserID != sInstance->mUserID) {
-            sInstance->lastGameInfPacket.mUserID = sInstance->mUserID;
-        }
-        sInstance->mSocket->send(&sInstance->lastGameInfPacket);
-    }
-
-    if (sInstance->lastPlayerInfPacket.mUserID == sInstance->mUserID) {
-        sInstance->mSocket->send(&sInstance->lastPlayerInfPacket);
-    }
-
-    if (sInstance->lastCostumeInfPacket.bodyModel[0] != '\0') {
-        sInstance->lastCostumeInfPacket.mUserID = sInstance->mUserID;
-        sInstance->mSocket->send(&sInstance->lastCostumeInfPacket);
-    }
-
-    sInstance->lastCaptureInfPacket.mUserID = sInstance->mUserID;
-    sInstance->mSocket->send(&sInstance->lastCaptureInfPacket);*/
+    if (sInstance->mIsAllowReconnect)
+        sInstance->mSocket->setSocketClientState(SocketClient::SocketClientState::RESET);
 }
 
 /**
@@ -284,13 +236,12 @@ bool Client::startConnection() {
                     if (curPacket->mPacketSize != sizeof(InitPacket) - sizeof(Packet)) {
                         // on an original smoo server, set to legacy and exit loop
                         setServerVersion("Legacy");
+                        sInstance->mIsAllowReconnect = true;
                         break;
                     }
 
                     if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
-                        sInstance->mIsAllowReconnect = false;
-                    } else {
-                        sInstance->mIsAllowReconnect = false;
+                        sInstance->mIsAllowReconnect = true;
                     }
 
                     setServerVersion(initPacket->ServerVersion);
@@ -560,14 +511,14 @@ void Client::readFunc() {
 
                 if (curPacket->mPacketSize != sizeof(InitPacket) - sizeof(Packet)) {
                     setServerVersion("Legacy");
+                    sInstance->mIsAllowReconnect = true;
                     break;
                 }
 
                 if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
-                    sInstance->mIsAllowReconnect = false;
-                } else {
-                    sInstance->mIsAllowReconnect = false;
+                    sInstance->mIsAllowReconnect = true;
                 }
+
                 setServerVersion(initPacket->ServerVersion);
                 hk::diag::logLine("Server version: %s", initPacket->ServerVersion);
                 break;

@@ -40,3 +40,4 @@ _init_libc1
 _init_libc2
 nnosInitialize
 nnosQuickExit
+_ZN2nn6socket8ShutdownEii

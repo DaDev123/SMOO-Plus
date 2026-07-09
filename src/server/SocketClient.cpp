@@ -7,6 +7,7 @@
 #include "nn/socket.h"
 #include "vapours/results/results_common.hpp"
 
+#include <cerrno>
 #include <cstring>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -247,7 +248,7 @@ bool SocketClient::recv() {
         if (result > 0) {
             valread += result;
         } else {
-            if (this->socket_errno == 11) {
+            if (this->socket_errno == EAGAIN) {
                 return true;
             } else {
                 hk::diag::logLine("Header Read Failed! Value: %d Total Read: %d", result, valread);
@@ -336,6 +337,13 @@ void SocketClient::printPacket(Packet* packet) {
 
 bool SocketClient::closeSocket() {
     hk::diag::logLine("Closing Socket.");
+
+    for (s32 shutdownFails = 0; shutdownFails <= 20; shutdownFails++) {
+        // Shutdown to unblock read func
+        if (nn::socket::Shutdown(this->socket_log_socket, SHUT_RDWR) == 0) {
+            break;
+        }
+    }
 
     nn::Result result = nn::socket::Close(this->socket_log_socket);
 

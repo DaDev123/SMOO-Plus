@@ -244,7 +244,7 @@ public:
         }
     }
 
-    bool mIsAllowReconnect = false;
+    bool mIsAllowReconnect = true;
 
 private:
     // ===== CORE FUNCTIONALITY =====
