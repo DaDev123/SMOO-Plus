@@ -167,6 +167,7 @@ public:
     // } static void setNeedUpdateHealthCoins(bool value);
     static void setServerVersion(const char* serverVersion);
     static const char* getServerVersion();
+    static bool isThreadDone() { return sInstance ? sInstance->mReadThread->isDone() : true; }
 
     // ===== SERVER CONFIGURATION =====
     static const int getCurrentPort();
@@ -283,7 +284,7 @@ private:
     sead::FixedSafeString<0x20> mUsername;
     bool mIsConnectionActive = false;
     bool mIsFirstConnect = true;
-    bool waitForGameInit = true;
+    bool isFirstRun = true;
 
     // ===== SERVER CONFIGURATION MEMBERS =====
     hostname mServerIP;

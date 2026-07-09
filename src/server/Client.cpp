@@ -60,9 +60,7 @@
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 
 /**
- * @brief Construct a new Client:: Client object
- *
- * @param bufferSize defines the maximum amount of puppets the client can handle
+ * @brief Construct a new Client::Client object
  */
 Client::Client() {
     sead::ScopedCurrentHeapSetter setter(gHeap);
@@ -236,7 +234,7 @@ bool Client::startConnection() {
     sead::ScopedCurrentHeapSetter setter(gHeap);
     bool isNeedSave = false;
 
-    bool isOverride = al::isPadHoldZL(-1);
+    bool isOverride = al::isPadHoldZL(-1) && isFirstRun;
 
     if (mServerIP.isEmpty() || isOverride) {
         mKeyboard->setHeaderText(u"IP Address");
@@ -263,17 +261,15 @@ bool Client::startConnection() {
     while (mSocket->getSocketClientState() == SocketClient::INIT) {
         hk::diag::logLine("log state: %s", mSocket->getStateChar());
         nn::os::YieldThread();
-        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
+        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100_ms));
     }
 
     mIsConnectionActive = mSocket->getLogState() == SockState::CONNECTED;
 
     if (mIsConnectionActive) {
-        hk::diag::logLine("Sucessful Connection. Waiting to recieve init packet.");
+        hk::diag::logLine("Successful Connection. Waiting to receive init packet.");
 
-        bool waitingForInitPacket = true;
-
-        while (waitingForInitPacket == true) {
+        while (true) {
             Packet* curPacket = mSocket->tryGetPacket();
 
             if (curPacket) {
@@ -286,6 +282,7 @@ bool Client::startConnection() {
                     mPuppetHolder->resizeHolder(maxPuppets);
 
                     if (curPacket->mPacketSize != sizeof(InitPacket) - sizeof(Packet)) {
+                        // on an original smoo server, set to legacy and exit loop
                         setServerVersion("Legacy");
                         break;
                     }
@@ -299,14 +296,14 @@ bool Client::startConnection() {
                     setServerVersion(initPacket->ServerVersion);
                     hk::diag::logLine("Server version: %s", initPacket->ServerVersion);
 
-                    waitingForInitPacket = false;
+                    break;
                 }
 
                 delete curPacket;
             } else {
                 hk::diag::logLine("Recieve failed! Stopping Connection.");
                 mIsConnectionActive = false;
-                waitingForInitPacket = false;
+                break;
             }
         }
     }
@@ -458,10 +455,10 @@ void Client::readFunc() {
 
     hk::diag::logLine("Starting Client read thread");
 
-    if (waitForGameInit) {
+    if (isFirstRun) {
+        // wait for some stuff to init
         nn::os::YieldThread();
         nn::os::SleepThread(nn::TimeSpan::FromSeconds(2));
-        waitForGameInit = false;
     }
 
     if (mConnectStatus)
@@ -480,6 +477,8 @@ void Client::readFunc() {
 
         return;
     }
+
+    isFirstRun = false;
 
     nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500000000));
 
@@ -583,12 +582,11 @@ void Client::readFunc() {
         } else {
             hk::diag::logLine("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x",
                               mSocket->socket_errno);
-            nn::os::YieldThread();
-            nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
-            // we need to sleep thread to prevent a spin lock when connection is lost
+            break;
         }
     }
 
+    mSocket->setLogState(SockState::DISCONNECTED);
     hk::diag::logLine("Client Read Thread ending.");
 }
 

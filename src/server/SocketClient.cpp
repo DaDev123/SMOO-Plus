@@ -47,8 +47,8 @@ void SocketClient::update() {
             exeReset();
             break;
         case RECONNECT:
-            if (!exeInit())
-                mState = RECONNECT;
+            Client::instance()->startThread();
+            mState = WAIT;
             break;
         }
         nn::os::YieldThread();
@@ -62,19 +62,30 @@ void SocketClient::init(const char* ip, u16 port) {
 
     if (mSocketThread->isDone())
         mSocketThread->start();
+
+    mState = INIT;
 }
 
 bool SocketClient::exeInit() {
+    // TODO: add back the errors or an equivalent of them that doesnt pause the game
     hk::diag::logLine("socket client init");
 
 // emulators (ryujinx) make this return false always, so skip it during init
 #ifndef EMU
-    if (!nn::nifm::IsNetworkAvailable()) {
-        this->socket_log_state = SockState::NONET;
-        this->socket_errno = nn::socket::GetLastErrno();
+    for (s32 networkFails = 0; networkFails <= 20; networkFails++) {
+        if (networkFails == 20) {
+            this->socket_log_state = SockState::NONET;
+            this->socket_errno = nn::socket::GetLastErrno();
 
-        mState = WAIT;
-        return false;
+            mState = WAIT;
+            return false;
+        }
+
+        if (nn::nifm::IsNetworkAvailable())
+            break;
+
+        nn::os::YieldThread();
+        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500_ms));
     }
 #endif
 
@@ -92,39 +103,51 @@ bool SocketClient::exeInit() {
         return false;
     }
 
-    if ((this->socket_log_socket = nn::socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-        hk::diag::logLine("Socket Unavailable.");
-        this->socket_errno = nn::socket::GetLastErrno();
-        this->socket_log_state = SockState::UNAVAILABLE;
+    for (s32 socketFails = 0; socketFails <= 20; socketFails++) {
+        if (socketFails == 20) {
+            hk::diag::logLine("Socket Unavailable.");
+            this->socket_errno = nn::socket::GetLastErrno();
+            this->socket_log_state = SockState::UNAVAILABLE;
 
-        mState = WAIT;
-        return false;
-    }
+            mState = WAIT;
+            return false;
+        }
 
-    serverAddress.sin_addr = hostAddress;
-    serverAddress.sin_port = nn::socket::InetHtons(this->port);
-    serverAddress.sin_family = nn::socket::InetHtons(AF_INET);
+        if ((this->socket_log_socket = nn::socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+            nn::os::YieldThread();
+            nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500_ms));
+            continue;
+        }
 
-    s32 sockOptValue = 1;
-    nn::socket::SetSockOpt(this->socket_log_socket, IPPROTO_TCP, TCP_NODELAY, &sockOptValue,
-                           sizeof(sockOptValue));
-    nn::socket::SetSockOpt(this->socket_log_socket, SOL_SOCKET, SO_REUSEADDR, &sockOptValue,
-                           sizeof(sockOptValue));
-    nn::socket::SetSockOpt(this->socket_log_socket, SOL_SOCKET, SO_REUSEPORT, &sockOptValue,
-                           sizeof(sockOptValue));
+        serverAddress.sin_addr = hostAddress;
+        serverAddress.sin_port = nn::socket::InetHtons(this->port);
+        serverAddress.sin_family = nn::socket::InetHtons(AF_INET);
 
-    nn::Result result;
+        s32 sockOptValue = 1;
+        nn::socket::SetSockOpt(this->socket_log_socket, IPPROTO_TCP, TCP_NODELAY, &sockOptValue,
+                               sizeof(sockOptValue));
+        nn::socket::SetSockOpt(this->socket_log_socket, SOL_SOCKET, SO_REUSEADDR, &sockOptValue,
+                               sizeof(sockOptValue));
+        nn::socket::SetSockOpt(this->socket_log_socket, SOL_SOCKET, SO_REUSEPORT, &sockOptValue,
+                               sizeof(sockOptValue));
 
-    if ((result =
-             nn::socket::Connect(this->socket_log_socket, (sockaddr*)&serverAddress, sizeof(serverAddress)))
-            .IsFailure()) {
-        hk::diag::logLine("Socket Connection Failed!");
-        this->socket_errno = nn::socket::GetLastErrno();
-        this->socket_log_state = SockState::CONNFAIL;
+        if (nn::socket::Connect(this->socket_log_socket, (sockaddr*)&serverAddress, sizeof(serverAddress))
+                .IsSuccess())
+            break;
 
-        nn::socket::Close(this->socket_log_socket);
-        mState = WAIT;
-        return false;
+        // different error than the one above
+        if (socketFails == 19) {
+            hk::diag::logLine("Socket Connection Failed!");
+            this->socket_errno = nn::socket::GetLastErrno();
+            this->socket_log_state = SockState::CONNFAIL;
+
+            nn::socket::Close(this->socket_log_socket);
+            mState = WAIT;
+            return false;
+        }
+
+        nn::os::YieldThread();
+        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500_ms));
     }
 
     this->socket_log_state = SockState::CONNECTED;
@@ -156,11 +179,14 @@ void SocketClient::exeReset() {
     nn::os::YieldThread();
     nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
 
-    // Free up all blocked threads
+    // Free up all blocked threads (pop first in case its full somehow)
+    mSendQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
+    mRecvQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
+
     mSendQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
     mRecvQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
 
-    while (!(mRecvThread->isDone() && mSendThread->isDone())) {
+    while (!(mRecvThread->isDone() && mSendThread->isDone() && Client::isThreadDone())) {
         nn::os::YieldThread();
         nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
     }
@@ -178,7 +204,7 @@ bool SocketClient::send(Packet* packet) {
     if (this->socket_log_state != SockState::CONNECTED || packet == nullptr)
         return false;
 
-    char* buffer = reinterpret_cast<char*>(packet);
+    u8* buffer = reinterpret_cast<u8*>(packet);
 
     int valread = 0;
 
@@ -205,8 +231,11 @@ bool SocketClient::recv() {
     }
 
     int headerSize = sizeof(Packet);
-    char headerBuf[sizeof(Packet)] = {};
+    u8 headerBuf[sizeof(Packet)] = {};
     int valread = 0;
+
+    // just for sanity
+    memset(headerBuf, 0, sizeof(Packet));
 
     // read only the size of a header
     while (valread < headerSize) {

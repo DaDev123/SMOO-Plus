@@ -8,7 +8,7 @@
 
 #include "basis/seadNew.h"
 #include "heap/seadHeap.h"
-#include "imconfig.h" // IWYU pragma: keep
+#include "imconfig.h"  // IWYU pragma: keep
 
 inline bool isInGame = false;
 inline bool debugMode = false;
