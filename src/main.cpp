@@ -715,8 +715,9 @@ void Start(size threadHandle, size argumentAddr, FuncPtr notifyExceptionHandlerR
     _init_libc2();
     (*callInitializers)();
 
-    uint s2 = 3068_MB + extraRAMAmount;
-    hk::hook::a64::assemble<"mov w8,{}">().arg(s2).installAtMainOffset(0x005157b8);
+    // increase size of root heap to take advantage of extra ram
+    u32 rootHeapSize = 3068_MB + extraRAMAmount;
+    hk::hook::a64::assemble<"mov w8,{}">().arg(rootHeapSize).installAtMainOffset(0x005157b8);
 
     nnMain();
 
