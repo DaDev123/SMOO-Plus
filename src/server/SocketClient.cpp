@@ -136,13 +136,16 @@ bool SocketClient::exeInit() {
                 .IsSuccess())
             break;
 
+        // shutdown and close so we dont create millions of fds
+        nn::socket::Shutdown(this->socket_log_socket, SHUT_RDWR);
+        nn::socket::Close(this->socket_log_socket);
+
         // different error than the one above
         if (socketFails == 19) {
             hk::diag::logLine("Socket Connection Failed!");
             this->socket_errno = nn::socket::GetLastErrno();
             this->socket_log_state = SockState::CONNFAIL;
 
-            nn::socket::Close(this->socket_log_socket);
             mState = WAIT;
             return false;
         }
