@@ -45,7 +45,3 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE SERVERIP=${SERVERIP})
 target_compile_definitions(${PROJECT_NAME} PRIVATE SMOVER=${SMOVER})
 target_compile_definitions(${PROJECT_NAME} PRIVATE BUILDVER=${BUILDVER})
 target_compile_definitions(${PROJECT_NAME} PRIVATE BUILDVERSTR=${BUILDVERSTR})
-
-if(DEBUG)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE SMOOHKDBG)
-endif()
