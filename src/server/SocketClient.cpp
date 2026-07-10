@@ -234,7 +234,8 @@ bool SocketClient::recv() {
     }
 
     int headerSize = sizeof(Packet);
-    u8 headerBuf[sizeof(Packet)] = {};
+    Packet header;
+    u8* headerBuf = reinterpret_cast<u8*>(&header);
     int valread = 0;
 
     // just for sanity
@@ -260,20 +261,18 @@ bool SocketClient::recv() {
     }
 
     if (valread > 0) {
-        Packet* header = reinterpret_cast<Packet*>(headerBuf);
+        int fullSize = header.mPacketSize + sizeof(Packet);
 
-        int fullSize = header->mPacketSize + sizeof(Packet);
-
-        if (header->mType > PacketType::UNKNOWN && header->mType < PacketType::End &&
-            fullSize <= MAXPACKSIZE && fullSize > 0 && valread == sizeof(Packet)) {
-            if (header->mType != PLAYERINF && header->mType != HACKCAPINF) {
-                hk::diag::log("Received packet (from %02X%02X):", header->mUserID.data[0],
-                              header->mUserID.data[1]);
+        if (header.mType > PacketType::UNKNOWN && header.mType < PacketType::End && fullSize <= MAXPACKSIZE &&
+            fullSize > 0 && valread == sizeof(Packet)) {
+            if (header.mType != PLAYERINF && header.mType != HACKCAPINF) {
+                hk::diag::log("Received packet (from %02X%02X):", header.mUserID.data[0],
+                              header.mUserID.data[1]);
                 Logger::disableName();
-                hk::diag::log(" Size: %d", header->mPacketSize);
-                hk::diag::log(" Type: %d", header->mType);
-                if (packetNames[header->mType])
-                    hk::diag::logLine(" Type String: %s", packetNames[header->mType]);
+                hk::diag::log(" Size: %d", header.mPacketSize);
+                hk::diag::log(" Type: %d", header.mType);
+                if (packetNames[header.mType])
+                    hk::diag::logLine(" Type String: %s", packetNames[header.mType]);
                 Logger::enableName();
             }
 
@@ -294,7 +293,7 @@ bool SocketClient::recv() {
                         // gHeap->free(packetBuf);
                         delete[] packetBuf;
                         hk::diag::logLine("Packet Read Failed! Value: %d\nPacket Size: %d\nPacket Type: %s",
-                                          result, header->mPacketSize, packetNames[header->mType]);
+                                          result, header.mPacketSize, packetNames[header.mType]);
                         return false;
                     }
                 }
@@ -308,7 +307,7 @@ bool SocketClient::recv() {
         } else {
             hk::diag::logLine(
                 "Failed to aquire valid data! Packet Type: %d Full Packet Size %d valread size: %d",
-                header->mType, fullSize, valread);
+                header.mType, fullSize, valread);
         }
 
         return true;
@@ -356,7 +355,7 @@ void SocketClient::closeSocket() {
 
     for (s32 closeFails = 0; closeFails <= 20; closeFails++) {
         if (closeFails == 20)
-        hk::diag::logLine("Failed to close socket!");
+            hk::diag::logLine("Failed to close socket!");
 
         if (nn::socket::Close(this->socket_log_socket).IsSuccess())
             break;
