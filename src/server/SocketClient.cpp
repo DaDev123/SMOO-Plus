@@ -388,7 +388,7 @@ void SocketClient::sendFunc() {
 
     hk::diag::logLine("Starting Send Thread.");
 
-    while (trySendQueue() && socket_log_state != SockState::DISCONNECTED) {
+    while (socket_log_state != SockState::DISCONNECTED && trySendQueue()) {
     }
 
     this->socket_log_state = SockState::DISCONNECTED;
@@ -408,7 +408,7 @@ void SocketClient::recvFunc() {
 
     hk::diag::logLine("Starting Recv Thread.");
 
-    while (recv() && socket_log_state != SockState::DISCONNECTED) {
+    while (socket_log_state != SockState::DISCONNECTED && recv()) {
     }
 
     this->socket_log_state = SockState::DISCONNECTED;
