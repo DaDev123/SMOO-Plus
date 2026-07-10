@@ -37,6 +37,7 @@ enum PacketType : short {
     COINCOLLECTCOLL,
     CHECKPOINTGET,
     MOONROCKHIT,
+    GAMESTART,
     End  // end of enum for bounds checking
 };
 

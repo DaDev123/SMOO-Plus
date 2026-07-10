@@ -1,4 +1,3 @@
-#include "hk/diag/diag.h"
 #include "hk/hook/Replace.h"
 #include "hk/hook/Trampoline.h"
 
@@ -175,7 +174,7 @@ static HkTrampoline startNewGameHook = [](TrampolineStatic(), HakoniwaSequence* 
 
     PlayerEventLog::addSelfEvent(PlayerEventLog::START, "");
 
-    Client::sendGameInfPacket(seq->mGameDataHolderAccessor, true);
+    Client::sendGameStartPacket();
 };
 
 static HkTrampoline moonRockHook = [](TrampolineStatic(), MoonRock* moonRock) -> void {

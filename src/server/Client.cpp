@@ -502,7 +502,9 @@ void Client::readFunc() {
             case PacketType::MOONROCKHIT:
                 updateMoonRocks((MoonRockHit*)curPacket);
                 break;
-
+            case PacketType::GAMESTART:
+                PlayerEventLog::addEvent(curPacket->mUserID, PlayerEventLog::START, "");
+                break;
             case PacketType::CLIENTINIT: {
                 InitPacket* initPacket = (InitPacket*)curPacket;
                 hk::diag::logLine("Server Max Player Size: %d", initPacket->maxPlayers);
@@ -693,7 +695,7 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
  * @brief Sends only stage info to the server.
  * @param holder
  */
-void Client::sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart) {
+void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -704,21 +706,12 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart) 
 
     packet->is2D = false;
 
-    if (isGameStart) {
-        packet->scenarioNo = 1;
+    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
 
-        strcpy(packet->stageName, "CapWorldHomeStage");
-    } else {
-        packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
-
-        strncpy(packet->stageName, GameDataFunction::getCurrentStageName(holder),
-                sizeof(GameInf::stageName) - 1);
-        packet->stageName[sizeof(GameInf::stageName) - 1] = '\0';
-    }
+    strncpy(packet->stageName, GameDataFunction::getCurrentStageName(holder), sizeof(GameInf::stageName) - 1);
+    packet->stageName[sizeof(GameInf::stageName) - 1] = '\0';
 
     packet->gameMode = -1;
-
-    packet->isGameStart = isGameStart;
 
     sInstance->lastGameInfPacket = *packet;
 
@@ -827,6 +820,22 @@ void Client::sendCheckpointGetPacket(const char* objId) {
     packet->mUserID = sInstance->mUserID;
     strncpy(packet->objId, objId, sizeof(CheckpointGet::objId) - 1);
     packet->objId[sizeof(CheckpointGet::objId) - 1] = '\0';
+
+    sInstance->mSocket->queuePacket(packet);
+}
+
+/**
+ * @brief Sends game start packet.
+ */
+void Client::sendGameStartPacket() {
+    if (!sInstance) {
+        hk::diag::logLine("Static Instance is Null!");
+        return;
+    }
+
+    Packet* packet = new (gHeap) Packet();
+    packet->mType = PacketType::GAMESTART;
+    packet->mUserID = sInstance->mUserID;
 
     sInstance->mSocket->queuePacket(packet);
 }
@@ -1034,10 +1043,6 @@ void Client::updateGameInfo(GameInf* packet) {
 
         curInfo->is2D = packet->is2D;
         curInfo->gameMode = packet->gameMode;
-
-        if (packet->isGameStart) {
-            PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::START, "");
-        }
     }
 }
 

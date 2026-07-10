@@ -15,7 +15,6 @@ struct PACKED GameInf : Packet {
     u8 scenarioNo = -1;
     char stageName[0x40] = {};
     s8 gameMode = -1;
-    bool1 isGameStart = false;
 
     bool operator==(const GameInf& rhs) const {
         return (is2D == rhs.is2D && scenarioNo == rhs.scenarioNo &&

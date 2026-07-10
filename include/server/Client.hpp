@@ -133,7 +133,7 @@ public:
     static void sendHackCapInfPacket(const HackCap* hackCap);
     static void sendPlayerInfPacket(const PlayerActorBase* player, bool isYukimaru);
     static void sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolderAccessor holder);
-    static void sendGameInfPacket(GameDataHolderAccessor holder, bool isGameStart = false);
+    static void sendGameInfPacket(GameDataHolderAccessor holder);
     static void sendCaptureInfPacket(const PlayerActorHakoniwa* player);
     static void sendCostumeInfPacket(const char* body, const char* cap);
     static void sendShineCollectPacket(int shineId);
@@ -141,6 +141,7 @@ public:
     static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
     static void sendCheckpointGetPacket(const char* objId);
     static void sendMoonRockHitPacket(int worldId);
+    static void sendGameStartPacket();
 
     // ===== PUPPET MANAGEMENT =====
     static bool tryAddPuppet(PuppetActor* puppet);
