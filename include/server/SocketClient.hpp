@@ -20,7 +20,7 @@ public:
     void exeReset();
 
     void init(const char* ip, u16 port);
-    bool closeSocket();
+    void closeSocket();
     Packet* tryGetPacket();
 
     bool startThreads();

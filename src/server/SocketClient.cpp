@@ -337,28 +337,33 @@ void SocketClient::printPacket(Packet* packet) {
     }
 }
 
-bool SocketClient::closeSocket() {
+void SocketClient::closeSocket() {
     hk::diag::logLine("Closing Socket.");
 
-    for (s32 shutdownFails = 0; shutdownFails <= 20; shutdownFails++) {
-        // Shutdown to unblock read func
-        if (nn::socket::Shutdown(this->socket_log_socket, SHUT_RDWR) == 0) {
-            break;
-        }
-    }
-
-    nn::Result result = nn::socket::Close(this->socket_log_socket);
-
-    while (result.IsFailure()) {
-        hk::diag::logLine("Failed to close socket!");
-        nn::os::YieldThread();
-        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
-
-        result = nn::socket::Close(this->socket_log_socket);
-    }
-
     this->socket_log_state = SockState::DISCONNECTED;
-    return true;
+
+    for (s32 shutdownFails = 0; shutdownFails <= 20; shutdownFails++) {
+        if (shutdownFails == 20)
+            hk::diag::logLine("Failed to shutdown socket!");
+
+        // Shutdown to unblock read func
+        if (nn::socket::Shutdown(this->socket_log_socket, SHUT_RDWR) == 0)
+            break;
+
+        nn::os::YieldThread();
+        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100_ms));
+    }
+
+    for (s32 closeFails = 0; closeFails <= 20; closeFails++) {
+        if (closeFails == 20)
+        hk::diag::logLine("Failed to close socket!");
+
+        if (nn::socket::Close(this->socket_log_socket).IsSuccess())
+            break;
+
+        nn::os::YieldThread();
+        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100_ms));
+    }
 }
 
 bool SocketClient::stringToIPAddress(const char* str, in_addr* out) {
