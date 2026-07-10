@@ -528,8 +528,9 @@ void Client::readFunc() {
                 break;
             }
 
-            delete curPacket;
-
+            // convert back to a u8* buffer to delete correctly
+            u8* packetBuf = reinterpret_cast<u8*>(curPacket);
+            delete[] packetBuf;
         } else {
             hk::diag::logLine("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x",
                               mSocket->socket_errno);

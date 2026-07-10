@@ -49,7 +49,6 @@ void SocketClient::update() {
             break;
         case RECONNECT:
             Client::instance()->startThread();
-            mState = WAIT;
             break;
         }
         nn::os::YieldThread();
