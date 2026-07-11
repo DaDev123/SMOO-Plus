@@ -406,11 +406,11 @@ void Client::readFunc() {
 
     hk::diag::logLine("Starting Client read thread");
 
-    if (isFirstRun) {
+    /*if (isFirstRun) {
         // wait for some stuff to init
         nn::os::YieldThread();
         nn::os::SleepThread(nn::TimeSpan::FromSeconds(2));
-    }
+    }*/
 
     if (mConnectStatus)
         mConnectStatus->appear();
@@ -421,7 +421,7 @@ void Client::readFunc() {
     if (!startConnection()) {
         hk::diag::logLine("Failed to Connect to Server.");
 
-        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(250000000));
+        // nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(250000000));
 
         if (mConnectStatus)
             mConnectStatus->end();
@@ -431,7 +431,7 @@ void Client::readFunc() {
 
     isFirstRun = false;
 
-    nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500000000));
+    // nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500000000));
 
     if (mConnectStatus)
         mConnectStatus->end();
