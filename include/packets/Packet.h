@@ -76,7 +76,6 @@ struct PACKED Packet {
 #include "packets/CostumeInf.h"
 #include "packets/GameInf.h"
 #include "packets/HackCapInf.h"
-#include "packets/HealthCoins.h"
 #include "packets/InitPacket.h"
 #include "packets/MoonRockHit.h"
 #include "packets/PlayerConnect.h"
