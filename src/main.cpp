@@ -575,8 +575,6 @@ void seadPrintHook(const char* fmt, ...) {
 HkReplaceVarArgs replaceSeadPrintHook = seadPrintHook;
 
 extern "C" void hkMain() {
-    shadowHook.installAtSym<"_ZN2al18ShadowMaskDirector9addSphereERKN4sead8Matrix34IfEERKNS1_7Color4fEfi">();
-
     // Init Stuff
     createHeap.installAtSym<"_ZN2al9SystemKit18createMemorySystemEPN4sead4HeapE">();
     gameSystemInit.installAtSym<"_ZN10GameSystem4initEv">();
@@ -630,7 +628,6 @@ extern "C" void hkMain() {
     windowConfirmWaitHook.installAtSym<"_ZN2al17WindowConfirmWait6tryEndEv">();
 
     // Pause Menu Changes
-
     hk::hook::a64::assemble<"mov w2, #5">()
         .installAtSym<"R_ZN24StageSceneStatePauseMenuNrvStateCount">();     // increase nerve state count to 5
     initNerveStateHook.installAtSym<"R_ZN24StageSceneStatePauseMenuC1">();  // inits options nerve state and
@@ -641,6 +638,9 @@ extern "C" void hkMain() {
     pauseMenuWaitHook.installAtSym<"_ZN24StageSceneStatePauseMenu7exeWaitEv">();  // Onine Indicator
 
     overrideHelpFadeNerve.installAtSym<"_ZN24StageSceneStatePauseMenu17exeFadeBeforeHelpEv">();
+
+    shadowHook.installAtSym<
+        "_ZN2al18ShadowMaskDirector9addSphereERKN4sead8Matrix34IfEERKNS1_7Color4fEfi">();  // fix stupid crash
 
     // custom bootscreen hooks
     hk::hook::writeBranchLinkAtSym<"R_hakoniwaSetNerveSetup">(speedboot::hakoniwaSetNerveSetup);

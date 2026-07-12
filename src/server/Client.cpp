@@ -120,11 +120,8 @@ void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor hol
     sead::ScopedCurrentHeapSetter setter(al::getSequenceHeap());
 
     mUIMessage = new al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
-
     mConnectStatus = new al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
-
     ConnectionStatus::sInstance = new ConnectionStatus("Status", initInfo);
-
     SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", initInfo);
 
     sead::ScopedCurrentHeapSetter setter2(gHeap);
@@ -489,9 +486,6 @@ void Client::readFunc() {
                 break;
             case PacketType::CHANGESTAGE:
                 sendToStage((ChangeStagePacket*)curPacket);
-                break;
-            case PacketType::HEALTHCOINS:
-                hk::diag::logLine("Received unused health/coins packet (?)");
                 break;
             case PacketType::COINCOLLECTCOLL:
                 updateCoinCollects((CoinCollectCollect*)curPacket);
