@@ -21,7 +21,6 @@ enum PacketType : short {
     HACKCAPINF,
     GAMEINF,
     TAGINF,
-    // FREEZEINF,
     PLAYERCON,
     PLAYERDC,
     COSTUMEINF,
@@ -29,11 +28,6 @@ enum PacketType : short {
     CAPTUREINF,
     CHANGESTAGE,
     CMD,
-    MESSAGE,
-    UDPINIT,
-    HOLEPUNCH,
-    EXTRA,
-    HEALTHCOINS,
     COINCOLLECTCOLL,
     CHECKPOINTGET,
     MOONROCKHIT,
@@ -43,10 +37,8 @@ enum PacketType : short {
 
 constexpr static const char* packetNames[] = {
     "Unknown", "Client Initialization", "Player Info", "Player Cap Info", "Game Info", "Tag Info",
-    //"Freeze Info",
     "Player Connect", "Player Disconnect", "Costume Info", "Moon Collection", "Capture Info", "Change Stage",
-    "Server Command", "Message", "UDP Initialization", "UDP Hole Punch", "Extra", "Health and Coins",
-    "Purple Coin Collection", "Checkpoint Get", "Moon Rock Hit"};
+    "Server Command", "Regional Coin Collection", "Checkpoint Get", "Moon Rock Hit", "Game Start"};
 
 enum SenderType { SERVER, CLIENT };
 
