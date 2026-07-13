@@ -49,13 +49,24 @@ void loadFileFromPath(LoadData& loadData) {
 
     long size = 0;
     nn::fs::GetFileSize(&size, handle);
+    if (size < 0 || size > 1024 * 1024) {
+        nn::fs::CloseFile(handle);
+        hk::diag::logLine("Refusing invalid/oversized file: %s (%ld bytes)", loadData.path, size);
+        loadData.bufSize = 0;
+        loadData.buffer = new (gHeap) u8[1];
+        if (loadData.buffer)
+            loadData.buffer[0] = '\0';
+        return;
+    }
     loadData.bufSize = size;
-    // loadData.buffer = gHeap->alloc(size);
-    loadData.buffer = new (gHeap) u8[size];
+    // One trailing NUL makes text consumers such as strtok safe while keeping
+    // bufSize equal to the bytes actually read from disk.
+    loadData.buffer = new (gHeap) u8[size + 1];
 
     HK_ABORT_UNLESS(loadData.buffer, "Failed to Allocate Buffer! File Size: %ld", size);
 
     HK_ABORT_UNLESS_R(nn::fs::ReadFile(handle, 0, loadData.buffer, size).IsFailure());
+    loadData.buffer[size] = '\0';
 
     nn::fs::CloseFile(handle);
 }

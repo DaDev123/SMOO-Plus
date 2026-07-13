@@ -7,8 +7,7 @@
 #include "types.h"
 
 SocketBase::SocketBase(const char* name) {
-    strcpy(this->sockName, name);
-    this->sock_flags = 0;
+    setName(name);
 }
 
 const char* SocketBase::getStateChar() {
@@ -55,10 +54,11 @@ s32 SocketBase::socket_read_char(char* out) {
 
     int valread = nn::socket::Recv(this->socket_log_socket, buf, sizeof(buf), this->sock_flags);
 
-    if (valread > 0) {
-        buf[valread] = '\0';
-    }
-    strncat(out, buf, valread);
+    if (valread <= 0)
+        return valread;
+    const s32 safeLength = valread < static_cast<s32>(sizeof(buf)) ? valread : sizeof(buf) - 1;
+    buf[safeLength] = '\0';
+    strncat(out, buf, safeLength);
     return valread;
 }
 

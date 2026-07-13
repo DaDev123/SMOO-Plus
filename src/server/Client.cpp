@@ -50,6 +50,7 @@
 #include "Scene/StageScene.h"
 #include "Sequence/HakoniwaSequence.h"
 #include "server/SocketClient.hpp"
+#include "server/LegacyProtocol.hpp"
 #include "System/GameDataHolder.h"
 #include "System/GameDataHolderAccessor.h"
 #include "System/GameDataHolderWriter.h"
@@ -72,7 +73,7 @@ Client::Client() {
 
     mSocket = new SocketClient();
 
-    mPuppetHolder = new PuppetHolder(maxPuppets);
+    mPuppetHolder = new PuppetHolder(MAXPUPINDEX - 1);
 
     for (size_t i = 0; i < MAXPUPINDEX; i++) {
         mPuppetInfoArr[i] = new PuppetInfo();
@@ -83,6 +84,7 @@ Client::Client() {
     mConnectCount = 0;
 
     curCollectedShines.fill(-1);
+    mPendingMoonRocks.fill(false);
 
     collectedShineCount = 0;
 
@@ -181,28 +183,15 @@ void Client::restartConnection() {
  */
 bool Client::startConnection() {
     sead::ScopedCurrentHeapSetter setter(gHeap);
-    bool isNeedSave = false;
-
-    bool isOverride = al::isPadHoldZL(-1) && isFirstRun;
-
-    if (mServerIP.isEmpty() || isOverride) {
-        mKeyboard->setHeaderText(u"IP Address");
-        mKeyboard->setSubText(u"Please set a server IP address below.");
+    // This function runs on the connection worker.  It must not open Odyssey
+    // UI, read input, or mutate save data.  The configuration menu owns those
+    // operations on the game thread; use a safe local default for first run.
+    if (mServerIP.isEmpty()) {
         mServerIP = "127.0.0.1";
-        Client::openKeyboardIP();
-        isNeedSave = true;
     }
 
-    if (!mServerPort || isOverride) {
-        mKeyboard->setHeaderText(u"Port");
-        mKeyboard->setSubText(u"Please set a server port below.");
+    if (!mServerPort) {
         mServerPort = 1027;
-        Client::openKeyboardPort();
-        isNeedSave = true;
-    }
-
-    if (isNeedSave) {
-        GameDataFunction::setRequireSave(mHolder.mData);
     }
 
     mSocket->init(mServerIP.cstr(), mServerPort);
@@ -213,49 +202,11 @@ bool Client::startConnection() {
         nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100_ms));
     }
 
+    // The init frame is decoded and applied by Client::update() on the game
+    // thread.  Do not touch puppet/UI/game state from this connection thread.
     mIsConnectionActive = mSocket->getLogState() == SockState::CONNECTED;
-
-    if (mIsConnectionActive) {
-        hk::diag::logLine("Successful Connection. Waiting to receive init packet.");
-
-        while (true) {
-            Packet* curPacket = mSocket->tryGetPacket();
-
-            if (curPacket) {
-                if (curPacket->mType == PacketType::CLIENTINIT) {
-                    InitPacket* initPacket = (InitPacket*)curPacket;
-
-                    hk::diag::logLine("Server Max Player Size: %d", initPacket->maxPlayers);
-
-                    maxPuppets = initPacket->maxPlayers - 1;
-                    mPuppetHolder->resizeHolder(maxPuppets);
-
-                    if (curPacket->mPacketSize != sizeof(InitPacket) - sizeof(Packet)) {
-                        // on an original smoo server, set to legacy and exit loop
-                        setServerVersion("Legacy");
-                        sInstance->mIsAllowReconnect = true;
-                        break;
-                    }
-
-                    if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
-                        sInstance->mIsAllowReconnect = true;
-                    }
-
-                    setServerVersion(initPacket->ServerVersion);
-                    hk::diag::logLine("Server version: %s", initPacket->ServerVersion);
-
-                    break;
-                }
-
-                delete curPacket;
-            } else {
-                hk::diag::logLine("Recieve failed! Stopping Connection.");
-                mIsConnectionActive = false;
-                break;
-            }
-        }
-    }
-
+    mLegacyProfileActive = false;
+    mIsAllowReconnect = false;
     return mIsConnectionActive;
 }
 
@@ -409,133 +360,308 @@ void Client::readFunc() {
         nn::os::SleepThread(nn::TimeSpan::FromSeconds(2));
     }*/
 
-    if (mConnectStatus)
-        mConnectStatus->appear();
-
-    if (mConnectStatus)
-        al::startAction(mConnectStatus, "Loop", "Loop");
-
     if (!startConnection()) {
         hk::diag::logLine("Failed to Connect to Server.");
-
-        // nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(250000000));
-
-        if (mConnectStatus)
-            mConnectStatus->end();
-
         return;
     }
 
     isFirstRun = false;
+    hk::diag::logLine("Client connection thread ending; game thread owns frame application.");
+}
 
-    // nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500000000));
+namespace {
+bool isSafeStageToken(const char* value) {
+    if (!value || value[0] == '\0')
+        return false;
+    for (const char* p = value; *p; ++p) {
+        const bool allowed = (*p >= 'a' && *p <= 'z') || (*p >= 'A' && *p <= 'Z') ||
+                             (*p >= '0' && *p <= '9') || *p == '_' || *p == '-';
+        if (!allowed)
+            return false;
+    }
+    return true;
+}
 
-    if (mConnectStatus)
-        mConnectStatus->end();
+bool isAllowedStageDestination(const char* stage) {
+    static constexpr const char* kStages[] = {
+        "CapWorldHomeStage",      "WaterfallWorldHomeStage", "SandWorldHomeStage",
+        "ForestWorldHomeStage",   "LakeWorldHomeStage",      "CloudWorldHomeStage",
+        "ClashWorldHomeStage",    "CityWorldHomeStage",      "SeaWorldHomeStage",
+        "SnowWorldHomeStage",     "LavaWorldHomeStage",      "BossRaidWorldHomeStage",
+        "SkyWorldHomeStage",      "MoonWorldHomeStage",      "PeachWorldHomeStage",
+        "Special1WorldHomeStage", "Special2WorldHomeStage",
+    };
+    for (const char* allowed : kStages) {
+        if (std::strcmp(stage, allowed) == 0)
+            return true;
+    }
+    return false;
+}
 
-    while (mIsConnectionActive) {
-        HK_ABORT_UNLESS(mSocket != nullptr, "Client::mSocket was nullptr");
-        Packet* curPacket = mSocket->tryGetPacket();
+bool isAllowedStageEntrance(const char* entrance) {
+    static constexpr const char* kEntrances[] = {"Start", "StartDemo", "Warp", "MoonRock"};
+    for (const char* allowed : kEntrances) {
+        if (std::strcmp(entrance, allowed) == 0)
+            return true;
+    }
+    return false;
+}
 
-        if (curPacket) {
-            switch (curPacket->mType) {
-            case PacketType::PLAYERINF:
-                updatePlayerInfo((PlayerInf*)curPacket);
-                break;
-            case PacketType::GAMEINF:
-                updateGameInfo((GameInf*)curPacket);
-                break;
-            case PacketType::HACKCAPINF:
-                updateHackCapInfo((HackCapInf*)curPacket);
-                break;
-            case PacketType::CAPTUREINF:
-                updateCaptureInfo((CaptureInf*)curPacket);
-                break;
-            case PacketType::PLAYERCON:
-                updatePlayerConnect((PlayerConnect*)curPacket);
+bool isValidAnimation(PlayerAnims::Type type) {
+    const s16 value = static_cast<s16>(type);
+    return value == static_cast<s16>(PlayerAnims::Type::Unknown) ||
+           (value >= 0 && value < static_cast<s16>(PlayerAnims::Type::End));
+}
 
-                if (lastGameInfPacket != emptyGameInfPacket) {
-                    if (lastGameInfPacket.mUserID != mUserID) {
-                        lastGameInfPacket.mUserID = mUserID;
-                    }
-                    mSocket->send(&lastGameInfPacket);
-                }
+nn::account::Uid makeUid(const LegacyProtocol::Header& header) {
+    nn::account::Uid id{};
+    std::memcpy(id.data, header.userId, sizeof(header.userId));
+    return id;
+}
+}  // namespace
 
-                if (lastPlayerInfPacket.mUserID == mUserID) {
-                    mSocket->send(&lastPlayerInfPacket);
-                }
-                if (lastCostumeInfPacket.bodyModel[0] != '\0') {
-                    lastCostumeInfPacket.mUserID = mUserID;
-                    mSocket->send(&lastCostumeInfPacket);
-                }
+bool Client::queueLegacyFrame(s16 type, const u8* payload, s16 payloadSize) {
+    if (!mLegacyProfileActive || !mSocket || !payload || payloadSize < 0 ||
+        payloadSize > LegacyProtocol::MaxPayloadSize)
+        return false;
 
-                lastCaptureInfPacket.mUserID = mUserID;
-                mSocket->send(&lastCaptureInfPacket);
+    u8 frame[LegacyProtocol::MaxFrameSize] = {};
+    LegacyProtocol::encodeHeader(frame, reinterpret_cast<const LegacyProtocol::Byte*>(mUserID.data), type,
+                                 payloadSize);
+    if (payloadSize > 0)
+        std::memcpy(frame + LegacyProtocol::HeaderSize, payload, payloadSize);
+    return mSocket->queueFrame(frame, LegacyProtocol::HeaderSize + payloadSize);
+}
 
-                break;
-            case PacketType::COSTUMEINF:
-                updateCostumeInfo((CostumeInf*)curPacket);
-                break;
-            case PacketType::SHINECOLL:
-                updateShineInfo((ShineCollect*)curPacket);
-                break;
-            case PacketType::PLAYERDC:
-                hk::diag::logLine("Received Player Disconnect!");
-                curPacket->mUserID.print();
-                disconnectPlayer((PlayerDC*)curPacket);
-                break;
-            case PacketType::CHANGESTAGE:
-                sendToStage((ChangeStagePacket*)curPacket);
-                break;
-            case PacketType::COINCOLLECTCOLL:
-                updateCoinCollects((CoinCollectCollect*)curPacket);
-                break;
-            case PacketType::CHECKPOINTGET:
-                updateCheckpoints((CheckpointGet*)curPacket);
-                break;
-            case PacketType::MOONROCKHIT:
-                updateMoonRocks((MoonRockHit*)curPacket);
-                break;
-            case PacketType::GAMESTART:
-                PlayerEventLog::addEvent(curPacket->mUserID, PlayerEventLog::START, "");
-                break;
-            case PacketType::CLIENTINIT: {
-                InitPacket* initPacket = (InitPacket*)curPacket;
-                hk::diag::logLine("Server Max Player Size: %d", initPacket->maxPlayers);
-                maxPuppets = initPacket->maxPlayers - 1;
-                mPuppetHolder->resizeHolder(maxPuppets);
+void Client::processIncomingFrames() {
+    if (!mSocket)
+        return;
 
-                if (curPacket->mPacketSize != sizeof(InitPacket) - sizeof(Packet)) {
-                    setServerVersion("Legacy");
-                    sInstance->mIsAllowReconnect = true;
-                    break;
-                }
+    // Keep frame work bounded per game tick.  Player/cap packets are snapshots,
+    // so processing the next update is preferable to blocking scene work.
+    for (s32 i = 0; i < 32; i++) {
+        u8* frame = mSocket->tryGetFrame();
+        if (!frame)
+            return;
+        handleLegacyFrame(frame);
+        delete[] frame;
+    }
+}
 
-                if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
-                    sInstance->mIsAllowReconnect = true;
-                }
+void Client::handleLegacyFrame(const u8* frame) {
+    LegacyProtocol::Header header{};
+    if (!LegacyProtocol::decodeHeader(frame, LegacyProtocol::HeaderSize, &header))
+        return;
 
-                setServerVersion(initPacket->ServerVersion);
-                hk::diag::logLine("Server version: %s", initPacket->ServerVersion);
-                break;
-            }
-            default:
-                hk::diag::logLine("Discarding Unknown Packet Type.");
-                break;
-            }
-
-            // convert back to a u8* buffer to delete correctly
-            u8* packetBuf = reinterpret_cast<u8*>(curPacket);
-            delete[] packetBuf;
-        } else {
-            hk::diag::logLine("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x",
-                              mSocket->socket_errno);
-            break;
-        }
+    // Known layouts must match exactly.  The three server extension packets
+    // without public layouts are still consumed by SocketClient and ignored.
+    if (!LegacyProtocol::hasExpectedPayloadSize(header)) {
+        hk::diag::logLine("Malformed legacy frame type %d size %d; reconnecting.", header.type,
+                          header.payloadSize);
+        mSocket->setSocketClientState(SocketClient::SocketClientState::RESET);
+        return;
     }
 
-    mSocket->setLogState(SockState::DISCONNECTED);
-    hk::diag::logLine("Client Read Thread ending.");
+    const u8* payload = frame + LegacyProtocol::HeaderSize;
+    const nn::account::Uid userId = makeUid(header);
+
+    if (header.type == LegacyProtocol::Init) {
+        if (header.payloadSize != 34)
+            return;
+
+        u16 serverMaxPlayers = 0;
+        char version[33] = {};
+        if (!LegacyProtocol::read(payload, header.payloadSize, 0, &serverMaxPlayers) ||
+            !LegacyProtocol::copyFixedString(version, sizeof(version), payload, header.payloadSize, 2, 32) ||
+            std::strcmp(version, LegacyProtocol::ServerVersion) != 0) {
+            hk::diag::logLine("Unsupported server layout/version '%s'.", version);
+            setServerVersion("Unsupported server");
+            showUIMessage(u"Unsupported server. Expected SMOO+ 0.5 pre.");
+            mLegacyProfileActive = false;
+            mIsConnectionActive = false;
+            mIsAllowReconnect = false;
+            mSocket->setSocketClientState(SocketClient::SocketClientState::RESET);
+            return;
+        }
+
+        const s32 remoteCapacity = static_cast<s32>(serverMaxPlayers) - 1;
+        maxPuppets = remoteCapacity < 0 ? 0 : (remoteCapacity > MAXPUPINDEX - 1 ? MAXPUPINDEX - 1 : remoteCapacity);
+        setServerVersion(version);
+        mLegacyProfileActive = true;
+        mIsConnectionActive = true;
+        mIsAllowReconnect = true;
+        hk::diag::logLine("Legacy SMOO+ 0.5 pre profile active (%d remote-player slots).", maxPuppets);
+        return;
+    }
+
+    if (!mLegacyProfileActive)
+        return;
+
+    switch (header.type) {
+    case LegacyProtocol::Player: {
+        PlayerInf packet;
+        packet.mUserID = userId;
+        if (!LegacyProtocol::read(payload, 56, 0, &packet.playerPos) ||
+            !LegacyProtocol::read(payload, 56, 12, &packet.playerRot) ||
+            !LegacyProtocol::read(payload, 56, 28, &packet.animBlendWeights) ||
+            !LegacyProtocol::read(payload, 56, 52, &packet.actName) ||
+            !LegacyProtocol::read(payload, 56, 54, &packet.subActName) ||
+            !LegacyProtocol::isFiniteVec3(packet.playerPos.x, packet.playerPos.y, packet.playerPos.z) ||
+            !LegacyProtocol::isNormalizedQuat(packet.playerRot.x, packet.playerRot.y, packet.playerRot.z,
+                                               packet.playerRot.w) ||
+            !isValidAnimation(packet.actName) || !isValidAnimation(packet.subActName))
+            return;
+        for (float weight : packet.animBlendWeights) {
+            if (!LegacyProtocol::isFinite(weight) || weight < 0.0f || weight > 1.0f)
+                return;
+        }
+        updatePlayerInfo(&packet);
+        break;
+    }
+    case LegacyProtocol::Cap: {
+        sead::Vector3f pos{};
+        sead::Quatf rotation{};
+        bool1 visible = false;
+        char animation[PACKBUFSIZE] = {};
+        if (!LegacyProtocol::read(payload, 80, 0, &pos) || !LegacyProtocol::read(payload, 80, 12, &rotation) ||
+            !LegacyProtocol::read(payload, 80, 28, &visible) ||
+            !LegacyProtocol::copyFixedString(animation, sizeof(animation), payload, 80, 32, 48) ||
+            !LegacyProtocol::isFiniteVec3(pos.x, pos.y, pos.z) ||
+            !LegacyProtocol::isNormalizedQuat(rotation.x, rotation.y, rotation.z, rotation.w) || visible > 1)
+            return;
+        PuppetInfo* info = findPuppetInfo(userId, false);
+        if (!info)
+            return;
+        info->capPos = pos;
+        // The server sends one quaternion only.  It is the cap rotation; the
+        // newer client-only second quaternion is never read from this frame.
+        info->capRot = rotation;
+        info->capQuat = sead::Quatf::unit;
+        info->isCapThrow = visible;
+        std::strncpy(info->capAnim, animation, sizeof(info->capAnim) - 1);
+        info->capAnim[sizeof(info->capAnim) - 1] = '\0';
+        break;
+    }
+    case LegacyProtocol::Game: {
+        GameInf packet;
+        packet.mUserID = userId;
+        if (!LegacyProtocol::read(payload, 66, 0, &packet.is2D) ||
+            !LegacyProtocol::read(payload, 66, 1, &packet.scenarioNo) ||
+            !LegacyProtocol::copyFixedString(packet.stageName, sizeof(packet.stageName), payload, 66, 2, 64) ||
+            !isSafeStageToken(packet.stageName) || packet.is2D > 1 || packet.scenarioNo > 99)
+            return;
+        // SMOO+ 0.5 pre has no gameMode field.
+        packet.gameMode = -1;
+        updateGameInfo(&packet);
+        break;
+    }
+    case LegacyProtocol::Connect: {
+        PlayerConnect packet;
+        packet.mUserID = userId;
+        s32 connectionType = 0;
+        if (!LegacyProtocol::read(payload, 38, 0, &connectionType) ||
+            !LegacyProtocol::read(payload, 38, 4, &packet.maxPlayerCount) ||
+            !LegacyProtocol::copyFixedString(packet.clientName, sizeof(packet.clientName), payload, 38, 6, 32) ||
+            connectionType < 0 || connectionType > 1)
+            return;
+        updatePlayerConnect(&packet);
+        resendCachedState();
+        break;
+    }
+    case LegacyProtocol::Disconnect: {
+        PlayerDC packet;
+        packet.mUserID = userId;
+        disconnectPlayer(&packet);
+        break;
+    }
+    case LegacyProtocol::Costume:
+    case LegacyProtocol::ChangeCostume: {
+        CostumeInf packet;
+        packet.mUserID = userId;
+        if (!LegacyProtocol::copyFixedString(packet.bodyModel, sizeof(packet.bodyModel), payload, 64, 0, 32) ||
+            !LegacyProtocol::copyFixedString(packet.capModel, sizeof(packet.capModel), payload, 64, 32, 32))
+            return;
+        updateCostumeInfo(&packet);
+        break;
+    }
+    case LegacyProtocol::Shine: {
+        ShineCollect packet;
+        packet.mUserID = userId;
+        if (!LegacyProtocol::read(payload, 4, 0, &packet.shineId) || packet.shineId < 0 || packet.shineId > 99999)
+            return;
+        // The legacy server sends only the integer ID, not the trailing flag.
+        packet.isGrand = false;
+        updateShineInfo(&packet);
+        break;
+    }
+    case LegacyProtocol::Capture: {
+        CaptureInf packet;
+        packet.mUserID = userId;
+        if (!LegacyProtocol::copyFixedString(packet.hackName, sizeof(packet.hackName), payload, 32, 0, 32))
+            return;
+        updateCaptureInfo(&packet);
+        break;
+    }
+    case LegacyProtocol::ChangeStage: {
+        ChangeStagePacket packet;
+        packet.mUserID = userId;
+        if (!LegacyProtocol::copyFixedString(packet.changeStage, sizeof(packet.changeStage), payload, 68, 0, 48) ||
+            !LegacyProtocol::copyFixedString(packet.changeID, sizeof(packet.changeID), payload, 68, 48, 16) ||
+            !LegacyProtocol::read(payload, 68, 64, &packet.scenarioNo) ||
+            !LegacyProtocol::read(payload, 68, 65, &packet.subScenarioType) ||
+            !isSafeStageToken(packet.changeStage) || !isSafeStageToken(packet.changeID) ||
+            !isAllowedStageDestination(packet.changeStage) || !isAllowedStageEntrance(packet.changeID) ||
+            packet.scenarioNo < 0 || packet.scenarioNo > 99 || packet.subScenarioType > 15)
+            return;
+        sendToStage(&packet);
+        break;
+    }
+    // These server packet IDs intentionally do not share the old client enum.
+    // Their complete payload was already consumed by SocketClient; unsupported
+    // chat/UDP/hole-punch/extra/health/mod packets are ignored safely.
+    case LegacyProtocol::Tag:
+    case LegacyProtocol::Command:
+    case LegacyProtocol::Chat:
+    case LegacyProtocol::UdpInit:
+    case LegacyProtocol::HolePunch:
+    case LegacyProtocol::Extra:
+    case LegacyProtocol::HealthCoins:
+    case LegacyProtocol::Mods:
+    default: break;
+    }
+}
+
+void Client::resendCachedState() {
+    // A new peer needs a reliable snapshot.  Re-encode cached state through
+    // the legacy codec; never hand an in-memory Packet to the socket layer.
+    if (lastGameInfPacket.stageName[0] != '\0') {
+        u8 payload[66] = {};
+        LegacyProtocol::write(payload, sizeof(payload), 0, lastGameInfPacket.is2D);
+        LegacyProtocol::write(payload, sizeof(payload), 1, lastGameInfPacket.scenarioNo);
+        std::memcpy(payload + 2, lastGameInfPacket.stageName, sizeof(lastGameInfPacket.stageName));
+        queueLegacyFrame(LegacyProtocol::Game, payload, sizeof(payload));
+    }
+
+    if (lastPlayerInfPacket.mUserID == mUserID) {
+        u8 payload[56] = {};
+        LegacyProtocol::write(payload, sizeof(payload), 0, lastPlayerInfPacket.playerPos);
+        LegacyProtocol::write(payload, sizeof(payload), 12, lastPlayerInfPacket.playerRot);
+        LegacyProtocol::write(payload, sizeof(payload), 28, lastPlayerInfPacket.animBlendWeights);
+        LegacyProtocol::write(payload, sizeof(payload), 52, lastPlayerInfPacket.actName);
+        LegacyProtocol::write(payload, sizeof(payload), 54, lastPlayerInfPacket.subActName);
+        queueLegacyFrame(LegacyProtocol::Player, payload, sizeof(payload));
+    }
+
+    if (lastCostumeInfPacket.bodyModel[0] != '\0') {
+        u8 payload[64] = {};
+        std::memcpy(payload, lastCostumeInfPacket.bodyModel, sizeof(lastCostumeInfPacket.bodyModel));
+        std::memcpy(payload + 32, lastCostumeInfPacket.capModel, sizeof(lastCostumeInfPacket.capModel));
+        queueLegacyFrame(LegacyProtocol::Costume, payload, sizeof(payload));
+    }
+
+    u8 capture[32] = {};
+    std::memcpy(capture, lastCaptureInfPacket.hackName, sizeof(lastCaptureInfPacket.hackName));
+    queueLegacyFrame(LegacyProtocol::Capture, capture, sizeof(capture));
 }
 
 void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukimaru) {
@@ -549,18 +675,18 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
         return;
     }
 
-    PlayerInf* packet = new (gHeap) PlayerInf();
-    packet->mUserID = sInstance->mUserID;
+    PlayerInf packet;
+    packet.mUserID = sInstance->mUserID;
 
-    packet->playerPos = al::getTrans(playerBase);
+    packet.playerPos = al::getTrans(playerBase);
 
-    al::calcQuat(&packet->playerRot, playerBase);
+    al::calcQuat(&packet.playerRot, playerBase);
 
     if (!isYukimaru) {
         PlayerActorHakoniwa* player = (PlayerActorHakoniwa*)playerBase;
 
         for (size_t i = 0; i < 6; i++) {
-            packet->animBlendWeights[i] = player->mAnimator->getBlendWeight(i);
+            packet.animBlendWeights[i] = player->mAnimator->getBlendWeight(i);
         }
 
         const char* hackName = player->mHackKeeper->getCurrentHackName();
@@ -571,15 +697,15 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
             const char* actName = al::getActionName(player->mHackKeeper->mHackActor);
 
             if (actName) {
-                packet->actName = PlayerAnims::FindType(actName);
-                packet->subActName = PlayerAnims::Type::Unknown;
+                packet.actName = PlayerAnims::FindType(actName);
+                packet.subActName = PlayerAnims::Type::Unknown;
             } else {
-                packet->actName = PlayerAnims::Type::Unknown;
-                packet->subActName = PlayerAnims::Type::Unknown;
+                packet.actName = PlayerAnims::Type::Unknown;
+                packet.subActName = PlayerAnims::Type::Unknown;
             }
         } else {
-            packet->actName = PlayerAnims::FindType(player->mAnimator->mAnimFrameCtrl->getActionName());
-            packet->subActName = PlayerAnims::FindType(player->mAnimator->mCurSubAnim.cstr());
+            packet.actName = PlayerAnims::FindType(player->mAnimator->mAnimFrameCtrl->getActionName());
+            packet.subActName = PlayerAnims::FindType(player->mAnimator->mCurSubAnim.cstr());
 
             sInstance->isClientCaptured = false;
         }
@@ -588,20 +714,32 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
         // TODO: implement YukimaruRacePlayer syncing
 
         for (size_t i = 0; i < 6; i++) {
-            packet->animBlendWeights[i] = 0;
+            packet.animBlendWeights[i] = 0;
         }
 
         sInstance->isClientCaptured = false;
 
-        packet->actName = PlayerAnims::Type::Unknown;
-        packet->subActName = PlayerAnims::Type::Unknown;
+        packet.actName = PlayerAnims::Type::Unknown;
+        packet.subActName = PlayerAnims::Type::Unknown;
     }
 
-    if (sInstance->lastPlayerInfPacket != *packet) {
-        sInstance->lastPlayerInfPacket = *packet;
-        sInstance->mSocket->queuePacket(packet);
-    } else {
-        delete packet;
+    static u32 idleSnapshotTicks = 0;
+    if (sInstance->lastPlayerInfPacket == packet) {
+        // State snapshots run at 20 Hz while changing, but an idle player only
+        // refreshes once per second so TCP never accumulates stale transforms.
+        if (++idleSnapshotTicks < 20)
+            return;
+    }
+
+    u8 payload[56] = {};
+    LegacyProtocol::write(payload, sizeof(payload), 0, packet.playerPos);
+    LegacyProtocol::write(payload, sizeof(payload), 12, packet.playerRot);
+    LegacyProtocol::write(payload, sizeof(payload), 28, packet.animBlendWeights);
+    LegacyProtocol::write(payload, sizeof(payload), 52, packet.actName);
+    LegacyProtocol::write(payload, sizeof(payload), 54, packet.subActName);
+    if (sInstance->queueLegacyFrame(LegacyProtocol::Player, payload, sizeof(payload))) {
+        sInstance->lastPlayerInfPacket = packet;
+        idleSnapshotTicks = 0;
     }
 }
 
@@ -619,33 +757,40 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
     bool isFlying = hackCap->isFlying();
 
     if (isFlying) {
-        HackCapInf* packet = new (gHeap) HackCapInf();
-        packet->mUserID = sInstance->mUserID;
-        packet->capPos = al::getTrans(hackCap);
+        HackCapInf packet;
+        packet.mUserID = sInstance->mUserID;
+        packet.capPos = al::getTrans(hackCap);
 
-        packet->isCapVisible = isFlying;
+        packet.isCapVisible = isFlying;
 
-        packet->capQuat.x = hackCap->mJointKeeper->mJointRot.x;
-        packet->capQuat.y = hackCap->mJointKeeper->mJointRot.y;
-        packet->capQuat.z = hackCap->mJointKeeper->mJointRot.z;
-        packet->capQuat.w = hackCap->mJointKeeper->mSkew;
-        packet->capRotQuat = al::getQuat(hackCap);
+        packet.capQuat.x = hackCap->mJointKeeper->mJointRot.x;
+        packet.capQuat.y = hackCap->mJointKeeper->mJointRot.y;
+        packet.capQuat.z = hackCap->mJointKeeper->mJointRot.z;
+        packet.capQuat.w = hackCap->mJointKeeper->mSkew;
+        packet.capRotQuat = al::getQuat(hackCap);
 
-        strncpy(packet->capAnim, al::getActionName(hackCap), sizeof(HackCapInf::capAnim) - 1);
-        packet->capAnim[sizeof(HackCapInf::capAnim) - 1] = '\0';
+        strncpy(packet.capAnim, al::getActionName(hackCap), sizeof(HackCapInf::capAnim) - 1);
+        packet.capAnim[sizeof(HackCapInf::capAnim) - 1] = '\0';
 
-        sInstance->mSocket->queuePacket(packet);
+        u8 payload[80] = {};
+        LegacyProtocol::write(payload, sizeof(payload), 0, packet.capPos);
+        // SMOO+ 0.5 pre has one legacy cap quaternion at offset 12.
+        LegacyProtocol::write(payload, sizeof(payload), 12, packet.capQuat);
+        LegacyProtocol::write(payload, sizeof(payload), 28, packet.isCapVisible);
+        std::memcpy(payload + 32, packet.capAnim, sizeof(packet.capAnim));
+        sInstance->queueLegacyFrame(LegacyProtocol::Cap, payload, sizeof(payload));
 
         sInstance->isSentHackInf = true;
 
     } else if (sInstance->isSentHackInf) {
-        HackCapInf* packet = new (gHeap) HackCapInf();
-        packet->mUserID = sInstance->mUserID;
-        packet->isCapVisible = false;
-        packet->capPos = sead::Vector3f::zero;
-        packet->capQuat = sead::Quatf::unit;
-        packet->capRotQuat = sead::Quatf::unit;
-        sInstance->mSocket->queuePacket(packet);
+        u8 payload[80] = {};
+        const sead::Vector3f pos = sead::Vector3f::zero;
+        const sead::Quatf rot = sead::Quatf::unit;
+        const bool1 visible = false;
+        LegacyProtocol::write(payload, sizeof(payload), 0, pos);
+        LegacyProtocol::write(payload, sizeof(payload), 12, rot);
+        LegacyProtocol::write(payload, sizeof(payload), 28, visible);
+        sInstance->queueLegacyFrame(LegacyProtocol::Cap, payload, sizeof(payload));
         sInstance->isSentHackInf = false;
     }
 }
@@ -661,28 +806,30 @@ void Client::sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolder
         return;
     }
 
-    GameInf* packet = new (gHeap) GameInf();
-    packet->mUserID = sInstance->mUserID;
+    GameInf packet;
+    packet.mUserID = sInstance->mUserID;
 
     if (player) {
-        packet->is2D = player->mDimensionKeeper->mIs2D;
+        packet.is2D = player->mDimensionKeeper->mIs2D;
     } else {
-        packet->is2D = false;
+        packet.is2D = false;
     }
 
-    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
+    packet.scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
 
-    strncpy(packet->stageName, GameDataFunction::getCurrentStageName(holder), sizeof(GameInf::stageName) - 1);
-    packet->stageName[sizeof(GameInf::stageName) - 1] = '\0';
+    strncpy(packet.stageName, GameDataFunction::getCurrentStageName(holder), sizeof(GameInf::stageName) - 1);
+    packet.stageName[sizeof(GameInf::stageName) - 1] = '\0';
 
-    packet->gameMode = -1;
+    packet.gameMode = -1;
 
-    if (*packet != sInstance->lastGameInfPacket) {
-        sInstance->lastGameInfPacket = *packet;
-        sInstance->mSocket->queuePacket(packet);
-    } else {
-        delete packet;
-    }
+    if (packet == sInstance->lastGameInfPacket)
+        return;
+    u8 payload[66] = {};
+    LegacyProtocol::write(payload, sizeof(payload), 0, packet.is2D);
+    LegacyProtocol::write(payload, sizeof(payload), 1, packet.scenarioNo);
+    std::memcpy(payload + 2, packet.stageName, sizeof(packet.stageName));
+    if (sInstance->queueLegacyFrame(LegacyProtocol::Game, payload, sizeof(payload)))
+        sInstance->lastGameInfPacket = packet;
 }
 
 /**
@@ -695,21 +842,20 @@ void Client::sendGameInfPacket(GameDataHolderAccessor holder) {
         return;
     }
 
-    GameInf* packet = new (gHeap) GameInf();
-    packet->mUserID = sInstance->mUserID;
+    GameInf packet;
+    packet.mUserID = sInstance->mUserID;
+    packet.is2D = false;
+    packet.scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
+    strncpy(packet.stageName, GameDataFunction::getCurrentStageName(holder), sizeof(GameInf::stageName) - 1);
+    packet.stageName[sizeof(GameInf::stageName) - 1] = '\0';
+    packet.gameMode = -1;
 
-    packet->is2D = false;
-
-    packet->scenarioNo = holder.mData->getGameDataFile()->getScenarioNo();
-
-    strncpy(packet->stageName, GameDataFunction::getCurrentStageName(holder), sizeof(GameInf::stageName) - 1);
-    packet->stageName[sizeof(GameInf::stageName) - 1] = '\0';
-
-    packet->gameMode = -1;
-
-    sInstance->lastGameInfPacket = *packet;
-
-    sInstance->mSocket->queuePacket(packet);
+    u8 payload[66] = {};
+    LegacyProtocol::write(payload, sizeof(payload), 0, packet.is2D);
+    LegacyProtocol::write(payload, sizeof(payload), 1, packet.scenarioNo);
+    std::memcpy(payload + 2, packet.stageName, sizeof(packet.stageName));
+    if (sInstance->queueLegacyFrame(LegacyProtocol::Game, payload, sizeof(payload)))
+        sInstance->lastGameInfPacket = packet;
 }
 
 /**
@@ -723,10 +869,17 @@ void Client::sendCostumeInfPacket(const char* body, const char* cap) {
         return;
     }
 
-    CostumeInf* packet = new (gHeap) CostumeInf(body, cap);
-    packet->mUserID = sInstance->mUserID;
-    sInstance->lastCostumeInfPacket = *packet;
-    sInstance->mSocket->queuePacket(packet);
+    CostumeInf packet;
+    packet.mUserID = sInstance->mUserID;
+    if (body)
+        std::strncpy(packet.bodyModel, body, sizeof(packet.bodyModel) - 1);
+    if (cap)
+        std::strncpy(packet.capModel, cap, sizeof(packet.capModel) - 1);
+    u8 payload[64] = {};
+    std::memcpy(payload, packet.bodyModel, sizeof(packet.bodyModel));
+    std::memcpy(payload + 32, packet.capModel, sizeof(packet.capModel));
+    if (sInstance->queueLegacyFrame(LegacyProtocol::Costume, payload, sizeof(payload)))
+        sInstance->lastCostumeInfPacket = packet;
 }
 
 /**
@@ -740,19 +893,24 @@ void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
     }
 
     if (sInstance->isClientCaptured && !sInstance->isSentCaptureInf) {
-        CaptureInf* packet = new (gHeap) CaptureInf();
-        packet->mUserID = sInstance->mUserID;
-        strncpy(packet->hackName, tryConvertName(player->mHackKeeper->getCurrentHackName()),
-                sizeof(CaptureInf::hackName) - 1);
-        packet->hackName[sizeof(CaptureInf::hackName) - 1] = '\0';
-        sInstance->mSocket->queuePacket(packet);
-        sInstance->isSentCaptureInf = true;
+        CaptureInf packet;
+        packet.mUserID = sInstance->mUserID;
+        strncpy(packet.hackName, tryConvertName(player->mHackKeeper->getCurrentHackName()),
+                sizeof(packet.hackName) - 1);
+        u8 payload[32] = {};
+        std::memcpy(payload, packet.hackName, sizeof(packet.hackName));
+        if (sInstance->queueLegacyFrame(LegacyProtocol::Capture, payload, sizeof(payload))) {
+            sInstance->lastCaptureInfPacket = packet;
+            sInstance->isSentCaptureInf = true;
+        }
     } else if (!sInstance->isClientCaptured && sInstance->isSentCaptureInf) {
-        CaptureInf* packet = new (gHeap) CaptureInf();
-        packet->mUserID = sInstance->mUserID;
-        strcpy(packet->hackName, "");
-        sInstance->mSocket->queuePacket(packet);
-        sInstance->isSentCaptureInf = false;
+        CaptureInf packet;
+        packet.mUserID = sInstance->mUserID;
+        u8 payload[32] = {};
+        if (sInstance->queueLegacyFrame(LegacyProtocol::Capture, payload, sizeof(payload))) {
+            sInstance->lastCaptureInfPacket = packet;
+            sInstance->isSentCaptureInf = false;
+        }
     }
 }
 
@@ -767,13 +925,10 @@ void Client::sendShineCollectPacket(int shineID) {
     }
 
     if (sInstance->lastCollectedShine != shineID) {
-        ShineCollect* packet = new (gHeap) ShineCollect();
-        packet->mUserID = sInstance->mUserID;
-        packet->shineId = shineID;
-
-        sInstance->lastCollectedShine = shineID;
-
-        sInstance->mSocket->queuePacket(packet);
+        u8 payload[4] = {};
+        LegacyProtocol::write(payload, sizeof(payload), 0, shineID);
+        if (sInstance->queueLegacyFrame(LegacyProtocol::Shine, payload, sizeof(payload)))
+            sInstance->lastCollectedShine = shineID;
     }
 }
 
@@ -789,15 +944,14 @@ void Client::sendCoinCollectCollectPacket(const char* placeID, int worldID, cons
         return;
     }
 
-    CoinCollectCollect* packet = new (gHeap) CoinCollectCollect();
-    packet->mUserID = sInstance->mUserID;
-    strncpy(packet->placeID, placeID, sizeof(CoinCollectCollect::placeID) - 1);
-    packet->placeID[sizeof(CoinCollectCollect::placeID) - 1] = '\0';
-    packet->worldID = worldID;
-    strncpy(packet->stage, stage, sizeof(CoinCollectCollect::stage) - 1);
-    packet->stage[sizeof(CoinCollectCollect::stage) - 1] = '\0';
-
-    sInstance->mSocket->queuePacket(packet);
+    (void)placeID;
+    (void)worldID;
+    (void)stage;
+    static bool warned = false;
+    if (!warned) {
+        hk::diag::logLine("Regional-coin sync is disabled for SMOO+ 0.5 pre (wire ID collision).");
+        warned = true;
+    }
 }
 
 /**
@@ -810,12 +964,12 @@ void Client::sendCheckpointGetPacket(const char* objId) {
         return;
     }
 
-    CheckpointGet* packet = new (gHeap) CheckpointGet();
-    packet->mUserID = sInstance->mUserID;
-    strncpy(packet->objId, objId, sizeof(CheckpointGet::objId) - 1);
-    packet->objId[sizeof(CheckpointGet::objId) - 1] = '\0';
-
-    sInstance->mSocket->queuePacket(packet);
+    (void)objId;
+    static bool warned = false;
+    if (!warned) {
+        hk::diag::logLine("Checkpoint sync is disabled for SMOO+ 0.5 pre (wire ID collision).");
+        warned = true;
+    }
 }
 
 /**
@@ -827,11 +981,11 @@ void Client::sendGameStartPacket() {
         return;
     }
 
-    Packet* packet = new (gHeap) Packet();
-    packet->mType = PacketType::GAMESTART;
-    packet->mUserID = sInstance->mUserID;
-
-    sInstance->mSocket->queuePacket(packet);
+    static bool warned = false;
+    if (!warned) {
+        hk::diag::logLine("Game-start sync is disabled for SMOO+ 0.5 pre (wire ID collision).");
+        warned = true;
+    }
 }
 
 /**
@@ -851,13 +1005,9 @@ void Client::updatePlayerInfo(PlayerInf* packet) {
 
     curInfo->playerPos = packet->playerPos;
 
-    if (abs(packet->playerRot.x) > 0.f || abs(packet->playerRot.y) > 0.f || abs(packet->playerRot.z) > 0.f ||
-        abs(packet->playerRot.w) > 0.f) {
-        if (abs(packet->playerRot.x) <= 1.f || abs(packet->playerRot.y) <= 1.f ||
-            abs(packet->playerRot.z) <= 1.f || abs(packet->playerRot.w) <= 1.f) {
-            curInfo->playerRot = packet->playerRot;
-        }
-    }
+    if (LegacyProtocol::isNormalizedQuat(packet->playerRot.x, packet->playerRot.y, packet->playerRot.z,
+                                         packet->playerRot.w))
+        curInfo->playerRot = packet->playerRot;
 
     if (packet->actName != PlayerAnims::Type::Unknown) {
         strncpy(curInfo->curAnimStr, PlayerAnims::FindStr(packet->actName),
@@ -901,30 +1051,12 @@ void Client::updateHackCapInfo(HackCapInf* packet) {
     PuppetInfo* curInfo = findPuppetInfo(packet->mUserID, false);
     if (!curInfo)
         return;
-    bool isOldPacket = packet->mPacketSize == (sizeof(HackCapInf) - sizeof(Packet) - sizeof(sead::Quatf));
-
     curInfo->capPos = packet->capPos;
-
-    if (isOldPacket) {
-        struct PACKED OldHackCapInf {
-            sead::Vector3f capPos;
-            sead::Quatf capQuat;
-            bool1 isCapVisible;
-            char capAnim[PACKBUFSIZE];
-        };
-        auto* old = reinterpret_cast<OldHackCapInf*>(&packet->capPos);
-        curInfo->capRot = old->capQuat;
-        curInfo->capQuat = {0.f, 0.f, 0.f, 0.f};
-        curInfo->isCapThrow = old->isCapVisible;
-        strncpy(curInfo->capAnim, old->capAnim, sizeof(PuppetInfo::capAnim) - 1);
-        curInfo->capAnim[sizeof(PuppetInfo::capAnim) - 1] = '\0';
-    } else {
-        curInfo->capRot = packet->capQuat;
-        curInfo->capQuat = packet->capRotQuat;
-        curInfo->isCapThrow = packet->isCapVisible;
-        strncpy(curInfo->capAnim, packet->capAnim, sizeof(PuppetInfo::capAnim) - 1);
-        curInfo->capAnim[sizeof(PuppetInfo::capAnim) - 1] = '\0';
-    }
+    curInfo->capRot = packet->capQuat;
+    curInfo->capQuat = sead::Quatf::unit;
+    curInfo->isCapThrow = packet->isCapVisible;
+    strncpy(curInfo->capAnim, packet->capAnim, sizeof(PuppetInfo::capAnim) - 1);
+    curInfo->capAnim[sizeof(PuppetInfo::capAnim) - 1] = '\0';
 }
 
 /**
@@ -981,6 +1113,10 @@ void Client::updateShineInfo(ShineCollect* packet) {
 
         GameDataFile::HintInfo* hintInfo =
             CustomGameDataFunction::getHintInfoByUniqueID(mHolder, packet->shineId);
+        if (!hintInfo) {
+            hk::diag::logLine("Ignoring unknown shine ID %d.", packet->shineId);
+            return;
+        }
         PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::SHINE,
                                  PlayerEventLog::getShineMessage(hintInfo->stageName, hintInfo->objId));
     }
@@ -1045,6 +1181,11 @@ void Client::updateGameInfo(GameInf* packet) {
  * @param packet
  */
 void Client::sendToStage(ChangeStagePacket* packet) {
+    if (!gIsSceneAlive || !mCurStageScene) {
+        hk::diag::logLine("Ignoring stage change outside an active scene.");
+        return;
+    }
+
     GameDataHolderWriter accessor(mHolder);
 
     hk::diag::logLine("Sending Player to %s at Entrance %s in Scenario %d", packet->changeStage,
@@ -1073,7 +1214,8 @@ void Client::disconnectPlayer(PlayerDC* packet) {
     strcpy(curInfo->stageName, "");
     curInfo->isInSameStage = false;
 
-    mConnectCount--;
+    if (mConnectCount > 0)
+        mConnectCount--;
     mShouldStopRumble = true;
 
     PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::DISCONNECT, "");
@@ -1106,7 +1248,8 @@ PuppetInfo* Client::findPuppetInfo(const nn::account::Uid& id, bool isFindAvaila
 
     PuppetInfo* firstAvailable = nullptr;
 
-    for (s32 i = 0; i < getMaxPlayerCount() - 1; i++) {
+    const s32 slotCount = maxPuppets < 0 ? 0 : (maxPuppets > MAXPUPINDEX - 1 ? MAXPUPINDEX - 1 : maxPuppets);
+    for (s32 i = 0; i < slotCount; i++) {
         PuppetInfo* curInfo = sInstance->mPuppetInfoArr[i];
 
         if (curInfo->playerID == id) {
@@ -1147,11 +1290,10 @@ bool Client::tryAddPuppet(PuppetActor* puppet) {
 }
 
 PuppetActor* Client::getPuppet(int idx) {
-    if (sInstance) {
+    if (sInstance && idx >= 0 && idx < sInstance->mPuppetHolder->getSize()) {
         return sInstance->mPuppetHolder->getPuppetActor(idx);
-    } else {
-        return nullptr;
     }
+    return nullptr;
 }
 
 PuppetInfo* Client::getLatestInfo() {
@@ -1163,7 +1305,7 @@ PuppetInfo* Client::getLatestInfo() {
 }
 
 PuppetInfo* Client::getPuppetInfo(int idx) {
-    if (sInstance) {
+    if (sInstance && idx >= 0 && idx < sInstance->maxPuppets && idx < MAXPUPINDEX) {
         PuppetInfo* curInfo = sInstance->mPuppetInfoArr[idx];
 
         if (!curInfo) {
@@ -1172,9 +1314,9 @@ PuppetInfo* Client::getPuppetInfo(int idx) {
         }
 
         return curInfo;
-    } else {
-        return nullptr;
     }
+    hk::diag::logLine("Attempting to Access Puppet Out of Bounds! Value: %d", idx);
+    return nullptr;
 }
 
 void Client::resetCollectedShines() {
@@ -1224,6 +1366,11 @@ inline constexpr s32 moonRockScenarios[14] = {4, 4, 5, 5, 4, 4, 4, 8, 4, 4, 8, 4
 void Client::updateMoonRocks(MoonRockHit* packet) {
     if (!sInstance)
         return;
+
+    if (packet->worldId < 0 || packet->worldId >= SNumMoonRocks) {
+        hk::diag::logLine("Ignoring invalid moon-rock world ID %d.", packet->worldId);
+        return;
+    }
 
     PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::MOONROCK, worldNames[packet->worldId]);
 
@@ -1281,11 +1428,12 @@ void Client::sendMoonRockHitPacket(int worldId) {
         return;
     }
 
-    MoonRockHit* packet = new (gHeap) MoonRockHit();
-    packet->mUserID = sInstance->mUserID;
-    packet->worldId = worldId;
-
-    sInstance->mSocket->queuePacket(packet);
+    (void)worldId;
+    static bool warned = false;
+    if (!warned) {
+        hk::diag::logLine("Moon-rock sync is disabled for SMOO+ 0.5 pre (wire ID collision).");
+        warned = true;
+    }
 }
 
 /**
@@ -1514,6 +1662,10 @@ void Client::updateCheckpoints(CheckpointGet* packet) {
  */
 void Client::update() {
     if (sInstance) {
+        // Network workers only enqueue immutable wire frames.  All engine,
+        // puppet, UI/event-log and scene effects begin here on the game thread.
+        sInstance->processIncomingFrames();
+
         sInstance->mPuppetHolder->update();
 
         if (isNeedUpdateShines()) {

@@ -2,10 +2,11 @@
 
 #include <netinet/in.h>
 #include <thread/seadAtomic.h>
+#include <thread/seadCriticalSection.h>
 #include <thread/seadMessageQueue.h>
+#include <prim/seadScopedLock.h>
 
 #include "Library/Thread/AsyncFunctorThread.h"
-#include "packets/Packet.h"
 #include "SocketBase.hpp"
 #include "types.h"
 
@@ -21,15 +22,18 @@ public:
 
     void init(const char* ip, u16 port);
     void closeSocket();
-    Packet* tryGetPacket();
+    // Frames are owned by the caller and must be released with delete[].  They
+    // are raw legacy-wire bytes, never Packet objects.
+    u8* tryGetFrame();
 
     bool startThreads();
     void endThreads();
 
-    bool send(Packet* packet);
     bool recv();
 
-    bool queuePacket(Packet* packet);
+    // This is the only public transmit entry point.  The send worker is the
+    // sole writer to the TCP socket and performs complete-frame writes.
+    bool queueFrame(const u8* frame, s32 frameSize);
     bool trySendQueue();
 
     void sendFunc();
@@ -37,7 +41,6 @@ public:
 
     void setLogState(SockState state) { socket_log_state = state; };
 
-    void printPacket(Packet* packet);
     bool isConnected() { return socket_log_state == SockState::CONNECTED; }
 
     u32 getSendCount() { return mSendQueue.mMessageQueueInner._count; }
@@ -58,9 +61,25 @@ private:
     sead::MessageQueue mRecvQueue;
     sead::MessageQueue mSendQueue;
 
+    // Transform snapshots are deliberately not FIFO.  At most one latest
+    // player and cap frame are retained while reliable messages stay ordered.
+    sead::CriticalSection mStateFrameLock;
+    u8* mLatestPlayerFrame = nullptr;
+    u8* mLatestCapFrame = nullptr;
+    bool mStateWakeQueued = false;
+
+    static constexpr s64 StateWakeMessage = 1;
+
     bool mIsFirstConnect = true;
+    s32 mReconnectBackoffMs = 250;
 
     sead::Atomic<SocketClientState> mState = INIT;
+
+    bool sendAll(const u8* buffer, s32 size);
+    bool readExact(u8* buffer, s32 size);
+    void clearFrameQueue(sead::MessageQueue& queue);
+    bool queueStateFrame(u8* frame, s16 type);
+    bool sendLatestStateFrames();
 
     /**
      * @param str a string containing an IPv4 address or a hostname that can be resolved via DNS

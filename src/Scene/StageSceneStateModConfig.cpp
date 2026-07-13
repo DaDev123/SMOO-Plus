@@ -1,5 +1,7 @@
 #include "Scene/StageSceneStateModConfig.hpp"
 
+#include "hk/diag/diag.h"
+
 #include "sead/container/seadSafeArray.h"
 #include "sead/prim/seadSafeString.h"
 
@@ -85,7 +87,7 @@ void StageSceneStateModConfig::loadServersFromFile() {
     char* savePtr = nullptr;
     char* line = strtok_r(buffer, "\n\r", &savePtr);
 
-    while (line) {
+    while (line && !mServerBrowserServers.isFull()) {
         // Skip whitespace and comments
         while (*line == ' ' || *line == '\t')
             line++;
@@ -109,6 +111,9 @@ void StageSceneStateModConfig::loadServersFromFile() {
 
         line = strtok_r(nullptr, "\n\r", &savePtr);
     }
+
+    if (line)
+        hk::diag::logLine("Server list truncated at %d entries.", mServerBrowserServers.capacity());
 
     // gHeap->free(loadData.buffer);
     delete[] loadData.buffer;

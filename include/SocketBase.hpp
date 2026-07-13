@@ -17,8 +17,11 @@ public:
 
     const char* getIP() { return this->sock_ip.cstr(); }
     u16 getPort() { return this->port; }
-    void setName(const char* name) { strcpy(sockName, name); };
-    u32 socket_errno;
+    void setName(const char* name) {
+        std::strncpy(sockName, name ? name : "", sizeof(sockName) - 1);
+        sockName[sizeof(sockName) - 1] = '\0';
+    };
+    u32 socket_errno = 0;
 
 protected:
     s32 socket_log(const char* str);
@@ -27,9 +30,9 @@ protected:
     char sockName[0x10] = {};
     sead::FixedSafeString<64> sock_ip;
 
-    u16 port;
+    u16 port = 0;
     SockState socket_log_state = SockState::UNINITIALIZED;
-    s32 socket_log_socket;
+    s32 socket_log_socket = -1;
 
-    int sock_flags;
+    int sock_flags = 0;
 };

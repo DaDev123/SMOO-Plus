@@ -8,6 +8,7 @@
 #include "vapours/results/results_common.hpp"
 
 #include <cerrno>
+#include <climits>
 #include <cstring>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -17,7 +18,7 @@
 #include "Library/Thread/FunctorV0M.h"
 #include "logger.hpp"
 #include "main.hpp"
-#include "packets/Packet.h"
+#include "server/LegacyProtocol.hpp"
 #include "server/Client.hpp"
 #include "types.h"
 
@@ -48,7 +49,11 @@ void SocketClient::update() {
             exeReset();
             break;
         case RECONNECT:
-            Client::instance()->startThread();
+            if (Client::instance()->mIsAllowReconnect) {
+                nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(mReconnectBackoffMs * 1000000LL));
+                Client::instance()->startThread();
+            } else
+                mState = WAIT;
             break;
         }
         nn::os::YieldThread();
@@ -157,20 +162,30 @@ bool SocketClient::exeInit() {
 
     hk::diag::logLine("Socket fd: %d", socket_log_socket);
 
-    if (mRecvThread->isDone())
-        mRecvThread->start();
     if (mSendThread->isDone())
         mSendThread->start();
+    if (mRecvThread->isDone())
+        mRecvThread->start();
 
-    PlayerConnect initPacket;
-
-    initPacket.mUserID = Client::getClientId();
-    strcpy(initPacket.clientName, Client::getUsername().cstr());
-
-    initPacket.conType = mIsFirstConnect ? ConnectionTypes::INIT : ConnectionTypes::RECONNECT;
+    // The legacy C# connect payload is exactly 38 bytes (int, ushort,
+    // fixed 32-byte name).  Queue it so the send worker remains the only
+    // TCP writer after the connection has been established.
+    u8 initFrame[LegacyProtocol::HeaderSize + 38] = {};
+    const nn::account::Uid clientId = Client::getClientId();
+    LegacyProtocol::encodeHeader(initFrame, reinterpret_cast<const LegacyProtocol::Byte*>(clientId.data),
+                                 LegacyProtocol::Connect, 38);
+    const s32 connectionType = mIsFirstConnect ? 0 : 1;
+    LegacyProtocol::write(initFrame + LegacyProtocol::HeaderSize, 38, 0, connectionType);
+    const u16 unknownMaxPlayers = USHRT_MAX;
+    LegacyProtocol::write(initFrame + LegacyProtocol::HeaderSize, 38, 4, unknownMaxPlayers);
+    const char* username = Client::getUsername().cstr();
+    std::strncpy(reinterpret_cast<char*>(initFrame + LegacyProtocol::HeaderSize + 6), username, 31);
     mIsFirstConnect = false;
-
-    send(&initPacket);
+    if (!queueFrame(initFrame, sizeof(initFrame))) {
+        socket_log_state = SockState::DISCONNECTED;
+        mState = RESET;
+        return false;
+    }
 
     mState = WAIT;
     return true;
@@ -182,9 +197,14 @@ void SocketClient::exeReset() {
     nn::os::YieldThread();
     nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
 
-    // Free up all blocked threads (pop first in case its full somehow)
-    mSendQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
-    mRecvQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
+    // Free up blocked workers (discard one owned frame first if a queue is
+    // full, preserving the matching allocation/deallocation path).
+    const s64 discardedSend = mSendQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
+    if (discardedSend && discardedSend != StateWakeMessage)
+        delete[] reinterpret_cast<u8*>(discardedSend);
+    const s64 discardedRecv = mRecvQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
+    if (discardedRecv)
+        delete[] reinterpret_cast<u8*>(discardedRecv);
 
     mSendQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
     mRecvQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
@@ -194,36 +214,20 @@ void SocketClient::exeReset() {
         nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
     }
 
-    // clear send and recv queue (idk man)
-    for (s32 i = 0; i < 100; i++) {
-        mSendQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
-        mRecvQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
+    clearFrameQueue(mSendQueue);
+    clearFrameQueue(mRecvQueue);
+    {
+        sead::ScopedLock<sead::CriticalSection> lock(&mStateFrameLock);
+        delete[] mLatestPlayerFrame;
+        delete[] mLatestCapFrame;
+        mLatestPlayerFrame = nullptr;
+        mLatestCapFrame = nullptr;
+        mStateWakeQueued = false;
     }
 
+    if (mReconnectBackoffMs < 4000)
+        mReconnectBackoffMs *= 2;
     mState = RECONNECT;
-}
-
-bool SocketClient::send(Packet* packet) {
-    if (this->socket_log_state != SockState::CONNECTED || packet == nullptr)
-        return false;
-
-    u8* buffer = reinterpret_cast<u8*>(packet);
-
-    int valread = 0;
-
-    if (packet->mType != PLAYERINF && packet->mType != HACKCAPINF)
-        hk::diag::logLine("Sending packet: %s", packetNames[packet->mType]);
-
-    valread = nn::socket::Send(this->socket_log_socket, buffer, packet->mPacketSize + sizeof(Packet), 0);
-
-    if (valread <= 0) {
-        hk::diag::logLine("Failed to Fully Send Packet! Result: %d Type: %s Packet Size: %d", valread,
-                          packetNames[packet->mType], packet->mPacketSize);
-        this->socket_errno = nn::socket::GetLastErrno();
-        return false;
-    }
-
-    return true;
 }
 
 bool SocketClient::recv() {
@@ -233,107 +237,34 @@ bool SocketClient::recv() {
         return false;
     }
 
-    int headerSize = sizeof(Packet);
-    Packet header;
-    u8* headerBuf = reinterpret_cast<u8*>(&header);
-    int valread = 0;
+    u8 headerBytes[LegacyProtocol::HeaderSize] = {};
+    if (!readExact(headerBytes, sizeof(headerBytes)))
+        return false;
 
-    // just for sanity
-    memset(headerBuf, 0, sizeof(Packet));
-
-    // read only the size of a header
-    while (valread < headerSize) {
-        int result = nn::socket::Recv(this->socket_log_socket, headerBuf + valread, headerSize - valread,
-                                      this->sock_flags);
-
-        this->socket_errno = nn::socket::GetLastErrno();
-
-        if (result > 0) {
-            valread += result;
-        } else {
-            if (this->socket_errno == EAGAIN) {
-                return true;
-            } else {
-                hk::diag::logLine("Header Read Failed! Value: %d Total Read: %d", result, valread);
-                return false;
-            }
-        }
-    }
-
-    if (valread > 0) {
-        int fullSize = header.mPacketSize + sizeof(Packet);
-
-        if (header.mType > PacketType::UNKNOWN && header.mType < PacketType::End && fullSize <= MAXPACKSIZE &&
-            fullSize > 0 && valread == sizeof(Packet)) {
-            if (header.mType != PLAYERINF && header.mType != HACKCAPINF) {
-                hk::diag::log("Received packet (from %02X%02X):", header.mUserID.data[0],
-                              header.mUserID.data[1]);
-                Logger::disableName();
-                hk::diag::log(" Size: %d", header.mPacketSize);
-                hk::diag::log(" Type: %d", header.mType);
-                if (packetNames[header.mType])
-                    hk::diag::logLine(" Type String: %s", packetNames[header.mType]);
-                Logger::enableName();
-            }
-
-            // char* packetBuf = (char*)gHeap->alloc(fullSize);
-            u8* packetBuf = new (gHeap) u8[fullSize];
-            if (packetBuf) {
-                memcpy(packetBuf, headerBuf, sizeof(Packet));
-
-                while (valread < fullSize) {
-                    int result = nn::socket::Recv(this->socket_log_socket, packetBuf + valread,
-                                                  fullSize - valread, this->sock_flags);
-
-                    this->socket_errno = nn::socket::GetLastErrno();
-
-                    if (result > 0) {
-                        valread += result;
-                    } else {
-                        // gHeap->free(packetBuf);
-                        delete[] packetBuf;
-                        hk::diag::logLine("Packet Read Failed! Value: %d\nPacket Size: %d\nPacket Type: %s",
-                                          result, header.mPacketSize, packetNames[header.mType]);
-                        return false;
-                    }
-                }
-
-                Packet* packet = reinterpret_cast<Packet*>(packetBuf);
-
-                if (!mRecvQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking))
-                    // gHeap->free(packetBuf);
-                    delete[] packetBuf;
-            }
-        } else {
-            hk::diag::logLine(
-                "Failed to aquire valid data! Packet Type: %d Full Packet Size %d valread size: %d",
-                header.mType, fullSize, valread);
-        }
-
-        return true;
-    } else {  // if we error'd, close the socket
-        hk::diag::logLine("valread was zero! Disconnecting.");
-        this->socket_errno = nn::socket::GetLastErrno();
+    LegacyProtocol::Header header{};
+    if (!LegacyProtocol::decodeHeader(headerBytes, sizeof(headerBytes), &header)) {
+        hk::diag::logLine("Invalid legacy packet header; reconnecting.");
         return false;
     }
-}
 
-// prints packet to debug logger
-void SocketClient::printPacket(Packet* packet) {
-    packet->mUserID.print();
-    hk::diag::logLine("Type: %s", packetNames[packet->mType]);
+    const s32 frameSize = LegacyProtocol::HeaderSize + header.payloadSize;
+    u8* frame = new (gHeap) u8[frameSize];
+    if (!frame)
+        return false;
+    std::memcpy(frame, headerBytes, sizeof(headerBytes));
 
-    switch (packet->mType) {
-    case PacketType::PLAYERINF:
-        hk::diag::logLine("Pos X: %f Pos Y: %f Pos Z: %f", ((PlayerInf*)packet)->playerPos.x,
-                          ((PlayerInf*)packet)->playerPos.y, ((PlayerInf*)packet)->playerPos.z);
-        hk::diag::logLine("Rot X: %f Rot Y: %f Rot Z: %f\nRot W: %f", ((PlayerInf*)packet)->playerRot.x,
-                          ((PlayerInf*)packet)->playerRot.y, ((PlayerInf*)packet)->playerRot.z,
-                          ((PlayerInf*)packet)->playerRot.w);
-        break;
-    default:
-        break;
+    // Read the entire bounded payload even for server extensions that this
+    // client does not use, so the next TCP frame stays aligned.
+    if (!readExact(frame + LegacyProtocol::HeaderSize, header.payloadSize)) {
+        delete[] frame;
+        return false;
     }
+
+    if (!mRecvQueue.push(reinterpret_cast<s64>(frame), sead::MessageQueue::BlockType::NonBlocking)) {
+        delete[] frame;
+        hk::diag::logLine("Receive queue full; dropping legacy frame type %d.", header.type);
+    }
+    return true;
 }
 
 void SocketClient::closeSocket() {
@@ -424,27 +355,159 @@ void SocketClient::recvFunc() {
         mState = RESET;
 }
 
-bool SocketClient::queuePacket(Packet* packet) {
-    if (socket_log_state == SockState::CONNECTED)
-        if (mSendQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking))
-            return true;
+bool SocketClient::queueFrame(const u8* frame, s32 frameSize) {
+    if (!frame || frameSize < LegacyProtocol::HeaderSize || frameSize > LegacyProtocol::MaxFrameSize ||
+        socket_log_state != SockState::CONNECTED)
+        return false;
 
-    delete packet;
+    LegacyProtocol::Header header{};
+    if (!LegacyProtocol::decodeHeader(frame, frameSize, &header) ||
+        frameSize != LegacyProtocol::HeaderSize + header.payloadSize)
+        return false;
+
+    u8* copy = new (gHeap) u8[frameSize];
+    if (!copy)
+        return false;
+    std::memcpy(copy, frame, frameSize);
+
+    if (header.type == LegacyProtocol::Player || header.type == LegacyProtocol::Cap)
+        return queueStateFrame(copy, header.type);
+
+    if (mSendQueue.push(reinterpret_cast<s64>(copy), sead::MessageQueue::BlockType::NonBlocking))
+        return true;
+
+    delete[] copy;
+    hk::diag::logLine("Send queue full; frame type %d dropped.", header.type);
     return false;
 }
 
 bool SocketClient::trySendQueue() {
-    Packet* curPacket = (Packet*)mSendQueue.pop(sead::MessageQueue::BlockType::Blocking);
+    const s64 message = mSendQueue.pop(sead::MessageQueue::BlockType::Blocking);
+    if (message == StateWakeMessage)
+        return sendLatestStateFrames();
 
-    bool successful = send(curPacket);
+    u8* frame = reinterpret_cast<u8*>(message);
+    if (!frame)
+        return false;
 
-    delete curPacket;
+    LegacyProtocol::Header header{};
+    const bool valid = LegacyProtocol::decodeHeader(frame, LegacyProtocol::HeaderSize, &header);
+    const s32 frameSize = valid ? LegacyProtocol::HeaderSize + header.payloadSize : 0;
+    const bool successful = valid && sendAll(frame, frameSize);
+
+    delete[] frame;
 
     return successful;
 }
 
-Packet* SocketClient::tryGetPacket() {
-    return socket_log_state == SockState::CONNECTED ?
-               (Packet*)mRecvQueue.pop(sead::MessageQueue::BlockType::Blocking) :
-               nullptr;
+u8* SocketClient::tryGetFrame() {
+    if (socket_log_state != SockState::CONNECTED)
+        return nullptr;
+    return reinterpret_cast<u8*>(mRecvQueue.pop(sead::MessageQueue::BlockType::NonBlocking));
+}
+
+bool SocketClient::sendAll(const u8* buffer, s32 size) {
+    if (!buffer || size <= 0 || socket_log_state != SockState::CONNECTED)
+        return false;
+
+    s32 sent = 0;
+    while (sent < size) {
+        const s32 result = nn::socket::Send(socket_log_socket, buffer + sent, size - sent, 0);
+        socket_errno = nn::socket::GetLastErrno();
+        if (result > 0) {
+            sent += result;
+            continue;
+        }
+        if (result < 0 && socket_errno == EINTR)
+            continue;
+        hk::diag::logLine("Legacy TCP send failed after %d/%d bytes (errno %d).", sent, size, socket_errno);
+        return false;
+    }
+    return true;
+}
+
+bool SocketClient::readExact(u8* buffer, s32 size) {
+    s32 received = 0;
+    while (received < size) {
+        const s32 result = nn::socket::Recv(socket_log_socket, buffer + received, size - received, sock_flags);
+        socket_errno = nn::socket::GetLastErrno();
+        if (result > 0) {
+            received += result;
+            continue;
+        }
+        if (result < 0 && socket_errno == EINTR)
+            continue;
+        hk::diag::logLine("Legacy TCP read failed after %d/%d bytes (errno %d).", received, size, socket_errno);
+        return false;
+    }
+    return true;
+}
+
+void SocketClient::clearFrameQueue(sead::MessageQueue& queue) {
+    for (;;) {
+        const s64 message = queue.pop(sead::MessageQueue::BlockType::NonBlocking);
+        if (!message)
+            return;
+        if (message != StateWakeMessage)
+            delete[] reinterpret_cast<u8*>(message);
+    }
+}
+
+bool SocketClient::queueStateFrame(u8* frame, s16 type) {
+    bool queueWake = false;
+    {
+        sead::ScopedLock<sead::CriticalSection> lock(&mStateFrameLock);
+        u8** slot = type == LegacyProtocol::Player ? &mLatestPlayerFrame : &mLatestCapFrame;
+        delete[] *slot;
+        *slot = frame;
+        if (!mStateWakeQueued) {
+            mStateWakeQueued = true;
+            queueWake = true;
+        }
+    }
+
+    if (!queueWake)
+        return true;
+    if (mSendQueue.push(StateWakeMessage, sead::MessageQueue::BlockType::NonBlocking))
+        return true;
+
+    // A saturated reliable queue is allowed to drop stale state.  Clear the
+    // wake flag so a later state update can request service again.
+    sead::ScopedLock<sead::CriticalSection> lock(&mStateFrameLock);
+    mStateWakeQueued = false;
+    delete[] mLatestPlayerFrame;
+    delete[] mLatestCapFrame;
+    mLatestPlayerFrame = nullptr;
+    mLatestCapFrame = nullptr;
+    hk::diag::logLine("Reliable send queue full; dropping coalesced state.");
+    return false;
+}
+
+bool SocketClient::sendLatestStateFrames() {
+    u8* player = nullptr;
+    u8* cap = nullptr;
+    {
+        sead::ScopedLock<sead::CriticalSection> lock(&mStateFrameLock);
+        mStateWakeQueued = false;
+        player = mLatestPlayerFrame;
+        cap = mLatestCapFrame;
+        mLatestPlayerFrame = nullptr;
+        mLatestCapFrame = nullptr;
+    }
+
+    const auto sendStateFrame = [this](u8* frame) {
+        if (!frame)
+            return true;
+        LegacyProtocol::Header header{};
+        const bool valid = LegacyProtocol::decodeHeader(frame, LegacyProtocol::HeaderSize, &header);
+        const bool sent = valid && sendAll(frame, LegacyProtocol::HeaderSize + header.payloadSize);
+        delete[] frame;
+        return sent;
+    };
+
+    if (!sendStateFrame(player)) {
+        delete[] cap;
+        return false;
+    }
+    return sendStateFrame(cap);
 }

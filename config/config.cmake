@@ -2,7 +2,7 @@ set(LINKFLAGS -nodefaultlibs)
 set(LLDFLAGS --no-demangle --gc-sections)
 
 set(OPTIMIZE_OPTIONS_DEBUG -O2 -gdwarf-4)
-set(OPTIMIZE_OPTIONS_RELEASE -O3 -ffast-math -flto)
+set(OPTIMIZE_OPTIONS_RELEASE -O3 -flto)
 set(WARN_OPTIONS -Werror=return-type -Wno-unqualified-std-cast-call -Wno-invalid-offsetof -Wno-macro-redefined -Wno-deprecated-declarations)
 
 set(INCLUDES include lib/OdysseyHeaders/agl)

@@ -315,7 +315,9 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
 // ===== PLAYER INFO UPDATE FUNCTION =====
 
 void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru) {
-    if (pInfSendTimer >= 1) {
+    // 60 FPS target: player/cap snapshots at 20 Hz.  TCP cannot discard
+    // stale bytes once queued, so lowering this cadence reduces HOL backlog.
+    if (pInfSendTimer >= 2) {
         Client::sendPlayerInfPacket(playerBase, isYukimaru);
 
         if (!isYukimaru) {

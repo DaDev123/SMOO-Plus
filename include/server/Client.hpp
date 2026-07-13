@@ -38,6 +38,7 @@
 #include "sead/container/seadSafeArray.h"
 #include "sead/heap/seadDisposer.h"
 #include "sead/prim/seadSafeString.h"
+#include "thread/seadAtomic.h"
 
 #include "container/seadPtrArray.h"
 #include "Library/Yaml/ByamlIter.h"
@@ -45,13 +46,17 @@
 
 // ===== PROJECT INCLUDES =====
 #include "Keyboard.hpp"
+#include "packets/Packet.h"
 #include "puppets/PuppetHolder.hpp"
 #include "puppets/PuppetInfo.h"
 #include "server/SocketClient.hpp"
 #include "types.h"
 
 // ===== CONSTANTS =====
-#define MAXPUPINDEX 32
+// The legacy server advertises a player count but puppet storage must never be
+// resized while a scene is active.  Keep room for the local player plus fifteen
+// remote players for the lifetime of the process.
+#define MAXPUPINDEX 16
 
 // ===== FORWARD DECLARATIONS =====
 class HideAndSeekIcon;
@@ -97,7 +102,9 @@ public:
     static bool isFirstConnect() { return sInstance ? sInstance->mIsFirstConnect : false; }
 
     // ===== PLAYER CONNECTION METHODS =====
-    bool isPlayerConnected(int index) { return mPuppetInfoArr[index]->isConnected; }
+    bool isPlayerConnected(int index) {
+        return index >= 0 && index < maxPuppets && mPuppetInfoArr[index] && mPuppetInfoArr[index]->isConnected;
+    }
     static int getConnectCount() {
         if (sInstance)
             return sInstance->mConnectCount;
@@ -245,12 +252,16 @@ public:
         }
     }
 
-    bool mIsAllowReconnect = true;
+    sead::Atomic<bool> mIsAllowReconnect = true;
 
 private:
     // ===== CORE FUNCTIONALITY =====
     void readFunc();
     bool startConnection();
+    void processIncomingFrames();
+    void handleLegacyFrame(const u8* frame);
+    bool queueLegacyFrame(s16 type, const u8* payload, s16 payloadSize);
+    void resendCachedState();
 
     // ===== PACKET HANDLERS =====
     void updatePlayerInfo(PlayerInf* packet);
@@ -283,7 +294,8 @@ private:
     bool mShouldStopRumble = false;
     nn::account::Uid mUserID;
     sead::FixedSafeString<0x20> mUsername;
-    bool mIsConnectionActive = false;
+    sead::Atomic<bool> mIsConnectionActive = false;
+    sead::Atomic<bool> mLegacyProfileActive = false;
     bool mIsFirstConnect = true;
     bool isFirstRun = true;
 
@@ -352,7 +364,7 @@ private:
     u8 mScenario = 0;
 
     // ===== PUPPET MANAGEMENT MEMBERS =====
-    int maxPuppets = 9;
+    int maxPuppets = MAXPUPINDEX - 1;
     PuppetInfo* mPuppetInfoArr[MAXPUPINDEX] = {};
     PuppetHolder* mPuppetHolder = nullptr;
 

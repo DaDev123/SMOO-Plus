@@ -92,7 +92,15 @@ void Logger::log(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
 
-    size_t buf_size = vsnprintf(nullptr, 0, fmt, args) + 1;
+    va_list measureArgs;
+    va_copy(measureArgs, args);
+    const int formattedLength = vsnprintf(nullptr, 0, fmt, measureArgs);
+    va_end(measureArgs);
+    if (formattedLength < 0) {
+        va_end(args);
+        return;
+    }
+    size_t buf_size = static_cast<size_t>(formattedLength) + 1;
     size_t prefix_size = buf_size + 0x10;
 
     char buf[buf_size];

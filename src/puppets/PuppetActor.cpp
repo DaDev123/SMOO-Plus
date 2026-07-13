@@ -66,7 +66,8 @@ PuppetActor::PuppetActor(const char* name) : al::LiveActor(name) {
 
 PuppetActor::~PuppetActor() {
     delete mCostumeInfo;
-    delete mInfo;
+    // PuppetInfo is owned by Client for the entire multiplayer session.
+    mInfo = nullptr;
     delete mPuppetCap;
     delete mModelHolder;
     delete mCaptures;
