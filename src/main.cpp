@@ -5,15 +5,14 @@
 
 #include "main.hpp"
 
-#include "hk/diag/diag.h"
+#include "hk/gfx/ImGuiBackendNvn.h"
 #include "hk/hook/a64/Assembler.h"
-#include "hk/hook/InstrUtil.h"
-#include "hk/hook/Replace.h"
-#include "hk/hook/Trampoline.h"
 
 #include "nn/init.h"
 #include "nn/oe.h"
 
+#include "sead/gfx/seadColor.h"
+#include "sead/prim/seadSafeString.h"
 #include <sead/gfx/seadCamera.h>
 #include <sead/gfx/seadPrimitiveRenderer.h>
 #include <sead/gfx/seadProjection.h>
@@ -22,11 +21,11 @@
 
 #include "al/Library/Bgm/BgmLineFunction.h"
 #include "al/Library/Camera/CameraUtil.h"
-#include "al/Library/Controller/InputFunction.h"
 #include "al/Library/Controller/PadRumbleDirector.h"
 #include "al/Library/Controller/PadRumbleFunction.h"
 #include "al/Library/Framework/GameFrameworkNx.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
+#include "al/Library/LiveActor/ActorInitInfo.h"
 #include "al/Library/LiveActor/ActorPoseKeeper.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/LiveActor/LiveActor.h"
@@ -35,9 +34,9 @@
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Scene/SceneUtil.h"
 #include "al/Library/Screen/ScreenFunction.h"
-#include "al/Library/System/SystemKit.h"
+#include "al/Library/System/GameSystemInfo.h"
 
-#include "agl/common/aglDrawContext.h"
+#include "agl/common/aglDrawContext.h"  // IWYU pragma: keep
 
 #include "game/Item/ShineInfo.h"
 #include "game/Player/HackCap.h"
@@ -48,269 +47,19 @@
 #include "game/Player/PlayerHackKeeper.h"
 #include "game/Scene/StageScene.h"
 #include "game/Sequence/HakoniwaSequence.h"
-#include "game/Sequence/SequenceInitInfo.h"
 #include "game/System/Application.h"
-#include "game/System/GameDataFile.h"
 #include "game/System/GameDataFunction.h"
 #include "game/System/GameDataHolderAccessor.h"
+#include "game/System/GameSystem.h"
+#include "game/Util/AchievementUtil.h"
 
 #include "actors/PuppetActor.h"
-#include "gfx/seadColor.h"
-#include "heap/seadExpHeap.h"
-#include "helpers.hpp"
-#include "hooks.hpp"
 #include "imgui.h"
-#include "Imgui.hpp"
 #include "layouts/PlayerEventLog.h"
-#include "layouts/SpeedrunIcon.h"
-#include "Library/Base/StringUtil.h"
-#include "Library/LiveActor/ActorInitInfo.h"
-#include "MapObj/CheckpointFlag.h"
-#include "prim/seadSafeString.h"
 #include "puppets/PuppetInfo.h"
-#include "puppets/PuppetMain.hpp"
-#include "saveManager.h"
-#include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "speedboot/BootHooks.hpp"
-#include "System/GameDataHolderWriter.h"
-#include "System/GameSystem.h"
-#include "Util/AchievementUtil.h"
-
-// ===== HOOKS =====
-#define MB(X) X * 1024.f * 1024.f
-HkTrampoline createHeap = [](TrampolineStatic(), al::SystemKit* systemKit, sead::Heap* rootHeap) -> void {
-    orig(systemKit, rootHeap);
-
-    gHeap = sead::ExpHeap::create(MB(2.1), "SMOOPlusHeap", al::getStationedHeap());
-    al::addNamedHeap(gHeap, "SMOOPlusHeap");
-};
-
-HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
-    imgui::setup();
-
-    Client::createInstance(gHeap);
-    SaveManager::createInstance(gHeap);
-
-    orig(gameSystem);
-
-#if DEBUGLOG
-    Logger::createInstance();
-#endif
-};
-
-HkTrampoline drawMainHookHk = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
-    orig(gameSystem);
-
-    auto* drawContext = Application::instance()->mDrawSystemInfo->drawContext;
-
-    /* ImGui */
-
-    ImGui::NewFrame();
-    ImGui::GetIO().DeltaTime = Time::deltaTime;
-    drawMain(gameSystem->mSequence);
-
-    ImGui::Render();
-
-    hk::gfx::ImGuiBackendNvn::instance()->draw(ImGui::GetDrawData(),
-                                               drawContext->getCommandBuffer()->ToData()->pNvnCommandBuffer);
-};
-
-HkTrampoline initMarioModelActorHook = [](TrampolineStatic(), al::LiveActor* actor,
-                                          al::ActorInitInfo& initInfo, char* bodyModel, char* capModel,
-                                          al::AudioKeeper* keeper, bool isCloset) -> PlayerCostumeInfo* {
-    Client::sendCostumeInfPacket(bodyModel, capModel);
-    return orig(actor, initInfo, bodyModel, capModel, keeper, isCloset);
-};
-
-HkTrampoline sendShinePacketHook = [](TrampolineStatic(), GameDataHolderWriter writer,
-                                      ShineInfo* info) -> void {
-    if (!GameDataFunction::isGotShine(writer, info)) {
-        for (int x = 0; x < 0x400; x++) {
-            GameDataFile::HintInfo* curInfo = &writer->getGameDataFile()->getHintList()[x];
-            if (info->mStageName == curInfo->stageName && info->mObjId == curInfo->objId) {
-                Client::sendShineCollectPacket(curInfo->uniqueId);
-
-                PlayerEventLog::addSelfEvent(PlayerEventLog::SHINE, PlayerEventLog::getShineMessage(
-                                                                        curInfo->stageName, curInfo->objId));
-            }
-        }
-    }
-    orig(writer, info);
-};
-
-HkTrampoline sendShinePacketHook2 = [](TrampolineStatic(), GameDataFile* file, const char* name) -> void {
-    if (!rs::checkGetAchievement(file->getGameDataHolder(), name)) {
-        for (int i = 0; i < hk::util::arraySize(toadetteMoons); i++) {
-            if (strcmp(toadetteMoons[i], name) == 0) {
-                Client::sendShineCollectPacket(2000 + i);
-
-                PlayerEventLog::addSelfEvent(PlayerEventLog::SHINE,
-                                             PlayerEventLog::getAchievementMessage(name));
-            }
-        }
-    }
-
-    orig(file, name);
-};
-
-HkTrampoline sendCoinCollectCollectPacketHook = [](TrampolineStatic(), GameDataFile* file,
-                                                   al::PlacementId* placeID) -> void {
-    al::StringTmp<128> placeIDString;
-    placeID->makeString(&placeIDString);
-    Client::sendCoinCollectCollectPacket(placeIDString.cstr(), file->getCurrentWorldIdNoDevelop(),
-                                         file->getStageNameCurrent());
-
-    PlayerEventLog::addSelfEvent(PlayerEventLog::PURPLE, worldNames[file->getCurrentWorldIdNoDevelop()]);
-
-    orig(file, placeID);
-};
-
-HkTrampoline sendCheckpointGetPacketHook = [](TrampolineStatic(), CheckpointFlag* checkpoint) -> void {
-    if (al::isFirstStep(checkpoint)) {
-        al::StringTmp<128> placementId = al::makeStringPlacementId(checkpoint->getPlacementId());
-        Client::sendCheckpointGetPacket(placementId.cstr());
-
-        PlayerEventLog::addSelfEvent(PlayerEventLog::CHECKPOINT,
-                                     PlayerEventLog::getCheckpointMessage(placementId));
-    }
-    orig(checkpoint);
-};
-
-HkTrampoline hakoniwaSequenceInitHook = [](TrampolineStatic(), HakoniwaSequence* sequence,
-                                           al::SequenceInitInfo* initInfo) -> void {
-    orig(sequence, initInfo);
-    // was threadInit (hook for initializing client class)
-    al::LayoutInitInfo lytInfo;
-
-    al::initLayoutInitInfo(&lytInfo, sequence->mLayoutKit, 0, sequence->mAudioDirector,
-                           initInfo->mSystemInfo->layoutSystem, initInfo->mSystemInfo->messageSystem,
-                           initInfo->mSystemInfo->gamePadSystem);
-
-    Client::instance()->init(lytInfo, sequence->mGameDataHolderAccessor);
-};
-
-HkTrampoline initActorInitInfoHook = [](TrampolineStatic(), al::ActorInitInfo* initInfo, al::Scene* scene,
-                                        al::PlacementInfo* placementInfo, al::LayoutInitInfo* layoutInfo,
-                                        al::ActorFactory* actorFactory, al::SceneMsgCtrl* sceneMsgCtrl,
-                                        al::GameDataHolderBase* gameDataHolderBase) -> void {
-    orig(initInfo, scene, placementInfo, layoutInfo, actorFactory, sceneMsgCtrl, gameDataHolderBase);
-
-    if (!scene || !al::isEqualString(scene->mName.cstr(), "StageScene"))
-        return;
-
-    // was stage init hook
-    gIsSceneAlive = true;
-
-    Client::sendGameInfPacket(scene);
-
-    for (s32 i = 0; i < (Client::getMaxPlayerCount() - 1); i++) {
-        createPuppetActorFromFactory(*initInfo);
-    }
-};
-
-HkTrampoline sceneKillHook = [](TrampolineStatic(), StageScene* scene) -> void {
-    // this hook should prevent crashes on scene transitions
-    gIsSceneAlive = false;
-
-    Client::clearArrays();
-
-    orig(scene);
-};
-
-HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* sequence) -> void {
-    StageScene* stageScene = (StageScene*)sequence->mCurrentScene;
-
-    static bool isCameraActive = false;
-
-    al::PlayerHolder* pHolder = al::getScenePlayerHolder(stageScene);
-    PlayerActorBase* playerBase = (PlayerActorBase*)al::tryGetPlayerActor(pHolder, 0);
-    auto* player = (PlayerActorHakoniwa*)al::tryGetPlayerActor(pHolder, 0);
-
-    if (!playerBase) {
-        orig(sequence);
-        return;
-    }
-
-    bool isYukimaru = !playerBase->getPlayerInfo();
-
-    isInGame = !stageScene->isPause();
-
-    Client::setStageInfo(sequence);
-
-    Client::update();
-
-    if (Client::shouldStopRumble() && player && !isYukimaru) {
-        auto* rumbleDirector = alPadRumbleFunction::getPadRumbleDirector(player);
-        if (rumbleDirector)
-            rumbleDirector->stopAllRumble();
-        Client::clearStopRumble();
-    }
-
-    if (gIsSceneAlive)
-        updatePlayerInfo(GameDataHolderWriter(stageScene), playerBase, isYukimaru);
-
-    if (SpeedrunIcon::sInstance) {
-        if (StageSceneStateModConfig::isSpeedrunModeEnabled()) {
-            SpeedrunIcon::sInstance->tryStart();
-        } else {
-            SpeedrunIcon::sInstance->tryEnd();
-        }
-    }
-
-    stageScene->stageSceneLayout->updateCounterParts();
-
-    if (al::isPadHoldZR(-1)) {
-        if (al::isPadTriggerUp(-1)) {  // ZR + Up => Debug menu
-            debugMode = !debugMode;
-        }
-        if (debugMode) {
-            if (al::isPadTriggerLeft(-1)) {  // [Debug menu] ZR + Left => Previous page
-                pageIndex--;
-                if (pageIndex < 0) {
-                    pageIndex = maxPages - 1;
-                }
-            }
-            if (al::isPadTriggerRight(-1)) {  // [Debug menu] ZR + Right => Next page
-                pageIndex++;
-                if (pageIndex >= maxPages) {
-                    pageIndex = 0;
-                }
-            }
-        }
-    } else if (al::isPadHoldZL(-1)) {
-        if (debugMode && pageIndex == 0) {
-            if (al::isPadTriggerLeft(-1)) {  // [Debug menu] ZL + Left => Previous player
-                debugPuppetIndex--;
-                if (debugPuppetIndex < 0) {
-                    debugPuppetIndex = Client::getMaxPlayerCount() - 1;
-                }
-            }
-            if (al::isPadTriggerRight(-1)) {  // [Debug menu] ZL + Right => Next player
-                debugPuppetIndex++;
-                if (debugPuppetIndex >= Client::getMaxPlayerCount()) {
-                    debugPuppetIndex = 0;
-                }
-            }
-        }
-        if (al::isPadTriggerUp(-1)) {
-            if (PlayerEventLog::sInstance)
-                PlayerEventLog::toggleShow();
-        }
-    } else if (al::isPadHoldL()) {
-        if (al::isPadTriggerUp()) {
-            Client::sInstance->setStopRumble();
-        }
-    }
-    if (Client::isMusicDisabled()) {
-        if (al::isPlayingBgm(stageScene)) {
-            al::stopAllBgm(stageScene, 0);
-        }
-    }
-
-    orig(sequence);
-};
 
 // ===== PLAYER INFO UPDATE FUNCTION =====
 
@@ -561,144 +310,43 @@ void drawMain(al::Sequence* curSequence) {
     ImGui::End();
 }
 
-// ===== LOGGING HOOK =====
-
-void seadPrintHook(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    Logger::disableName();
-    hk::diag::log(fmt, args);
-    Logger::enableName();
-    va_end(args);
-}
-
-HkReplaceVarArgs replaceSeadPrintHook = seadPrintHook;
-
 extern "C" void hkMain() {
-    // Init Stuff
-    createHeap.installAtSym<"_ZN2al9SystemKit18createMemorySystemEPN4sead4HeapE">();
-    gameSystemInit.installAtSym<"_ZN10GameSystem4initEv">();
-    hakoniwaSequenceInitHook.installAtSym<"_ZN16HakoniwaSequence4initERKN2al16SequenceInitInfoE">();
-    initActorInitInfoHook.installAtSym<"R_ZN2al17initActorInitInfo">();
-
-    // Debug Stuff
-    drawMainHookHk.installAtSym<"_ZN10GameSystem8drawMainEv">();
-    replaceSeadPrintHook.installAtSym<"_ZN4sead6system5PrintEPKcz">();
-
-    // Main Stuff
-    hakoniwaSequenceHook.installAtSym<"_ZN16HakoniwaSequence12exePlayStageEv">();
-    initMarioModelActorHook.installAtSym<"R_ZN14PlayerFunction19initMarioModelActor">();
-
-    // Shine Syncing
-    sendShinePacketHook
-        .installAtSym<"_ZN16GameDataFunction11setGotShineE20GameDataHolderWriterPK9ShineInfo">();
-    sendShinePacketHook2.installAtSym<"_ZN12GameDataFile14getAchievementEPKc">();
-    registerShineToListHook.installAtSym<"_ZN5Shine18initAfterPlacementEv">();
-
-    // CoinCollect Syncing
-    sendCoinCollectCollectPacketHook.installAtSym<"_ZN12GameDataFile14addCoinCollectEPKN2al11PlacementIdE">();
-    registerCoinCollectToListHook
-        .installAtSym<"_ZN17CoinCollectHolder19registerCoinCollectEP11CoinCollect">();
-    registerCoinCollect2DToListHook
-        .installAtSym<"_ZN17CoinCollectHolder21registerCoinCollect2DEP13CoinCollect2D">();
-
-    // CheckpointFlag Syncing
-    sendCheckpointGetPacketHook.installAtSym<"_ZN14CheckpointFlag6exeGetEv">();
-
-    // Amiibo Button Disabling
-    hk::hook::replace([]() -> void {
-        return;
-    }).installAtSym<"_ZN2rs16isHoldAmiiboModeEPKN2al18IUseSceneObjHolderE">();
-    hk::hook::replace([]() -> void {
-        return;
-    }).installAtSym<"_ZN2rs19isTriggerAmiiboModeEPKN2al18IUseSceneObjHolderE">();
-
-    // Capture Syncing
-    // initObjHook.installAtSym<"_ZN2al31createPlacementActorFromFactoryERKNS_13ActorInitInfoEPKNS_13PlacementInfoE">();
-    // patch GpuMemAllocator::init to have more space; fixes some crashes with capture sync
-    // hk::hook::a64::assemble<"mov w2, {}">().arg(0x1d00000 + 0x0200000).installAtMainOffset(0x00878708);
-    // hk::hook::a64::assemble<"mov w2, {}">().arg(0x3e00000 + 0x0200000).installAtMainOffset(0x00878730);
-    // hk::hook::a64::assemble<"mov w2, {}">().arg(0x0300000 + 0x0200000).installAtMainOffset(0x0087875c);
-
-    // Save Data Edits
-    saveWriteHook.installAtSym<"_ZN14GameConfigData5writeEPN2al11ByamlWriterE">();
-    saveReadHook.installAtSym<"_ZN14GameConfigData4readERKN2al9ByamlIterE">();
-
-    // WindowConfirm Edits (Forces logic to ignore current nerve)
-    windowConfirmWaitHook.installAtSym<"_ZN2al17WindowConfirmWait6tryEndEv">();
-
-    // Pause Menu Changes
-    hk::hook::a64::assemble<"mov w2, #5">()
-        .installAtSym<"R_ZN24StageSceneStatePauseMenuNrvStateCount">();     // increase nerve state count to 5
-    initNerveStateHook.installAtSym<"R_ZN24StageSceneStatePauseMenuC1">();  // inits options nerve state and
-                                                                            // server config state
-    pauseMenuAppearHook
-        .installAtSym<"_ZN24StageSceneStatePauseMenu9exeAppearEv">();  // Change Action Guide Text
-
-    pauseMenuWaitHook.installAtSym<"_ZN24StageSceneStatePauseMenu7exeWaitEv">();  // Onine Indicator
-
-    overrideHelpFadeNerve.installAtSym<"_ZN24StageSceneStatePauseMenu17exeFadeBeforeHelpEv">();
-
-    shadowHook.installAtSym<
-        "_ZN2al18ShadowMaskDirector9addSphereERKN4sead8Matrix34IfEERKNS1_7Color4fEfi">();  // fix stupid crash
-
-    // custom bootscreen hooks
-    hk::hook::writeBranchLinkAtSym<"R_hakoniwaSetNerveSetup">(speedboot::hakoniwaSetNerveSetup);
-    hk::hook::a64::assemble<"mov w2, #0x1f">()
-        .installAtSym<"R_hakoniwaSetNerveCount">();  // nerve state count
-    speedboot::prepareSpeedBootHook.installAtSym<"_ZN10BootLayoutC1ERKN2al14LayoutInitInfoE">();
-
-    // unlock costume doors
-    unlockCostumeDoorsHook.installAtSym<
-        "_ZN2al19listenStageSwitchOnEPNS_15IUseStageSwitchEPKcRKNS_11FunctorBaseE">();  // all except metro
-    hk::hook::writeBranchLinkAtSym<"R_metroCostumeDoor">(unlockCostumeDoorMetroHook);   // metro
-
-    hk::hook::trampoline([]() -> void {
-    }).installAtSym<"_ZN2rs21requestShowHtmlViewerEPKN2al18IUseSceneObjHolderE">();  // Disable Action Guide /
-                                                                                     // HtmlViewer
-    disableAppearSwitchCameraHook
-        .installAtSym<"R_ZN17AppearSwitchTimer4init">();  // disables AppearSwitchTimer's camera switch
-    // hk::hook::a64::assemble<"nop">().installAtMainOffset(0x45c69c);  // Removes Assist Mode Ledge Grabs
-
-    hk::hook::trampoline([]() -> bool {
-        return true;
-    }).installAtSym<"_ZNK9MapLayout22isEnableCheckpointWarpEv">();
-
-    startNewGameHook.installAtSym<"_ZN24HakoniwaStateDemoOpening7exeLoadEv">();
-
-    moonRockHook.installAtSym<"_ZN8MoonRock11exeReactionEv">();
-
-    mountSdCardHook.installAtSym<"_ZN4sead13FileDeviceMgrC1Ev">();
-
-    sceneKillHook.installAtSym<"_ZN10StageScene4killEv">();
+    installSyncHooks();
+    installInitHooks();
+    installModMenuHooks();
+    installQolHooks();
+    installOtherHooks();
+    speedboot::installSpeedbootHooks();
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
 }
 
 namespace nn::init {
 
-extern "C" void _init_libc0();
-extern "C" void nnosInitialize(hk::Handle threadHandle, ptr argumentAddr);
-extern "C" void _init_libc1();
-extern "C" void _init_libc2();
+extern "C" __attribute__((weak)) void _init_libc0();
+extern "C" __attribute__((weak)) void nnosInitialize(hk::Handle threadHandle, ptr argumentAddr);
+extern "C" __attribute__((weak)) void _init_libc1();
+extern "C" __attribute__((weak)) void _init_libc2();
 extern "C" void nnMain();
-extern "C" void nnosQuickExit();
+extern "C" __attribute__((weak)) void nnosQuickExit();
 
 extern "C" __attribute__((weak)) void nninitInitializeSdkModule(void);
 extern "C" __attribute__((weak)) void nninitInitializeAbortObserver(void);
 extern "C" __attribute__((weak)) void nninitFinalizeSdkModule(void);
 
 using FuncPtr = void (*)();
-
+constexpr u32 defaultRAMAmount = 3200_MB;
+constexpr u32 allocHeapRAMAmount = 36_MB;
+constexpr u32 recordingHeapRAMAmount = 96_MB;
 void nninitStartup() {  // Copied straight from OdysseyDecomp with some slight adjustments
     uintptr_t allocatorHeap;
     uintptr_t recordingHeap;
 
-    nn::os::SetMemoryHeapSize(3200_MB + extraRAMAmount);
-    nn::os::AllocateMemoryBlock(&allocatorHeap, 36_MB);
-    nn::init::InitializeAllocator(reinterpret_cast<void*>(allocatorHeap), 36_MB);
-    nn::os::AllocateMemoryBlock(&recordingHeap, 96_MB);
-    nn::oe::EnableGamePlayRecording(reinterpret_cast<void*>(recordingHeap), 96_MB);
+    nn::os::SetMemoryHeapSize(defaultRAMAmount + extraRAMAmount);
+    nn::os::AllocateMemoryBlock(&allocatorHeap, allocHeapRAMAmount);
+    nn::init::InitializeAllocator(reinterpret_cast<void*>(allocatorHeap), allocHeapRAMAmount);
+    nn::os::AllocateMemoryBlock(&recordingHeap, recordingHeapRAMAmount);
+    nn::oe::EnableGamePlayRecording(reinterpret_cast<void*>(recordingHeap), recordingHeapRAMAmount);
 }
 
 void Start(size threadHandle, size argumentAddr, FuncPtr notifyExceptionHandlerReady,
@@ -716,7 +364,7 @@ void Start(size threadHandle, size argumentAddr, FuncPtr notifyExceptionHandlerR
     (*callInitializers)();
 
     // increase size of root heap to take advantage of extra ram
-    u32 rootHeapSize = 3068_MB + extraRAMAmount;
+    u32 rootHeapSize = defaultRAMAmount - allocHeapRAMAmount - recordingHeapRAMAmount + extraRAMAmount;
     hk::hook::a64::assemble<"mov w8,{}">().arg(rootHeapSize).installAtMainOffset(0x005157b8);
 
     nnMain();

@@ -36,4 +36,12 @@ static void hakoniwaSetNerveSetup(al::IUseNerve* useNerve, al::Nerve* nerve) {
     speedbootState = new HakoniwaSequenceSpeedboot(sequence);
     al::initNerveState(useNerve, speedbootState, &nrvSpeedboot, "Speedboot");
 }
+
+static void installSpeedbootHooks() {
+    hk::hook::writeBranchLinkAtSym<"R_hakoniwaSetNerveSetup">(speedboot::hakoniwaSetNerveSetup);
+    hk::hook::a64::assemble<"mov w2, #0x1f">()
+        .installAtSym<"R_hakoniwaSetNerveCount">();  // nerve state count
+    speedboot::prepareSpeedBootHook.installAtSym<"_ZN10BootLayoutC1ERKN2al14LayoutInitInfoE">();
+}
+
 }  // namespace speedboot

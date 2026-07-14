@@ -24,43 +24,11 @@ static const int maxPages = 4;
 static constexpr size extraRAMAmount = 4_MB;
 static_assert((extraRAMAmount / 1_MB) % 2 == 0, "Extra RAM amount must be multiple of 2");
 
+void installSyncHooks();
+void installModMenuHooks();
+void installInitHooks();
+void installQolHooks();
+void installOtherHooks();
+
 void drawMain(al::Sequence* seq);
 void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase, bool isYukimaru);
-
-constexpr const char* captureNames[] = {"AnagramAlphabetCharacter",
-                                        "Byugo",
-                                        "Bubble",
-                                        "Bull",
-                                        "Car",
-                                        "ElectricWire",
-                                        "JugemFishing",
-                                        "Statue",
-                                        "Fukankun",
-                                        "Yoshi",
-                                        "KillerLauncherMagnum",
-                                        "KuriboPossessed",
-                                        "WanwanBig",  // has sub-actors
-                                        "KillerLauncher",
-                                        "Koopa",
-                                        "Wanwan",  // has sub-actors
-                                        "Pukupuku",
-                                        "PukupukuSnow",
-                                        "Gamane",  // has sub-actors
-                                        "FireBrosPossessed",
-                                        "PackunFire",
-                                        "Frog",
-                                        "Kakku",
-                                        "Hosui",
-                                        "HammerBrosPossessed",
-                                        "Megane",
-                                        "KaronWing",
-                                        "KuriboWing",
-                                        "PackunPoison",
-                                        "Radicon",
-                                        "Tank",
-                                        "Tsukkun",
-                                        "TRex",
-                                        "TRexSleep",
-                                        "TRexPatrol",
-                                        "Imomu",
-                                        "SenobiGeneratePoint"};
