@@ -303,7 +303,7 @@ bool SocketClient::recv() {
 
                 Packet* packet = reinterpret_cast<Packet*>(packetBuf);
 
-                if (!mRecvQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking))
+                if (!mRecvQueue.push((uintptr_t)packet, sead::MessageQueue::BlockType::NonBlocking))
                     // gHeap->free(packetBuf);
                     delete[] packetBuf;
             }
@@ -476,7 +476,7 @@ void SocketClient::deletePacketAfterSend(Packet* packet) {
 
 bool SocketClient::queuePacket(Packet* packet) {
     if (socket_log_state == SockState::CONNECTED)
-        if (mSendQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking))
+        if (mSendQueue.push((uintptr_t)packet, sead::MessageQueue::BlockType::NonBlocking))
             return true;
 
     deletePacketAfterSend(packet);
