@@ -163,8 +163,7 @@ bool Client::startThread() {
 }
 
 void Client::restartConnection() {
-    if (sInstance->mIsAllowReconnect)
-        sInstance->mSocket->setSocketClientState(SocketClient::SocketClientState::RESET);
+    sInstance->mSocket->setSocketClientState(SocketClient::SocketClientState::RESET);
 }
 
 /**
@@ -228,12 +227,7 @@ bool Client::startConnection() {
                     if (curPacket->mPacketSize != sizeof(InitPacket) - sizeof(Packet)) {
                         // on an original smoo server, set to legacy and exit loop
                         setServerVersion("Legacy");
-                        sInstance->mIsAllowReconnect = true;
                         break;
-                    }
-
-                    if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
-                        sInstance->mIsAllowReconnect = true;
                     }
 
                     setServerVersion(initPacket->ServerVersion);
@@ -474,12 +468,7 @@ void Client::readFunc() {
 
                 if (curPacket->mPacketSize != sizeof(InitPacket) - sizeof(Packet)) {
                     setServerVersion("Legacy");
-                    sInstance->mIsAllowReconnect = true;
                     break;
-                }
-
-                if (al::isStartWithString(initPacket->ServerVersion, "SMOO+")) {
-                    sInstance->mIsAllowReconnect = true;
                 }
 
                 setServerVersion(initPacket->ServerVersion);

@@ -258,8 +258,7 @@ void StageSceneStateModConfig::updateNetworkSettingsOptions() {
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERLIST].copy(u"Browse Server List");
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERIP].copy(u"Change Server IP");
     msgList[MENU_NETWORK]->mBuffer[NETW_SERVERPORT].copy(u"Change Server Port");
-    msgList[MENU_NETWORK]->mBuffer[NETW_RECONNECT].copy(
-        Client::get()->mIsAllowReconnect ? u"Reconnect to Server" : u"Reconnect to Server (Disabled)");
+    msgList[MENU_NETWORK]->mBuffer[NETW_RECONNECT].copy(u"Reconnect to Server");
 }
 
 void StageSceneStateModConfig::exeNetworkSettings() {
@@ -540,8 +539,7 @@ void StageSceneStateModConfig::appear() {
 
 void StageSceneStateModConfig::kill() {
     if (Client::hasServerChanged()) {
-        if (Client::get()->mIsAllowReconnect)
-            Client::restartConnection();
+        Client::restartConnection();
         for (int i = 0; i < 240; i++)
             nn::os::YieldThread();
     }

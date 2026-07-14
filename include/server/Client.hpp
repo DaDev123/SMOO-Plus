@@ -238,8 +238,6 @@ public:
         }
     }
 
-    bool mIsAllowReconnect = true;
-
 private:
     // ===== CORE FUNCTIONALITY =====
     void readFunc();
@@ -255,7 +253,6 @@ private:
     void updateCaptureInfo(CaptureInf* packet);
     void sendToStage(ChangeStagePacket* packet);
     void disconnectPlayer(PlayerDC* packet);
-    // void updateHealthCoins(HealthCoins* packet);
     void updateCoinCollects(CoinCollectCollect* packet);
     void updateCheckpoints(CheckpointGet* packet);
     void updateMoonRocks(MoonRockHit* packet);
@@ -286,12 +283,6 @@ private:
     sead::FixedSafeString<64> mServerVersion;
     bool mServerHidden = true;
     bool mIsDisableMusic = false;
-
-    // ===== HEALTH AND COINS =====
-    bool isKids = false;
-    u8 mHealth = 3;
-    int mCoins = 0;
-    // bool mNeedsUpdateHealthCoins = false;
 
     // ===== SHINE SYNCHRONIZATION MEMBERS =====
     sead::SafeArray<int, 128> curCollectedShines;
