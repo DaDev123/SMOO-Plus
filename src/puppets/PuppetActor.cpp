@@ -66,7 +66,7 @@ PuppetActor::PuppetActor(const char* name) : al::LiveActor(name) {
 
 PuppetActor::~PuppetActor() {
     delete mCostumeInfo;
-    delete mInfo;
+    mInfo = nullptr;
     delete mPuppetCap;
     delete mModelHolder;
     delete mCaptures;
