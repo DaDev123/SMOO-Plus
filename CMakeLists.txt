@@ -45,3 +45,5 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE SERVERIP=${SERVERIP})
 target_compile_definitions(${PROJECT_NAME} PRIVATE SMOVER=${SMOVER})
 target_compile_definitions(${PROJECT_NAME} PRIVATE BUILDVER=${BUILDVER})
 target_compile_definitions(${PROJECT_NAME} PRIVATE BUILDVERSTR=${BUILDVERSTR})
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_USER_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/include/imconfig.h")
