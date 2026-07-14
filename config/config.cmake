@@ -28,4 +28,4 @@ set(BAKE_SYMBOLS FALSE)
 
 set(USE_ADVANCED_RESULT 1)
 
-set(HAKKUN_ADDONS Nvn ImGui DebugRenderer HeapSourceDynamic)
+set(HAKKUN_ADDONS Nvn ImGui HeapSourceDynamic)
