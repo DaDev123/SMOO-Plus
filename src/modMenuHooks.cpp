@@ -56,10 +56,10 @@ HkTrampoline pauseMenuWaitHook = [](TrampolineStatic(), StageSceneStatePauseMenu
     }
 };
 
-HkTrampoline shadowHook = [](TrampolineStatic(), void* a, void* b, void* c, void* d, void* e) -> void {
+HkTrampoline shadowHook = [](TrampolineStatic(), void* a) -> void {
     if (isModMenu)
         return;
-    orig(a, b, c, d, e);
+    orig(a);
 };
 
 void installModMenuHooks() {
@@ -79,5 +79,5 @@ void installModMenuHooks() {
     overrideHelpFadeNerve.installAtSym<"_ZN24StageSceneStatePauseMenu17exeFadeBeforeHelpEv">();
 
     // fix stupid crash
-    shadowHook.installAtSym<"_ZN2al18ShadowMaskDirector9addSphereERKN4sead8Matrix34IfEERKNS1_7Color4fEfi">();
+    shadowHook.installAtSym<"_ZN2al14ShadowDirector6updateEv">();
 }

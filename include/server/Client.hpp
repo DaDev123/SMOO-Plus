@@ -16,7 +16,6 @@
 // ===== AL/GAME ENGINE INCLUDES =====
 
 #include "al/Library/Layout/LayoutInitInfo.h"
-#include "al/Library/Layout/WindowConfirmWait.h"
 #include "al/Library/LiveActor/ActorInitInfo.h"
 #include "al/Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
 #include "al/Library/Sequence/Sequence.h"
@@ -40,6 +39,7 @@
 #include "sead/prim/seadSafeString.h"
 
 #include "container/seadPtrArray.h"
+#include "Library/Layout/WindowConfirmWait.h"
 #include "Library/Yaml/ByamlIter.h"
 #include "Sequence/HakoniwaSequence.h"
 
@@ -223,11 +223,6 @@ public:
     // ===== UI METHODS =====
     static bool openKeyboardIP();
     static bool openKeyboardPort();
-    static void showUIMessage(const char16_t* msg);
-    static void hideUIMessage();
-    static void showConnect();
-    static void showConnectError(const char16_t* msg);
-    static void hideConnect();
 
     // ===== PUBLIC MEMBERS (for debug purposes) =====
     SocketClient* mSocket;
@@ -334,7 +329,7 @@ private:
 
     // ===== UI COMPONENTS =====
     Keyboard* mKeyboard = nullptr;
-    al::WindowConfirmWait* mUIMessage = nullptr;
+    void* _wtf_why;
     al::SimpleLayoutAppearWaitEnd* mConnectStatus = nullptr;
 
     // ===== GAME STATE MEMBERS =====

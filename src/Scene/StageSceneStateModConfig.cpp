@@ -542,11 +542,8 @@ void StageSceneStateModConfig::kill() {
     if (Client::hasServerChanged()) {
         if (Client::get()->mIsAllowReconnect)
             Client::restartConnection();
-        Client::showUIMessage(Client::get()->mIsAllowReconnect ? u"Reconnecting..." :
-                                                                 u"Server changed. Please restart the game.");
         for (int i = 0; i < 240; i++)
             nn::os::YieldThread();
-        Client::hideUIMessage();
     }
     mCurrentMenu->startEnd("End");
     al::NerveStateBase::kill();

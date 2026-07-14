@@ -11,6 +11,8 @@ Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
     mThread = new al::AsyncFunctorThread("Swkbd", al::FunctorV0M(this, &Keyboard::keyboardThread), 0, 16_KB,
                                          sead::CoreId::cMain);
 
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     mWorkBufSize = nn::swkbd::GetRequiredWorkBufferSize(false);
     mWorkBuf = (char*)gHeap->alloc(mWorkBufSize, 0x1000);
 

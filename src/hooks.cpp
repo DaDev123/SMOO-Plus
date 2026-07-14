@@ -5,7 +5,6 @@
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/Controller/PadRumbleDirector.h"
 #include "al/Library/Controller/PadRumbleFunction.h"
-#include "al/Library/Nerve/NerveUtil.h"
 #include "al/Library/Player/PlayerUtil.h"
 #include "al/Library/Scene/SceneUtil.h"
 #include "al/Library/System/GameSystemInfo.h"
@@ -42,11 +41,6 @@ HkTrampoline saveReadHook = [](TrampolineStatic(), GameConfigData* cfgData,
     orig(cfgData, origIter);
 
     SaveManager::instance()->read(cfgData);
-};
-
-HkTrampoline windowConfirmWaitHook = [](TrampolineStatic(), al::WindowConfirmWait* win) -> bool {
-    al::setNerve(win, (al::Nerve*)(hk::ro::getMainModule()->range().start() + 0x1e05be8));
-    return true;
 };
 
 HkTrampoline drawMainHookHk = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
@@ -190,9 +184,6 @@ void installOtherHooks() {
     // Save Data Edits
     saveWriteHook.installAtSym<"_ZN14GameConfigData5writeEPN2al11ByamlWriterE">();
     saveReadHook.installAtSym<"_ZN14GameConfigData4readERKN2al9ByamlIterE">();
-
-    // WindowConfirm Edits (Forces logic to ignore current nerve)
-    windowConfirmWaitHook.installAtSym<"_ZN2al17WindowConfirmWait6tryEndEv">();
 
     sceneKillHook.installAtSym<"_ZN10StageScene4killEv">();
 }

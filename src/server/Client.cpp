@@ -119,7 +119,6 @@ Client::Client() {
 void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor holder) {
     sead::ScopedCurrentHeapSetter setter(al::getSequenceHeap());
 
-    mUIMessage = new al::WindowConfirmWait("ServerWaitConnect", "WindowConfirmWait", initInfo);
     mConnectStatus = new al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
     ConnectionStatus::sInstance = new ConnectionStatus("Status", initInfo);
     SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", initInfo);
@@ -130,10 +129,6 @@ void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor hol
         PlayerEventLog::deleteInstance();
     PlayerEventLog::createInstance(gHeap);
 
-    if (mUIMessage) {
-        mUIMessage->setTxtMessage(u"Connecting to Server.");
-        mUIMessage->setTxtMessageConfirm(u"Failed to Connect!");
-    }
     if (mConnectStatus) {
         al::setPaneString(mConnectStatus, "TxtSave", u"Connecting to Server.", 0);
         al::setPaneString(mConnectStatus, "TxtSaveSh", u"Connecting to Server.", 0);
@@ -306,7 +301,7 @@ bool Client::openKeyboardPort() {
     }
 
     char buf[0x6];
-    nn::util::SNPrintf(buf, 0x6, "%u", sInstance->mServerPort);
+    snprintf(buf, 0x6, "%u", sInstance->mServerPort);
 
     sInstance->mKeyboard->openKeyboard(buf, [](nn::swkbd::KeyboardConfig& config) {
         config.keyboardMode = nn::swkbd::KeyboardMode::ModeNumeric;
@@ -321,7 +316,7 @@ bool Client::openKeyboardPort() {
     while (true) {
         if (sInstance->mKeyboard->isThreadDone()) {
             if (!sInstance->mKeyboard->isKeyboardCancelled())
-                sInstance->mServerPort = ::atoi(sInstance->mKeyboard->getResult());
+                sInstance->mServerPort = atoi(sInstance->mKeyboard->getResult());
             break;
         }
         nn::os::YieldThread();
@@ -366,32 +361,6 @@ void Client::setServerPort(int port) {
 
     bool isFirstConnect = prevPort != sInstance->mServerPort;
     // sInstance->mSocket->setIsFirstConn(isFirstConnect);
-}
-
-void Client::showUIMessage(const char16_t* msg) {
-    if (!sInstance || !sInstance->mUIMessage) {
-        return;
-    }
-
-    sInstance->mUIMessage->setTxtMessageConfirm(msg);
-
-    al::hidePane(sInstance->mUIMessage, "Page01");  // hide A button prompt
-
-    if (!sInstance->mUIMessage->mIsAlive) {
-        sInstance->mUIMessage->appear();
-
-        sInstance->mUIMessage->playLoop();
-    }
-
-    al::startAction(sInstance->mUIMessage, "Confirm", "State");
-}
-
-void Client::hideUIMessage() {
-    if (!sInstance || !sInstance->mUIMessage) {
-        return;
-    }
-
-    sInstance->mUIMessage->tryEnd();
 }
 
 /**
@@ -455,15 +424,13 @@ void Client::readFunc() {
                 updatePlayerConnect((PlayerConnect*)curPacket);
 
                 if (lastGameInfPacket != emptyGameInfPacket) {
-                    if (lastGameInfPacket.mUserID != mUserID) {
-                        lastGameInfPacket.mUserID = mUserID;
-                    }
+                    lastGameInfPacket.mUserID = mUserID;
                     mSocket->send(&lastGameInfPacket);
                 }
 
-                if (lastPlayerInfPacket.mUserID == mUserID) {
-                    mSocket->send(&lastPlayerInfPacket);
-                }
+                lastPlayerInfPacket.mUserID = mUserID;
+                mSocket->send(&lastPlayerInfPacket);
+
                 if (lastCostumeInfPacket.bodyModel[0] != '\0') {
                     lastCostumeInfPacket.mUserID = mUserID;
                     mSocket->send(&lastCostumeInfPacket);
@@ -1689,37 +1656,4 @@ Shine* Client::findStageShine(int shineID) {
         }
     }
     return nullptr;
-}
-
-void Client::showConnectError(const char16_t* msg) {
-    if (!sInstance || !sInstance->mUIMessage)
-        return;
-
-    sInstance->mUIMessage->setTxtMessageConfirm(msg);
-
-    al::hidePane(sInstance->mUIMessage, "Page01");
-
-    if (!sInstance->mUIMessage->mIsAlive) {
-        sInstance->mUIMessage->appear();
-
-        sInstance->mUIMessage->playLoop();
-    }
-
-    al::startAction(sInstance->mUIMessage, "Confirm", "State");
-}
-
-void Client::showConnect() {
-    if (!sInstance || !sInstance->mUIMessage)
-        return;
-
-    sInstance->mUIMessage->appear();
-
-    sInstance->mUIMessage->playLoop();
-}
-
-void Client::hideConnect() {
-    if (!sInstance || !sInstance->mUIMessage)
-        return;
-
-    sInstance->mUIMessage->tryEnd();
 }

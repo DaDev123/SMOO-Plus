@@ -6,6 +6,7 @@
 
 #include <cstddef>
 
+#include "prim/seadSafeString.h"
 #include "types.h"
 
 typedef void (*KeyboardSetup)(nn::swkbd::KeyboardConfig&);
@@ -32,22 +33,22 @@ public:
     void setSubText(const char16_t* text) { mSubText = text; }
 
 private:
-    al::AsyncFunctorThread* mThread;
-    nn::swkbd::String mResultString;
-    nn::swkbd::ShowKeyboardArg mKeyboardArg;
+    al::AsyncFunctorThread* mThread = nullptr;
+    nn::swkbd::String mResultString = nn::swkbd::String(10);
+    nn::swkbd::ShowKeyboardArg mKeyboardArg = nn::swkbd::ShowKeyboardArg();
 
-    hostname mInitialText;
-    KeyboardSetup mSetupFunc;
+    hostname mInitialText = sead::FixedSafeString<MAX_HOSTNAME_LENGTH + 1>();
+    KeyboardSetup mSetupFunc = KeyboardSetup();
 
     const char16_t* mHeaderText = u"Enter Server IP Here!";
     const char16_t* mSubText = u"Must be a Valid Address.";
 
     bool mIsCancelled = false;
 
-    char* mWorkBuf;
-    int mWorkBufSize;
-    char* mTextCheckBuf;
-    int mTextCheckSize;
-    char* mCustomizeDicBuf;
-    int mCustomizeDicSize;
+    char* mWorkBuf = nullptr;
+    int mWorkBufSize = 0;
+    char* mTextCheckBuf = nullptr;
+    int mTextCheckSize = 0;
+    char* mCustomizeDicBuf = nullptr;
+    int mCustomizeDicSize = 0;
 };
