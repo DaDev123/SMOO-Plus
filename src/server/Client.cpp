@@ -1083,10 +1083,10 @@ PuppetInfo* Client::findPuppetInfo(const nn::account::Uid& id, bool isFindAvaila
         }
     }
 
-    if (!firstAvailable) {
-        hk::diag::logLine("Unable to find Assigned Puppet for Player!");
-        id.print("User ID");
-    }
+    // if (!firstAvailable) {
+    //     hk::diag::logLine("Unable to find Assigned Puppet for Player!");
+    //     id.print("User ID");
+    // }
 
     return firstAvailable;
 }

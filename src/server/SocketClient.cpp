@@ -432,45 +432,45 @@ void SocketClient::deletePacketAfterSend(Packet* packet) {
         return;
 
     switch (packet->mType) {
-        case PacketType::PLAYERINF:
-            delete static_cast<PlayerInf*>(packet);
-            break;
-        case PacketType::HACKCAPINF:
-            delete static_cast<HackCapInf*>(packet);
-            break;
-        case PacketType::GAMEINF:
-            delete static_cast<GameInf*>(packet);
-            break;
-        case PacketType::PLAYERCON:
-            delete static_cast<PlayerConnect*>(packet);
-            break;
-        case PacketType::PLAYERDC:
-            delete static_cast<PlayerDC*>(packet);
-            break;
-        case PacketType::COSTUMEINF:
-            delete static_cast<CostumeInf*>(packet);
-            break;
-        case PacketType::SHINECOLL:
-            delete static_cast<ShineCollect*>(packet);
-            break;
-        case PacketType::CAPTUREINF:
-            delete static_cast<CaptureInf*>(packet);
-            break;
-        case PacketType::COINCOLLECTCOLL:
-            delete static_cast<CoinCollectCollect*>(packet);
-            break;
-        case PacketType::CHECKPOINTGET:
-            delete static_cast<CheckpointGet*>(packet);
-            break;
-        case PacketType::MOONROCKHIT:
-            delete static_cast<MoonRockHit*>(packet);
-            break;
-        case PacketType::GAMESTART:
-            delete packet;
-            break;
-        default:
-            hk::diag::logLine("WARNING: Attempted to delete invalid packet type!");
-            break;
+    case PacketType::PLAYERINF:
+        delete static_cast<PlayerInf*>(packet);
+        break;
+    case PacketType::HACKCAPINF:
+        delete static_cast<HackCapInf*>(packet);
+        break;
+    case PacketType::GAMEINF:
+        delete static_cast<GameInf*>(packet);
+        break;
+    case PacketType::PLAYERCON:
+        delete static_cast<PlayerConnect*>(packet);
+        break;
+    case PacketType::PLAYERDC:
+        delete static_cast<PlayerDC*>(packet);
+        break;
+    case PacketType::COSTUMEINF:
+        delete static_cast<CostumeInf*>(packet);
+        break;
+    case PacketType::SHINECOLL:
+        delete static_cast<ShineCollect*>(packet);
+        break;
+    case PacketType::CAPTUREINF:
+        delete static_cast<CaptureInf*>(packet);
+        break;
+    case PacketType::COINCOLLECTCOLL:
+        delete static_cast<CoinCollectCollect*>(packet);
+        break;
+    case PacketType::CHECKPOINTGET:
+        delete static_cast<CheckpointGet*>(packet);
+        break;
+    case PacketType::MOONROCKHIT:
+        delete static_cast<MoonRockHit*>(packet);
+        break;
+    case PacketType::GAMESTART:
+        delete packet;
+        break;
+    default:
+        hk::diag::logLine("WARNING: Attempted to delete invalid packet type!");
+        break;
     }
 }
 
