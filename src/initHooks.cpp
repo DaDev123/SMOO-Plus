@@ -1,6 +1,8 @@
 #include "hk/hook/Trampoline.h"
 
 #include "nn/fs/fs_mount.h"
+#include "nn/nifm.h"
+#include "nn/socket.h"
 
 #include "sead/filedevice/nin/seadNinFileDeviceBaseNin.h"
 #include "sead/filedevice/seadFileDeviceMgr.h"
@@ -17,17 +19,31 @@
 #include "saveManager.h"
 #include "server/Client.hpp"
 
+static constexpr int socketPoolSize = 6_MB;
+static constexpr int socketAllocPoolSize = 128_KB;
+static char socketPool[socketPoolSize + socketAllocPoolSize] __attribute__((aligned(4_KB)));
+static HkReplace<void> disableSocketInit = [] {};
+
 HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> void {
+    nn::nifm::Initialize();
+    nn::nifm::SubmitNetworkRequest();
+
+    while (nn::nifm::IsNetworkRequestOnHold()) {
+    }
+
+    nn::socket::Initialize(socketPool, socketPoolSize, socketAllocPoolSize, 0xE);
+    disableSocketInit.installAtSym<"_ZN2nn6socket10InitializeEPvmmi">();
+
+#if DEBUGLOG
+    Logger::createInstance();
+#endif
+
     imgui::setup();
 
     Client::createInstance(gHeap);
     SaveManager::createInstance(gHeap);
 
     orig(gameSystem);
-
-#if DEBUGLOG
-    Logger::createInstance();
-#endif
 };
 
 HkTrampoline hakoniwaSequenceInitHook = [](TrampolineStatic(), HakoniwaSequence* sequence,
