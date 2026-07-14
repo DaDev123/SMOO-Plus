@@ -1184,8 +1184,6 @@ inline constexpr storyShine scenarioSyncList[16] = {
     {795, 11, "BossRaidWorldHomeStage", 2},  {332, 12, "SkyWorldHomeStage", 2},
     {1055, 15, "Special1WorldHomeStage", 2}, {1061, 16, "Special2WorldHomeStage", 2}};
 
-inline constexpr s32 postGameScenarios[14] = {3, 3, 4, 4, 3, 3, 3, 5, 3, 3, 4, 3, 3, 2};
-
 inline constexpr s32 moonRockScenarios[14] = {4, 4, 5, 5, 4, 4, 4, 8, 4, 4, 8, 4, 4, 3};
 
 void Client::updateMoonRocks(MoonRockHit* packet) {
