@@ -39,7 +39,6 @@
 #include "sead/prim/seadSafeString.h"
 
 #include "container/seadPtrArray.h"
-#include "Library/Layout/WindowConfirmWait.h"
 #include "Library/Yaml/ByamlIter.h"
 #include "Sequence/HakoniwaSequence.h"
 
@@ -137,7 +136,6 @@ public:
     static void sendCaptureInfPacket(const PlayerActorHakoniwa* player);
     static void sendCostumeInfPacket(const char* body, const char* cap);
     static void sendShineCollectPacket(int shineId);
-    static void sendPuppetPosInfoPacket();
     static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
     static void sendCheckpointGetPacket(const char* objId);
     static void sendMoonRockHitPacket(int worldId);

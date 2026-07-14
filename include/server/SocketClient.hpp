@@ -35,6 +35,8 @@ public:
     void sendFunc();
     void recvFunc();
 
+    void deletePacketAfterSend(Packet* packet);
+
     void setLogState(SockState state) { socket_log_state = state; };
 
     void printPacket(Packet* packet);

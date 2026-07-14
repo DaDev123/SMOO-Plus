@@ -207,6 +207,9 @@ bool SocketClient::send(Packet* packet) {
     if (this->socket_log_state != SockState::CONNECTED || packet == nullptr)
         return false;
 
+    if (!(packet->mType > PacketType::UNKNOWN && packet->mType < PacketType::End))
+        return false;
+
     u8* buffer = reinterpret_cast<u8*>(packet);
 
     int valread = 0;
@@ -424,12 +427,59 @@ void SocketClient::recvFunc() {
         mState = RESET;
 }
 
+void SocketClient::deletePacketAfterSend(Packet* packet) {
+    if (!packet)
+        return;
+
+    switch (packet->mType) {
+        case PacketType::PLAYERINF:
+            delete static_cast<PlayerInf*>(packet);
+            break;
+        case PacketType::HACKCAPINF:
+            delete static_cast<HackCapInf*>(packet);
+            break;
+        case PacketType::GAMEINF:
+            delete static_cast<GameInf*>(packet);
+            break;
+        case PacketType::PLAYERCON:
+            delete static_cast<PlayerConnect*>(packet);
+            break;
+        case PacketType::PLAYERDC:
+            delete static_cast<PlayerDC*>(packet);
+            break;
+        case PacketType::COSTUMEINF:
+            delete static_cast<CostumeInf*>(packet);
+            break;
+        case PacketType::SHINECOLL:
+            delete static_cast<ShineCollect*>(packet);
+            break;
+        case PacketType::CAPTUREINF:
+            delete static_cast<CaptureInf*>(packet);
+            break;
+        case PacketType::COINCOLLECTCOLL:
+            delete static_cast<CoinCollectCollect*>(packet);
+            break;
+        case PacketType::CHECKPOINTGET:
+            delete static_cast<CheckpointGet*>(packet);
+            break;
+        case PacketType::MOONROCKHIT:
+            delete static_cast<MoonRockHit*>(packet);
+            break;
+        case PacketType::GAMESTART:
+            delete packet;
+            break;
+        default:
+            hk::diag::logLine("WARNING: Attempted to delete invalid packet type!");
+            break;
+    }
+}
+
 bool SocketClient::queuePacket(Packet* packet) {
     if (socket_log_state == SockState::CONNECTED)
         if (mSendQueue.push((s64)packet, sead::MessageQueue::BlockType::NonBlocking))
             return true;
 
-    delete packet;
+    deletePacketAfterSend(packet);
     return false;
 }
 
@@ -438,7 +488,7 @@ bool SocketClient::trySendQueue() {
 
     bool successful = send(curPacket);
 
-    delete curPacket;
+    deletePacketAfterSend(curPacket);
 
     return successful;
 }
