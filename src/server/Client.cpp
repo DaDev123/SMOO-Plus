@@ -217,7 +217,7 @@ bool Client::startConnection() {
 
             if (curPacket) {
                 if (curPacket->mType == PacketType::CLIENTINIT) {
-                    InitPacket* initPacket = (InitPacket*)curPacket;
+                    InitPacket* initPacket = static_cast<InitPacket*>(curPacket);
 
                     hk::diag::logLine("Server Max Player Size: %d", initPacket->maxPlayers);
 
@@ -236,7 +236,7 @@ bool Client::startConnection() {
                     break;
                 }
 
-                delete curPacket;
+                delete[] reinterpret_cast<u8*>(curPacket);
             } else {
                 hk::diag::logLine("Recieve failed! Stopping Connection.");
                 mIsConnectionActive = false;
@@ -403,19 +403,19 @@ void Client::readFunc() {
         if (curPacket) {
             switch (curPacket->mType) {
             case PacketType::PLAYERINF:
-                updatePlayerInfo((PlayerInf*)curPacket);
+                updatePlayerInfo(static_cast<PlayerInf*>(curPacket));
                 break;
             case PacketType::GAMEINF:
-                updateGameInfo((GameInf*)curPacket);
+                updateGameInfo(static_cast<GameInf*>(curPacket));
                 break;
             case PacketType::HACKCAPINF:
-                updateHackCapInfo((HackCapInf*)curPacket);
+                updateHackCapInfo(static_cast<HackCapInf*>(curPacket));
                 break;
             case PacketType::CAPTUREINF:
-                updateCaptureInfo((CaptureInf*)curPacket);
+                updateCaptureInfo(static_cast<CaptureInf*>(curPacket));
                 break;
             case PacketType::PLAYERCON:
-                updatePlayerConnect((PlayerConnect*)curPacket);
+                updatePlayerConnect(static_cast<PlayerConnect*>(curPacket));
 
                 if (lastGameInfPacket != emptyGameInfPacket) {
                     lastGameInfPacket.mUserID = mUserID;
@@ -435,33 +435,33 @@ void Client::readFunc() {
 
                 break;
             case PacketType::COSTUMEINF:
-                updateCostumeInfo((CostumeInf*)curPacket);
+                updateCostumeInfo(static_cast<CostumeInf*>(curPacket));
                 break;
             case PacketType::SHINECOLL:
-                updateShineInfo((ShineCollect*)curPacket);
+                updateShineInfo(static_cast<ShineCollect*>(curPacket));
                 break;
             case PacketType::PLAYERDC:
                 hk::diag::logLine("Received Player Disconnect!");
                 curPacket->mUserID.print();
-                disconnectPlayer((PlayerDC*)curPacket);
+                disconnectPlayer(static_cast<PlayerDC*>(curPacket));
                 break;
             case PacketType::CHANGESTAGE:
-                sendToStage((ChangeStagePacket*)curPacket);
+                sendToStage(static_cast<ChangeStagePacket*>(curPacket));
                 break;
             case PacketType::COINCOLLECTCOLL:
-                updateCoinCollects((CoinCollectCollect*)curPacket);
+                updateCoinCollects(static_cast<CoinCollectCollect*>(curPacket));
                 break;
             case PacketType::CHECKPOINTGET:
-                updateCheckpoints((CheckpointGet*)curPacket);
+                updateCheckpoints(static_cast<CheckpointGet*>(curPacket));
                 break;
             case PacketType::MOONROCKHIT:
-                updateMoonRocks((MoonRockHit*)curPacket);
+                updateMoonRocks(static_cast<MoonRockHit*>(curPacket));
                 break;
             case PacketType::GAMESTART:
                 PlayerEventLog::addEvent(curPacket->mUserID, PlayerEventLog::START, "");
                 break;
             case PacketType::CLIENTINIT: {
-                InitPacket* initPacket = (InitPacket*)curPacket;
+                InitPacket* initPacket = static_cast<InitPacket*>(curPacket);
                 hk::diag::logLine("Server Max Player Size: %d", initPacket->maxPlayers);
                 maxPuppets = initPacket->maxPlayers - 1;
                 mPuppetHolder->resizeHolder(maxPuppets);
@@ -481,8 +481,7 @@ void Client::readFunc() {
             }
 
             // convert back to a u8* buffer to delete correctly
-            u8* packetBuf = reinterpret_cast<u8*>(curPacket);
-            delete[] packetBuf;
+            delete[] reinterpret_cast<u8*>(curPacket);
         } else {
             hk::diag::logLine("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x",
                               mSocket->socket_errno);
