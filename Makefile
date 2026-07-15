@@ -27,12 +27,17 @@ setup:
 	python sys/tools/setup_libcxx_prepackaged.py
 	python sys/tools/setup_sail.py
 
-format:
+format: check_includes
 	-clear
 	find src include lib/custom -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | xargs clang-format -i
 
 clean:
 	rm -rf build package
+
+check_includes:
+	-clear
+	python3 check_includes.py
+
 
 file_structure:
 	
