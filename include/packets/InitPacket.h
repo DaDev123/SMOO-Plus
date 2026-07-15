@@ -8,6 +8,4 @@ struct PACKED InitPacket : Packet {
         mPacketSize = sizeof(InitPacket) - sizeof(Packet);
     };
     u16 maxPlayers = 0;
-
-    char ServerVersion[VERSIONSIZE] = {};
 };

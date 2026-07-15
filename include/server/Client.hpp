@@ -164,8 +164,7 @@ public:
     // static int getCoins() { return sInstance ? sInstance->mCoins : 0; }
     // static bool isNeedUpdateHealthCoins() { return sInstance ? sInstance->mNeedsUpdateHealthCoins : false;
     // } static void setNeedUpdateHealthCoins(bool value);
-    static void setServerVersion(const char* serverVersion);
-    static const char* getServerVersion();
+
     static bool isThreadDone() { return sInstance ? sInstance->mReadThread->isDone() : true; }
 
     // ===== SERVER CONFIGURATION =====

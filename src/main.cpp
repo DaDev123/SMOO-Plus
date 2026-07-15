@@ -60,6 +60,7 @@
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "speedboot/BootHooks.hpp"
+#include "types.h"
 
 // ===== PLAYER INFO UPDATE FUNCTION =====
 
@@ -136,8 +137,7 @@ void drawMain(al::Sequence* curSequence) {
                 socket->getSendMaxCount(), socket->getRecvCount(), socket->getRecvMaxCount());
 
     ImGui::Text("Framework: Hakkun");
-    ImGui::Text("Mod version: %s\n", TOSTRING(BUILDVERSTR));
-    ImGui::Text("Server is running version: %s\n", Client::getServerVersion());
+    ImGui::Text("Mod version: %s: %s\n", TOSTRING(BUILDVERSTR), __DATE__);
 
     // ===== 3D DEBUG RENDERING =====
     if (curScene && gIsSceneAlive) {

@@ -235,15 +235,6 @@ bool Client::startConnection() {
                     maxPuppets = initPacket->maxPlayers - 1;
                     mPuppetHolder->resizeHolder(maxPuppets);
 
-                    if (curPacket->mPacketSize != sizeof(InitPacket) - sizeof(Packet)) {
-                        // on an original smoo server, set to legacy and exit loop
-                        setServerVersion("Legacy");
-                        break;
-                    }
-
-                    setServerVersion(initPacket->ServerVersion);
-                    hk::diag::logLine("Server version: %s", initPacket->ServerVersion);
-
                     break;
                 }
 
@@ -492,13 +483,6 @@ void Client::readFunc() {
                 maxPuppets = initPacket->maxPlayers - 1;
                 mPuppetHolder->resizeHolder(maxPuppets);
 
-                if (curPacket->mPacketSize != sizeof(InitPacket) - sizeof(Packet)) {
-                    setServerVersion("Legacy");
-                    break;
-                }
-
-                setServerVersion(initPacket->ServerVersion);
-                hk::diag::logLine("Server version: %s", initPacket->ServerVersion);
                 break;
             }
             default:
@@ -1565,22 +1549,6 @@ void Client::updateHealthCoins(HealthCoins* packet) {
     sInstance->isKids = packet->isKids;
     sInstance->mNeedsUpdateHealthCoins = true;
 }*/
-
-void Client::setServerVersion(const char* serverVersion) {
-    if (!sInstance) {
-        return;
-    }
-
-    sInstance->mServerVersion = serverVersion;
-}
-
-const char* Client::getServerVersion() {
-    if (!sInstance) {
-        return "";
-    }
-
-    return sInstance->mServerVersion.cstr();
-}
 
 Keyboard* Client::getKeyboard() {
     if (sInstance) {
