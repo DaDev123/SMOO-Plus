@@ -16,6 +16,7 @@
 #include "game/System/GameSystem.h"
 
 #include "Imgui.hpp"
+#include "logger.hpp"
 #include "saveManager.h"
 #include "server/Client.hpp"
 

@@ -8,6 +8,7 @@
 #include "vapours/results/results_common.hpp"
 
 #include <cerrno>
+#include <cstdio>
 #include <cstring>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -15,7 +16,6 @@
 #include "heap/seadHeapMgr.h"
 #include "Library/Thread/AsyncFunctorThread.h"
 #include "Library/Thread/FunctorV0M.h"
-#include "logger.hpp"
 #include "main.hpp"
 #include "packets/Packet.h"
 #include "server/Client.hpp"
@@ -268,14 +268,16 @@ bool SocketClient::recv() {
         if (header.mType > PacketType::UNKNOWN && header.mType < PacketType::End && fullSize <= MAXPACKSIZE &&
             fullSize > 0 && valread == sizeof(Packet)) {
             if (header.mType != PLAYERINF && header.mType != HACKCAPINF) {
-                hk::diag::log("Received packet (from %02X%02X):", header.mUserID.data[0],
-                              header.mUserID.data[1]);
-                Logger::disableName();
-                hk::diag::log(" Size: %d", header.mPacketSize);
-                hk::diag::log(" Type: %d", header.mType);
+                char msg[0x50] = "";
+                int len = sprintf(msg, "Received packet (from %02X%02X):", header.mUserID.data[0],
+                                  header.mUserID.data[1]);
+                len += sprintf(msg + len, " Size: %d", header.mPacketSize);
+                len += sprintf(msg + len, " Type: %d", header.mType);
+
                 if (packetNames[header.mType])
-                    hk::diag::logLine(" Type String: %s", packetNames[header.mType]);
-                Logger::enableName();
+                    len += sprintf(msg + len, " Type String: %s", packetNames[header.mType]);
+                msg[len] = '\0';
+                hk::diag::logLine("%s", msg);
             }
 
             // char* packetBuf = (char*)gHeap->alloc(fullSize);

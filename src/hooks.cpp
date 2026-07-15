@@ -18,6 +18,7 @@
 #include "imgui.h"
 #include "layouts/PlayerEventLog.h"
 #include "layouts/SpeedrunIcon.h"
+#include "logger.hpp"
 #include "main.hpp"
 #include "saveManager.h"
 #include "Scene/StageSceneStateModConfig.hpp"

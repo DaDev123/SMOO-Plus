@@ -347,7 +347,7 @@ void Client::setServerIP(const char* ip) {
  */
 void Client::setServerPort(int port) {
     if (!sInstance) {
-        hk::diag::log("Static Instance is null!\n");
+        hk::diag::logLine("Static Instance is null!");
         return;
     }
 
@@ -1496,8 +1496,8 @@ void Client::update() {
 
             // Drain checkpoints that arrived while the scene was loading
             if (sInstance->mPendingCheckpointCount > 0) {
-                hk::diag::log("update: draining %d pending checkpoint(s)\n",
-                              sInstance->mPendingCheckpointCount);
+                hk::diag::logLine("update: draining %d pending checkpoint(s)",
+                                  sInstance->mPendingCheckpointCount);
                 for (s32 i = 0; i < sInstance->mPendingCheckpointCount; i++) {
                     PendingCheckpoint& c = sInstance->mPendingCheckpoints[i];
                     getOneCheckpoint(c.objId);

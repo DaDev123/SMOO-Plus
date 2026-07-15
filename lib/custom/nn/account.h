@@ -9,7 +9,7 @@
 
 #include "nn/os.h"
 
-#include "logger.hpp"
+#include <cstdio>
 
 namespace nn {
 namespace account {
@@ -33,23 +33,23 @@ struct Uid {
     inline bool isEmpty() const { return *this == EmptyId; }
 
     inline void print() const {
-        hk::diag::log("Player ID: 0x");
-        Logger::disableName();
+        char msg[0x50] = "";
+        int len = sprintf(msg, "Player ID 0x");
         for (size_t i = 0; i < 0x10; i++) {
-            hk::diag::log("%02X", data[i]);
+            len += sprintf(msg + len, "%02X", data[i]);
         }
-        hk::diag::log("\n");
-        Logger::enableName();
+        msg[len] = '\0';
+        hk::diag::logLine("%s", msg);
     }
 
     inline void print(const char* prefix) const {
-        hk::diag::log("%s: 0x", prefix);
-        Logger::disableName();
+        char msg[0x50] = "";
+        int len = sprintf(msg, "%s: 0x", prefix);
         for (size_t i = 0; i < 0x10; i++) {
-            hk::diag::log("%02X", data[i]);
+            len += sprintf(msg + len, "%02X", data[i]);
         }
-        hk::diag::log("\n");
-        Logger::enableName();
+        msg[len] = '\0';
+        hk::diag::logLine("%s", msg);
     }
 
     static const Uid EmptyId;
