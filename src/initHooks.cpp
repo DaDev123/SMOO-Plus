@@ -116,11 +116,10 @@ HkTrampoline mountSdCardHook = [](TrampolineStatic(), sead::FileDeviceMgr* fileD
     fileDeviceMgr->mount(sdFileDevice);
 };
 
-#define MB(X) X * 1024.f * 1024.f
 HkTrampoline createHeap = [](TrampolineStatic(), al::SystemKit* systemKit, sead::Heap* rootHeap) -> void {
     orig(systemKit, rootHeap);
 
-    gHeap = sead::ExpHeap::create(MB(2.1), "SMOOPlusHeap", al::getStationedHeap());
+    gHeap = sead::ExpHeap::create(2_MB, "SMOOPlusHeap", al::getStationedHeap());
     al::addNamedHeap(gHeap, "SMOOPlusHeap");
 };
 
