@@ -43,7 +43,7 @@
 #include <cmath>
 #include <cstring>
 #include <netinet/in.h>
-#include <std/musl/arch/generic/bits/socket.h>
+#include <sys/socket.h>
 
 #include "helpers.hpp"
 #include "layouts/ConnectionStatus.h"
