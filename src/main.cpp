@@ -132,7 +132,7 @@ void drawMain(al::Sequence* curSequence) {
                 socket->getSendMaxCount(), socket->getRecvCount(), socket->getRecvMaxCount());
 
     ImGui::Text("Framework: Hakkun");
-    ImGui::Text("Mod version: %s: %s\n", BUILDVERSTR, __DATE__);
+    ImGui::Text("Mod version: %s: %s\n", BUILDVER, __DATE__);
 
     // ===== 3D DEBUG RENDERING =====
     if (curScene && gIsSceneAlive) {
@@ -263,7 +263,7 @@ void drawMain(al::Sequence* curSequence) {
                 };
 
                 displayHeapInfo(gHeap);
-                displayHeapInfo(al::getStationedHeap());
+                // displayHeapInfo(al::getStationedHeap());
                 displayHeapInfo(al::getSequenceHeap());
                 displayHeapInfo(al::getSceneHeap());
                 displayHeapInfo(al::getSceneResourceHeap(), true);

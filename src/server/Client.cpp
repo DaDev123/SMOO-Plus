@@ -118,7 +118,7 @@ Client::Client() {
 
     hk::diag::logLine("Player Name: %s", playerName.name);
 
-    hk::diag::logLine("%s Build Number: %s", playerName.name, BUILDVERSTR);
+    hk::diag::logLine("%s Build Number: %s", playerName.name, BUILDVER);
 }
 
 /**
@@ -127,13 +127,14 @@ Client::Client() {
  * @param initInfo init info used to create layouts used by client
  */
 void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor holder) {
-    sead::ScopedCurrentHeapSetter setter(al::getSequenceHeap());
+    {
+        sead::ScopedCurrentHeapSetter setter(al::getSequenceHeap());
+        mConnectStatus = new al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
+        ConnectionStatus::sInstance = new ConnectionStatus("Status", initInfo);
+        SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", initInfo);
+    }
 
-    mConnectStatus = new al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
-    ConnectionStatus::sInstance = new ConnectionStatus("Status", initInfo);
-    SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", initInfo);
-
-    sead::ScopedCurrentHeapSetter setter2(gHeap);
+    sead::ScopedCurrentHeapSetter setter(gHeap);
 
     if (PlayerEventLog::instance())
         PlayerEventLog::deleteInstance();

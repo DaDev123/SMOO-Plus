@@ -178,7 +178,7 @@ void SpeedbootLoad::updateTextElements() {
     sead::WFormatFixedSafeString<0x100> debugString(u"Progress: %.1f%%", displayPercent);
     al::setPaneString(this, "TxtDebug", debugString.cstr(), 0);
     al::setPaneString(this, "TxtCurModName", u"Super Mario Odyssey Online - Plus", 0);
-    al::setPaneStringFormat(this, "TxtCurModVersion", "%s\n", BUILDVERSTR);
+    al::setPaneStringFormat(this, "TxtCurModVersion", "%s\n", BUILDVER);
     al::setPaneString(this, "TxtCredits", u"CONTRIBUTORS", 0);
     al::setPaneString(this, "TxtContributors",
                       u"MrKatzenGaming\n"

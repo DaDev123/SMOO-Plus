@@ -35,7 +35,7 @@ HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> 
     nn::socket::Initialize(socketPool, socketPoolSize, socketAllocPoolSize, 0xE);
     disableSocketInit.installAtSym<"_ZN2nn6socket10InitializeEPvmmi">();
 
-#if DEBUGLOG
+#ifdef DEBUGLOG
     Logger::createInstance();
 #endif
 
