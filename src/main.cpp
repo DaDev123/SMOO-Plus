@@ -132,7 +132,7 @@ void drawMain(al::Sequence* curSequence) {
                 socket->getSendMaxCount(), socket->getRecvCount(), socket->getRecvMaxCount());
 
     ImGui::Text("Framework: Hakkun");
-    ImGui::Text("Mod version: %s: %s\n", STR(BUILDVERSTR), __DATE__);
+    ImGui::Text("Mod version: %s: %s\n", BUILDVERSTR, __DATE__);
 
     // ===== 3D DEBUG RENDERING =====
     if (curScene && gIsSceneAlive) {

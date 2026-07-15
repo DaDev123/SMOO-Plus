@@ -25,7 +25,7 @@ extern "C" void hk::diag::hkLogSink(const char* msg, size len) {
 
 void Logger::createInstance() {
 #ifdef SERVERIP
-    sInstance = new (gHeap) Logger(STR(SERVERIP), 3080, "MainLogger");
+    sInstance = new (gHeap) Logger(SERVERIP, 3080, "MainLogger");
 #else
     sInstance = new (gHeap) Logger(0, 3080, "MainLogger");
 #endif

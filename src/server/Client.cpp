@@ -118,7 +118,7 @@ Client::Client() {
 
     hk::diag::logLine("Player Name: %s", playerName.name);
 
-    hk::diag::logLine("%s Build Number: %s", playerName.name, STR(BUILDVERSTR));
+    hk::diag::logLine("%s Build Number: %s", playerName.name, BUILDVERSTR);
 }
 
 /**
