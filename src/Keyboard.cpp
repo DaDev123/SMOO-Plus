@@ -15,10 +15,10 @@ Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
     sead::ScopedCurrentHeapSetter setter(gHeap);
 
     mWorkBufSize = nn::swkbd::GetRequiredWorkBufferSize(false);
-    mWorkBuf = (char*)gHeap->alloc(mWorkBufSize, 0x1000);
+    mWorkBuf = (char*)aligned_alloc(0x1000, mWorkBufSize);
 
     mTextCheckSize = 0x7d4;
-    mTextCheckBuf = (char*)gHeap->alloc(mTextCheckSize, 0x1000);
+    mTextCheckBuf = (char*)aligned_alloc(0x1000, mTextCheckSize);
 
     mResultString.allocate();
 }
