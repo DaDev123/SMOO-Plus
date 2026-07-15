@@ -6,10 +6,6 @@
 #include "main.hpp"
 
 #include "hk/gfx/ImGuiBackendNvn.h"
-#include "hk/hook/a64/Assembler.h"
-
-#include "nn/init.h"
-#include "nn/oe.h"
 
 #include "sead/gfx/seadColor.h"
 #include "sead/prim/seadSafeString.h"
@@ -320,58 +316,3 @@ extern "C" void hkMain() {
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
 }
-
-namespace nn::init {
-
-extern "C" __attribute__((weak)) void _init_libc0();
-extern "C" __attribute__((weak)) void nnosInitialize(hk::Handle threadHandle, ptr argumentAddr);
-extern "C" __attribute__((weak)) void _init_libc1();
-extern "C" __attribute__((weak)) void _init_libc2();
-extern "C" void nnMain();
-extern "C" __attribute__((weak)) void nnosQuickExit();
-
-extern "C" __attribute__((weak)) void nninitInitializeSdkModule(void);
-extern "C" __attribute__((weak)) void nninitInitializeAbortObserver(void);
-extern "C" __attribute__((weak)) void nninitFinalizeSdkModule(void);
-
-using FuncPtr = void (*)();
-constexpr u32 defaultRAMAmount = 3200_MB;
-constexpr u32 allocHeapRAMAmount = 36_MB;
-constexpr u32 recordingHeapRAMAmount = 96_MB;
-void nninitStartup() {  // Copied straight from OdysseyDecomp with some slight adjustments
-    uintptr_t allocatorHeap;
-    uintptr_t recordingHeap;
-
-    nn::os::SetMemoryHeapSize(defaultRAMAmount + extraRAMAmount);
-    nn::os::AllocateMemoryBlock(&allocatorHeap, allocHeapRAMAmount);
-    nn::init::InitializeAllocator(reinterpret_cast<void*>(allocatorHeap), allocHeapRAMAmount);
-    nn::os::AllocateMemoryBlock(&recordingHeap, recordingHeapRAMAmount);
-    nn::oe::EnableGamePlayRecording(reinterpret_cast<void*>(recordingHeap), recordingHeapRAMAmount);
-}
-
-void Start(size threadHandle, size argumentAddr, FuncPtr notifyExceptionHandlerReady,
-           FuncPtr callInitializers) {
-    _init_libc0();
-    nnosInitialize(threadHandle, argumentAddr);
-
-    // (*notifyExceptionHandlerReady)();
-
-    _init_libc1();
-    nninitInitializeSdkModule();
-
-    nninitStartup();
-    _init_libc2();
-    (*callInitializers)();
-
-    // increase size of root heap to take advantage of extra ram
-    u32 rootHeapSize = defaultRAMAmount - allocHeapRAMAmount - recordingHeapRAMAmount + extraRAMAmount;
-    hk::hook::a64::assemble<"mov w8,{}">().arg(rootHeapSize).installAtMainOffset(0x005157b8);
-
-    nnMain();
-
-    nninitFinalizeSdkModule();
-    nnosQuickExit();
-    return;
-}
-
-}  // namespace nn::init
