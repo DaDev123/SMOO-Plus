@@ -1,7 +1,6 @@
 #pragma once
 
 #include "SocketBase.hpp"
-#include "types.h"
 
 class Logger : public SocketBase {
 public:

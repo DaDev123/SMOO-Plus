@@ -2,14 +2,14 @@
 
 #include "Packet.h"
 
-struct PACKED HackCapInf : Packet {
+struct __attribute__((packed)) HackCapInf : Packet {
     HackCapInf() : Packet() {
         this->mType = PacketType::HACKCAPINF;
         mPacketSize = sizeof(HackCapInf) - sizeof(Packet);
     };
     sead::Vector3f capPos;
     sead::Quatf capQuat;
-    bool1 isCapVisible = false;
+    u8 isCapVisible = false;  // fake bool
     char capAnim[PACKBUFSIZE] = {};
     sead::Quatf capRotQuat;
 };

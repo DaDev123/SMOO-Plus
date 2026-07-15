@@ -2,7 +2,7 @@
 
 #include "Packet.h"
 
-struct PACKED PlayerDC : Packet {
+struct __attribute__((packed)) PlayerDC : Packet {
     PlayerDC() : Packet() {
         this->mType = PacketType::PLAYERDC;
         mPacketSize = sizeof(PlayerDC) - sizeof(Packet);

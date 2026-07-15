@@ -3,7 +3,7 @@
 #include "algorithms/PlayerAnims.h"
 #include "Packet.h"
 
-struct PACKED PlayerInf : Packet {
+struct __attribute__((packed)) PlayerInf : Packet {
     PlayerInf() : Packet() {
         mType = PacketType::PLAYERINF;
         mPacketSize = sizeof(PlayerInf) - sizeof(Packet);

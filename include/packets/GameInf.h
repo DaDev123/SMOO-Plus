@@ -6,12 +6,12 @@
 
 enum GameMode : s8;
 
-struct PACKED GameInf : Packet {
+struct __attribute__((packed)) GameInf : Packet {
     GameInf() : Packet() {
         this->mType = PacketType::GAMEINF;
         mPacketSize = sizeof(GameInf) - sizeof(Packet);
     };
-    bool1 is2D = false;
+    u8 is2D = false;  // fake bool
     u8 scenarioNo = -1;
     char stageName[0x40] = {};
     s8 gameMode = -1;

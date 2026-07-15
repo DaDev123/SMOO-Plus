@@ -2,7 +2,7 @@
 
 #include "Packet.h"
 
-struct PACKED CoinCollectCollect : Packet {
+struct __attribute__((packed)) CoinCollectCollect : Packet {
     CoinCollectCollect() : Packet() {
         this->mType = PacketType::COINCOLLECTCOLL;
         mPacketSize = sizeof(CoinCollectCollect) - sizeof(Packet);

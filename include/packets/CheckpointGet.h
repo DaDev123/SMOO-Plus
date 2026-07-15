@@ -2,7 +2,7 @@
 
 #include "Packet.h"
 
-struct PACKED CheckpointGet : Packet {
+struct __attribute__((packed)) CheckpointGet : Packet {
     CheckpointGet() : Packet() {
         this->mType = PacketType::CHECKPOINTGET;
         mPacketSize = sizeof(CheckpointGet) - sizeof(Packet);

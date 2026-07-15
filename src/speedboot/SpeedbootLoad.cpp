@@ -1,5 +1,7 @@
 #include "speedboot/SpeedbootLoad.hpp"
 
+#include "hk/types.h"
+
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Layout/LayoutInitInfo.h"
@@ -10,7 +12,6 @@
 #include "game/System/GameDataFunction.h"
 
 #include "math/seadMathCalcCommon.h"
-#include "types.h"
 
 // Forward declare the nerve classes
 namespace {
@@ -177,7 +178,7 @@ void SpeedbootLoad::updateTextElements() {
     sead::WFormatFixedSafeString<0x100> debugString(u"Progress: %.1f%%", displayPercent);
     al::setPaneString(this, "TxtDebug", debugString.cstr(), 0);
     al::setPaneString(this, "TxtCurModName", u"Super Mario Odyssey Online - Plus", 0);
-    al::setPaneStringFormat(this, "TxtCurModVersion", "%s\n", TOSTRING(BUILDVERSTR));
+    al::setPaneStringFormat(this, "TxtCurModVersion", "%s\n", STR(BUILDVERSTR));
     al::setPaneString(this, "TxtCredits", u"CONTRIBUTORS", 0);
     al::setPaneString(this, "TxtContributors",
                       u"MrKatzenGaming\n"

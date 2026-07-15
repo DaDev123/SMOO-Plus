@@ -19,7 +19,8 @@
 #include "main.hpp"
 #include "packets/Packet.h"
 #include "server/Client.hpp"
-#include "types.h"
+
+using namespace nn;
 
 SocketClient::SocketClient() : SocketBase("SocketClient") {
     mRecvQueue.allocate(100, gHeap);
@@ -51,14 +52,14 @@ void SocketClient::update() {
             Client::instance()->startThread();
             break;
         }
-        nn::os::YieldThread();
-        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
+        os::YieldThread();
+        os::SleepThread(TimeSpan::FromNanoSeconds(100_ms));
     }
 }
 
 void SocketClient::init(const char* ip, u16 port) {
-    this->sock_ip = ip;
-    this->port = port;
+    mSockIp = ip;
+    mPort = port;
 
     if (mSocketThread->isDone())
         mSocketThread->start();
@@ -67,95 +68,94 @@ void SocketClient::init(const char* ip, u16 port) {
 }
 
 bool SocketClient::exeInit() {
-    // TODO: add back the errors or an equivalent of them that doesnt pause the game
     hk::diag::logLine("socket client init");
 
-// emulators (ryujinx) make this return false always, so skip it during init
+    // emulators (ryujinx) make this return false always, so skip it during init
+    s32 fails;
 #ifndef EMU
-    for (s32 networkFails = 0; networkFails <= 20; networkFails++) {
-        if (networkFails == 20) {
-            this->socket_log_state = SockState::NONET;
-            this->socket_errno = nn::socket::GetLastErrno();
+    // TODO: this has been causing issues so maybe reomove
+    for (fails = 0; fails <= 20; fails++) {
+        if (fails == 20) {
+            mSockState = SockState::NONET;
+            mSockErrno = socket::GetLastErrno();
 
             mState = WAIT;
             return false;
         }
 
-        if (nn::nifm::IsNetworkAvailable())
+        if (nifm::IsNetworkAvailable())
             break;
 
-        nn::os::YieldThread();
-        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500_ms));
+        os::YieldThread();
+        os::SleepThread(TimeSpan::FromNanoSeconds(500_ms));
     }
 #endif
-
     in_addr hostAddress = {0};
     sockaddr_in serverAddress = {0};
 
-    hk::diag::logLine("SocketClient::exeInit: %s:%d sock %s", getIP(), this->port, getStateChar());
+    hk::diag::logLine("SocketClient::exeInit: %s:%d sock %s", getIP(), mPort, getStateChar());
 
-    if (!this->stringToIPAddress(this->sock_ip.cstr(), &hostAddress)) {
+    if (!stringToIPAddress(getIP(), &serverAddress.sin_addr)) {
         hk::diag::logLine("IP address is invalid or hostname not resolveable.");
-        this->socket_errno = nn::socket::GetLastErrno();
-        this->socket_log_state = SockState::INVALIP;
+        mSockErrno = socket::GetLastErrno();
+        mSockState = SockState::INVALIP;
 
         mState = WAIT;
         return false;
     }
 
-    for (s32 socketFails = 0; socketFails <= 20; socketFails++) {
-        if (socketFails == 20) {
+    serverAddress.sin_port = socket::InetHtons(mPort);
+    serverAddress.sin_family = socket::InetHtons(AF_INET);
+
+    for (fails = 0; fails <= 20; fails++) {
+        if (fails == 20) {
             hk::diag::logLine("Socket Unavailable.");
-            this->socket_errno = nn::socket::GetLastErrno();
-            this->socket_log_state = SockState::UNAVAILABLE;
+            mSockErrno = socket::GetLastErrno();
+            mSockState = SockState::UNAVAILABLE;
 
             mState = WAIT;
             return false;
         }
 
-        if ((this->socket_log_socket = nn::socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-            nn::os::YieldThread();
-            nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500_ms));
+        if ((mSockFd = socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+            hk::diag::logLine("Failed to create Socket");
+            os::YieldThread();
+            os::SleepThread(TimeSpan::FromNanoSeconds(500_ms));
             continue;
         }
 
-        serverAddress.sin_addr = hostAddress;
-        serverAddress.sin_port = nn::socket::InetHtons(this->port);
-        serverAddress.sin_family = nn::socket::InetHtons(AF_INET);
+        s32 optValue = 1;
 
-        s32 sockOptValue = 1;
-        nn::socket::SetSockOpt(this->socket_log_socket, IPPROTO_TCP, TCP_NODELAY, &sockOptValue,
-                               sizeof(sockOptValue));
-        nn::socket::SetSockOpt(this->socket_log_socket, SOL_SOCKET, SO_REUSEADDR, &sockOptValue,
-                               sizeof(sockOptValue));
-        nn::socket::SetSockOpt(this->socket_log_socket, SOL_SOCKET, SO_REUSEPORT, &sockOptValue,
-                               sizeof(sockOptValue));
+        socket::SetSockOpt(mSockFd, SOL_SOCKET, TCP_NODELAY, &optValue, sizeof(optValue));
+        socket::SetSockOpt(mSockFd, SOL_SOCKET, SO_REUSEADDR, &optValue, sizeof(optValue));
+        socket::SetSockOpt(mSockFd, SOL_SOCKET, SO_REUSEPORT, &optValue, sizeof(optValue));
 
-        if (nn::socket::Connect(this->socket_log_socket, (sockaddr*)&serverAddress, sizeof(serverAddress))
-                .IsSuccess())
+        if (socket::Connect(mSockFd, (sockaddr*)&serverAddress, sizeof(serverAddress)).IsSuccess())
             break;
 
+        hk::diag::logLine("Failed to connect to server");
+
         // shutdown and close so we dont create millions of fds
-        nn::socket::Shutdown(this->socket_log_socket, SHUT_RDWR);
-        nn::socket::Close(this->socket_log_socket);
+        socket::Shutdown(mSockFd, SHUT_RDWR);
+        socket::Close(mSockFd);
 
         // different error than the one above
-        if (socketFails == 19) {
+        if (fails == 19) {
             hk::diag::logLine("Socket Connection Failed!");
-            this->socket_errno = nn::socket::GetLastErrno();
-            this->socket_log_state = SockState::CONNFAIL;
+            mSockErrno = socket::GetLastErrno();
+            mSockState = SockState::CONNFAIL;
 
             mState = WAIT;
             return false;
         }
 
-        nn::os::YieldThread();
-        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(500_ms));
+        os::YieldThread();
+        os::SleepThread(TimeSpan::FromNanoSeconds(500_ms));
     }
 
-    this->socket_log_state = SockState::CONNECTED;
+    mSockState = SockState::CONNECTED;
 
-    hk::diag::logLine("Socket fd: %d", socket_log_socket);
+    hk::diag::logLine("Socket fd: %d", mSockFd);
 
     if (mRecvThread->isDone())
         mRecvThread->start();
@@ -179,8 +179,8 @@ bool SocketClient::exeInit() {
 void SocketClient::exeReset() {
     closeSocket();
 
-    nn::os::YieldThread();
-    nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
+    os::YieldThread();
+    os::SleepThread(TimeSpan::FromNanoSeconds(100_ms));
 
     // Free up all blocked threads (pop first in case its full somehow)
     mSendQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
@@ -190,8 +190,8 @@ void SocketClient::exeReset() {
     mRecvQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
 
     while (!(mRecvThread->isDone() && mSendThread->isDone() && Client::isThreadDone())) {
-        nn::os::YieldThread();
-        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100000000));
+        os::YieldThread();
+        os::SleepThread(TimeSpan::FromNanoSeconds(100_ms));
     }
 
     // clear send and recv queue (idk man)
@@ -204,7 +204,7 @@ void SocketClient::exeReset() {
 }
 
 bool SocketClient::send(Packet* packet) {
-    if (this->socket_log_state != SockState::CONNECTED || packet == nullptr)
+    if (mSockState != SockState::CONNECTED || packet == nullptr)
         return false;
 
     if (!(packet->mType > PacketType::UNKNOWN && packet->mType < PacketType::End))
@@ -217,12 +217,12 @@ bool SocketClient::send(Packet* packet) {
     if (packet->mType != PLAYERINF && packet->mType != HACKCAPINF)
         hk::diag::logLine("Sending packet: %s", packetNames[packet->mType]);
 
-    valread = nn::socket::Send(this->socket_log_socket, buffer, packet->mPacketSize + sizeof(Packet), 0);
+    valread = socket::Send(mSockFd, buffer, packet->mPacketSize + sizeof(Packet), 0);
 
     if (valread <= 0) {
         hk::diag::logLine("Failed to Fully Send Packet! Result: %d Type: %s Packet Size: %d", valread,
                           packetNames[packet->mType], packet->mPacketSize);
-        this->socket_errno = nn::socket::GetLastErrno();
+        mSockErrno = socket::GetLastErrno();
         return false;
     }
 
@@ -230,9 +230,9 @@ bool SocketClient::send(Packet* packet) {
 }
 
 bool SocketClient::recv() {
-    if (this->socket_log_state != SockState::CONNECTED) {
+    if (mSockState != SockState::CONNECTED) {
         hk::diag::logLine("Unable To Receive! Socket Not Connected.");
-        this->socket_errno = nn::socket::GetLastErrno();
+        mSockErrno = socket::GetLastErrno();
         return false;
     }
 
@@ -246,15 +246,14 @@ bool SocketClient::recv() {
 
     // read only the size of a header
     while (valread < headerSize) {
-        int result = nn::socket::Recv(this->socket_log_socket, headerBuf + valread, headerSize - valread,
-                                      this->sock_flags);
+        int result = socket::Recv(mSockFd, headerBuf + valread, headerSize - valread, mSockFlags | MSG_PEEK);
 
-        this->socket_errno = nn::socket::GetLastErrno();
+        mSockErrno = socket::GetLastErrno();
 
         if (result > 0) {
             valread += result;
         } else {
-            if (this->socket_errno == EAGAIN) {
+            if (mSockErrno == EAGAIN) {
                 return true;
             } else {
                 hk::diag::logLine("Header Read Failed! Value: %d Total Read: %d", result, valread);
@@ -282,13 +281,10 @@ bool SocketClient::recv() {
             // char* packetBuf = (char*)gHeap->alloc(fullSize);
             u8* packetBuf = new (gHeap) u8[fullSize];
             if (packetBuf) {
-                memcpy(packetBuf, headerBuf, sizeof(Packet));
-
                 while (valread < fullSize) {
-                    int result = nn::socket::Recv(this->socket_log_socket, packetBuf + valread,
-                                                  fullSize - valread, this->sock_flags);
+                    int result = socket::Recv(mSockFd, packetBuf, fullSize, mSockFlags);
 
-                    this->socket_errno = nn::socket::GetLastErrno();
+                    mSockErrno = socket::GetLastErrno();
 
                     if (result > 0) {
                         valread += result;
@@ -316,66 +312,48 @@ bool SocketClient::recv() {
         return true;
     } else {  // if we error'd, close the socket
         hk::diag::logLine("valread was zero! Disconnecting.");
-        this->socket_errno = nn::socket::GetLastErrno();
+        mSockErrno = socket::GetLastErrno();
         return false;
-    }
-}
-
-// prints packet to debug logger
-void SocketClient::printPacket(Packet* packet) {
-    packet->mUserID.print();
-    hk::diag::logLine("Type: %s", packetNames[packet->mType]);
-
-    switch (packet->mType) {
-    case PacketType::PLAYERINF:
-        hk::diag::logLine("Pos X: %f Pos Y: %f Pos Z: %f", ((PlayerInf*)packet)->playerPos.x,
-                          ((PlayerInf*)packet)->playerPos.y, ((PlayerInf*)packet)->playerPos.z);
-        hk::diag::logLine("Rot X: %f Rot Y: %f Rot Z: %f\nRot W: %f", ((PlayerInf*)packet)->playerRot.x,
-                          ((PlayerInf*)packet)->playerRot.y, ((PlayerInf*)packet)->playerRot.z,
-                          ((PlayerInf*)packet)->playerRot.w);
-        break;
-    default:
-        break;
     }
 }
 
 void SocketClient::closeSocket() {
     hk::diag::logLine("Closing Socket.");
 
-    this->socket_log_state = SockState::DISCONNECTED;
-
-    for (s32 shutdownFails = 0; shutdownFails <= 20; shutdownFails++) {
-        if (shutdownFails == 20)
+    mSockState = SockState::DISCONNECTED;
+    s32 fails = 0;
+    for (fails = 0; fails <= 20; fails++) {
+        if (fails == 20)
             hk::diag::logLine("Failed to shutdown socket!");
 
         // Shutdown to unblock read func
-        if (nn::socket::Shutdown(this->socket_log_socket, SHUT_RDWR) == 0)
+        if (socket::Shutdown(mSockFd, SHUT_RDWR) == 0)
             break;
 
-        nn::os::YieldThread();
-        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100_ms));
+        os::YieldThread();
+        os::SleepThread(TimeSpan::FromNanoSeconds(100_ms));
     }
 
-    for (s32 closeFails = 0; closeFails <= 20; closeFails++) {
-        if (closeFails == 20)
+    for (fails = 0; fails <= 20; fails++) {
+        if (fails == 20)
             hk::diag::logLine("Failed to close socket!");
 
-        if (nn::socket::Close(this->socket_log_socket).IsSuccess())
+        if (socket::Close(mSockFd).IsSuccess())
             break;
 
-        nn::os::YieldThread();
-        nn::os::SleepThread(nn::TimeSpan::FromNanoSeconds(100_ms));
+        os::YieldThread();
+        os::SleepThread(TimeSpan::FromNanoSeconds(100_ms));
     }
 }
 
 bool SocketClient::stringToIPAddress(const char* str, in_addr* out) {
     // string to IPv4
-    if (nn::socket::InetAton(str, out)) {
+    if (socket::InetAton(str, out)) {
         return true;
     }
 
     // get IPs via DNS
-    hostent* he = nn::socket::GetHostByName(str);
+    hostent* he = socket::GetHostByName(str);
     if (!he) {
         return false;
     }
@@ -395,10 +373,10 @@ void SocketClient::sendFunc() {
 
     hk::diag::logLine("Starting Send Thread.");
 
-    while (socket_log_state != SockState::DISCONNECTED && trySendQueue()) {
+    while (mSockState != SockState::DISCONNECTED && trySendQueue()) {
     }
 
-    this->socket_log_state = SockState::DISCONNECTED;
+    mSockState = SockState::DISCONNECTED;
 
     hk::diag::logLine("Sending packet failed!");
     hk::diag::logLine("Ending Send Thread.");
@@ -411,14 +389,14 @@ void SocketClient::recvFunc() {
     sead::ScopedCurrentHeapSetter setter(gHeap);
 
     // ???
-    nn::socket::Recv(this->socket_log_socket, nullptr, 0, 0);
+    socket::Recv(mSockFd, nullptr, 0, 0);
 
     hk::diag::logLine("Starting Recv Thread.");
 
-    while (socket_log_state != SockState::DISCONNECTED && recv()) {
+    while (mSockState != SockState::DISCONNECTED && recv()) {
     }
 
-    this->socket_log_state = SockState::DISCONNECTED;
+    mSockState = SockState::DISCONNECTED;
 
     hk::diag::logLine("Receiving Packet Failed!");
     hk::diag::logLine("Ending Recv Thread.");
@@ -469,13 +447,13 @@ void SocketClient::deletePacketAfterSend(Packet* packet) {
         delete packet;
         break;
     default:
-        hk::diag::logLine("WARNING: Attempted to delete invalid packet type!");
+        hk::diag::logLine("WARNING: Attempted to delete invalid packet type: %d!", packet->mType);
         break;
     }
 }
 
 bool SocketClient::queuePacket(Packet* packet) {
-    if (socket_log_state == SockState::CONNECTED)
+    if (mSockState == SockState::CONNECTED)
         if (mSendQueue.push((uintptr_t)packet, sead::MessageQueue::BlockType::NonBlocking))
             return true;
 
@@ -494,7 +472,7 @@ bool SocketClient::trySendQueue() {
 }
 
 Packet* SocketClient::tryGetPacket() {
-    return socket_log_state == SockState::CONNECTED ?
+    return mSockState == SockState::CONNECTED ?
                (Packet*)mRecvQueue.pop(sead::MessageQueue::BlockType::Blocking) :
                nullptr;
 }

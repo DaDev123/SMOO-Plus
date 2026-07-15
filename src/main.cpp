@@ -56,7 +56,6 @@
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
 #include "speedboot/BootHooks.hpp"
-#include "types.h"
 
 // ===== PLAYER INFO UPDATE FUNCTION =====
 
@@ -133,7 +132,7 @@ void drawMain(al::Sequence* curSequence) {
                 socket->getSendMaxCount(), socket->getRecvCount(), socket->getRecvMaxCount());
 
     ImGui::Text("Framework: Hakkun");
-    ImGui::Text("Mod version: %s: %s\n", TOSTRING(BUILDVERSTR), __DATE__);
+    ImGui::Text("Mod version: %s: %s\n", STR(BUILDVERSTR), __DATE__);
 
     // ===== 3D DEBUG RENDERING =====
     if (curScene && gIsSceneAlive) {
@@ -225,7 +224,7 @@ void drawMain(al::Sequence* curSequence) {
                         ImGui::Text("Cur Action: %s\n", p1->mAnimator->mAnimFrameCtrl->getActionName());
                         ImGui::Text("Cur Anim: %s\n", p1->mAnimator->mCurAnim.cstr());
                         ImGui::Text("Cur Sub Anim: %s\n", p1->mAnimator->mCurSubAnim.cstr());
-                        ImGui::Text("Is Cappy Flying? %s\n", BTOC(p1->mHackCap->isFlying()));
+                        ImGui::Text("Is Cappy Flying? %s\n", p1->mHackCap->isFlying() ? "True" : "False");
 
                         if (p1->mHackCap->isFlying()) {
                             ImGui::Text("Cappy Action: %s\n", al::getActionName(p1->mHackCap));

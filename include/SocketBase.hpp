@@ -3,7 +3,16 @@
 #include <cstring>
 
 #include "prim/seadSafeString.h"
-#include "types.h"
+
+enum class SockState {
+    UNINITIALIZED = 0,
+    CONNECTED = 1,
+    UNAVAILABLE = 2,
+    DISCONNECTED = 3,
+    NONET = 4,
+    INVALIP = 5,
+    CONNFAIL = 6
+};
 
 class SocketBase {
 public:
@@ -11,25 +20,23 @@ public:
 
     const char* getStateChar();
     SockState getLogState();
-    s32 getFd();
 
     void set_sock_flags(int flags);
 
-    const char* getIP() { return this->sock_ip.cstr(); }
-    u16 getPort() { return this->port; }
-    void setName(const char* name) { strcpy(sockName, name); };
-    u32 socket_errno;
+    const char* getIP() { return this->mSockIp.cstr(); }
+    u16 getPort() { return this->mPort; }
+    void setName(const char* name) { strcpy(mSockName, name); };
+    u32 mSockErrno;
 
 protected:
     s32 socket_log(const char* str);
-    s32 socket_read_char(char* out);
 
-    char sockName[0x10] = {};
-    sead::FixedSafeString<64> sock_ip;
+    char mSockName[0x10] = {};
+    sead::FixedSafeString<64> mSockIp;
 
-    u16 port;
-    SockState socket_log_state = SockState::UNINITIALIZED;
-    s32 socket_log_socket;
+    u16 mPort;
+    SockState mSockState = SockState::UNINITIALIZED;
+    s32 mSockFd;
 
-    int sock_flags;
+    int mSockFlags;
 };

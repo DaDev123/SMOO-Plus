@@ -47,7 +47,6 @@
 #include "puppets/PuppetHolder.hpp"
 #include "puppets/PuppetInfo.h"
 #include "server/SocketClient.hpp"
-#include "types.h"
 
 // ===== CONSTANTS =====
 #define MAXPUPINDEX 32

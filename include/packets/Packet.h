@@ -5,8 +5,6 @@
 #include "sead/math/seadQuat.h"    // IWYU pragma: keep
 #include "sead/math/seadVector.h"  // IWYU pragma: keep
 
-#include "types.h"
-
 #define PACKBUFSIZE 0x30
 #define COSTUMEBUFSIZE 0x20
 #define MESSAGESIZE 0x4B
@@ -56,7 +54,7 @@ static const char *senderNames[] = {
 };
 */
 
-struct PACKED Packet {
+struct __attribute__((packed)) Packet {
     nn::account::Uid mUserID;  // User ID of the packet owner
     PacketType mType = PacketType::UNKNOWN;
     short mPacketSize = 0;  // represents packet size without size of header

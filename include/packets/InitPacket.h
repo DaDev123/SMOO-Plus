@@ -2,7 +2,7 @@
 
 #include "Packet.h"
 
-struct PACKED InitPacket : Packet {
+struct __attribute__((packed)) InitPacket : Packet {
     InitPacket() : Packet() {
         this->mType = PacketType::CLIENTINIT;
         mPacketSize = sizeof(InitPacket) - sizeof(Packet);

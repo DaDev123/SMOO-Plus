@@ -65,7 +65,6 @@
 #include "System/GameDataHolderAccessor.h"
 #include "System/GameDataHolderWriter.h"
 #include "System/UniqObjInfo.h"
-#include "types.h"
 #include "Util/AchievementUtil.h"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
@@ -119,7 +118,7 @@ Client::Client() {
 
     hk::diag::logLine("Player Name: %s", playerName.name);
 
-    hk::diag::logLine("%s Build Number: %s", playerName.name, TOSTRING(BUILDVERSTR));
+    hk::diag::logLine("%s Build Number: %s", playerName.name, STR(BUILDVERSTR));
 }
 
 /**
@@ -494,12 +493,12 @@ void Client::readFunc() {
             delete[] reinterpret_cast<u8*>(curPacket);
         } else {
             hk::diag::logLine("SocketClient::tryGetPacket() returned nullptr! Errno: 0x%x",
-                              mSocket->socket_errno);
+                              mSocket->mSockErrno);
             break;
         }
     }
 
-    mSocket->setLogState(SockState::DISCONNECTED);
+    mSocket->setSockState(SockState::DISCONNECTED);
     hk::diag::logLine("Client Read Thread ending.");
 }
 
@@ -871,10 +870,10 @@ void Client::updateHackCapInfo(HackCapInf* packet) {
     curInfo->capPos = packet->capPos;
 
     if (isOldPacket) {
-        struct PACKED OldHackCapInf {
+        struct __attribute__((packed)) OldHackCapInf {
             sead::Vector3f capPos;
             sead::Quatf capQuat;
-            bool1 isCapVisible;
+            u8 isCapVisible;  // fake bool
             char capAnim[PACKBUFSIZE];
         };
         auto* old = reinterpret_cast<OldHackCapInf*>(&packet->capPos);

@@ -7,9 +7,10 @@
 #include <cstddef>
 
 #include "prim/seadSafeString.h"
-#include "types.h"
 
 typedef void (*KeyboardSetup)(nn::swkbd::KeyboardConfig&);
+const u8 MAX_HOSTNAME_LENGTH = 50;
+typedef sead::FixedSafeString<MAX_HOSTNAME_LENGTH + 1> hostname;
 
 class Keyboard {
 public:

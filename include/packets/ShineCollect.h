@@ -2,11 +2,11 @@
 
 #include "Packet.h"
 
-struct PACKED ShineCollect : Packet {
+struct __attribute__((packed)) ShineCollect : Packet {
     ShineCollect() : Packet() {
         this->mType = PacketType::SHINECOLL;
         mPacketSize = sizeof(ShineCollect) - sizeof(Packet);
     };
     int shineId = -1;
-    bool1 isGrand = false;
+    u8 isGrand = false;  // fake bool
 };

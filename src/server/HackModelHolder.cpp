@@ -1,5 +1,7 @@
 #include "puppets/HackModelHolder.hpp"
 
+#include "hk/util/Algorithm.h"
+
 PuppetHackActor* HackModelHolder::getCapture(const char* hackName) {
     for (size_t i = 0; i < mCaptureCount; i++) {
         if (al::isEqualString(mOnlineCaptures[i].className, hackName)) {
@@ -18,7 +20,7 @@ const char* HackModelHolder::getCaptureClass(int index) {
 }
 
 bool HackModelHolder::addCapture(PuppetHackActor* capture, const char* hackName) {
-    if (mCaptureCount < ACNT(mOnlineCaptures)) {
+    if (mCaptureCount < hk::util::arraySize(mOnlineCaptures)) {
         mOnlineCaptures[mCaptureCount].actor = capture;
         strcpy(mOnlineCaptures[mCaptureCount].className, hackName);
         mCaptureCount++;

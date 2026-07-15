@@ -2,7 +2,7 @@
 
 #include "Packet.h"
 
-struct PACKED CostumeInf : Packet {
+struct __attribute__((packed)) CostumeInf : Packet {
     CostumeInf() : Packet() {
         this->mType = PacketType::COSTUMEINF;
         mPacketSize = sizeof(CostumeInf) - sizeof(Packet);

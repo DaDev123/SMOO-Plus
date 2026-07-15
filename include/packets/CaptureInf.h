@@ -2,7 +2,7 @@
 
 #include "Packet.h"
 
-struct PACKED CaptureInf : Packet {
+struct __attribute__((packed)) CaptureInf : Packet {
     CaptureInf() : Packet() {
         this->mType = PacketType::CAPTUREINF;
         mPacketSize = sizeof(CaptureInf) - sizeof(Packet);

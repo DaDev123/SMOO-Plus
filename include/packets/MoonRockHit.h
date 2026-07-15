@@ -2,7 +2,7 @@
 
 #include "Packet.h"
 
-struct PACKED MoonRockHit : Packet {
+struct __attribute__((packed)) MoonRockHit : Packet {
     MoonRockHit() : Packet() {
         this->mType = PacketType::MOONROCKHIT;
         mPacketSize = sizeof(MoonRockHit) - sizeof(Packet);

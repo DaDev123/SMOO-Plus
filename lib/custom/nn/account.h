@@ -10,7 +10,6 @@
 #include "nn/os.h"
 
 #include "logger.hpp"
-#include "types.h"
 
 namespace nn {
 namespace account {

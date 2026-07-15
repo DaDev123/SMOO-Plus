@@ -2,7 +2,7 @@
 
 #include "Packet.h"
 
-struct PACKED ChangeStagePacket : Packet {
+struct __attribute__((packed)) ChangeStagePacket : Packet {
     ChangeStagePacket() : Packet() {
         this->mType = PacketType::CHANGESTAGE;
         mPacketSize = sizeof(ChangeStagePacket) - sizeof(Packet);

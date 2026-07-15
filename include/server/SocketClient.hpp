@@ -7,7 +7,6 @@
 #include "Library/Thread/AsyncFunctorThread.h"
 #include "packets/Packet.h"
 #include "SocketBase.hpp"
-#include "types.h"
 
 class SocketClient : public SocketBase {
 public:
@@ -37,10 +36,9 @@ public:
 
     void deletePacketAfterSend(Packet* packet);
 
-    void setLogState(SockState state) { socket_log_state = state; };
+    void setSockState(SockState state) { mSockState = state; };
 
-    void printPacket(Packet* packet);
-    bool isConnected() { return socket_log_state == SockState::CONNECTED; }
+    bool isConnected() { return mSockState == SockState::CONNECTED; }
 
     u32 getSendCount() { return mSendQueue.mMessageQueueInner._count; }
     u32 getSendMaxCount() { return mSendQueue.mMessageQueueInner._maxCount; }
