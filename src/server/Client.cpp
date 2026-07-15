@@ -42,9 +42,20 @@
 #include "Library/Yaml/ByamlUtil.h"
 #include "logger.hpp"
 #include "main.hpp"
+#include "packets/CaptureInf.h"
+#include "packets/ChangeStagePacket.h"
+#include "packets/CheckpointGet.h"
+#include "packets/CoinCollectCollect.h"
+#include "packets/CostumeInf.h"
+#include "packets/GameInf.h"
+#include "packets/HackCapInf.h"
 #include "packets/InitPacket.h"
 #include "packets/MoonRockHit.h"
 #include "packets/Packet.h"
+#include "packets/PlayerConnect.h"
+#include "packets/PlayerDC.h"
+#include "packets/PlayerInfPacket.h"
+#include "packets/ShineCollect.h"
 #include "prim/seadSafeString.h"
 #include "puppets/PuppetInfo.h"
 #include "Scene/StageScene.h"
@@ -403,62 +414,77 @@ void Client::readFunc() {
         if (curPacket) {
             switch (curPacket->mType) {
             case PacketType::PLAYERINF:
-                updatePlayerInfo(static_cast<PlayerInf*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(PlayerInf) - sizeof(Packet))
+                    updatePlayerInfo(static_cast<PlayerInf*>(curPacket));
                 break;
             case PacketType::GAMEINF:
-                updateGameInfo(static_cast<GameInf*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(GameInf) - sizeof(Packet))
+                    updateGameInfo(static_cast<GameInf*>(curPacket));
                 break;
             case PacketType::HACKCAPINF:
-                updateHackCapInfo(static_cast<HackCapInf*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(HackCapInf) - sizeof(Packet))
+                    updateHackCapInfo(static_cast<HackCapInf*>(curPacket));
                 break;
             case PacketType::CAPTUREINF:
-                updateCaptureInfo(static_cast<CaptureInf*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(CaptureInf) - sizeof(Packet))
+                    updateCaptureInfo(static_cast<CaptureInf*>(curPacket));
                 break;
             case PacketType::PLAYERCON:
-                updatePlayerConnect(static_cast<PlayerConnect*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(PlayerConnect) - sizeof(Packet)) {
+                    updatePlayerConnect(static_cast<PlayerConnect*>(curPacket));
 
-                if (lastGameInfPacket != emptyGameInfPacket) {
-                    lastGameInfPacket.mUserID = mUserID;
-                    mSocket->send(&lastGameInfPacket);
+                    if (lastGameInfPacket != emptyGameInfPacket) {
+                        lastGameInfPacket.mUserID = mUserID;
+                        mSocket->send(&lastGameInfPacket);
+                    }
+
+                    lastPlayerInfPacket.mUserID = mUserID;
+                    mSocket->send(&lastPlayerInfPacket);
+
+                    if (lastCostumeInfPacket.bodyModel[0] != '\0') {
+                        lastCostumeInfPacket.mUserID = mUserID;
+                        mSocket->send(&lastCostumeInfPacket);
+                    }
+
+                    lastCaptureInfPacket.mUserID = mUserID;
+                    mSocket->send(&lastCaptureInfPacket);
                 }
-
-                lastPlayerInfPacket.mUserID = mUserID;
-                mSocket->send(&lastPlayerInfPacket);
-
-                if (lastCostumeInfPacket.bodyModel[0] != '\0') {
-                    lastCostumeInfPacket.mUserID = mUserID;
-                    mSocket->send(&lastCostumeInfPacket);
-                }
-
-                lastCaptureInfPacket.mUserID = mUserID;
-                mSocket->send(&lastCaptureInfPacket);
 
                 break;
             case PacketType::COSTUMEINF:
-                updateCostumeInfo(static_cast<CostumeInf*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(CostumeInf) - sizeof(Packet))
+                    updateCostumeInfo(static_cast<CostumeInf*>(curPacket));
                 break;
             case PacketType::SHINECOLL:
-                updateShineInfo(static_cast<ShineCollect*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(ShineCollect) - sizeof(Packet))
+                    updateShineInfo(static_cast<ShineCollect*>(curPacket));
                 break;
             case PacketType::PLAYERDC:
-                hk::diag::logLine("Received Player Disconnect!");
-                curPacket->mUserID.print();
-                disconnectPlayer(static_cast<PlayerDC*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(PlayerDC) - sizeof(Packet)) {
+                    hk::diag::logLine("Received Player Disconnect!");
+                    curPacket->mUserID.print();
+                    disconnectPlayer(static_cast<PlayerDC*>(curPacket));
+                }
                 break;
             case PacketType::CHANGESTAGE:
-                sendToStage(static_cast<ChangeStagePacket*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(ChangeStagePacket) - sizeof(Packet))
+                    sendToStage(static_cast<ChangeStagePacket*>(curPacket));
                 break;
             case PacketType::COINCOLLECTCOLL:
-                updateCoinCollects(static_cast<CoinCollectCollect*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(CoinCollectCollect) - sizeof(Packet))
+                    updateCoinCollects(static_cast<CoinCollectCollect*>(curPacket));
                 break;
             case PacketType::CHECKPOINTGET:
-                updateCheckpoints(static_cast<CheckpointGet*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(CheckpointGet) - sizeof(Packet))
+                    updateCheckpoints(static_cast<CheckpointGet*>(curPacket));
                 break;
             case PacketType::MOONROCKHIT:
-                updateMoonRocks(static_cast<MoonRockHit*>(curPacket));
+                if (curPacket->mPacketSize == sizeof(MoonRockHit) - sizeof(Packet))
+                    updateMoonRocks(static_cast<MoonRockHit*>(curPacket));
                 break;
             case PacketType::GAMESTART:
-                PlayerEventLog::addEvent(curPacket->mUserID, PlayerEventLog::START, "");
+                if (curPacket->mPacketSize == sizeof(Packet) - sizeof(Packet))
+                    PlayerEventLog::addEvent(curPacket->mUserID, PlayerEventLog::START, "");
                 break;
             case PacketType::CLIENTINIT: {
                 InitPacket* initPacket = static_cast<InitPacket*>(curPacket);
