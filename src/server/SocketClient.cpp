@@ -246,7 +246,7 @@ bool SocketClient::recv() {
 
     // read only the size of a header
     while (valread < headerSize) {
-        int result = socket::Recv(mSockFd, headerBuf + valread, headerSize - valread, mSockFlags | MSG_PEEK);
+        int result = socket::Recv(mSockFd, headerBuf + valread, headerSize - valread, mSockFlags);
 
         mSockErrno = socket::GetLastErrno();
 
@@ -281,8 +281,10 @@ bool SocketClient::recv() {
             // char* packetBuf = (char*)gHeap->alloc(fullSize);
             u8* packetBuf = new (gHeap) u8[fullSize];
             if (packetBuf) {
+                memcpy(packetBuf, headerBuf, sizeof(Packet));
                 while (valread < fullSize) {
-                    int result = socket::Recv(mSockFd, packetBuf, fullSize, mSockFlags);
+                    int result =
+                        nn::socket::Recv(mSockFd, packetBuf + valread, fullSize - valread, mSockFlags);
 
                     mSockErrno = socket::GetLastErrno();
 
