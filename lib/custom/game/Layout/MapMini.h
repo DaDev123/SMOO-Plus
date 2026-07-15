@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Library/Layout/LayoutActor.h"
-#include "Library/Layout/LayoutInitInfo.h"
-#include "Library/Player/PlayerHolder.h"
+#include "al/Library/Layout/LayoutActor.h"
+#include "al/Library/Layout/LayoutInitInfo.h"
+#include "al/Library/Player/PlayerHolder.h"
 
 class MapMini : public al::LayoutActor {
 public:

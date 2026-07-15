@@ -1,7 +1,7 @@
 #pragma once
 
 #include "algorithms/PlayerAnims.h"
-#include "Packet.h"
+#include "packets/Packet.h"
 
 struct __attribute__((packed)) PlayerInf : Packet {
     PlayerInf() : Packet() {

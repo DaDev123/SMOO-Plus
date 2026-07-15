@@ -1,9 +1,8 @@
 #pragma once
 
 #include "al/Library/Layout/LayoutActor.h"
+#include "al/Library/Nerve/NerveSetupUtil.h"
 #include "al/Library/Play/Layout/WipeSimple.h"
-
-#include "Library/Nerve/NerveSetupUtil.h"
 
 namespace al {
 class LayoutInitInfo;

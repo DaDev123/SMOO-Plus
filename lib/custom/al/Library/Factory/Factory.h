@@ -1,8 +1,8 @@
 #pragma once
 
-#include <basis/seadTypes.h>
+#include "sead/basis/seadTypes.h"
 
-#include "Library/Base/StringUtil.h"
+#include "al/Library/Base/StringUtil.h"
 
 namespace al {
 template <typename T>

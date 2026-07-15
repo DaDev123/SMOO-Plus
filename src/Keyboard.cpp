@@ -4,7 +4,8 @@
 
 #include "nn/swkbd/swkbd.h"
 
-#include "heap/seadHeapMgr.h"
+#include "sead/heap/seadHeapMgr.h"
+
 #include "main.hpp"
 
 Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {

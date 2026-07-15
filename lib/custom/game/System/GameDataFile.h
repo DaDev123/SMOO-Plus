@@ -1,18 +1,19 @@
 #pragma once
 
-#include <basis/seadTypes.h>
-#include <container/seadPtrArray.h>
-#include <math/seadVector.h>
-#include <prim/seadBitFlag.h>
-#include <prim/seadSafeString.h>
-#include <stream/seadStream.h>
+#include "sead/basis/seadTypes.h"
+#include "sead/container/seadPtrArray.h"
+#include "sead/math/seadVector.h"
+#include "sead/prim/seadBitFlag.h"
+#include "sead/prim/seadSafeString.h"
+#include "sead/stream/seadStream.h"
 
-#include "Library/Base/StringUtil.h"
-#include "Library/Placement/PlacementId.h"
-#include "Npc/SessionEventProgress.h"
-#include "Npc/SessionMusicianType.h"
-#include "System/UniqObjInfo.h"
-#include "Util/ScenePrepoFunction.h"
+#include "al/Library/Base/StringUtil.h"
+#include "al/Library/Placement/PlacementId.h"
+
+#include "game/Npc/SessionEventProgress.h"
+#include "game/Npc/SessionMusicianType.h"
+#include "game/System/UniqObjInfo.h"
+#include "game/Util/ScenePrepoFunction.h"
 
 constexpr s32 sNumWorlds = 20;
 

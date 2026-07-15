@@ -2,19 +2,21 @@
 
 #include <nn/fs.h>
 
-#include <heap/seadFrameHeap.h>
-#include <stream/seadRamStream.h>
+#include "sead/heap/seadFrameHeap.h"
+#include "sead/heap/seadHeapMgr.h"
+#include "sead/mc/seadCoreInfo.h"
+#include "sead/stream/seadRamStream.h"
+
+#include "al/Library/Thread/FunctorV0M.h"
+#include "al/Library/Yaml/ByamlUtil.h"
+
+#include "game/System/GameConfigData.h"
 
 #include "fsHelper.h"
-#include "heap/seadHeapMgr.h"
 #include "layouts/PlayerEventLog.h"
-#include "Library/Thread/FunctorV0M.h"
-#include "Library/Yaml/ByamlUtil.h"
 #include "main.hpp"
-#include "mc/seadCoreInfo.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
-#include "System/GameConfigData.h"
 
 SEAD_SINGLETON_DISPOSER_IMPL(SaveManager)
 

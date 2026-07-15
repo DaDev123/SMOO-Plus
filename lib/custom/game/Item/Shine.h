@@ -1,10 +1,11 @@
 #pragma once
 
-#include <math/seadVector.h>
-#include <prim/seadSafeString.h>
+#include "sead/math/seadVector.h"
+#include "sead/prim/seadSafeString.h"
 
-#include "Library/LiveActor/LiveActor.h"
-#include "Util/IUseDimension.h"
+#include "al/Library/LiveActor/LiveActor.h"
+
+#include "game/Util/IUseDimension.h"
 
 struct ShineInfo;
 class QuestInfo;

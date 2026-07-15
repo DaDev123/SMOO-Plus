@@ -2,7 +2,7 @@
 
 #include "al/Library/Base/StringUtil.h"
 
-#include "Packet.h"
+#include "packets/Packet.h"
 
 enum GameMode : s8;
 

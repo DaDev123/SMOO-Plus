@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Library/LiveActor/LiveActor.h"
-#include "System/GameDataFile.h"
-#include "System/GameDataHolder.h"
-#include "System/GameDataHolderAccessor.h"
-#include "System/GameDataHolderWriter.h"
+#include "al/Library/LiveActor/LiveActor.h"
+
+#include "game/System/GameDataFile.h"
+#include "game/System/GameDataHolder.h"
+#include "game/System/GameDataHolderAccessor.h"
+#include "game/System/GameDataHolderWriter.h"
 
 namespace nn::g3d {
 class ResFile;

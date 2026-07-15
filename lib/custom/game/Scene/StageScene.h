@@ -1,10 +1,11 @@
 #pragma once
 
-#include <math/seadQuat.h>
+#include "sead/math/seadQuat.h"
 
-#include "Layout/StageSceneLayout.h"
-#include "Library/LiveActor/LiveActorGroup.h"
-#include "Library/Scene/Scene.h"
+#include "al/Library/LiveActor/LiveActorGroup.h"
+#include "al/Library/Scene/Scene.h"
+
+#include "game/Layout/StageSceneLayout.h"
 
 namespace al {
 class LayoutActor;

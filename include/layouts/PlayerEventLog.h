@@ -1,10 +1,10 @@
 #pragma once
 
-#include <basis/seadTypes.h>
-#include <heap/seadDisposer.h>
-#include <prim/seadSafeString.h>
+#include "nn/account.h"
 
-#include "account.h"
+#include "sead/basis/seadTypes.h"
+#include "sead/heap/seadDisposer.h"
+#include "sead/prim/seadSafeString.h"
 
 constexpr s32 sNumEntries = 8;
 

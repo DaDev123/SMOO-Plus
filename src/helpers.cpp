@@ -14,9 +14,8 @@
 #include "game/Scene/StageScene.h"
 #include "game/Sequence/HakoniwaSequence.h"
 #include "game/System/GameDataFunction.h"
+#include "game/System/GameDataHolderWriter.h"
 #include "game/System/GameSystem.h"
-
-#include "System/GameDataHolderWriter.h"
 
 bool isPartOf(const char* w1, const char* w2) {
     int i = 0;

@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Library/LiveActor/LiveActor.h"
-#include "Library/Nerve/NerveExecutor.h"
-#include "math/seadVector.h"
+#include "sead/math/seadVector.h"
+
+#include "al/Library/LiveActor/LiveActor.h"
+#include "al/Library/Nerve/NerveExecutor.h"
 
 class WorldEndBorderKeeper : public al::NerveExecutor {
 public:

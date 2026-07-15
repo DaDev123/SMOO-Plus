@@ -1,7 +1,7 @@
 #pragma once
 
-#include "math/seadMatrix.h"
-#include "prim/seadSafeString.h"
+#include "sead/math/seadMatrix.h"
+#include "sead/prim/seadSafeString.h"
 
 namespace al {
 class LiveActor;

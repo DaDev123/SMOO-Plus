@@ -13,6 +13,7 @@
 
 #include "game/System/Application.h"
 #include "game/System/GameConfigData.h"
+#include "game/System/GameDataHolderAccessor.h"
 #include "game/System/GameSystem.h"
 
 #include "imgui.h"
@@ -24,7 +25,6 @@
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
 #include "server/DeltaTime.hpp"
-#include "System/GameDataHolderAccessor.h"
 
 HkTrampoline saveWriteHook = [](TrampolineStatic(), GameConfigData* cfgData,
                                 al::ByamlWriter* origWriter) -> void {

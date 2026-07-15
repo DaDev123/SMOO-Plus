@@ -2,15 +2,24 @@
 
 #include "hk/diag/diag.h"
 
+#include "nn/account.h"
 #include "nn/os.h"
 #include "nn/socket.h"
 
+#include "sead/heap/seadHeapMgr.h"
+#include "sead/prim/seadSafeString.h"
+
+#include "al/Library/Base/StringUtil.h"
 #include "al/Library/Controller/InputFunction.h"
 #include "al/Library/Layout/LayoutActionFunction.h"
+#include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorFlagFunction.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
+#include "al/Library/Memory/HeapUtil.h"
 #include "al/Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
+#include "al/Library/Yaml/ByamlIter.h"
+#include "al/Library/Yaml/ByamlUtil.h"
 
 #include "game/MapObj/ChangeStageInfo.h"
 #include "game/MapObj/CheckpointFlag.h"
@@ -19,27 +28,27 @@
 #include "game/Player/PlayerAnimator.h"
 #include "game/Player/PlayerAnimFrameCtrl.h"
 #include "game/Player/PlayerHackKeeper.h"
+#include "game/Scene/StageScene.h"
+#include "game/Sequence/HakoniwaSequence.h"
 #include "game/System/CustomGameDataFunction.h"
 #include "game/System/GameDataFile.h"
 #include "game/System/GameDataFunction.h"
+#include "game/System/GameDataHolder.h"
+#include "game/System/GameDataHolderAccessor.h"
+#include "game/System/GameDataHolderWriter.h"
+#include "game/System/UniqObjInfo.h"
+#include "game/Util/AchievementUtil.h"
 #include "game/Util/ActorDimensionKeeper.h"
 
 #include <cmath>
 #include <cstring>
 #include <netinet/in.h>
-#include <sys/socket.h>
+#include <std/musl/arch/generic/bits/socket.h>
 
-#include "account.h"
-#include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
 #include "layouts/ConnectionStatus.h"
 #include "layouts/PlayerEventLog.h"
 #include "layouts/SpeedrunIcon.h"
-#include "Library/Base/StringUtil.h"
-#include "Library/Layout/LayoutActorUtil.h"
-#include "Library/Memory/HeapUtil.h"
-#include "Library/Yaml/ByamlIter.h"
-#include "Library/Yaml/ByamlUtil.h"
 #include "logger.hpp"
 #include "main.hpp"
 #include "packets/CaptureInf.h"
@@ -56,16 +65,8 @@
 #include "packets/PlayerDC.h"
 #include "packets/PlayerInfPacket.h"
 #include "packets/ShineCollect.h"
-#include "prim/seadSafeString.h"
 #include "puppets/PuppetInfo.h"
-#include "Scene/StageScene.h"
-#include "Sequence/HakoniwaSequence.h"
 #include "server/SocketClient.hpp"
-#include "System/GameDataHolder.h"
-#include "System/GameDataHolderAccessor.h"
-#include "System/GameDataHolderWriter.h"
-#include "System/UniqObjInfo.h"
-#include "Util/AchievementUtil.h"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
 

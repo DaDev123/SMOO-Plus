@@ -2,6 +2,8 @@
 
 #include "hk/types.h"
 
+#include "sead/math/seadMathCalcCommon.h"
+
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Layout/LayoutInitInfo.h"
@@ -10,8 +12,6 @@
 #include "game/Sequence/HakoniwaSequence.h"
 #include "game/Sequence/WorldResourceLoader.h"
 #include "game/System/GameDataFunction.h"
-
-#include "math/seadMathCalcCommon.h"
 
 // Forward declare the nerve classes
 namespace {

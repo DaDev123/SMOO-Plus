@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Library/Layout/LayoutInitInfo.h"
-#include "Library/Nerve/NerveStateBase.h"
-#include "Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
+#include "al/Library/Layout/LayoutInitInfo.h"
+#include "al/Library/Nerve/NerveStateBase.h"
+#include "al/Library/Play/Layout/SimpleLayoutAppearWaitEnd.h"
 
 class CoinCounter;
 class CounterLifeCtrl;

@@ -4,7 +4,7 @@
 #include "al/Library/Layout/LayoutInitInfo.h"
 #include "al/Library/Nerve/NerveSetupUtil.h"
 
-#include "Scene/StageScene.h"
+#include "game/Scene/StageScene.h"
 
 // TODO: kill layout if going through loading zone or paused
 

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <math/seadVector.h>
-#include <prim/seadSafeString.h>
+#include "sead/math/seadVector.h"
+#include "sead/prim/seadSafeString.h"
 
-#include "Library/Nerve/NerveExecutor.h"
+#include "al/Library/Nerve/NerveExecutor.h"
 
 namespace al {
 class LayoutActor;

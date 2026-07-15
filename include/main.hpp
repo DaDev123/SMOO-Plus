@@ -1,12 +1,12 @@
 #pragma once
 
+#include "sead/basis/seadNew.h"
+#include "sead/heap/seadHeap.h"
+
 #include "al/Library/Sequence/Sequence.h"
 
 #include "game/Player/PlayerActorBase.h"
 #include "game/System/GameDataHolderAccessor.h"
-
-#include "basis/seadNew.h"
-#include "heap/seadHeap.h"
 
 inline bool isInGame = false;
 inline bool debugMode = false;

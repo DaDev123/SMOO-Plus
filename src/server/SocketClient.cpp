@@ -7,15 +7,17 @@
 #include "nn/socket.h"
 #include "vapours/results/results_common.hpp"
 
+#include "sead/heap/seadHeapMgr.h"
+
+#include "al/Library/Thread/AsyncFunctorThread.h"
+#include "al/Library/Thread/FunctorV0M.h"
+
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
-#include "heap/seadHeapMgr.h"
-#include "Library/Thread/AsyncFunctorThread.h"
-#include "Library/Thread/FunctorV0M.h"
 #include "main.hpp"
 #include "packets/Packet.h"
 #include "server/Client.hpp"

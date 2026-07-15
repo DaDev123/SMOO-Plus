@@ -1,10 +1,12 @@
 #pragma once
 
-#include <netinet/in.h>
-#include <thread/seadAtomic.h>
-#include <thread/seadMessageQueue.h>
+#include "sead/thread/seadAtomic.h"
+#include "sead/thread/seadMessageQueue.h"
 
-#include "Library/Thread/AsyncFunctorThread.h"
+#include "al/Library/Thread/AsyncFunctorThread.h"
+
+#include <netinet/in.h>
+
 #include "packets/Packet.h"
 #include "SocketBase.hpp"
 

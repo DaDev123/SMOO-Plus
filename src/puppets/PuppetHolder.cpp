@@ -2,12 +2,13 @@
 
 #include "hk/diag/diag.h"
 
+#include "sead/container/seadPtrArray.h"
+
 #include "al/Library/LiveActor/ActorFlagFunction.h"
 
 #include <math.h>
 
 #include "actors/PuppetActor.h"
-#include "container/seadPtrArray.h"
 #include "main.hpp"
 
 PuppetHolder::PuppetHolder(int size) {

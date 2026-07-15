@@ -2,11 +2,11 @@
 
 #include "nn/swkbd/swkbd.h"
 
+#include "sead/prim/seadSafeString.h"
+
 #include "al/Library/Thread/AsyncFunctorThread.h"
 
 #include <cstddef>
-
-#include "prim/seadSafeString.h"
 
 typedef void (*KeyboardSetup)(nn::swkbd::KeyboardConfig&);
 const u8 MAX_HOSTNAME_LENGTH = 50;

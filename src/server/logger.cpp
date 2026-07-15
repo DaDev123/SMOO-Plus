@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <netinet/in.h>
-#include <sys/socket.h>
+#include <std/musl/arch/generic/bits/socket.h>
 
 #include "main.hpp"
 

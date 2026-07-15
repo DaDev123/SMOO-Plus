@@ -2,11 +2,15 @@
 
 #include "hk/diag/diag.h"
 
+#include "sead/heap/seadHeapMgr.h"
+#include "sead/math/seadQuat.h"
+
 #include "al/Library/Action/ActorActionKeeper.h"
 #include "al/Library/Base/StringUtil.h"
 #include "al/Library/Draw/GraphicsSystemInfo.h"
 #include "al/Library/Effect/EffectSystemInfo.h"
 #include "al/Library/HitSensor/HitSensorKeeper.h"
+#include "al/Library/Light/ModelMaterialCategory.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorAnimFunction.h"
 #include "al/Library/LiveActor/ActorClippingFunction.h"
@@ -21,31 +25,28 @@
 #include "al/Library/LiveActor/LiveActor.h"
 #include "al/Library/LiveActor/LiveActorFunction.h"
 #include "al/Library/LiveActor/LiveActorKeeper.h"
+#include "al/Library/Memory/HeapUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
 #include "al/Library/Obj/PartsModel.h"
 #include "al/Library/Play/Layout/BalloonMessage.h"
+#include "al/Library/Resource/ActorResource.h"
 #include "al/Library/Resource/ResourceFunction.h"
 #include "al/Library/Yaml/ByamlIter.h"
 #include "al/Project/Action/ActionPadAndCameraCtrl.h"
+#include "al/Project/HitSensor/HitSensor.h"
 
 #include "game/Player/PlayerCostumeFunction.h"
 #include "game/Player/PlayerCostumeInfo.h"
 #include "game/Player/PlayerFunction.h"
 #include "game/Util/PlayerUtil.h"
+#include "game/Util/SensorMsgFunction.h"
 
 #include <cstddef>
 
 #include "algorithms/CaptureTypes.h"
-#include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
-#include "Library/Light/ModelMaterialCategory.h"
-#include "Library/Memory/HeapUtil.h"
-#include "Library/Resource/ActorResource.h"
-#include "math/seadQuat.h"
-#include "Project/HitSensor/HitSensor.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/DeltaTime.hpp"
-#include "Util/SensorMsgFunction.h"
 
 static const char* subActorNames[] = {
     "顔",    // Face

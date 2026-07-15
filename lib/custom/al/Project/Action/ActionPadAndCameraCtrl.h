@@ -1,6 +1,6 @@
 #pragma once
 
-#include <math/seadVector.h>
+#include "sead/math/seadVector.h"
 
 namespace al {
 class ActionPadAndCameraInfo;

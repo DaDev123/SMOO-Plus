@@ -1,8 +1,10 @@
 #pragma once
 
-#include "heap/seadDisposer.h"
-#include "Library/Thread/AsyncFunctorThread.h"
-#include "System/GameConfigData.h"
+#include "sead/heap/seadDisposer.h"
+
+#include "al/Library/Thread/AsyncFunctorThread.h"
+
+#include "game/System/GameConfigData.h"
 
 namespace sead {
 class FrameHeap;

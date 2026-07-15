@@ -4,10 +4,11 @@
 #include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
 
+#include "game/System/GameDataFile.h"
+
 #include "helpers.hpp"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
-#include "System/GameDataFile.h"
 
 SpeedrunIcon* SpeedrunIcon::sInstance = nullptr;
 

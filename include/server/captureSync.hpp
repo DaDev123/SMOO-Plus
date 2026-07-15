@@ -1,13 +1,14 @@
 #pragma once
 
+#include "sead/heap/seadHeapMgr.h"
+
 #include "al/Library/LiveActor/ActorInitUtil.h"
+#include "al/Library/Memory/HeapUtil.h"
 #include "al/Library/Placement/PlacementFunction.h"
 #include "al/Library/Placement/PlacementInfo.h"
 
 #include "actors/PuppetHackActor.h"
 #include "algorithms/CaptureTypes.h"
-#include "heap/seadHeapMgr.h"
-#include "Library/Memory/HeapUtil.h"
 #include "server/Client.hpp"
 
 // Helper Methods

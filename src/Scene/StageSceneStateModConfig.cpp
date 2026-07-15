@@ -1,12 +1,15 @@
 #include "Scene/StageSceneStateModConfig.hpp"
 
+#include "sead/container/seadPtrArray.h"
 #include "sead/container/seadSafeArray.h"
+#include "sead/heap/seadHeapMgr.h"
 #include "sead/prim/seadSafeString.h"
 
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Layout/LayoutInitInfo.h"
 #include "al/Library/LiveActor/ActorInitInfo.h"
+#include "al/Library/Memory/HeapUtil.h"
 #include "al/Library/Nerve/NerveUtil.h"
 #include "al/Library/Play/Layout/RollParts.h"
 
@@ -23,11 +26,8 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "container/seadPtrArray.h"
 #include "fsHelper.h"
-#include "heap/seadHeapMgr.h"
 #include "layouts/PlayerEventLog.h"
-#include "Library/Memory/HeapUtil.h"
 #include "main.hpp"
 #include "server/Client.hpp"
 
@@ -382,13 +382,13 @@ void StageSceneStateModConfig::initGameplayMenu(const al::LayoutInitInfo& initIn
     setMenuItemCheck(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_MUSIC + 1]);
 
     optionsList[MENU_GAMEPLAY]->startLoopActionAll("Loop", "Loop");
-    RollPartsData* dataColPlayer =
-        new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                          (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), true);
-    RollPartsData* dataColCap =
-        new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
-                          (sCapCollisionEnabled + (sCapBounceEnabled << 1)), true);
-    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
+    RollPartsData* dataColPlayer = new RollPartsData(
+        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" },
+        (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), true);
+    RollPartsData* dataColCap = new RollPartsData(
+        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" },
+        (sCapCollisionEnabled + (sCapBounceEnabled << 1)), true);
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t* [] { u"" });
     optionsList[MENU_GAMEPLAY]->setRollPartsData(
         new RollPartsData[]{*dataColPlayer, *dataColCap, *dataEmpty, *dataEmpty, *dataEmpty});
 
@@ -463,9 +463,9 @@ void StageSceneStateModConfig::initSpeedrunConfigMenu(const al::LayoutInitInfo& 
     optionsList[MENU_SPEEDRUN_CONFIG]->startLoopActionAll("Loop", "Loop");
 
     RollPartsData* dataLogLife = new RollPartsData(
-        4, new const char16_t*[]{u"Never", u"After 15 Seconds", u"After 10 Seconds", u"After 5 Seconds"},
+        4, new const char16_t* [] { u"Never", u"After 15 Seconds", u"After 10 Seconds", u"After 5 Seconds" },
         sLogLife, true);
-    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t* [] { u"" });
 
     optionsList[MENU_SPEEDRUN_CONFIG]->setRollPartsData(
         new RollPartsData[]{*dataLogLife, *dataEmpty, *dataEmpty});

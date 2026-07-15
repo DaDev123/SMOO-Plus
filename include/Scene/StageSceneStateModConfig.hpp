@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sead/container/seadSafeArray.h"
+#include "sead/prim/seadSafeString.h"
 
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Layout/LayoutActorUtil.h"
@@ -15,8 +16,6 @@
 #include "game/Layout/CommonVerticalList.h"
 #include "game/Layout/SimpleLayoutMenu.h"
 #include "game/System/GameDataHolder.h"
-
-#include "prim/seadSafeString.h"
 
 class FooterParts;
 

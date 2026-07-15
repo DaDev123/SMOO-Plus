@@ -1,9 +1,9 @@
 #pragma once
 
-#include <math/seadMatrix.h>
+#include "sead/math/seadMatrix.h"
 
-#include "Library/Execute/IUseExecutor.h"
-#include "Library/HostIO/HioNode.h"
+#include "al/Library/Execute/IUseExecutor.h"
+#include "al/Library/HostIO/HioNode.h"
 
 namespace al {
 class AreaObjDirector;

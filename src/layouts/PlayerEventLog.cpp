@@ -1,12 +1,15 @@
 #include "layouts/PlayerEventLog.h"
 
-#include <basis/seadTypes.h>
-#include <cstdarg>
-#include <prim/seadSafeString.h>
+#include "nn/account.h"
 
-#include "account.h"
+#include "sead/basis/seadTypes.h"
+#include "sead/prim/seadSafeString.h"
+
+#include "al/Library/Base/StringUtil.h"
+
+#include <cstdarg>
+
 #include "imgui.h"
-#include "Library/Base/StringUtil.h"
 #include "MessageMasterList.h"
 #include "puppets/PuppetInfo.h"
 #include "Scene/StageSceneStateModConfig.hpp"

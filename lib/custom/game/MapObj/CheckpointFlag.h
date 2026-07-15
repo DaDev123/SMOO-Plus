@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Library/LiveActor/LiveActor.h"
-#include "Library/Message/IUseMessageSystem.h"
+#include "al/Library/LiveActor/LiveActor.h"
+#include "al/Library/Message/IUseMessageSystem.h"
 
 namespace al {
 class PlacementId;

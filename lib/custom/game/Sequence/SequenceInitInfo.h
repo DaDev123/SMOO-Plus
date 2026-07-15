@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Library/System/GameSystemInfo.h"
+#include "al/Library/System/GameSystemInfo.h"
 
 namespace al {
 class SequenceInitInfo {

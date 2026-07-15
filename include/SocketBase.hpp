@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cstring>
+#include "sead/prim/seadSafeString.h"
 
-#include "prim/seadSafeString.h"
+#include <cstring>
 
 enum class SockState {
     UNINITIALIZED = 0,

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Packet.h"
+#include "packets/Packet.h"
 
 struct __attribute__((packed)) CaptureInf : Packet {
     CaptureInf() : Packet() {

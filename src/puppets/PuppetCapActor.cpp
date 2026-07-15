@@ -1,5 +1,9 @@
 #include "actors/PuppetCapActor.h"
 
+#include "sead/heap/seadHeapMgr.h"
+#include "sead/math/seadQuat.h"
+#include "sead/math/seadVectorFwd.h"
+
 #include "al/Library/HitSensor/HitSensorKeeper.h"
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorAnimFunction.h"
@@ -7,17 +11,14 @@
 #include "al/Library/LiveActor/ActorModelFunction.h"
 #include "al/Library/LiveActor/ActorPoseUtil.h"
 #include "al/Library/LiveActor/ActorSensorUtil.h"
+#include "al/Library/Math/MathUtil.h"
+#include "al/Library/Memory/HeapUtil.h"
+#include "al/Project/HitSensor/HitSensor.h"
 
 #include "game/Player/PlayerFunction.h"
 #include "game/Util/SensorMsgFunction.h"
 
-#include "heap/seadHeapMgr.h"
 #include "helpers.hpp"
-#include "Library/Math/MathUtil.h"
-#include "Library/Memory/HeapUtil.h"
-#include "math/seadQuat.h"
-#include "math/seadVectorFwd.h"
-#include "Project/HitSensor/HitSensor.h"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
 
