@@ -2,22 +2,18 @@
 
 BUILDVER ?= SR-1.0.0-pre
 DEBUGLOG ?= 1 # defaults to enable debug logger 
-SERVERIP ?= 192.168.178.41 # put debug logger server IP here
+SERVERIP ?= 192.168.1.192 # put debug logger server IP here
 
-PROJNAME ?= SMOO-Plus-Speedrun
+PROJECTNAME ?= SMOO-Plus-Speedrun
 
-SCONTENTPATH := package/$(PROJNAME)-Switch/atmosphere/contents/0100000000010000
-ECONTENTPATH :=  package/$(PROJNAME)-Emulator/$(PROJNAME)
-
-#I hate Nixos (sometimes)
-export SOURCE_DATE_EPOCH = $(shell date +%s)
-
+SCONTENTPATH := package/$(PROJECTNAME)-Switch/atmosphere/contents/0100000000010000
+ECONTENTPATH :=  package/$(PROJECTNAME)-Emulator/$(PROJECTNAME)
 
 debug: format
-	cmake -DCMAKE_BUILD_TYPE=Debug -DPROJNAME=$(PROJNAME) -DBUILDVER=$(BUILDVER) -DSERVERIP=$(SERVERIP) -DDEBUGLOG=$(DEBUGLOG) -S . -B build && $(MAKE) -C build
+	cmake -DCMAKE_BUILD_TYPE=Debug -DBUILDVER=$(BUILDVER) -DSERVERIP=$(SERVERIP) -DDEBUGLOG=$(DEBUGLOG) -S . -B build && $(MAKE) -C build
 
 release_build: clean format
-	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPROJNAME=$(PROJNAME) -DBUILDVER=$(BUILDVER) -S . -B build && $(MAKE) -C build
+	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILDVER=$(BUILDVER) -S . -B build && $(MAKE) -C build
 
 release:
 	$(MAKE) release_build
@@ -49,15 +45,15 @@ file_structure:
 	@mkdir -p $(ECONTENTPATH)/romfs/
 
 # 	Copy subsdk binaries
-	@cp build/$(PROJNAME).nso $(SCONTENTPATH)/exefs/subsdk4 
-	@cp build/$(PROJNAME).nso $(ECONTENTPATH)/exefs/subsdk4 
+	@cp build/$(PROJECTNAME).nso $(SCONTENTPATH)/exefs/subsdk4 
+	@cp build/$(PROJECTNAME).nso $(ECONTENTPATH)/exefs/subsdk4 
 
 # 	Copy npdm file
 	@cp build/main.npdm $(SCONTENTPATH)/exefs/main.npdm 
 	@cp build/main.npdm $(ECONTENTPATH)/exefs/main.npdm 
 
 # 	Copy NSS debug symbols
-	@cp build/$(PROJNAME).nss package/$(PROJNAME).nss
+	@cp build/$(PROJECTNAME).nss package/$(PROJECTNAME).nss
 	
 # 	Copying romfs data
 	@cp -R romfs/ $(SCONTENTPATH)
