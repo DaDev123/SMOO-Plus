@@ -32,7 +32,6 @@ inline std::unique_ptr<Packet> create(PacketType type) {
 
     case PacketType::HACKCAPINF:
         return std::unique_ptr<Packet>{new (gHeap) HackCapInf};
-        ;
 
     case PacketType::GAMEINF:
         return std::unique_ptr<Packet>{new (gHeap) GameInf};
