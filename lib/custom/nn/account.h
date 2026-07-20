@@ -7,81 +7,78 @@
 
 #include "hk/diag/diag.h"
 
-#include "nn/os.h"
-
-#include <cstdio>
+#include <nn/os.h>
+#include <nn/types.h>
 
 namespace nn {
 namespace account {
-// typedef char Nickname[0x21];
-// typedef u64 Uid[0x2];
-
 struct Nickname {
-    char name[0x21] = {};
+    char m_Buffer[0x21];
+};
+struct NetworkServiceAccountId {
+    u64 m_Id;
 };
 
-struct Uid {
-    char data[0x10] = {};
+class AsyncContext;
 
-    bool operator==(const Uid& rhs) const { return memcmp(data, rhs.data, 0x10) == 0; }
+class Uid {
+public:
+    bool IsValid() const { return m_Storage[0] != 0 || m_Storage[1] != 0; }
+
+    u64 m_Storage[2];
+
+    // custom funcs
+    bool operator==(const Uid& rhs) const {
+        return m_Storage[0] == rhs.m_Storage[0] && m_Storage[1] == rhs.m_Storage[1];
+    }
 
     Uid& operator=(const Uid& other) {
-        memcpy(this->data, other.data, 0x10);
+        m_Storage[0] = other.m_Storage[0];
+        m_Storage[1] = other.m_Storage[1];
         return *this;
     }
 
-    inline bool isEmpty() const { return *this == EmptyId; }
+    inline bool isEmpty() const { return !IsValid(); }
 
-    inline void print() const {
-        char msg[0x50] = "";
-        int len = sprintf(msg, "Player ID 0x");
-        for (size_t i = 0; i < 0x10; i++) {
-            len += sprintf(msg + len, "%02X", data[i]);
-        }
-        msg[len] = '\0';
-        hk::diag::logLine("%s", msg);
+    inline void print() const { hk::diag::logLine("%lu%lu", m_Storage[0], m_Storage[1]); }
+
+    inline void print(const char* prefix) {
+        hk::diag::logLine("%s: %lu%lu", prefix, m_Storage[0], m_Storage[1]);
     }
-
-    inline void print(const char* prefix) const {
-        char msg[0x50] = "";
-        int len = sprintf(msg, "%s: 0x", prefix);
-        for (size_t i = 0; i < 0x10; i++) {
-            len += sprintf(msg + len, "%02X", data[i]);
-        }
-        msg[len] = '\0';
-        hk::diag::logLine("%s", msg);
-    }
-
-    static const Uid EmptyId;
 };
 
-typedef u64 NetworkServiceAccountId;
-
-class AsyncContext;
-struct UserHandle;
+class UserHandle {
+public:
+    Uid m_Uid;
+    void* m_Handle;
+};
 
 void Initialize();
-Result ListAllUsers(s32*, nn::account::Uid*, s32 numUsers);
-Result OpenUser(nn::account::UserHandle*, const nn::account::Uid&);
-Result IsNetworkServiceAccountAvailable(bool* out, const nn::account::UserHandle&);
-void CloseUser(const nn::account::UserHandle&);
+Result ListAllUsers(s32*, Uid*, s32 numUsers);
+Result OpenUser(UserHandle*, Uid const&);
+Result IsNetworkServiceAccountAvailable(bool* out, UserHandle const&);
+void CloseUser(UserHandle const&);
 
-Result EnsureNetworkServiceAccountAvailable(const nn::account::UserHandle& userHandle);
-Result EnsureNetworkServiceAccountIdTokenCacheAsync(nn::account::AsyncContext*,
-                                                    const nn::account::UserHandle&);
-Result LoadNetworkServiceAccountIdTokenCache(u64*, char*, u64, const nn::account::UserHandle&);
+Result EnsureNetworkServiceAccountAvailable(UserHandle const& userHandle);
+Result EnsureNetworkServiceAccountIdTokenCacheAsync(AsyncContext*, UserHandle const&);
+Result LoadNetworkServiceAccountIdTokenCache(u64*, char*, u64, UserHandle const&);
 
-Result GetLastOpenedUser(nn::account::Uid*);
-Result GetNickname(nn::account::Nickname* nickname, const nn::account::Uid& userID);
+Result GetLastOpenedUser(Uid*);
+Result GetNickname(Nickname* nickname, Uid const& userID);
+Result GetNetworkServiceAccountId(NetworkServiceAccountId*, const UserHandle&);
+
+Result GetUserId(Uid* uid, const UserHandle& handle);
+Result OpenPreselectedUser(UserHandle* handle);
 
 class AsyncContext {
 public:
     AsyncContext();
+    ~AsyncContext();
 
     Result HasDone(bool*);
     Result GetResult();
     Result Cancel();
     Result GetSystemEvent(nn::os::SystemEvent*);
 };
-};  // namespace account
-};  // namespace nn
+}  // namespace account
+}  // namespace nn

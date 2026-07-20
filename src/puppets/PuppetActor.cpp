@@ -87,7 +87,8 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
         bodyName = tryGetPuppetBodyName(mInfo);
         capName = tryGetPuppetCapName(mInfo);
 
-        mNameTag = new NameTag(this, al::getLayoutInitInfo(initInfo), 4900.0f, 5000.0f, mInfo->puppetName);
+        mNameTag =
+            new NameTag(this, al::getLayoutInitInfo(initInfo), 4900.0f, 5000.0f, mInfo->puppetName.cstr());
     }
 
     al::LiveActor* normalModel = new al::LiveActor("Normal");
@@ -163,10 +164,10 @@ void PuppetActor::control() {
 
         // Animation Updating
 
-        if (!al::isActionPlaying(curModel, mInfo->curSubAnimStr)) {
-            startAction(mInfo->curAnimStr);
+        if (!al::isActionPlaying(curModel, mInfo->curSubAnimStr.cstr())) {
+            startAction(mInfo->curAnimStr.cstr());
         } else if (al::isActionEnd(curModel)) {
-            startAction(mInfo->curAnimStr);
+            startAction(mInfo->curAnimStr.cstr());
         }
 
         if (isNeedBlending()) {
@@ -205,7 +206,7 @@ void PuppetActor::control() {
         if (mInfo->isCaptured && !mIsCaptureModel) {
             getCurrentModel()->makeActorDead();  // sets previous model to dead so we can try to
                                                  // switch to capture model
-            setCapture(mInfo->curHack);
+            setCapture(mInfo->curHack.cstr());
             mIsCaptureModel = true;
             getCurrentModel()->makeActorAlive();  // make new model alive
 
@@ -269,7 +270,7 @@ void PuppetActor::makeActorAlive() {
     // update name tag when puppet becomes active again
     if (mInfo) {
         if (mNameTag) {
-            mNameTag->setText(mInfo->puppetName);
+            mNameTag->setText(mInfo->puppetName.cstr());
         }
     }
 

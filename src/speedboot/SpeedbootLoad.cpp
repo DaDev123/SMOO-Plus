@@ -3,7 +3,9 @@
 #include "hk/types.h"
 
 #include "sead/math/seadMathCalcCommon.h"
+#include "sead/prim/seadSafeString.h"
 
+#include "al/Library/Base/StringUtil.h"
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Layout/LayoutInitInfo.h"
@@ -74,9 +76,9 @@ const char* SpeedbootLoad::getStageName() const {
     }
 
     // Try next stage name
-    const char* name = GameDataFunction::getNextStageName(mSequence->mGameDataHolderAccessor);
-    if (name && name[0] != '\0')
-        return name;
+    sead::SafeString name = GameDataFunction::getNextStageName(mSequence->mGameDataHolderAccessor);
+    if (!name.isEmpty())
+        return name.cstr();
 
     // Fallback to current stage
     return GameDataFunction::getCurrentStageName(mSequence->mGameDataHolderAccessor);
@@ -87,7 +89,7 @@ const char16_t* SpeedbootLoad::getKingdomName(const char* stageName) const {
         return u"Unknown Kingdom";
 
     for (const auto& mapping : KINGDOM_NAMES) {
-        if (strcmp(stageName, mapping.stageName) == 0) {
+        if (al::isEqualString(stageName, mapping.stageName)) {
             return mapping.kingdomName;
         }
     }
@@ -100,7 +102,7 @@ bool SpeedbootLoad::isKnownStage(const char* stageName) const {
         return false;
 
     for (const auto& mapping : KINGDOM_NAMES) {
-        if (strcmp(stageName, mapping.stageName) == 0) {
+        if (al::isEqualString(stageName, mapping.stageName)) {
             return true;
         }
     }

@@ -31,7 +31,7 @@ public:
 
     virtual const char* getName() const override {
         if (mInfo)
-            return mInfo->puppetName;
+            return mInfo->puppetName.cstr();
         return "";
     }
 

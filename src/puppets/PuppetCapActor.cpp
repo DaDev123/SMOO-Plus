@@ -20,7 +20,6 @@
 
 #include "helpers.hpp"
 #include "Scene/StageSceneStateModConfig.hpp"
-#include "server/Client.hpp"
 
 PuppetCapActor::PuppetCapActor(const char* name) : al::LiveActor(name) {}
 
@@ -60,8 +59,8 @@ void PuppetCapActor::movement() {
 }
 
 void PuppetCapActor::control() {
-    if (strcmp(mInfo->capAnim, "") != 0) {
-        startAction(mInfo->capAnim);
+    if (!mInfo->capAnim.isEmpty()) {
+        startAction(mInfo->capAnim.cstr());
     }
 
     if (!StageSceneStateModConfig::isLowLatencyEnabled()) {

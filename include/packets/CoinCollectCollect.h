@@ -2,12 +2,30 @@
 
 #include "packets/Packet.h"
 
-struct __attribute__((packed)) CoinCollectCollect : Packet {
-    CoinCollectCollect() : Packet() {
-        this->mType = PacketType::COINCOLLECTCOLL;
-        mPacketSize = sizeof(CoinCollectCollect) - sizeof(Packet);
-    };
-    char placeID[0x40] = {};
+struct CoinCollectCollect : public Packet {
+    PacketType getType() override { return PacketType::COINCOLLECTCOLL; }
+
+    std::vector<u8> serialize() override {
+        PacketWriter writer(this);
+
+        writer.writeString(placeID);
+        writer.write(worldID);
+        writer.writeString(stage);
+
+        return writer.finalize();
+    }
+
+    void deserialize(const std::vector<u8>& data) override {
+        PacketReader reader(this, data.data(), data.size());
+
+        reader.readString(placeID);
+        reader.read(worldID);
+        reader.readString(stage);
+
+        reader.finalize();
+    }
+
+    sead::FixedSafeString<0x40> placeID;
     int worldID = 0;
-    char stage[0x40] = {};
+    sead::FixedSafeString<0x40> stage;
 };

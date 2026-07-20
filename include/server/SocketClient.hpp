@@ -5,6 +5,7 @@
 
 #include "al/Library/Thread/AsyncFunctorThread.h"
 
+#include <experimental/memory>
 #include <netinet/in.h>
 
 #include "packets/Packet.h"
@@ -22,25 +23,28 @@ public:
 
     void init(const char* ip, u16 port);
     void closeSocket();
-    Packet* tryGetPacket();
+    std::unique_ptr<Packet> tryGetPacket();
 
-    bool startThreads();
-    void endThreads();
+    void startThreads();
 
-    bool send(Packet* packet);
+    bool send(std::unique_ptr<Packet> packet);
     bool recv();
 
-    bool queuePacket(Packet* packet);
+    bool queuePacket(std::unique_ptr<Packet> packet);
     bool trySendQueue();
 
     void sendFunc();
     void recvFunc();
 
-    void deletePacketAfterSend(Packet* packet);
-
     void setSockState(SockState state) { mSockState = state; };
 
     bool isConnected() { return mSockState == SockState::CONNECTED; }
+
+    void resetFirstConnect() { mIsFirstConnect = true; }
+    void signalReset() {
+        if (mState == WAIT)
+            mState = RESET;
+    }
 
     u32 getSendCount() { return mSendQueue.mMessageQueueInner._count; }
     u32 getSendMaxCount() { return mSendQueue.mMessageQueueInner._maxCount; }

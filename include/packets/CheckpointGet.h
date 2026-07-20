@@ -2,10 +2,24 @@
 
 #include "packets/Packet.h"
 
-struct __attribute__((packed)) CheckpointGet : Packet {
-    CheckpointGet() : Packet() {
-        this->mType = PacketType::CHECKPOINTGET;
-        mPacketSize = sizeof(CheckpointGet) - sizeof(Packet);
-    };
-    char objId[0x40] = {};
+struct CheckpointGet : public Packet {
+    PacketType getType() override { return PacketType::CHECKPOINTGET; }
+
+    std::vector<u8> serialize() override {
+        PacketWriter writer(this);
+
+        writer.writeString(objId);
+
+        return writer.finalize();
+    }
+
+    void deserialize(const std::vector<u8>& data) override {
+        PacketReader reader(this, data.data(), data.size());
+
+        reader.readString(objId);
+
+        reader.finalize();
+    }
+
+    sead::FixedSafeString<0x40> objId;
 };

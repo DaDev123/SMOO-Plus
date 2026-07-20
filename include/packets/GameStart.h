@@ -2,14 +2,11 @@
 
 #include "packets/Packet.h"
 
-struct ShineCollect : public Packet {
-    PacketType getType() override { return PacketType::SHINECOLL; }
+struct GameStart : public Packet {
+    PacketType getType() override { return PacketType::GAMESTART; }
 
     std::vector<u8> serialize() override {
         PacketWriter writer(this);
-
-        writer.write(shineId);
-        writer.write(isGrand);
 
         return writer.finalize();
     }
@@ -17,12 +14,6 @@ struct ShineCollect : public Packet {
     void deserialize(const std::vector<u8>& data) override {
         PacketReader reader(this, data.data(), data.size());
 
-        reader.read(shineId);
-        reader.read(isGrand);
-
         reader.finalize();
     }
-
-    int shineId = -1;
-    u8 isGrand = false;  // fake bool
 };

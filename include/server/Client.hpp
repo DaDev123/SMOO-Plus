@@ -66,13 +66,13 @@ struct UIDIndexNode {
  *        Drained each frame in Client::update() once mCurStageScene is valid.
  */
 struct PendingCoinCollect {
-    char placeID[0x40];
+    sead::FixedSafeString<0x40> placeID;
     int worldID;
-    char stage[0x40];
+    sead::FixedSafeString<0x40> stage;
 };
 
 struct PendingCheckpoint {
-    char objId[0x40];
+    sead::FixedSafeString<0x40> objId;
 };
 
 // ===== MAIN CLASS =====
@@ -273,7 +273,6 @@ private:
     sead::FixedSafeString<0x20> mUsername;
     bool mIsConnectionActive = false;
     bool mIsFirstConnect = true;
-    bool isFirstRun = true;
 
     // ===== SERVER CONFIGURATION MEMBERS =====
     hostname mServerIP;

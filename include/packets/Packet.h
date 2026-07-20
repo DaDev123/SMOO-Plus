@@ -1,9 +1,15 @@
 #pragma once
 
+#include "hk/diag/diag.h"
+
 #include "nn/account.h"
 
 #include "sead/math/seadQuat.h"    // IWYU pragma: keep
 #include "sead/math/seadVector.h"  // IWYU pragma: keep
+#include "sead/prim/seadSafeString.h"
+
+#include <cstring>
+#include <vector>
 
 #define PACKBUFSIZE 0x30
 #define COSTUMEBUFSIZE 0x20
@@ -42,22 +48,117 @@ constexpr static const char* packetNames[] = {"Unknown",        "Client Initiali
                                               "Checkpoint Get", "Moon Rock Hit",
                                               "Game Start"};
 
-enum SenderType { SERVER, CLIENT };
-
 enum ConnectionTypes { INIT, RECONNECT };
 
-// unused
-/*
-static const char *senderNames[] = {
-    "Server",
-    "Client"
-};
-*/
+// uid part 1 + uid part 2 + packet type + packet size
+static constexpr s32 sHeaderSize = sizeof(u64) + sizeof(u64) + sizeof(PacketType) + sizeof(short);
 
-struct __attribute__((packed)) Packet {
+struct Packet {
+    virtual ~Packet() = default;
+    virtual PacketType getType() = 0;
+    virtual std::vector<u8> serialize() = 0;
+    virtual void deserialize(const std::vector<u8>& data) = 0;
+
     nn::account::Uid mUserID;  // User ID of the packet owner
     PacketType mType = PacketType::UNKNOWN;
     short mPacketSize = 0;  // represents packet size without size of header
+    bool mIsFail = false;
+};
+
+class PacketWriter {
+public:
+    PacketWriter(Packet* packet) : mPacket(packet) {
+        packet->mType = packet->getType();
+        writeToFullData(packet->mUserID.m_Storage[0]);
+        writeToFullData(packet->mUserID.m_Storage[1]);
+        writeToFullData(packet->getType());
+    }
+
+    template <typename T>
+    void writeToFullData(T value) {
+        const u8* ptr = reinterpret_cast<const u8*>(&value);
+        mFullData.insert(mFullData.end(), ptr, ptr + sizeof(T));
+    }
+
+    template <typename T>
+    void write(T value) {
+        const u8* ptr = reinterpret_cast<const u8*>(&value);
+        mData.insert(mData.end(), ptr, ptr + sizeof(T));
+    }
+
+    template <s32 L>
+    void writeString(sead::FixedSafeString<L>& str) {
+        s32 len = str.calcLength();
+        mData.insert(mData.end(), str.getStringTop(), str.getStringTop() + len);
+
+        if (len < L)
+            mData.insert(mData.end(), L - len, 0);
+    }
+
+    std::vector<u8> finalize() {
+        u16 sizeNoHeader = mData.size();
+        mPacket->mPacketSize = sizeNoHeader;
+        writeToFullData(sizeNoHeader);
+        mFullData.insert(mFullData.end(), mData.data(), mData.data() + mData.size());
+        return std::move(mFullData);
+    }
+
+private:
+    Packet* mPacket = nullptr;
+    std::vector<u8> mFullData;
+    std::vector<u8> mData;
+    size mSizeOffset = 0;
+};
+
+class PacketReader {
+public:
+    PacketReader(Packet* packet, const u8* data, size size)
+        : mPacket(packet), mData(data), mSize(size + sHeaderSize) {
+        read(packet->mUserID.m_Storage[0]);
+        read(packet->mUserID.m_Storage[1]);
+        read(packet->mType);
+        read(packet->mPacketSize);
+    }
+
+    template <typename T>
+    void read(T& value) {
+        if (mIsReadFail || mOffset + sizeof(T) > mSize) {
+            hk::diag::logLine("Reading a value failed because it would go out of bounds. Offset: %zu Size: "
+                              "%zu Type: %hd Type String: %s",
+                              mOffset, mSize, mPacket->mType, packetNames[mPacket->mType]);
+            mIsReadFail = true;
+            return;
+        }
+
+        memcpy(&value, &mData[mOffset], sizeof(T));
+        mOffset += sizeof(T);
+    }
+
+    template <s32 L>
+    void readString(sead::FixedSafeString<L>& str) {
+        if (mIsReadFail || mOffset + L > mSize) {
+            hk::diag::logLine(
+                "Reading a string failed because it would go out of bounds. Offset: %zu Size %zu", mOffset,
+                mSize);
+            mIsReadFail = true;
+            str = "";
+            return;
+        }
+
+        const char* strData = reinterpret_cast<const char*>(&mData[mOffset]);
+
+        str.copy(strData, L);
+        mOffset += L;
+    }
+
+    void finalize() { mPacket->mIsFail = mIsReadFail; }
+
+private:
+    Packet* mPacket = nullptr;
+    const u8* mData = nullptr;
+    size mSize = 0;
+    size mOffset = 0;
+    bool mIsReadFail = false;
 };
 
 // all packet types
@@ -69,9 +170,12 @@ struct __attribute__((packed)) Packet {
 #include "packets/CoinCollectCollect.h"
 #include "packets/CostumeInf.h"
 #include "packets/GameInf.h"
+#include "packets/GameStart.h"
 #include "packets/HackCapInf.h"
 #include "packets/InitPacket.h"
 #include "packets/MoonRockHit.h"
+#include "packets/PacketFactory.h"
+#include "packets/PacketHeader.h"
 #include "packets/PlayerConnect.h"
 #include "packets/PlayerDC.h"
 #include "packets/PlayerInfPacket.h"

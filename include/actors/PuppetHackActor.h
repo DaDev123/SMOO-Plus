@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sead/prim/seadSafeString.h"
+
 #include "al/Library/LiveActor/LiveActor.h"
 
 #include "puppets/PuppetInfo.h"
@@ -16,7 +18,7 @@ public:
     virtual void movement(void) override;
     void initOnline(PuppetInfo* info, const char* hackType);
 
-    void startAction(const char* actName);
+    void startAction(sead::SafeString actName);
 
     void startHackAnim(bool isOn);
 

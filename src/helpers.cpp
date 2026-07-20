@@ -102,16 +102,16 @@ bool isInCostumeList(const char* costumeName) {
 }
 
 const char* tryGetPuppetCapName(PuppetInfo* info) {
-    if (strcmp(info->costumeHead, "") != 0 && isInCostumeList(info->costumeHead)) {
-        return info->costumeHead;
+    if (!info->costumeHead.isEmpty() && isInCostumeList(info->costumeHead.cstr())) {
+        return info->costumeHead.cstr();
     } else {
         return "Mario";
     }
 }
 
 const char* tryGetPuppetBodyName(PuppetInfo* info) {
-    if (strcmp(info->costumeBody, "") != 0 && isInCostumeList(info->costumeBody)) {
-        return info->costumeBody;
+    if (!info->costumeBody.isEmpty() && isInCostumeList(info->costumeBody.cstr())) {
+        return info->costumeBody.cstr();
     } else {
         return "Mario";
     }

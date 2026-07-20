@@ -1,6 +1,6 @@
 #include "actors/PuppetHackActor.h"
 
-#include "hk/diag/diag.h"
+#include "sead/prim/seadSafeString.h"
 
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorAnimFunction.h"
@@ -60,10 +60,9 @@ void PuppetHackActor::movement() {
 
 void PuppetHackActor::control() {}
 
-void PuppetHackActor::startAction(const char* actName) {
-    if (!actName || actName[0] == '\0') {
+void PuppetHackActor::startAction(sead::SafeString actName) {
+    if (actName.isEmpty())
         return;
-    }
 
     // Get the currently playing action
     const char* curActName = al::getActionName(this);
@@ -81,9 +80,9 @@ void PuppetHackActor::startAction(const char* actName) {
 
     if (needsStart) {
         // Try to start the action (will restart even if already playing)
-        if (al::tryStartAction(this, actName)) {
+        if (al::tryStartAction(this, actName.cstr())) {
             // Clear interpolation for clean animation start
-            if (al::isSklAnimExist(this, actName)) {
+            if (al::isSklAnimExist(this, actName.cstr())) {
                 al::clearSklAnimInterpole(this);
             }
         }

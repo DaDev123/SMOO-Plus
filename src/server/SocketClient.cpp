@@ -13,14 +13,17 @@
 #include "al/Library/Thread/FunctorV0M.h"
 
 #include <cerrno>
-#include <cstdio>
-#include <cstring>
+#include <experimental/memory>
+#include <experimental/utility>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
 #include "main.hpp"
 #include "packets/Packet.h"
+#include "packets/PacketFactory.h"
+#include "packets/PlayerConnect.h"
 #include "server/Client.hpp"
+#include "SocketBase.hpp"
 
 using namespace nn;
 
@@ -55,7 +58,7 @@ void SocketClient::update() {
             break;
         }
         os::YieldThread();
-        os::SleepThread(TimeSpan::FromNanoSeconds(100_ms));
+        os::SleepThread(TimeSpan::FromMilliSeconds(100));
     }
 }
 
@@ -89,7 +92,7 @@ bool SocketClient::exeInit() {
             break;
 
         os::YieldThread();
-        os::SleepThread(TimeSpan::FromNanoSeconds(500_ms));
+        os::SleepThread(TimeSpan::FromMilliSeconds(500));
     }
 #endif
     in_addr hostAddress = {0};
@@ -122,7 +125,7 @@ bool SocketClient::exeInit() {
         if ((mSockFd = socket::Socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
             hk::diag::logLine("Failed to create Socket");
             os::YieldThread();
-            os::SleepThread(TimeSpan::FromNanoSeconds(500_ms));
+            os::SleepThread(TimeSpan::FromMilliSeconds(500));
             continue;
         }
 
@@ -152,80 +155,87 @@ bool SocketClient::exeInit() {
         }
 
         os::YieldThread();
-        os::SleepThread(TimeSpan::FromNanoSeconds(500_ms));
+        os::SleepThread(TimeSpan::FromMilliSeconds(500));
     }
 
     mSockState = SockState::CONNECTED;
 
     hk::diag::logLine("Socket fd: %d", mSockFd);
 
-    if (mRecvThread->isDone())
-        mRecvThread->start();
-    if (mSendThread->isDone())
-        mSendThread->start();
+    auto initPacket = std::unique_ptr<PlayerConnect>{new (gHeap) PlayerConnect};
 
-    PlayerConnect initPacket;
+    initPacket->mUserID = Client::getClientId();
+    initPacket->clientName = Client::getUsername();
 
-    initPacket.mUserID = Client::getClientId();
-    strcpy(initPacket.clientName, Client::getUsername().cstr());
-
-    initPacket.conType = mIsFirstConnect ? ConnectionTypes::INIT : ConnectionTypes::RECONNECT;
+    initPacket->conType = mIsFirstConnect ? ConnectionTypes::INIT : ConnectionTypes::RECONNECT;
     mIsFirstConnect = false;
 
-    send(&initPacket);
+    if (send(std::move(initPacket))) {
+        mState = WAIT;
+        startThreads();
+        return true;
+    }
 
-    mState = WAIT;
-    return true;
+    return false;
 }
 
 void SocketClient::exeReset() {
     closeSocket();
 
     os::YieldThread();
-    os::SleepThread(TimeSpan::FromNanoSeconds(100_ms));
+    os::SleepThread(TimeSpan::FromMilliSeconds(100));
 
-    // Free up all blocked threads (pop first in case its full somehow)
-    mSendQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
-    mRecvQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
-
+    // Free up all blocked threads
     mSendQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
     mRecvQueue.push(0, sead::MessageQueue::BlockType::NonBlocking);
 
     while (!(mRecvThread->isDone() && mSendThread->isDone() && Client::isThreadDone())) {
         os::YieldThread();
-        os::SleepThread(TimeSpan::FromNanoSeconds(100_ms));
+        os::SleepThread(TimeSpan::FromMilliSeconds(100));
     }
 
     // clear send and recv queue (idk man)
     for (s32 i = 0; i < 100; i++) {
-        mSendQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
-        mRecvQueue.pop(sead::MessageQueue::BlockType::NonBlocking);
+        delete reinterpret_cast<Packet*>(mSendQueue.pop(sead::MessageQueue::BlockType::NonBlocking));
+        delete reinterpret_cast<Packet*>(mRecvQueue.pop(sead::MessageQueue::BlockType::NonBlocking));
     }
 
     mState = RECONNECT;
 }
 
-bool SocketClient::send(Packet* packet) {
-    if (mSockState != SockState::CONNECTED || packet == nullptr)
+void SocketClient::startThreads() {
+    if (mRecvThread->isDone())
+        mRecvThread->start();
+    if (mSendThread->isDone())
+        mSendThread->start();
+}
+
+bool SocketClient::send(std::unique_ptr<Packet> packet) {
+    if (mSockState != SockState::CONNECTED || packet == nullptr) {
+        hk::diag::logLine("Unable To Send! Socket Not Connected.");
+        mSockErrno = socket::GetLastErrno();
         return false;
+    }
 
-    if (!(packet->mType > PacketType::UNKNOWN && packet->mType < PacketType::End))
-        return false;
-
-    u8* buffer = reinterpret_cast<u8*>(packet);
-
-    int valread = 0;
+    std::vector<u8> packetData = packet->serialize();
+    s32 valsent = 0;
 
     if (packet->mType != PLAYERINF && packet->mType != HACKCAPINF)
         hk::diag::logLine("Sending packet: %s", packetNames[packet->mType]);
 
-    valread = socket::Send(mSockFd, buffer, packet->mPacketSize + sizeof(Packet), 0);
+    while (valsent < packetData.size()) {
+        s32 result = socket::Send(mSockFd, packetData.data(), packetData.size() - valsent, 0);
 
-    if (valread <= 0) {
-        hk::diag::logLine("Failed to Fully Send Packet! Result: %d Type: %s Packet Size: %d", valread,
-                          packetNames[packet->mType], packet->mPacketSize);
         mSockErrno = socket::GetLastErrno();
-        return false;
+
+        if (result <= 0) {
+            hk::diag::logLine(
+                "Packet send failed! Packet type is %hd. Sent %d this iteration, %d so far, out of %hd.",
+                packet->mType, result, valsent, packet->mPacketSize);
+            return false;
+        }
+
+        valsent += result;
     }
 
     return true;
@@ -238,23 +248,16 @@ bool SocketClient::recv() {
         return false;
     }
 
-    int headerSize = sizeof(Packet);
-    Packet header;
-    u8* headerBuf = reinterpret_cast<u8*>(&header);
-    int valread = 0;
-
-    // just for sanity
-    memset(headerBuf, 0, sizeof(Packet));
+    u8 headerBuf[sHeaderSize];
+    s32 valread = 0;
 
     // read only the size of a header
-    while (valread < headerSize) {
-        int result = socket::Recv(mSockFd, headerBuf + valread, headerSize - valread, mSockFlags);
+    while (valread < sHeaderSize) {
+        s32 result = socket::Recv(mSockFd, headerBuf + valread, sHeaderSize - valread, mSockFlags);
 
         mSockErrno = socket::GetLastErrno();
 
-        if (result > 0) {
-            valread += result;
-        } else {
+        if (result <= 0) {
             if (mSockErrno == EAGAIN) {
                 return true;
             } else {
@@ -262,65 +265,70 @@ bool SocketClient::recv() {
                 return false;
             }
         }
+
+        valread += result;
     }
 
-    if (valread > 0) {
-        int fullSize = header.mPacketSize + sizeof(Packet);
+    std::vector<u8> packetData;
+    packetData.insert(packetData.end(), headerBuf, headerBuf + sHeaderSize);
 
-        if (header.mType > PacketType::UNKNOWN && header.mType < PacketType::End && fullSize <= MAXPACKSIZE &&
-            fullSize > 0 && valread == sizeof(Packet)) {
-            if (header.mType != PLAYERINF && header.mType != HACKCAPINF) {
-                char msg[0x50] = "";
-                int len = sprintf(msg, "Received packet (from %02X%02X):", header.mUserID.data[0],
-                                  header.mUserID.data[1]);
-                len += sprintf(msg + len, " Size: %d", header.mPacketSize);
-                len += sprintf(msg + len, " Type: %d", header.mType);
+    PacketHeader header;
+    header.deserialize(packetData);
 
-                if (packetNames[header.mType])
-                    len += sprintf(msg + len, " Type String: %s", packetNames[header.mType]);
-                msg[len] = '\0';
-                hk::diag::logLine("%s", msg);
-            }
-
-            // char* packetBuf = (char*)gHeap->alloc(fullSize);
-            u8* packetBuf = new (gHeap) u8[fullSize];
-            if (packetBuf) {
-                memcpy(packetBuf, headerBuf, sizeof(Packet));
-                while (valread < fullSize) {
-                    int result =
-                        nn::socket::Recv(mSockFd, packetBuf + valread, fullSize - valread, mSockFlags);
-
-                    mSockErrno = socket::GetLastErrno();
-
-                    if (result > 0) {
-                        valread += result;
-                    } else {
-                        // gHeap->free(packetBuf);
-                        delete[] packetBuf;
-                        hk::diag::logLine("Packet Read Failed! Value: %d\nPacket Size: %d\nPacket Type: %s",
-                                          result, header.mPacketSize, packetNames[header.mType]);
-                        return false;
-                    }
-                }
-
-                Packet* packet = reinterpret_cast<Packet*>(packetBuf);
-
-                if (!mRecvQueue.push((uintptr_t)packet, sead::MessageQueue::BlockType::NonBlocking))
-                    // gHeap->free(packetBuf);
-                    delete[] packetBuf;
-            }
-        } else {
-            hk::diag::logLine(
-                "Failed to aquire valid data! Packet Type: %d Full Packet Size %d valread size: %d",
-                header.mType, fullSize, valread);
-        }
-
+    // taginf is unused in SR so just ignore
+    if (header.mType == TAGINF)
         return true;
-    } else {  // if we error'd, close the socket
-        hk::diag::logLine("valread was zero! Disconnecting.");
-        mSockErrno = socket::GetLastErrno();
+
+    if (header.mIsFail) {
+        hk::diag::logLine("The header failed to deserialize properly.");
         return false;
     }
+
+    if (header.mType != PLAYERINF && header.mType != HACKCAPINF) {
+        hk::diag::logLine("Received packet (from %lu%lu): Size: %hd Type: %hd%s%s",
+                          header.mUserID.m_Storage[0], header.mUserID.m_Storage[1], header.mPacketSize,
+                          header.mType, packetNames[header.mType] ? " Type String: " : "",
+                          packetNames[header.mType] ? packetNames[header.mType] : "");
+    }
+
+    u8 packetBuf[header.mPacketSize];
+
+    valread = 0;
+
+    while (valread < header.mPacketSize) {
+        s32 result = nn::socket::Recv(mSockFd, packetBuf + valread, header.mPacketSize - valread, mSockFlags);
+
+        mSockErrno = socket::GetLastErrno();
+
+        if (result <= 0) {
+            hk::diag::logLine("Packet Read Failed! Value: %d Packet Size: %d Packet Type: %s", result,
+                              header.mPacketSize, packetNames[header.mType]);
+            return false;
+        }
+
+        valread += result;
+    }
+
+    packetData.insert(packetData.end(), packetBuf, packetBuf + header.mPacketSize);
+
+    auto packet = PacketFactory::create(header.mType);
+
+    if (packet)
+        packet->deserialize(packetData);
+    else {
+        hk::diag::logLine("Factory couldn't produce packet of type %d", header.mType);
+        return false;
+    }
+
+    if (packet->mIsFail) {
+        hk::diag::logLine("The packet failed to deserialize properly.");
+        return false;
+    }
+
+    s64 ptr = reinterpret_cast<s64>(packet.release());
+    mRecvQueue.push(ptr, sead::MessageQueue::BlockType::NonBlocking);
+
+    return true;
 }
 
 void SocketClient::closeSocket() {
@@ -337,7 +345,7 @@ void SocketClient::closeSocket() {
             break;
 
         os::YieldThread();
-        os::SleepThread(TimeSpan::FromNanoSeconds(100_ms));
+        os::SleepThread(TimeSpan::FromMilliSeconds(100));
     }
 
     for (fails = 0; fails <= 20; fails++) {
@@ -348,7 +356,7 @@ void SocketClient::closeSocket() {
             break;
 
         os::YieldThread();
-        os::SleepThread(TimeSpan::FromNanoSeconds(100_ms));
+        os::SleepThread(TimeSpan::FromMilliSeconds(100));
     }
 }
 
@@ -387,8 +395,7 @@ void SocketClient::sendFunc() {
     hk::diag::logLine("Sending packet failed!");
     hk::diag::logLine("Ending Send Thread.");
 
-    if (mState != RESET && mState != RECONNECT)
-        mState = RESET;
+    signalReset();
 }
 
 void SocketClient::recvFunc() {
@@ -407,78 +414,35 @@ void SocketClient::recvFunc() {
     hk::diag::logLine("Receiving Packet Failed!");
     hk::diag::logLine("Ending Recv Thread.");
 
-    if (mState != RESET && mState != RECONNECT)
-        mState = RESET;
+    signalReset();
 }
 
-void SocketClient::deletePacketAfterSend(Packet* packet) {
-    if (!packet)
-        return;
+bool SocketClient::queuePacket(std::unique_ptr<Packet> packet) {
+    if (mSockState == SockState::CONNECTED) {
+        s64 ptr = reinterpret_cast<s64>(packet.release());
+        mSendQueue.push(ptr, sead::MessageQueue::BlockType::NonBlocking);
 
-    switch (packet->mType) {
-    case PacketType::PLAYERINF:
-        delete static_cast<PlayerInf*>(packet);
-        break;
-    case PacketType::HACKCAPINF:
-        delete static_cast<HackCapInf*>(packet);
-        break;
-    case PacketType::GAMEINF:
-        delete static_cast<GameInf*>(packet);
-        break;
-    case PacketType::PLAYERCON:
-        delete static_cast<PlayerConnect*>(packet);
-        break;
-    case PacketType::PLAYERDC:
-        delete static_cast<PlayerDC*>(packet);
-        break;
-    case PacketType::COSTUMEINF:
-        delete static_cast<CostumeInf*>(packet);
-        break;
-    case PacketType::SHINECOLL:
-        delete static_cast<ShineCollect*>(packet);
-        break;
-    case PacketType::CAPTUREINF:
-        delete static_cast<CaptureInf*>(packet);
-        break;
-    case PacketType::COINCOLLECTCOLL:
-        delete static_cast<CoinCollectCollect*>(packet);
-        break;
-    case PacketType::CHECKPOINTGET:
-        delete static_cast<CheckpointGet*>(packet);
-        break;
-    case PacketType::MOONROCKHIT:
-        delete static_cast<MoonRockHit*>(packet);
-        break;
-    case PacketType::GAMESTART:
-        delete packet;
-        break;
-    default:
-        hk::diag::logLine("WARNING: Attempted to delete invalid packet type: %d!", packet->mType);
-        break;
+        return true;
     }
-}
 
-bool SocketClient::queuePacket(Packet* packet) {
-    if (mSockState == SockState::CONNECTED)
-        if (mSendQueue.push((uintptr_t)packet, sead::MessageQueue::BlockType::NonBlocking))
-            return true;
-
-    deletePacketAfterSend(packet);
     return false;
 }
 
 bool SocketClient::trySendQueue() {
-    Packet* curPacket = (Packet*)mSendQueue.pop(sead::MessageQueue::BlockType::Blocking);
+    Packet* ptr = reinterpret_cast<Packet*>(mSendQueue.pop(sead::MessageQueue::BlockType::Blocking));
+    if (!ptr) {
+        hk::diag::logLine("SocketClient::trySendQueue: packet was nullptr");
+        return false;
+    }
 
-    bool successful = send(curPacket);
-
-    deletePacketAfterSend(curPacket);
-
-    return successful;
+    std::unique_ptr<Packet> packet(ptr);
+    return send(std::move(packet));
 }
 
-Packet* SocketClient::tryGetPacket() {
-    return mSockState == SockState::CONNECTED ?
-               (Packet*)mRecvQueue.pop(sead::MessageQueue::BlockType::Blocking) :
-               nullptr;
+std::unique_ptr<Packet> SocketClient::tryGetPacket() {
+    if (mSockState != SockState::CONNECTED)
+        return nullptr;
+
+    return std::unique_ptr<Packet>{
+        reinterpret_cast<Packet*>(mRecvQueue.pop(sead::MessageQueue::BlockType::Blocking))};
 }
