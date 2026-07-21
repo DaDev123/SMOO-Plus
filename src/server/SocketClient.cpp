@@ -255,10 +255,6 @@ bool SocketClient::recv() {
     PacketHeader header;
     header.deserialize(packetData);
 
-    // taginf is unused in SR so just ignore
-    if (header.mType == TAGINF)
-        return true;
-
     if (header.mIsFail) {
         hk::diag::logLine("The header failed to deserialize properly.");
         return false;
@@ -276,7 +272,7 @@ bool SocketClient::recv() {
     valread = 0;
 
     while (valread < header.mPacketSize) {
-        s32 result = nn::socket::Recv(mSockFd, packetBuf + valread, header.mPacketSize - valread, mSockFlags);
+        s32 result = socket::Recv(mSockFd, packetBuf + valread, header.mPacketSize - valread, mSockFlags);
 
         mSockErrno = socket::GetLastErrno();
 
@@ -288,6 +284,10 @@ bool SocketClient::recv() {
 
         valread += result;
     }
+
+    // taginf is unused in SR so just ignore
+    if (header.mType == TAGINF)
+        return true;
 
     packetData.insert(packetData.end(), packetBuf, packetBuf + header.mPacketSize);
 
