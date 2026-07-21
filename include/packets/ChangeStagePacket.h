@@ -7,7 +7,7 @@
 struct ChangeStagePacket : public Packet {
     PacketType getType() override { return PacketType::CHANGESTAGE; }
 
-    std::vector<u8> serialize() override {
+    PacketVector serialize() override {
         PacketWriter writer(this);
 
         writer.writeString(changeStage);
@@ -19,7 +19,7 @@ struct ChangeStagePacket : public Packet {
         return writer.finalize();
     }
 
-    void deserialize(const std::vector<u8>& data) override {
+    void deserialize(const PacketVector& data) override {
         PacketReader reader(this, data.data(), data.size());
 
         reader.readString(changeStage);

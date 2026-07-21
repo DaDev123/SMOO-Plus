@@ -2,7 +2,6 @@
 
 #include "hk/diag/diag.h"
 
-#include "nn/nifm.h"
 #include "nn/os.h"
 #include "nn/socket.h"
 #include "vapours/results/results_common.hpp"
@@ -28,6 +27,8 @@
 using namespace nn;
 
 SocketClient::SocketClient() : SocketBase("SocketClient") {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
+
     mRecvQueue.allocate(100, gHeap);
     mSendQueue.allocate(100, gHeap);
 
@@ -197,7 +198,7 @@ bool SocketClient::send(std::unique_ptr<Packet> packet) {
         return false;
     }
 
-    std::vector<u8> packetData = packet->serialize();
+    PacketVector packetData = packet->serialize();
     s32 valsent = 0;
 
     if (packet->mType != PLAYERINF && packet->mType != HACKCAPINF)
@@ -249,7 +250,7 @@ bool SocketClient::recv() {
         valread += result;
     }
 
-    std::vector<u8> packetData;
+    PacketVector packetData;
     packetData.insert(packetData.end(), headerBuf, headerBuf + sHeaderSize);
 
     PacketHeader header;

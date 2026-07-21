@@ -11,6 +11,8 @@
 #include <cstring>
 #include <vector>
 
+#include "main.hpp"
+
 #define PACKBUFSIZE 0x30
 #define COSTUMEBUFSIZE 0x20
 #define MESSAGESIZE 0x4B
@@ -53,11 +55,40 @@ enum ConnectionTypes { INIT, RECONNECT };
 // uid part 1 + uid part 2 + packet type + packet size
 static constexpr s32 sHeaderSize = sizeof(u64) + sizeof(u64) + sizeof(PacketType) + sizeof(short);
 
+template <typename T>
+class PacketAllocator {
+public:
+    using value_type = T;
+
+    PacketAllocator() noexcept = default;
+
+    template <typename U>
+    PacketAllocator(const PacketAllocator<U>& other) noexcept {}
+
+    T* allocate(std::size_t n) {
+        if (n == 0)
+            return nullptr;
+        void* ptr = gHeap->alloc(n * sizeof(T));
+        if (!ptr)
+            HK_ABORT("Crashed while allocating for a vector!");
+        return static_cast<T*>(ptr);
+    }
+
+    void deallocate(T* p, std::size_t n) noexcept {
+        if (p)
+            gHeap->free(p);
+    }
+
+    bool operator==(const PacketAllocator& other) const noexcept = default;
+};
+
+using PacketVector = std::vector<u8, PacketAllocator<u8>>;
+
 struct Packet {
     virtual ~Packet() = default;
     virtual PacketType getType() = 0;
-    virtual std::vector<u8> serialize() = 0;
-    virtual void deserialize(const std::vector<u8>& data) = 0;
+    virtual PacketVector serialize() = 0;
+    virtual void deserialize(const PacketVector& data) = 0;
 
     nn::account::Uid mUserID;  // User ID of the packet owner
     PacketType mType = PacketType::UNKNOWN;
@@ -95,7 +126,7 @@ public:
             mData.insert(mData.end(), L - len, 0);
     }
 
-    std::vector<u8> finalize() {
+    PacketVector finalize() {
         u16 sizeNoHeader = mData.size();
         mPacket->mPacketSize = sizeNoHeader;
         writeToFullData(sizeNoHeader);
@@ -105,8 +136,8 @@ public:
 
 private:
     Packet* mPacket = nullptr;
-    std::vector<u8> mFullData;
-    std::vector<u8> mData;
+    PacketVector mFullData;
+    PacketVector mData;
     size mSizeOffset = 0;
 };
 

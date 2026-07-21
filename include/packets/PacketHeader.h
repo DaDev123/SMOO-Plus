@@ -5,9 +5,9 @@
 struct PacketHeader : public Packet {
     PacketType getType() override { return PacketType::UNKNOWN; }
 
-    std::vector<u8> serialize() override { return std::vector<u8>(); }
+    PacketVector serialize() override { return PacketVector(); }
 
-    void deserialize(const std::vector<u8>& data) override {
+    void deserialize(const PacketVector& data) override {
         PacketReader reader(this, data.data(), data.size());
 
         reader.finalize();
