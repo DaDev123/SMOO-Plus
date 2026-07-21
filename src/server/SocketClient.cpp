@@ -75,26 +75,6 @@ void SocketClient::init(const char* ip, u16 port) {
 bool SocketClient::exeInit() {
     hk::diag::logLine("socket client init");
 
-    // emulators (ryujinx) make this return false always, so skip it during init
-    s32 fails;
-#ifndef EMU
-    // TODO: this has been causing issues so maybe reomove
-    for (fails = 0; fails <= 20; fails++) {
-        if (fails == 20) {
-            mSockState = SockState::NONET;
-            mSockErrno = socket::GetLastErrno();
-
-            mState = WAIT;
-            return false;
-        }
-
-        if (nifm::IsNetworkAvailable())
-            break;
-
-        os::YieldThread();
-        os::SleepThread(TimeSpan::FromMilliSeconds(500));
-    }
-#endif
     in_addr hostAddress = {0};
     sockaddr_in serverAddress = {0};
 
@@ -112,7 +92,7 @@ bool SocketClient::exeInit() {
     serverAddress.sin_port = socket::InetHtons(mPort);
     serverAddress.sin_family = socket::InetHtons(AF_INET);
 
-    for (fails = 0; fails <= 20; fails++) {
+    for (s32 fails = 0; fails <= 20; fails++) {
         if (fails == 20) {
             hk::diag::logLine("Socket Unavailable.");
             mSockErrno = socket::GetLastErrno();
