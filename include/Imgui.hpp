@@ -2,15 +2,16 @@
 
 #include "hk/gfx/ImGuiBackendNvn.h"
 
-#include <cstring>
+#include "sead/heap/seadHeap.h"
 
 #include "fsHelper.h"
 #include "imgui.h"
-#include "main.hpp"
 
 namespace imgui {
 
-static void setupFont() {
+inline sead::Heap* ImHeap = nullptr;
+
+inline void setupFont() {
     FsHelper::LoadData loadData = {.path = "content:/DebugData/Font/ChironHeiHK-Regular.ttf"};
     FsHelper::loadFileFromPath(loadData);
 
@@ -38,12 +39,12 @@ static void setupFont() {
     delete[] loadData.buffer;
 }
 
-static void setup() {
+inline void setup() {
     hk::gfx::ImGuiBackendNvn* imgui = hk::gfx::ImGuiBackendNvn::instance();
 
-    imgui->setAllocator({[](size allocSize, size alignment) { return gHeap->alloc(allocSize, alignment); },
-                         [](void* ptr) { gHeap->free(ptr); }});
-
+    imgui->setAllocator({[](size allocSize, size alignment) { return ImHeap->alloc(allocSize, alignment); },
+                         [](void* ptr) { ImHeap->free(ptr); }});
+    
     imgui->tryInitialize();
     setupFont();
 }

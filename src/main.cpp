@@ -51,6 +51,7 @@
 
 #include "actors/PuppetActor.h"
 #include "imgui.h"
+#include "Imgui.hpp"
 #include "layouts/PlayerEventLog.h"
 #include "puppets/PuppetInfo.h"
 #include "server/Client.hpp"
@@ -262,7 +263,8 @@ void drawMain(al::Sequence* curSequence) {
                     ImGui::ProgressBar(percentUsed / 100, ImVec2(-1, 0), buf);
                 };
 
-                displayHeapInfo(gHeap);
+                displayHeapInfo(gHeap, true);
+                displayHeapInfo(imgui::ImHeap);
                 displayHeapInfo(al::getStationedHeap());
                 displayHeapInfo(al::getSequenceHeap());
                 displayHeapInfo(al::getSceneHeap());
