@@ -199,20 +199,20 @@ bool SocketClient::send(std::unique_ptr<Packet> packet) {
     }
 
     PacketVector packetData = packet->serialize();
-    s32 valsent = 0;
+    size valsent = 0;
 
     if (packet->mType != PLAYERINF && packet->mType != HACKCAPINF)
         hk::diag::logLine("Sending packet: %s", packetNames[packet->mType]);
 
     while (valsent < packetData.size()) {
-        s32 result = socket::Send(mSockFd, packetData.data(), packetData.size() - valsent, 0);
+        s32 result = socket::Send(mSockFd, packetData.data() + valsent, packetData.size() - valsent, 0);
 
         mSockErrno = socket::GetLastErrno();
 
         if (result <= 0) {
             hk::diag::logLine(
-                "Packet send failed! Packet type is %hd. Sent %d this iteration, %d so far, out of %hd.",
-                packet->mType, result, valsent, packet->mPacketSize);
+                "Packet send failed! Packet type is %hd. Sent %d this iteration, %zu so far, out of %zu.",
+                packet->mType, result, valsent, packetData.size());
             return false;
         }
 
@@ -229,35 +229,48 @@ bool SocketClient::recv() {
         return false;
     }
 
-    u8 headerBuf[sHeaderSize];
-    s32 valread = 0;
+    PacketVector packetData(sHeaderSize);
+    size valread = 0;
+    s32 retries = 0;
 
     // read only the size of a header
     while (valread < sHeaderSize) {
-        s32 result = socket::Recv(mSockFd, headerBuf + valread, sHeaderSize - valread, mSockFlags);
+        s32 result = socket::Recv(mSockFd, packetData.data() + valread, sHeaderSize - valread, mSockFlags);
 
         mSockErrno = socket::GetLastErrno();
 
         if (result <= 0) {
-            if (mSockErrno == EAGAIN) {
-                return true;
-            } else {
-                hk::diag::logLine("Header Read Failed! Value: %d Total Read: %d", result, valread);
-                return false;
+            if (mSockErrno == EAGAIN || mSockErrno == EWOULDBLOCK) {
+                if (valread == 0)
+                    return true;
+
+                if (++retries > 100) {
+                    hk::diag::logLine("Timed out trying to get remaining packet header data!");
+                    return false;
+                }
+
+                nn::os::YieldThread();
+                nn::os::SleepThread(nn::TimeSpan::FromMilliSeconds(10));
+                continue;
             }
+
+            hk::diag::logLine("Header Read Failed! Value: %d Total Read: %zu", result, valread);
+            return false;
         }
 
         valread += result;
     }
-
-    PacketVector packetData;
-    packetData.insert(packetData.end(), headerBuf, headerBuf + sHeaderSize);
 
     PacketHeader header;
     header.deserialize(packetData);
 
     if (header.mIsFail) {
         hk::diag::logLine("The header failed to deserialize properly.");
+        return false;
+    }
+
+    if (header.mPacketSize > MAXPACKSIZE) {
+        hk::diag::logLine("Packet is too big! Size: %hd", header.mPacketSize);
         return false;
     }
 
@@ -268,18 +281,29 @@ bool SocketClient::recv() {
                           packetNames[header.mType] ? packetNames[header.mType] : "");
     }
 
-    u8 packetBuf[header.mPacketSize];
-
+    packetData.resize(sHeaderSize + header.mPacketSize);
     valread = 0;
+    retries = 0;
 
     while (valread < header.mPacketSize) {
-        s32 result = socket::Recv(mSockFd, packetBuf + valread, header.mPacketSize - valread, mSockFlags);
+        s32 result = socket::Recv(mSockFd, packetData.data() + sHeaderSize + valread,
+                                  header.mPacketSize - valread, mSockFlags);
 
         mSockErrno = socket::GetLastErrno();
 
         if (result <= 0) {
-            hk::diag::logLine("Packet Read Failed! Value: %d Packet Size: %d Packet Type: %s", result,
-                              header.mPacketSize, packetNames[header.mType]);
+            if (mSockErrno == EAGAIN || mSockErrno == EWOULDBLOCK) {
+                if (++retries > 100) {
+                    hk::diag::logLine("Timed out trying to get remaining packet body data!");
+                    return false;
+                }
+
+                nn::os::YieldThread();
+                nn::os::SleepThread(nn::TimeSpan::FromMilliSeconds(10));
+                continue;
+            }
+
+            hk::diag::logLine("Body Read Failed! Value: %d Total Read: %zu", result, valread);
             return false;
         }
 
@@ -289,8 +313,6 @@ bool SocketClient::recv() {
     // taginf is unused in SR so just ignore
     if (header.mType == TAGINF)
         return true;
-
-    packetData.insert(packetData.end(), packetBuf, packetBuf + header.mPacketSize);
 
     auto packet = PacketFactory::create(header.mType);
 
