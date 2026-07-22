@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/sys/cmake/toolchain.cmake")
-project(SMOO-Plus-Speedrun VERSION 1.0 LANGUAGES ASM C CXX)
+project(${PROJNAME} VERSION 1.0 LANGUAGES ASM C CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(config/config.cmake)
