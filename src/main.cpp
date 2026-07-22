@@ -67,7 +67,7 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
         if (!isYukimaru) {
             Client::sendHackCapInfPacket(((PlayerActorHakoniwa*)playerBase)->mHackCap);
 
-            Client::sendCaptureInfPacket((PlayerActorHakoniwa*)playerBase);
+            // Client::sendCaptureInfPacket((PlayerActorHakoniwa*)playerBase);
         }
 
         pInfSendTimer = 0;
@@ -166,7 +166,7 @@ void drawMain(al::Sequence* curSequence) {
                     ImGui::Text("Scenario: %u\n", client->getLastGameInfPacket()->scenarioNo);
                     ImGui::Text("Costume: H: %s B: %s\n", client->getLastCostumeInfPacket()->capModel.cstr(),
                                 client->getLastCostumeInfPacket()->bodyModel.cstr());
-                    ImGui::Text("Capture: %s\n", client->getLastCaptureInfPacket()->hackName.cstr());
+                    // ImGui::Text("Capture: %s\n", client->getLastCaptureInfPacket()->hackName.cstr());
 
                     PlayerHackKeeper* hackKeeper = playerBase->getPlayerHackKeeper();
                     if (hackKeeper) {

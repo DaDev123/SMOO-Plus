@@ -132,7 +132,7 @@ public:
     static void sendPlayerInfPacket(const PlayerActorBase* player, bool isYukimaru);
     static void sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolderAccessor holder);
     static void sendGameInfPacket(GameDataHolderAccessor holder);
-    static void sendCaptureInfPacket(const PlayerActorHakoniwa* player);
+    // static void sendCaptureInfPacket(const PlayerActorHakoniwa* player);
     static void sendCostumeInfPacket(const char* body, const char* cap);
     static void sendShineCollectPacket(int shineId);
     static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
@@ -226,7 +226,7 @@ public:
     PlayerInf* getLastPlayerInfPacket() { return &this->lastPlayerInfPacket; }
     GameInf* getLastGameInfPacket() { return &this->lastGameInfPacket; }
     CostumeInf* getLastCostumeInfPacket() { return &this->lastCostumeInfPacket; }
-    CaptureInf* getLastCaptureInfPacket() { return &this->lastCaptureInfPacket; }
+    // CaptureInf* getLastCaptureInfPacket() { return &this->lastCaptureInfPacket; }
 
     static al::Sequence* getSequence() { return sInstance ? sInstance->mSequence : nullptr; }
 
@@ -248,7 +248,7 @@ private:
     void updateCostumeInfo(CostumeInf* packet);
     void updateShineInfo(ShineCollect* packet);
     void updatePlayerConnect(PlayerConnect* packet);
-    void updateCaptureInfo(CaptureInf* packet);
+    // void updateCaptureInfo(CaptureInf* packet);
     void sendToStage(ChangeStagePacket* packet);
     void disconnectPlayer(PlayerDC* packet);
     void updateCoinCollects(CoinCollectCollect* packet);
@@ -311,7 +311,7 @@ private:
     GameInf lastGameInfPacket = GameInf();
     GameInf emptyGameInfPacket = GameInf();
     CostumeInf lastCostumeInfPacket = CostumeInf();
-    CaptureInf lastCaptureInfPacket = CaptureInf();
+    // CaptureInf lastCaptureInfPacket = CaptureInf();
 
     // ===== UI COMPONENTS =====
     Keyboard* mKeyboard = nullptr;

@@ -668,26 +668,26 @@ void Client::sendCostumeInfPacket(const char* body, const char* cap) {
  * @brief Sends capture info packet.
  * @param player
  */
-void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
+/*void Client::sendCaptureInfPacket(const PlayerActorHakoniwa* player) {
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
     }
 
     if (sInstance->isClientCaptured && !sInstance->isSentCaptureInf) {
-        std::unique_ptr<CaptureInf> packet(new (gHeap) CaptureInf);
+        auto packet = new (gHeap) CaptureInf;
         packet->mUserID = sInstance->mUserID;
         packet->hackName = tryConvertName(player->mHackKeeper->getCurrentHackName());
-        sInstance->mSocket->queuePacket(std::move(packet));
+        sInstance->mSocket->queuePacket(packet);
         sInstance->isSentCaptureInf = true;
     } else if (!sInstance->isClientCaptured && sInstance->isSentCaptureInf) {
-        std::unique_ptr<CaptureInf> packet(new (gHeap) CaptureInf);
+        auto packet = new (gHeap) CaptureInf;
         packet->mUserID = sInstance->mUserID;
         packet->hackName.clear();
-        sInstance->mSocket->queuePacket(std::move(packet));
+        sInstance->mSocket->queuePacket(packet);
         sInstance->isSentCaptureInf = false;
     }
-}
+}*/
 
 /**
  * @brief Sends shine collect packet.
@@ -860,7 +860,7 @@ void Client::updateHackCapInfo(HackCapInf* packet) {
  * @brief Updates capture info from packet.
  * @param packet
  */
-void Client::updateCaptureInfo(CaptureInf* packet) {
+/*void Client::updateCaptureInfo(CaptureInf* packet) {
     if (!packet)
         return;
 
@@ -873,7 +873,7 @@ void Client::updateCaptureInfo(CaptureInf* packet) {
 
     if (curInfo->isCaptured)
         curInfo->curHack = packet->hackName;
-}
+}*/
 
 /**
  * @brief Updates costume info from packet.
