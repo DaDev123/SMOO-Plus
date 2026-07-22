@@ -44,6 +44,8 @@ for file in source_files:
             line = data[i].strip()
             hasIWYU = False
             continue
+        if line == "sys/socket.h":  # exception cuz stupid
+            continue
 
         header_path = resolve_header(line.split("/")[-1])
         headerFile = (
