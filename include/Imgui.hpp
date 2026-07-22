@@ -44,7 +44,7 @@ inline void setup() {
 
     imgui->setAllocator({[](size allocSize, size alignment) { return ImHeap->alloc(allocSize, alignment); },
                          [](void* ptr) { ImHeap->free(ptr); }});
-    
+
     imgui->tryInitialize();
     setupFont();
 }

@@ -127,7 +127,7 @@ HkTrampoline createHeap = [](TrampolineStatic(), al::SystemKit* systemKit, sead:
     al::addNamedHeap(gHeap, "SMOOPlusHeap");
 
     imgui::ImHeap = sead::ExpHeap::create(MB(1.5), "ImHeap", al::getStationedHeap());
-    al::addNamedHeap(gHeap, "ImHeap");
+    al::addNamedHeap(imgui::ImHeap, "ImHeap");
 };
 
 void installInitHooks() {
