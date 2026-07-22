@@ -22,49 +22,49 @@
 #include "packets/ShineCollect.h"
 
 namespace PacketFactory {
-inline std::unique_ptr<Packet> create(PacketType type) {
+inline Packet* create(PacketType type) {
     switch (type) {
     case PacketType::CLIENTINIT:
-        return std::unique_ptr<Packet>{new (gHeap) InitPacket};
+        return new (gHeap) InitPacket;
 
     case PacketType::PLAYERINF:
-        return std::unique_ptr<Packet>{new (gHeap) PlayerInf};
+        return new (gHeap) PlayerInf;
 
     case PacketType::HACKCAPINF:
-        return std::unique_ptr<Packet>{new (gHeap) HackCapInf};
+        return new (gHeap) HackCapInf;
 
     case PacketType::GAMEINF:
-        return std::unique_ptr<Packet>{new (gHeap) GameInf};
+        return new (gHeap) GameInf;
 
     case PacketType::PLAYERCON:
-        return std::unique_ptr<Packet>{new (gHeap) PlayerConnect};
+        return new (gHeap) PlayerConnect;
 
     case PacketType::PLAYERDC:
-        return std::unique_ptr<Packet>{new (gHeap) PlayerDC};
+        return new (gHeap) PlayerDC;
 
     case PacketType::COSTUMEINF:
-        return std::unique_ptr<Packet>{new (gHeap) CostumeInf};
+        return new (gHeap) CostumeInf;
 
     case PacketType::SHINECOLL:
-        return std::unique_ptr<Packet>{new (gHeap) ShineCollect};
+        return new (gHeap) ShineCollect;
 
     case PacketType::CAPTUREINF:
-        return std::unique_ptr<Packet>{new (gHeap) CaptureInf};
+        return new (gHeap) CaptureInf;
 
     case PacketType::CHANGESTAGE:
-        return std::unique_ptr<Packet>{new (gHeap) ChangeStagePacket};
+        return new (gHeap) ChangeStagePacket;
 
     case PacketType::COINCOLLECTCOLL:
-        return std::unique_ptr<Packet>{new (gHeap) CoinCollectCollect};
+        return new (gHeap) CoinCollectCollect;
 
     case PacketType::CHECKPOINTGET:
-        return std::unique_ptr<Packet>{new (gHeap) CheckpointGet};
+        return new (gHeap) CheckpointGet;
 
     case PacketType::MOONROCKHIT:
-        return std::unique_ptr<Packet>{new (gHeap) MoonRockHit};
+        return new (gHeap) MoonRockHit;
 
     case PacketType::GAMESTART:
-        return std::unique_ptr<Packet>{new (gHeap) GameStart};
+        return new (gHeap) GameStart;
 
     default:
         hk::diag::logLine("Invalid packet type in factory. Dropping packet.");

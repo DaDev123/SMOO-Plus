@@ -143,7 +143,7 @@ bool SocketClient::exeInit() {
 
     hk::diag::logLine("Socket fd: %d", mSockFd);
 
-    auto initPacket = std::unique_ptr<PlayerConnect>{new (gHeap) PlayerConnect};
+    auto initPacket = new (gHeap) PlayerConnect;
 
     initPacket->mUserID = Client::getClientId();
     initPacket->clientName = Client::getUsername();
@@ -151,7 +151,7 @@ bool SocketClient::exeInit() {
     initPacket->conType = mIsFirstConnect ? ConnectionTypes::INIT : ConnectionTypes::RECONNECT;
     mIsFirstConnect = false;
 
-    if (send(std::move(initPacket))) {
+    if (send(initPacket)) {
         mState = WAIT;
         startThreads();
         return true;
@@ -191,10 +191,12 @@ void SocketClient::startThreads() {
         mSendThread->start();
 }
 
-bool SocketClient::send(std::unique_ptr<Packet> packet) {
-    if (mSockState != SockState::CONNECTED || packet == nullptr) {
+bool SocketClient::send(Packet* packet) {
+    if (mSockState != SockState::CONNECTED) {
         hk::diag::logLine("Unable To Send! Socket Not Connected.");
         mSockErrno = socket::GetLastErrno();
+
+        delete packet;
         return false;
     }
 
@@ -213,12 +215,15 @@ bool SocketClient::send(std::unique_ptr<Packet> packet) {
             hk::diag::logLine(
                 "Packet send failed! Packet type is %hd. Sent %d this iteration, %zu so far, out of %zu.",
                 packet->mType, result, valsent, packetData.size());
+
+            delete packet;
             return false;
         }
 
         valsent += result;
     }
 
+    delete packet;
     return true;
 }
 
@@ -310,8 +315,8 @@ bool SocketClient::recv() {
         valread += result;
     }
 
-    // taginf is unused in SR so just ignore
-    if (header.mType == TAGINF)
+    // unused in SR so just ignore
+    if (header.mType == TAGINF || header.mType == CAPTUREINF)
         return true;
 
     auto packet = PacketFactory::create(header.mType);
@@ -325,10 +330,12 @@ bool SocketClient::recv() {
 
     if (packet->mIsFail) {
         hk::diag::logLine("The packet failed to deserialize properly.");
+
+        delete packet;
         return false;
     }
 
-    s64 ptr = reinterpret_cast<s64>(packet.release());
+    s64 ptr = reinterpret_cast<s64>(packet);
     mRecvQueue.push(ptr, sead::MessageQueue::BlockType::NonBlocking);
 
     return true;
@@ -420,9 +427,9 @@ void SocketClient::recvFunc() {
     signalReset();
 }
 
-bool SocketClient::queuePacket(std::unique_ptr<Packet> packet) {
+bool SocketClient::queuePacket(Packet* packet) {
     if (mSockState == SockState::CONNECTED) {
-        s64 ptr = reinterpret_cast<s64>(packet.release());
+        s64 ptr = reinterpret_cast<s64>(packet);
         mSendQueue.push(ptr, sead::MessageQueue::BlockType::NonBlocking);
 
         return true;
@@ -432,20 +439,18 @@ bool SocketClient::queuePacket(std::unique_ptr<Packet> packet) {
 }
 
 bool SocketClient::trySendQueue() {
-    Packet* ptr = reinterpret_cast<Packet*>(mSendQueue.pop(sead::MessageQueue::BlockType::Blocking));
-    if (!ptr) {
+    Packet* packet = reinterpret_cast<Packet*>(mSendQueue.pop(sead::MessageQueue::BlockType::Blocking));
+    if (!packet) {
         hk::diag::logLine("SocketClient::trySendQueue: packet was nullptr");
         return false;
     }
 
-    std::unique_ptr<Packet> packet(ptr);
-    return send(std::move(packet));
+    return send(packet);
 }
 
-std::unique_ptr<Packet> SocketClient::tryGetPacket() {
+Packet* SocketClient::tryGetPacket() {
     if (mSockState != SockState::CONNECTED)
         return nullptr;
 
-    return std::unique_ptr<Packet>{
-        reinterpret_cast<Packet*>(mRecvQueue.pop(sead::MessageQueue::BlockType::Blocking))};
+    return reinterpret_cast<Packet*>(mRecvQueue.pop(sead::MessageQueue::BlockType::Blocking));
 }

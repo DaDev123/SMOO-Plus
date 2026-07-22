@@ -23,14 +23,14 @@ public:
 
     void init(const char* ip, u16 port);
     void closeSocket();
-    std::unique_ptr<Packet> tryGetPacket();
+    Packet* tryGetPacket();
 
     void startThreads();
 
-    bool send(std::unique_ptr<Packet> packet);
+    bool send(Packet* packet);
     bool recv();
 
-    bool queuePacket(std::unique_ptr<Packet> packet);
+    bool queuePacket(Packet* packet);
     bool trySendQueue();
 
     void sendFunc();
