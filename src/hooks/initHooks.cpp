@@ -8,6 +8,7 @@
 #include "sead/filedevice/nin/seadNinFileDeviceBaseNin.h"
 #include "sead/filedevice/seadFileDeviceMgr.h"
 #include "sead/heap/seadExpHeap.h"
+#include "sead/heap/seadHeap.h"
 #include "sead/heap/seadHeapMgr.h"
 
 #include "al/Library/Memory/HeapUtil.h"
@@ -124,10 +125,12 @@ HkTrampoline mountSdCardHook = [](TrampolineStatic(), sead::FileDeviceMgr* fileD
 HkTrampoline createHeap = [](TrampolineStatic(), al::SystemKit* systemKit, sead::Heap* rootHeap) -> void {
     orig(systemKit, rootHeap);
 
-    gHeap = sead::ExpHeap::create(MB(0.5), "SMOOPlusHeap", al::getStationedHeap());
+    gHeap = sead::ExpHeap::create(MB(0.5), "SMOOPlusHeap", al::getStationedHeap(), sizeof(void*),
+                                  sead::Heap::cHeapDirection_Forward, true);
     al::addNamedHeap(gHeap, "SMOOPlusHeap");
 
-    imgui::ImHeap = sead::ExpHeap::create(MB(1.5), "ImHeap", al::getStationedHeap());
+    imgui::ImHeap = sead::ExpHeap::create(MB(1.5), "ImHeap", al::getStationedHeap(), sizeof(void*),
+                                          sead::Heap::cHeapDirection_Forward, true);
     al::addNamedHeap(imgui::ImHeap, "ImHeap");
 };
 
