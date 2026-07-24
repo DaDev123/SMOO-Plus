@@ -32,10 +32,10 @@ void PuppetHackActor::init(al::ActorInitInfo const& initInfo) {
 
     al::invalidateHitSensors(this);
 
-    // al::setClippingInfo(this, 999999999.0f, 0);
-    // al::setClippingNearDistance(this, 999999999.0f);
-    // al::validateClipping(this);
-    al::invalidateClipping(this);
+    al::setClippingInfo(this, 999999999.0f, 0);
+    al::setClippingNearDistance(this, 999999999.0f);
+    al::validateClipping(this);
+    // al::invalidateClipping(this);
 
     al::offCollide(this);
 

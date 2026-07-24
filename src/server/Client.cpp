@@ -1381,6 +1381,9 @@ void Client::getOneCheckpoint(const char* objId) {
         hk::diag::logLine("updateCheckpoints: GameDataFile null, dropping");
         return;
     }
+    if (!sInstance->mCurStageScene || !gIsSceneAlive) {
+        hk::diag::logLine("updateCheckpoints: no scene or scene not alive, dropping");
+    }
 
     al::PlacementId placeId(objId, nullptr, nullptr);
     UniqObjInfo* info = gdf->customSetCheckpointId(&placeId);

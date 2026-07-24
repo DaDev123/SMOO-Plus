@@ -106,13 +106,13 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
 
     mModelHolder->registerModel(normal2DModel, "Normal2D");
 
-    // al::setClippingInfo(normalModel, 999999999.0f, 0);
-    // al::setClippingNearDistance(normalModel, 999999999.0f);
+    al::setClippingInfo(normalModel, 999999999.0f, 0);
+    al::setClippingNearDistance(normalModel, 999999999.0f);
 
-    // al::setClippingInfo(normal2DModel, 999999999.0f, 0);
-    // al::setClippingNearDistance(normal2DModel, 999999999.0f);
-    al::invalidateClipping(normalModel);
-    al::invalidateClipping(normal2DModel);
+    al::setClippingInfo(normal2DModel, 999999999.0f, 0);
+    al::setClippingNearDistance(normal2DModel, 999999999.0f);
+    // al::invalidateClipping(normalModel);
+    // al::invalidateClipping(normal2DModel);
 
     al::hideSilhouetteModelIfShow(normalModel);
 
@@ -137,8 +137,8 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
     al::addHitSensor(this, initInfo, "Foot", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 1,
                      sead::Vector3f(0.0f, 40.0f, 0.0f));
 
-    // al::validateClipping(normalModel);
-    // al::validateClipping(normal2DModel);
+    al::validateClipping(normalModel);
+    al::validateClipping(normal2DModel);
 }
 
 void PuppetActor::initOnline(PuppetInfo* pupInfo) {
