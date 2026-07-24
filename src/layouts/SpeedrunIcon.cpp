@@ -5,8 +5,8 @@
 #include "al/Library/Nerve/NerveUtil.h"
 
 #include "game/System/GameDataFile.h"
+#include "game/System/GameDataHolderAccessor.h"
 
-#include "helpers.hpp"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
 
@@ -90,8 +90,7 @@ void SpeedrunIcon::updateSpeedrunText() {
 }
 
 void SpeedrunIcon::updateShineCount() {
-    if (getStageScene())
-        al::setPaneStringFormat(
-            this, "ShineCount", "%03d",
-            GameDataHolderAccessor(getStageScene())->getGameDataFile()->getTotalUniqueShineNum());
+    GameDataHolderAccessor acc{};
+    if (acc)
+        al::setPaneStringFormat(this, "ShineCount", "%03d", acc->getGameDataFile()->getTotalUniqueShineNum());
 }

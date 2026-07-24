@@ -61,13 +61,12 @@ PuppetActor::PuppetActor(const char* name) : al::LiveActor(name) {
 
     mPuppetCap = new PuppetCapActor(name);
     mCaptures = new HackModelHolder();
-    mModelHolder = new PlayerModelHolder(3);  // Regular Model, 2D Model, 2D Mini Model
-    // what is a 2d mini model? i feel like we could get rid of that but w/e
+    mModelHolder = new PlayerModelHolder(2);  // Regular Model, 2D Model
 }
 
 PuppetActor::~PuppetActor() {
     delete mCostumeInfo;
-    mInfo = nullptr;
+    mPupInfo = nullptr;
     delete mPuppetCap;
     delete mModelHolder;
     delete mCaptures;
@@ -83,12 +82,12 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
     const char* bodyName = "Mario";
     const char* capName = "Mario";
 
-    if (mInfo) {
-        bodyName = tryGetPuppetBodyName(mInfo);
-        capName = tryGetPuppetCapName(mInfo);
+    if (mPupInfo) {
+        bodyName = tryGetPuppetBodyName(mPupInfo);
+        capName = tryGetPuppetCapName(mPupInfo);
 
         mNameTag =
-            new NameTag(this, al::getLayoutInitInfo(initInfo), 4900.0f, 5000.0f, mInfo->puppetName.cstr());
+            new NameTag(this, al::getLayoutInitInfo(initInfo), 4900.0f, 5000.0f, mPupInfo->puppetName.cstr());
     }
 
     al::LiveActor* normalModel = new al::LiveActor("Normal");
@@ -107,11 +106,13 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
 
     mModelHolder->registerModel(normal2DModel, "Normal2D");
 
-    al::setClippingInfo(normalModel, 999999999.0f, 0);
-    al::setClippingNearDistance(normalModel, 999999999.0f);
+    // al::setClippingInfo(normalModel, 999999999.0f, 0);
+    // al::setClippingNearDistance(normalModel, 999999999.0f);
 
-    al::setClippingInfo(normal2DModel, 999999999.0f, 0);
-    al::setClippingNearDistance(normal2DModel, 999999999.0f);
+    // al::setClippingInfo(normal2DModel, 999999999.0f, 0);
+    // al::setClippingNearDistance(normal2DModel, 999999999.0f);
+    al::invalidateClipping(normalModel);
+    al::invalidateClipping(normal2DModel);
 
     al::hideSilhouetteModelIfShow(normalModel);
 
@@ -136,81 +137,71 @@ void PuppetActor::init(al::ActorInitInfo const& initInfo) {
     al::addHitSensor(this, initInfo, "Foot", static_cast<u32>(al::HitSensorType::Npc), 40.0f, 1,
                      sead::Vector3f(0.0f, 40.0f, 0.0f));
 
-    al::validateClipping(normalModel);
-    al::validateClipping(normal2DModel);
-}
-
-void PuppetActor::initAfterPlacement() {
-    al::LiveActor::initAfterPlacement();
+    // al::validateClipping(normalModel);
+    // al::validateClipping(normal2DModel);
 }
 
 void PuppetActor::initOnline(PuppetInfo* pupInfo) {
-    mInfo = pupInfo;
+    mPupInfo = pupInfo;
 
     mPuppetCap->initOnline(pupInfo);
 }
 
-void PuppetActor::movement() {
-    al::LiveActor::movement();
-}
-
-void PuppetActor::calcAnim() {
-    al::LiveActor::calcAnim();
-}
-
 void PuppetActor::control() {
-    if (mInfo) {
+    if (mPupInfo) {
         al::LiveActor* curModel = getCurrentModel();
 
         // Animation Updating
 
-        if (!al::isActionPlaying(curModel, mInfo->curSubAnimStr.cstr())) {
-            startAction(mInfo->curAnimStr.cstr());
+        if (!al::isActionPlaying(curModel, mPupInfo->curSubAnimStr.cstr())) {
+            startAction(mPupInfo->curAnimStr.cstr());
         } else if (al::isActionEnd(curModel)) {
-            startAction(mInfo->curAnimStr.cstr());
+            startAction(mPupInfo->curAnimStr.cstr());
         }
 
         if (isNeedBlending()) {
             for (size_t i = 0; i < 6; i++) {
-                setBlendWeight(i, mInfo->blendWeights[i]);
+                setBlendWeight(i, mPupInfo->blendWeights[i]);
             }
         }
 
         // Position & Rotation Handling
 
         // Use smooth movement if low latency is disabled, otherwise snap directly
-        if (!StageSceneStateModConfig::isLowLatencyEnabled()) {
+        if (StageSceneStateModConfig::isLowLatencyEnabled()) {
+            al::setTrans(this, mPupInfo->playerPos);
+            al::setQuat(this, mPupInfo->playerRot);
+
+        } else {
             sead::Vector3f* pPos = al::getTransPtr(this);
             sead::Quatf* pQuat = al::getQuatPtr(this);
 
-            mClosingSpeed = VisualUtils::SmoothMove({pPos, pQuat}, {&mInfo->playerPos, &mInfo->playerRot},
-                                                    Time::deltaTime, mClosingSpeed, 1440.0f);
-        } else {
-            al::setTrans(this, mInfo->playerPos);
-            al::setQuat(this, mInfo->playerRot);
+            mClosingSpeed =
+                VisualUtils::SmoothMove({pPos, pQuat}, {&mPupInfo->playerPos, &mPupInfo->playerRot},
+                                        Time::deltaTime, mClosingSpeed, 1440.0f);
         }
 
         // Model Updating
 
-        if (!mIs2DModel && mInfo->is2D) {
+        if (!mIs2DModel && mPupInfo->is2D) {
             changeModel("Normal2D");
             mIs2DModel = true;
 
-        } else if (mIs2DModel && !mInfo->is2D) {
+        } else if (mIs2DModel && !mPupInfo->is2D) {
             changeModel("Normal");
             mIs2DModel = false;
         }
 
         // Capture Updating
 
-        if (mInfo->isCaptured && !mIsCaptureModel) {
+        if (mPupInfo->isCaptured && !mIsCaptureModel) {
             getCurrentModel()->makeActorDead();  // sets previous model to dead so we can try to
                                                  // switch to capture model
-            setCapture(mInfo->curHack.cstr());
+            setCapture(mPupInfo->curHack.cstr());
             mIsCaptureModel = true;
             getCurrentModel()->makeActorAlive();  // make new model alive
 
-        } else if (!mInfo->isCaptured && mIsCaptureModel) {
+        } else if (!mPupInfo->isCaptured && mIsCaptureModel) {
             getCurrentModel()->makeActorDead();   // make capture model dead
             mModelHolder->changeModel("Normal");  // set player model to normal
             mIsCaptureModel = false;
@@ -219,10 +210,10 @@ void PuppetActor::control() {
 
         // Visibility Updating
 
-        if (mInfo->isCapThrow) {
+        if (mPupInfo->isCapThrow) {
             if (al::isDead(mPuppetCap)) {
                 mPuppetCap->makeActorAlive();
-                al::setTrans(mPuppetCap, mInfo->capPos);
+                al::setTrans(mPuppetCap, mPupInfo->capPos);
             }
         } else {
             if (al::isAlive(mPuppetCap)) {
@@ -268,9 +259,9 @@ void PuppetActor::makeActorAlive() {
     }
 
     // update name tag when puppet becomes active again
-    if (mInfo) {
+    if (mPupInfo) {
         if (mNameTag) {
-            mNameTag->setText(mInfo->puppetName.cstr());
+            mNameTag->setText(mPupInfo->puppetName.cstr());
         }
     }
 

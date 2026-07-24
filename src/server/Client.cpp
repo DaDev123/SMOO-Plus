@@ -548,11 +548,11 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
 
         packet->isCapVisible = isFlying;
 
-        packet->capQuat.x = hackCap->mJointKeeper->mJointRot.x;
-        packet->capQuat.y = hackCap->mJointKeeper->mJointRot.y;
-        packet->capQuat.z = hackCap->mJointKeeper->mJointRot.z;
-        packet->capQuat.w = hackCap->mJointKeeper->mSkew;
-        packet->capRotQuat = al::getQuat(hackCap);
+        packet->capJointRot.x = hackCap->mJointKeeper->mJointRot.x;
+        packet->capJointRot.y = hackCap->mJointKeeper->mJointRot.y;
+        packet->capJointRot.z = hackCap->mJointKeeper->mJointRot.z;
+        packet->capJointRot.w = hackCap->mJointKeeper->mSkew;
+        packet->capRot = al::getQuat(hackCap);
 
         packet->capAnim = al::getActionName(hackCap);
 
@@ -565,8 +565,8 @@ void Client::sendHackCapInfPacket(const HackCap* hackCap) {
         packet->mUserID = sInstance->mUserID;
         packet->isCapVisible = false;
         packet->capPos = sead::Vector3f::zero;
-        packet->capQuat = sead::Quatf::unit;
-        packet->capRotQuat = sead::Quatf::unit;
+        packet->capJointRot = sead::Quatf::unit;
+        packet->capRot = sead::Quatf::unit;
         sInstance->mSocket->queuePacket(packet);
         sInstance->isSentHackInf = false;
     }
@@ -836,8 +836,8 @@ void Client::updateHackCapInfo(HackCapInf* packet) {
         return;
 
     curInfo->capPos = packet->capPos;
-    curInfo->capRot = packet->capQuat;
-    curInfo->capQuat = packet->capRotQuat;
+    curInfo->capRot = packet->capJointRot;
+    curInfo->capQuat = packet->capRot;
     curInfo->isCapThrow = packet->isCapVisible;
     curInfo->capAnim = packet->capAnim;
 }

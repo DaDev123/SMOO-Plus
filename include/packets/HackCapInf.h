@@ -11,16 +11,16 @@ struct HackCapInf : public Packet {
         writer.write(capPos.x);
         writer.write(capPos.y);
         writer.write(capPos.z);
-        writer.write(capQuat.w);
-        writer.write(capQuat.x);
-        writer.write(capQuat.y);
-        writer.write(capQuat.z);
+        writer.write(capJointRot.x);
+        writer.write(capJointRot.y);
+        writer.write(capJointRot.z);
+        writer.write(capJointRot.w);
         writer.write(isCapVisible);
         writer.writeString(capAnim);
-        writer.write(capRotQuat.w);
-        writer.write(capRotQuat.x);
-        writer.write(capRotQuat.y);
-        writer.write(capRotQuat.z);
+        writer.write(capRot.x);
+        writer.write(capRot.y);
+        writer.write(capRot.z);
+        writer.write(capRot.w);
 
         return writer.finalize();
     }
@@ -31,22 +31,22 @@ struct HackCapInf : public Packet {
         reader.read(capPos.x);
         reader.read(capPos.y);
         reader.read(capPos.z);
-        reader.read(capQuat.w);
-        reader.read(capQuat.x);
-        reader.read(capQuat.y);
-        reader.read(capQuat.z);
+        reader.read(capJointRot.x);
+        reader.read(capJointRot.y);
+        reader.read(capJointRot.z);
+        reader.read(capJointRot.w);
         reader.read(isCapVisible);
         reader.readString(capAnim);
-        reader.read(capRotQuat.w);
-        reader.read(capRotQuat.x);
-        reader.read(capRotQuat.y);
-        reader.read(capRotQuat.z);
+        reader.read(capRot.x);
+        reader.read(capRot.y);
+        reader.read(capRot.z);
+        reader.read(capRot.w);
 
         reader.finalize();
     }
     sead::Vector3f capPos;
-    sead::Quatf capQuat;
+    sead::Quatf capJointRot;
     u8 isCapVisible = false;  // fake bool
     sead::FixedSafeString<PACKBUFSIZE> capAnim;
-    sead::Quatf capRotQuat;
+    sead::Quatf capRot;
 };

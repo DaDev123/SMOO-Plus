@@ -46,16 +46,8 @@ void PuppetCapActor::init(const al::ActorInitInfo& initInfo) {
     makeActorDead();
 }
 
-void PuppetCapActor::initAfterPlacement() {
-    al::LiveActor::initAfterPlacement();
-}
-
 void PuppetCapActor::initOnline(PuppetInfo* pupInfo) {
     mInfo = pupInfo;
-}
-
-void PuppetCapActor::movement() {
-    al::LiveActor::movement();
 }
 
 void PuppetCapActor::control() {
@@ -63,11 +55,11 @@ void PuppetCapActor::control() {
         startAction(mInfo->capAnim.cstr());
     }
 
-    if (!StageSceneStateModConfig::isLowLatencyEnabled()) {
+    if (StageSceneStateModConfig::isLowLatencyEnabled()) {
+        al::setTrans(this, mInfo->capPos);
+    } else {
         sead::Vector3f* trans = al::getTransPtr(this);
         al::lerpVec(trans, *trans, mInfo->capPos, 0.45);
-    } else {
-        al::setTrans(this, mInfo->capPos);
     }
     al::setQuat(this, mInfo->capQuat);
 

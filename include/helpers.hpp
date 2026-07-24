@@ -1,36 +1,13 @@
 #pragma once
 
-#include "game/Player/PlayerActorHakoniwa.h"
-
 #include <cstring>
 
 #include "puppets/PuppetInfo.h"
-
-bool isPartOf(const char* w1, const char* w2);
-
-int indexOf(char* w1, char c1);
-
-void logVector(const char* vectorName, sead::Vector3f vector);
-
-void logQuat(const char* quatName, sead::Quatf quat);
-
-sead::Vector3f QuatToEuler(sead::Quatf* quat);
-
-float vecMagnitude(sead::Vector3f const& input);
-float vecDistance(sead::Vector3f const& a, sead::Vector3f const& b);
-float vecDistanceSq(sead::Vector3f const& a, sead::Vector3f const& b);
-
-float quatAngle(sead::Quatf const& q1, sead::Quatf& q2);
-
-bool isInCostumeList(const char* costumeName);
 
 const char* tryGetPuppetCapName(PuppetInfo* info);
 const char* tryGetPuppetBodyName(PuppetInfo* info);
 
 const char* tryConvertName(const char* className);
-
-void killMainPlayer(al::LiveActor* actor);
-void killMainPlayer(PlayerActorHakoniwa* mainPlayer);
 
 __attribute__((used)) static const char* costumeNames[] = {
     "Mario",           "MarioCaptain",      "Mario64",           "Mario64Metal",      "MarioAloha",
@@ -156,7 +133,3 @@ public:
     constexpr static const float k_MinSmoothSpeed = 0.1f;
     constexpr static const float k_TargetCatchupTime = 0.2f;
 };
-
-class StageScene;
-
-StageScene* getStageScene();

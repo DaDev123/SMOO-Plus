@@ -73,14 +73,15 @@ al::LiveActor* createPuppetActorFromFactory(const al::ActorInitInfo& initInfo) {
             delete newActor;
             return nullptr;
         } else {
-            hk::diag::logLine("[Factory] Creating puppet for player: %s", curInfo->puppetName.cstr());
+            // hk::diag::logLine("[Factory] Creating puppet for player: %s", curInfo->puppetName.cstr());
 
             // set puppet info first before calling init so we can get costume info from the
             // info
             newActor->initOnline(curInfo);
             newActor->init(initInfo);
 
-            hk::diag::logLine("[Factory] Puppet initialized successfully for %s", curInfo->puppetName.cstr());
+            // hk::diag::logLine("[Factory] Puppet initialized successfully for %s",
+            // curInfo->puppetName.cstr());
         }
     } else {
         hk::diag::logLine("[Factory] ERROR: Failed to add puppet to client");

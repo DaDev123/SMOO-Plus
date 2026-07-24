@@ -12,10 +12,10 @@ struct PlayerInf : public Packet {
         writer.write(playerPos.x);
         writer.write(playerPos.y);
         writer.write(playerPos.z);
-        writer.write(playerRot.w);
         writer.write(playerRot.x);
         writer.write(playerRot.y);
         writer.write(playerRot.z);
+        writer.write(playerRot.w);
         writer.write(animBlendWeights[0]);
         writer.write(animBlendWeights[1]);
         writer.write(animBlendWeights[2]);
@@ -34,10 +34,10 @@ struct PlayerInf : public Packet {
         reader.read(playerPos.x);
         reader.read(playerPos.y);
         reader.read(playerPos.z);
-        reader.read(playerRot.w);
         reader.read(playerRot.x);
         reader.read(playerRot.y);
         reader.read(playerRot.z);
+        reader.read(playerRot.w);
         reader.read(animBlendWeights[0]);
         reader.read(animBlendWeights[1]);
         reader.read(animBlendWeights[2]);
