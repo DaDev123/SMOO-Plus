@@ -90,7 +90,7 @@ void SpeedrunIcon::updateSpeedrunText() {
 }
 
 void SpeedrunIcon::updateShineCount() {
-    GameDataHolderAccessor acc{};
-    if (acc)
-        al::setPaneStringFormat(this, "ShineCount", "%03d", acc->getGameDataFile()->getTotalUniqueShineNum());
+    if (mGDataHolder)
+        al::setPaneStringFormat(this, "ShineCount", "%03d",
+                                mGDataHolder->getGameDataFile()->getTotalUniqueShineNum());
 }
