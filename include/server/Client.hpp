@@ -315,7 +315,6 @@ private:
 
     // ===== UI COMPONENTS =====
     Keyboard* mKeyboard = nullptr;
-    void* _wtf_why;
     al::SimpleLayoutAppearWaitEnd* mConnectStatus = nullptr;
 
     // ===== GAME STATE MEMBERS =====

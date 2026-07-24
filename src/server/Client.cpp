@@ -66,7 +66,7 @@ Client::Client() {
     mReadThread = new al::AsyncFunctorThread("ClientReadThread", al::FunctorV0M(this, &Client::readFunc), 0,
                                              16_KB, sead::CoreId::cMain);
 
-    mKeyboard = new Keyboard(nn::swkbd::GetRequiredStringBufferSize());
+    mKeyboard = new Keyboard();
 
     mSocket = new SocketClient();
 

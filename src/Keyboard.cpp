@@ -8,7 +8,7 @@
 
 #include "main.hpp"
 
-Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
+Keyboard::Keyboard() {
     mThread = new al::AsyncFunctorThread("Swkbd", al::FunctorV0M(this, &Keyboard::keyboardThread), 0, 16_KB,
                                          sead::CoreId::cSub1);
 
@@ -19,8 +19,6 @@ Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
 
     mTextCheckSize = 0x7d4;
     mTextCheckBuf = (char*)aligned_alloc(0x1000, mTextCheckSize);
-
-    mResultString.allocate();
 }
 
 void Keyboard::keyboardThread() {
@@ -44,7 +42,7 @@ void Keyboard::keyboardThread() {
         nn::swkbd::SetInitialTextUtf8(&mKeyboardArg, mInitialText.cstr());
     }
 
-    mIsCancelled = nn::swkbd::ShowKeyboard(&mResultString, mKeyboardArg) ==
+    mIsCancelled = nn::swkbd::ShowKeyboard(&mResString, mKeyboardArg) ==
                    671;  // 671 = exit code for pressing x to cancel keyboard
 }
 

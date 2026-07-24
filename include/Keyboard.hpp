@@ -12,16 +12,19 @@ typedef void (*KeyboardSetup)(nn::swkbd::KeyboardConfig&);
 const u8 MAX_HOSTNAME_LENGTH = 50;
 typedef sead::FixedSafeString<MAX_HOSTNAME_LENGTH + 1> hostname;
 
+inline char* mResBuf = (char*)malloc(nn::swkbd::GetRequiredStringBufferSize());
+inline nn::swkbd::String mResString = nn::swkbd::String(nn::swkbd::GetRequiredStringBufferSize(), mResBuf);
+
 class Keyboard {
 public:
-    Keyboard(ulong strSize);
+    Keyboard();
     void keyboardThread();
 
     void openKeyboard(const char* initialText, KeyboardSetup setup);
 
     const char* getResult() {
         if (mThread->isDone()) {
-            return mResultString.cstr();
+            return mResString.cstr();
         }
         return nullptr;
     };
@@ -35,7 +38,6 @@ public:
 
 private:
     al::AsyncFunctorThread* mThread = nullptr;
-    nn::swkbd::String mResultString = nn::swkbd::String(10);
     nn::swkbd::ShowKeyboardArg mKeyboardArg = nn::swkbd::ShowKeyboardArg();
 
     hostname mInitialText = sead::FixedSafeString<MAX_HOSTNAME_LENGTH + 1>();
@@ -50,6 +52,4 @@ private:
     int mWorkBufSize = 0;
     char* mTextCheckBuf = nullptr;
     int mTextCheckSize = 0;
-    char* mCustomizeDicBuf = nullptr;
-    int mCustomizeDicSize = 0;
 };
