@@ -177,16 +177,16 @@ bool Client::startConnection() {
     bool isNeedSave = false;
 
     if (mServerIP.isEmpty()) {
-        mKeyboard->setHeaderText(u"IP Address");
-        mKeyboard->setSubText(u"Please set a server IP address below.");
+        mKeyboard->setHeaderText("IP Address");
+        mKeyboard->setSubText("Please set a server IP address below.");
         mServerIP = "127.0.0.1";
         Client::openKeyboardIP();
         isNeedSave = true;
     }
 
     if (!mServerPort) {
-        mKeyboard->setHeaderText(u"Port");
-        mKeyboard->setSubText(u"Please set a server port below.");
+        mKeyboard->setHeaderText("Port");
+        mKeyboard->setSubText("Please set a server port below.");
         mServerPort = 1027;
         Client::openKeyboardPort();
         isNeedSave = true;
@@ -258,8 +258,8 @@ bool Client::openKeyboardIP() {
     hostname prevIp = sInstance->mServerIP;
 
     while (true) {
-        if (sInstance->mKeyboard->isThreadDone()) {
-            if (!sInstance->mKeyboard->isKeyboardCancelled())
+        if (sInstance->mKeyboard->isDone()) {
+            if (!sInstance->mKeyboard->isCancelled())
                 sInstance->mServerIP = sInstance->mKeyboard->getResult();
             break;
         }
@@ -297,8 +297,8 @@ bool Client::openKeyboardPort() {
     int prevPort = sInstance->mServerPort;
 
     while (true) {
-        if (sInstance->mKeyboard->isThreadDone()) {
-            if (!sInstance->mKeyboard->isKeyboardCancelled())
+        if (sInstance->mKeyboard->isDone()) {
+            if (!sInstance->mKeyboard->isCancelled())
                 sInstance->mServerPort = atoi(sInstance->mKeyboard->getResult());
             break;
         }
@@ -463,6 +463,7 @@ void Client::readFunc() {
 }
 
 void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukimaru) {
+    sead::ScopedCurrentHeapSetter setter(gHeap);
     if (!sInstance) {
         hk::diag::logLine("Static Instance is Null!");
         return;
@@ -473,7 +474,7 @@ void Client::sendPlayerInfPacket(const PlayerActorBase* playerBase, bool isYukim
         return;
     }
 
-    auto packet = new (gHeap) PlayerInf;
+    auto packet = new PlayerInf;
     packet->mUserID = sInstance->mUserID;
 
     packet->playerPos = al::getTrans(playerBase);

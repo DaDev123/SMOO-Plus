@@ -293,8 +293,8 @@ void StageSceneStateModConfig::exeNetworkSettings() {
 void StageSceneStateModConfig::exeOpenKeyboardIP() {
     if (al::isFirstStep(this)) {
         mCurrentList->deactivate();
-        Client::getKeyboard()->setHeaderText(u"Enter Server IP Address");
-        Client::getKeyboard()->setSubText(u"");
+        Client::getKeyboard()->setHeaderText("Enter Server IP Address");
+        Client::getKeyboard()->setSubText("");
         Client::openKeyboardIP();
 
         al::startHitReaction(mCurrentMenu, "リセット", 0);
@@ -307,8 +307,8 @@ void StageSceneStateModConfig::exeOpenKeyboardIP() {
 void StageSceneStateModConfig::exeOpenKeyboardPort() {
     if (al::isFirstStep(this)) {
         mCurrentList->deactivate();
-        Client::getKeyboard()->setHeaderText(u"Enter Server Port");
-        Client::getKeyboard()->setSubText(u"");
+        Client::getKeyboard()->setHeaderText("Enter Server Port");
+        Client::getKeyboard()->setSubText("");
         Client::openKeyboardPort();
 
         al::startHitReaction(mCurrentMenu, "リセット", 0);
