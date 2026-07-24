@@ -6,8 +6,6 @@
 #include "al/Library/Layout/LayoutActionFunction.h"
 #include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/Layout/LayoutInitInfo.h"
-#include "al/Library/Message/IUseMessageSystem.h"
-#include "al/Library/Message/MessageSystem.h"
 #include "al/Library/Nerve/NerveSetupUtil.h"
 #include "al/Library/Nerve/NerveStateBase.h"
 #include "al/Library/Scene/Scene.h"
@@ -38,10 +36,10 @@ struct ServerBrowser {
 // Main Configuration State Class
 // ============================================================================
 
-class StageSceneStateModConfig : public al::HostStateBase<al::Scene>, public al::IUseMessageSystem {
+class StageSceneStateModConfig : public al::HostStateBase<al::Scene> {
 public:
     StageSceneStateModConfig(const char* name, al::Scene* scene, const al::LayoutInitInfo& initInfo,
-                             FooterParts* footerParts, GameDataHolder* dataHolder, bool unused);
+                             FooterParts* footerParts, GameDataHolder* dataHolder);
 
     enum SpeedrunLogLife { INF, FIFTEEN, TEN, FIVE };
 
@@ -49,7 +47,6 @@ public:
     virtual void init() override;
     virtual void appear() override;
     virtual void kill() override;
-    virtual al::MessageSystem* getMessageSystem() const override { return mMsgSystem; };
 
     // Menu execution methods
     void exeMainMenu();
@@ -187,7 +184,6 @@ private:
     // ========================================================================
     // Core Systems
     // ========================================================================
-    al::MessageSystem* mMsgSystem = nullptr;
     FooterParts* mFooterParts = nullptr;
     GameDataHolder* mGameDataHolder = nullptr;
     InputSeparator* mInput = nullptr;

@@ -47,7 +47,6 @@
 #include <sys/socket.h>
 
 #include "helpers.hpp"
-#include "layouts/ConnectionStatus.h"
 #include "layouts/PlayerEventLog.h"
 #include "layouts/SpeedrunIcon.h"
 #include "logger.hpp"
@@ -118,7 +117,6 @@ void Client::init(al::LayoutInitInfo const& initInfo, GameDataHolderAccessor hol
     {
         sead::ScopedCurrentHeapSetter setter(al::getSequenceHeap());
         mConnectStatus = new al::SimpleLayoutAppearWaitEnd("", "SaveMessage", initInfo, 0, false);
-        ConnectionStatus::sInstance = new ConnectionStatus("Status", initInfo);
         SpeedrunIcon::sInstance = new SpeedrunIcon("SpeedrunIcon", initInfo);
     }
 

@@ -151,13 +151,12 @@ bool StageSceneStateModConfig::isRollPartsSelected() const {
 
 StageSceneStateModConfig::StageSceneStateModConfig(const char* name, al::Scene* scene,
                                                    const al::LayoutInitInfo& initInfo,
-                                                   FooterParts* footerParts, GameDataHolder* dataHolder, bool)
+                                                   FooterParts* footerParts, GameDataHolder* dataHolder)
     : al::HostStateBase<al::Scene>(name, scene) {
     sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
 
     mFooterParts = footerParts;
     mGameDataHolder = dataHolder;
-    mMsgSystem = initInfo.getMessageSystem();
     mInput = new InputSeparator(mHost, true);
 
     // Load server list
