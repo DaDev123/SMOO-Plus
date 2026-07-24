@@ -17,6 +17,7 @@ SpeedrunIcon::SpeedrunIcon(const char* name, const al::LayoutInitInfo& initInfo)
 
     al::hidePane(this, "TxtNonstop");
     al::setPaneStringFormat(this, "TxtNonstop", "Non-Stop");
+    al::setPaneStringFormat(this, "TxtVersion", BUILDVER);
 
     initNerve(&NrvSpeedrunIcon.End, 0);
 
