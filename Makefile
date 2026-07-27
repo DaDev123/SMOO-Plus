@@ -1,4 +1,4 @@
-.PHONY: debug clean release file_structure release_build0
+.PHONY: debug clean release file_structure release_build
 
 BUILDVER ?= SR-1.0.0
 DEBUGLOG ?= 0 # defaults to enable debug logger 
