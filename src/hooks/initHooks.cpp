@@ -1,3 +1,4 @@
+#include "hk/diag/diag.h"
 #include "hk/hook/Trampoline.h"
 
 #include "nn/fs/fs_mount.h"
@@ -7,6 +8,7 @@
 #include "sead/filedevice/nin/seadNinFileDeviceBaseNin.h"
 #include "sead/filedevice/seadFileDeviceMgr.h"
 #include "sead/heap/seadExpHeap.h"
+#include "sead/heap/seadHeap.h"
 #include "sead/heap/seadHeapMgr.h"
 
 #include "al/Library/Memory/HeapUtil.h"
@@ -72,14 +74,15 @@ al::LiveActor* createPuppetActorFromFactory(const al::ActorInitInfo& initInfo) {
             delete newActor;
             return nullptr;
         } else {
-            hk::diag::logLine("[Factory] Creating puppet for player: %s", curInfo->puppetName);
+            // hk::diag::logLine("[Factory] Creating puppet for player: %s", curInfo->puppetName.cstr());
 
             // set puppet info first before calling init so we can get costume info from the
             // info
             newActor->initOnline(curInfo);
             newActor->init(initInfo);
 
-            hk::diag::logLine("[Factory] Puppet initialized successfully for %s", curInfo->puppetName);
+            // hk::diag::logLine("[Factory] Puppet initialized successfully for %s",
+            // curInfo->puppetName.cstr());
         }
     } else {
         hk::diag::logLine("[Factory] ERROR: Failed to add puppet to client");
@@ -117,11 +120,18 @@ HkTrampoline mountSdCardHook = [](TrampolineStatic(), sead::FileDeviceMgr* fileD
     fileDeviceMgr->mount(sdFileDevice);
 };
 
+#define MB(x) (x * 1024.f * 1024.f)
+
 HkTrampoline createHeap = [](TrampolineStatic(), al::SystemKit* systemKit, sead::Heap* rootHeap) -> void {
     orig(systemKit, rootHeap);
 
-    gHeap = sead::ExpHeap::create(2_MB, "SMOOPlusHeap", al::getStationedHeap());
+    gHeap = sead::ExpHeap::create(MB(0.5), "SMOOPlusHeap", al::getStationedHeap(), sizeof(void*),
+                                  sead::Heap::cHeapDirection_Forward, true);
     al::addNamedHeap(gHeap, "SMOOPlusHeap");
+
+    imgui::ImHeap = sead::ExpHeap::create(MB(1.5), "ImHeap", al::getStationedHeap(), sizeof(void*),
+                                          sead::Heap::cHeapDirection_Forward, true);
+    al::addNamedHeap(imgui::ImHeap, "ImHeap");
 };
 
 void installInitHooks() {

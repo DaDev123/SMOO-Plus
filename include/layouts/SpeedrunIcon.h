@@ -5,6 +5,7 @@
 #include "al/Library/Nerve/NerveSetupUtil.h"
 
 #include "game/Scene/StageScene.h"
+#include "game/System/GameDataHolder.h"
 // TODO: kill layout if going through loading zone or paused
 
 class SpeedrunIcon : public al::LayoutActor {
@@ -22,12 +23,12 @@ public:
     void updateSpeedrunText();
     void updateShineCount();
 
-    void setCurScene(StageScene* scene) { mCurScene = scene; }
+    void setHolder(GameDataHolder* holder) { mGDataHolder = holder; }
 
     static SpeedrunIcon* sInstance;
 
 private:
-    StageScene* mCurScene = nullptr;
+    GameDataHolder* mGDataHolder = nullptr;
 };
 
 namespace {

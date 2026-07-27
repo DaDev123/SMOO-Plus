@@ -1,12 +1,27 @@
 #pragma once
 
+#include "sead/prim/seadSafeString.h"
+
 #include "packets/Packet.h"
 
-struct __attribute__((packed)) CaptureInf : Packet {
-    CaptureInf() : Packet() {
-        this->mType = PacketType::CAPTUREINF;
-        mPacketSize = sizeof(CaptureInf) - sizeof(Packet);
-    };
+struct CaptureInf : public Packet {
+    PacketType getType() override { return PacketType::CAPTUREINF; }
 
-    char hackName[0x20] = {};
+    PacketVector serialize() override {
+        PacketWriter writer(this);
+
+        writer.writeString(hackName);
+
+        return writer.finalize();
+    }
+
+    void deserialize(const PacketVector& data) override {
+        PacketReader reader(this, data.data(), data.size());
+
+        reader.readString(hackName);
+
+        reader.finalize();
+    }
+
+    sead::FixedSafeString<0x20> hackName;
 };

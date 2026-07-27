@@ -20,7 +20,6 @@
 
 #include "helpers.hpp"
 #include "Scene/StageSceneStateModConfig.hpp"
-#include "server/Client.hpp"
 
 PuppetCapActor::PuppetCapActor(const char* name) : al::LiveActor(name) {}
 
@@ -47,28 +46,20 @@ void PuppetCapActor::init(const al::ActorInitInfo& initInfo) {
     makeActorDead();
 }
 
-void PuppetCapActor::initAfterPlacement() {
-    al::LiveActor::initAfterPlacement();
-}
-
 void PuppetCapActor::initOnline(PuppetInfo* pupInfo) {
     mInfo = pupInfo;
 }
 
-void PuppetCapActor::movement() {
-    al::LiveActor::movement();
-}
-
 void PuppetCapActor::control() {
-    if (strcmp(mInfo->capAnim, "") != 0) {
-        startAction(mInfo->capAnim);
+    if (!mInfo->capAnim.isEmpty()) {
+        startAction(mInfo->capAnim.cstr());
     }
 
-    if (!StageSceneStateModConfig::isLowLatencyEnabled()) {
+    if (StageSceneStateModConfig::isLowLatencyEnabled()) {
+        al::setTrans(this, mInfo->capPos);
+    } else {
         sead::Vector3f* trans = al::getTransPtr(this);
         al::lerpVec(trans, *trans, mInfo->capPos, 0.45);
-    } else {
-        al::setTrans(this, mInfo->capPos);
     }
     al::setQuat(this, mInfo->capQuat);
 

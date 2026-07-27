@@ -51,6 +51,7 @@
 
 #include "actors/PuppetActor.h"
 #include "imgui.h"
+#include "Imgui.hpp"
 #include "layouts/PlayerEventLog.h"
 #include "puppets/PuppetInfo.h"
 #include "server/Client.hpp"
@@ -66,7 +67,7 @@ void updatePlayerInfo(GameDataHolderAccessor holder, PlayerActorBase* playerBase
         if (!isYukimaru) {
             Client::sendHackCapInfPacket(((PlayerActorHakoniwa*)playerBase)->mHackCap);
 
-            Client::sendCaptureInfPacket((PlayerActorHakoniwa*)playerBase);
+            // Client::sendCaptureInfPacket((PlayerActorHakoniwa*)playerBase);
         }
 
         pInfSendTimer = 0;
@@ -149,11 +150,11 @@ void drawMain(al::Sequence* curSequence) {
             renderer->setCamera(*cam);
             renderer->setProjection(*projection);
 
-            ImGui::Text("(ZR ←)------------ Page %d/%d -------------(ZR →)\n", pageIndex + 1, maxPages);
+            ImGui::Text("(ZR ←)------------ Page %d/%d ------------(ZR →)\n", pageIndex + 1, maxPages);
 
             switch (pageIndex) {
             case 0: {
-                ImGui::Text("(ZL ←)----------%s Player %d/%d %s-----------(ZL →)\n\n",
+                ImGui::Text("(ZL ←)----------%s Player %d/%d %s----------(ZL →)\n\n",
                             debugPuppetIndex + 1 < 10 ? "-" : "", debugPuppetIndex + 1,
                             Client::getMaxPlayerCount(), Client::getMaxPlayerCount() < 10 ? "-" : "");
 
@@ -161,11 +162,11 @@ void drawMain(al::Sequence* curSequence) {
                     ImGui::Text("Player Name: %s\n", Client::getClientName());
                     ImGui::Text("Connection Status: %s\n", isConnected ? "Online" : "Offline");
                     ImGui::Text("Is in same Stage: Yes\n");
-                    ImGui::Text("Stage: %s\n", client->getLastGameInfPacket()->stageName);
+                    ImGui::Text("Stage: %s\n", client->getLastGameInfPacket()->stageName.cstr());
                     ImGui::Text("Scenario: %u\n", client->getLastGameInfPacket()->scenarioNo);
-                    ImGui::Text("Costume: H: %s B: %s\n", client->getLastCostumeInfPacket()->capModel,
-                                client->getLastCostumeInfPacket()->bodyModel);
-                    ImGui::Text("Capture: %s\n", client->getLastCaptureInfPacket()->hackName);
+                    ImGui::Text("Costume: H: %s B: %s\n", client->getLastCostumeInfPacket()->capModel.cstr(),
+                                client->getLastCostumeInfPacket()->bodyModel.cstr());
+                    // ImGui::Text("Capture: %s\n", client->getLastCaptureInfPacket()->hackName.cstr());
 
                     PlayerHackKeeper* hackKeeper = playerBase->getPlayerHackKeeper();
                     if (hackKeeper) {
@@ -181,17 +182,17 @@ void drawMain(al::Sequence* curSequence) {
                     PuppetInfo* curPupInfo = curPuppet->getInfo();
 
                     if (curModel && curPupInfo) {
-                        ImGui::Text("Player Name: %s\n", curPupInfo->puppetName);
+                        ImGui::Text("Player Name: %s\n", curPupInfo->puppetName.cstr());
                         ImGui::Text("Connection Status: %s\n",
                                     curPupInfo->isConnected ? "Online" : "Offline");
-                        GameMode puppetGameMode = static_cast<GameMode>(curPupInfo->gameMode);
                         ImGui::Text("Is in same Stage: %s\n", curPupInfo->isInSameStage ? "Yes" : "No");
-                        ImGui::Text("Stage: %s\n", curPupInfo->stageName);
+                        ImGui::Text("Stage: %s\n", curPupInfo->stageName.cstr());
                         ImGui::Text("Scenario: %u\n", curPupInfo->scenarioNo);
-                        ImGui::Text("Costume: H: %s B: %s\n", curPupInfo->costumeHead,
-                                    curPupInfo->costumeBody);
-                        ImGui::Text("Capture: %s\n", curPupInfo->isCaptured ? curPupInfo->curHack : "");
-                        ImGui::Text("Animation: %d %s\n", curPupInfo->curAnim, curPupInfo->curAnimStr);
+                        ImGui::Text("Costume: H: %s B: %s\n", curPupInfo->costumeHead.cstr(),
+                                    curPupInfo->costumeBody.cstr());
+                        ImGui::Text("Capture: %s\n",
+                                    curPupInfo->isCaptured ? curPupInfo->curHack.cstr() : "");
+                        ImGui::Text("Animation: %d %s\n", curPupInfo->curAnim, curPupInfo->curAnimStr.cstr());
 
                         const char* modelAnim = al::getActionName(curModel);
                         ImGui::Text("Model Animation: %s\n", modelAnim ? modelAnim : "none");
@@ -241,7 +242,7 @@ void drawMain(al::Sequence* curSequence) {
                 break;
             }
             case 2: {
-                ImGui::Text("------------------- Heaps --------------------\n\n");
+                ImGui::Text("------------------- Heaps -------------------\n\n");
 
                 auto displayHeapInfo = [](sead::Heap* heap, bool isKB = false) {
                     if (!heap) {
@@ -251,19 +252,20 @@ void drawMain(al::Sequence* curSequence) {
                     ImGui::Text("%s   ", heap->getName().cstr());
                     ImGui::SameLine();
 
-                    float used = isKB ? (heap->getSize() - heap->getFreeSize()) / float(1_KB) :
-                                        (heap->getSize() - heap->getFreeSize()) / float(1_MB);
-                    float max = isKB ? heap->getSize() / float(1_KB) : heap->getSize() / float(1_MB);
-                    float percentUsed =
-                        (heap->getSize() - heap->getFreeSize()) / (float(heap->getSize()) / 100);
+                    f32 used = isKB ? f32(heap->getSize() - heap->getFreeSize()) / f32(1_KB) :
+                                      f32(heap->getSize() - heap->getFreeSize()) / f32(1_MB);
+                    f32 max = isKB ? heap->getSize() / f32(1_KB) : heap->getSize() / f32(1_MB);
+                    f32 percentUsed =
+                        f32(heap->getSize() - heap->getFreeSize()) / (f32(heap->getSize()) / 100.f);
                     char buf[0x20];
                     snprintf(buf, sizeof(buf), "%.3f/%.3f %s", used, max, isKB ? "KB" : "MB");
 
                     ImGui::ProgressBar(percentUsed / 100, ImVec2(-1, 0), buf);
                 };
 
-                displayHeapInfo(gHeap);
-                // displayHeapInfo(al::getStationedHeap());
+                displayHeapInfo(gHeap, true);
+                displayHeapInfo(imgui::ImHeap);
+                displayHeapInfo(al::getStationedHeap());
                 displayHeapInfo(al::getSequenceHeap());
                 displayHeapInfo(al::getSceneHeap());
                 displayHeapInfo(al::getSceneResourceHeap(), true);
@@ -298,8 +300,6 @@ void drawMain(al::Sequence* curSequence) {
             renderer->end();
         }
         isInGame = false;
-        ImGui::End();
-        return;
     }
 
     ImGui::End();

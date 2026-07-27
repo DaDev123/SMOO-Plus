@@ -2,8 +2,8 @@
 
 #include "packets/Packet.h"
 
-struct PlayerDC : public Packet {
-    PacketType getType() override { return PacketType::PLAYERDC; }
+struct GameStart : public Packet {
+    PacketType getType() override { return PacketType::GAMESTART; }
 
     PacketVector serialize() override {
         PacketWriter writer(this);

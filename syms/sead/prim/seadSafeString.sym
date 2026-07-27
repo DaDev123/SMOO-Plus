@@ -1,3 +1,4 @@
 @smo:100,101,110,120
 
 _ZN4sead14SafeStringBaseIcEaSERKS1_
+_ZN4sead22BufferedSafeStringBaseIDsE6formatEPKDsz

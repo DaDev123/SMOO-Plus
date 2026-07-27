@@ -151,13 +151,12 @@ bool StageSceneStateModConfig::isRollPartsSelected() const {
 
 StageSceneStateModConfig::StageSceneStateModConfig(const char* name, al::Scene* scene,
                                                    const al::LayoutInitInfo& initInfo,
-                                                   FooterParts* footerParts, GameDataHolder* dataHolder, bool)
+                                                   FooterParts* footerParts, GameDataHolder* dataHolder)
     : al::HostStateBase<al::Scene>(name, scene) {
     sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
 
     mFooterParts = footerParts;
     mGameDataHolder = dataHolder;
-    mMsgSystem = initInfo.getMessageSystem();
     mInput = new InputSeparator(mHost, true);
 
     // Load server list
@@ -293,8 +292,8 @@ void StageSceneStateModConfig::exeNetworkSettings() {
 void StageSceneStateModConfig::exeOpenKeyboardIP() {
     if (al::isFirstStep(this)) {
         mCurrentList->deactivate();
-        Client::getKeyboard()->setHeaderText(u"Enter Server IP Address");
-        Client::getKeyboard()->setSubText(u"");
+        Client::getKeyboard()->setHeaderText("Enter Server IP Address");
+        Client::getKeyboard()->setSubText("");
         Client::openKeyboardIP();
 
         al::startHitReaction(mCurrentMenu, "リセット", 0);
@@ -307,8 +306,8 @@ void StageSceneStateModConfig::exeOpenKeyboardIP() {
 void StageSceneStateModConfig::exeOpenKeyboardPort() {
     if (al::isFirstStep(this)) {
         mCurrentList->deactivate();
-        Client::getKeyboard()->setHeaderText(u"Enter Server Port");
-        Client::getKeyboard()->setSubText(u"");
+        Client::getKeyboard()->setHeaderText("Enter Server Port");
+        Client::getKeyboard()->setSubText("");
         Client::openKeyboardPort();
 
         al::startHitReaction(mCurrentMenu, "リセット", 0);
@@ -382,13 +381,13 @@ void StageSceneStateModConfig::initGameplayMenu(const al::LayoutInitInfo& initIn
     setMenuItemCheck(optionsList[MENU_GAMEPLAY]->mListPartsArr[GP_MUSIC + 1]);
 
     optionsList[MENU_GAMEPLAY]->startLoopActionAll("Loop", "Loop");
-    RollPartsData* dataColPlayer = new RollPartsData(
-        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" },
-        (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), true);
-    RollPartsData* dataColCap = new RollPartsData(
-        4, new const char16_t* [] { u"Off", u"Collision", u"Bounce", u"Collision + Bounce" },
-        (sCapCollisionEnabled + (sCapBounceEnabled << 1)), true);
-    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t* [] { u"" });
+    RollPartsData* dataColPlayer =
+        new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
+                          (sPuppetCollisionEnabled + (sPuppetBounceEnabled << 1)), true);
+    RollPartsData* dataColCap =
+        new RollPartsData(4, new const char16_t*[]{u"Off", u"Collision", u"Bounce", u"Collision + Bounce"},
+                          (sCapCollisionEnabled + (sCapBounceEnabled << 1)), true);
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
     optionsList[MENU_GAMEPLAY]->setRollPartsData(
         new RollPartsData[]{*dataColPlayer, *dataColCap, *dataEmpty, *dataEmpty, *dataEmpty});
 
@@ -463,9 +462,9 @@ void StageSceneStateModConfig::initSpeedrunConfigMenu(const al::LayoutInitInfo& 
     optionsList[MENU_SPEEDRUN_CONFIG]->startLoopActionAll("Loop", "Loop");
 
     RollPartsData* dataLogLife = new RollPartsData(
-        4, new const char16_t* [] { u"Never", u"After 15 Seconds", u"After 10 Seconds", u"After 5 Seconds" },
+        4, new const char16_t*[]{u"Never", u"After 15 Seconds", u"After 10 Seconds", u"After 5 Seconds"},
         sLogLife, true);
-    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t* [] { u"" });
+    RollPartsData* dataEmpty = new RollPartsData(0, new const char16_t*[]{u""});
 
     optionsList[MENU_SPEEDRUN_CONFIG]->setRollPartsData(
         new RollPartsData[]{*dataLogLife, *dataEmpty, *dataEmpty});

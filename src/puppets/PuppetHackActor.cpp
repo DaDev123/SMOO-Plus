@@ -1,6 +1,6 @@
 #include "actors/PuppetHackActor.h"
 
-#include "hk/diag/diag.h"
+#include "sead/prim/seadSafeString.h"
 
 #include "al/Library/LiveActor/ActorActionFunction.h"
 #include "al/Library/LiveActor/ActorAnimFunction.h"
@@ -35,6 +35,7 @@ void PuppetHackActor::init(al::ActorInitInfo const& initInfo) {
     al::setClippingInfo(this, 999999999.0f, 0);
     al::setClippingNearDistance(this, 999999999.0f);
     al::validateClipping(this);
+    // al::invalidateClipping(this);
 
     al::offCollide(this);
 
@@ -45,25 +46,14 @@ void PuppetHackActor::init(al::ActorInitInfo const& initInfo) {
     startAction("Wait");
 }
 
-void PuppetHackActor::initAfterPlacement() {
-    al::LiveActor::initAfterPlacement();
-}
-
 void PuppetHackActor::initOnline(PuppetInfo* pupInfo, const char* hackType) {
     mInfo = pupInfo;
     mHackType = hackType;
 }
 
-void PuppetHackActor::movement() {
-    al::LiveActor::movement();
-}
-
-void PuppetHackActor::control() {}
-
-void PuppetHackActor::startAction(const char* actName) {
-    if (!actName || actName[0] == '\0') {
+void PuppetHackActor::startAction(sead::SafeString actName) {
+    if (actName.isEmpty())
         return;
-    }
 
     // Get the currently playing action
     const char* curActName = al::getActionName(this);
@@ -81,9 +71,9 @@ void PuppetHackActor::startAction(const char* actName) {
 
     if (needsStart) {
         // Try to start the action (will restart even if already playing)
-        if (al::tryStartAction(this, actName)) {
+        if (al::tryStartAction(this, actName.cstr())) {
             // Clear interpolation for clean animation start
-            if (al::isSklAnimExist(this, actName)) {
+            if (al::isSklAnimExist(this, actName.cstr())) {
                 al::clearSklAnimInterpole(this);
             }
         }

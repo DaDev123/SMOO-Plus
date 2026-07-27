@@ -5,8 +5,8 @@
 #include "al/Library/Nerve/NerveUtil.h"
 
 #include "game/System/GameDataFile.h"
+#include "game/System/GameDataHolderAccessor.h"
 
-#include "helpers.hpp"
 #include "Scene/StageSceneStateModConfig.hpp"
 #include "server/Client.hpp"
 
@@ -17,6 +17,7 @@ SpeedrunIcon::SpeedrunIcon(const char* name, const al::LayoutInitInfo& initInfo)
 
     al::hidePane(this, "TxtNonstop");
     al::setPaneStringFormat(this, "TxtNonstop", "Non-Stop");
+    al::setPaneStringFormat(this, "TxtVersion", BUILDVER);
 
     initNerve(&NrvSpeedrunIcon.End, 0);
 
@@ -90,8 +91,7 @@ void SpeedrunIcon::updateSpeedrunText() {
 }
 
 void SpeedrunIcon::updateShineCount() {
-    if (getStageScene())
-        al::setPaneStringFormat(
-            this, "ShineCount", "%03d",
-            GameDataHolderAccessor(getStageScene())->getGameDataFile()->getTotalUniqueShineNum());
+    if (mGDataHolder)
+        al::setPaneStringFormat(this, "ShineCount", "%03d",
+                                mGDataHolder->getGameDataFile()->getTotalUniqueShineNum());
 }

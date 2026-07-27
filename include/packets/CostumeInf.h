@@ -2,17 +2,27 @@
 
 #include "packets/Packet.h"
 
-struct __attribute__((packed)) CostumeInf : Packet {
-    CostumeInf() : Packet() {
-        this->mType = PacketType::COSTUMEINF;
-        mPacketSize = sizeof(CostumeInf) - sizeof(Packet);
-    };
-    CostumeInf(const char* body, const char* cap) : Packet() {
-        this->mType = PacketType::COSTUMEINF;
-        mPacketSize = sizeof(CostumeInf) - sizeof(Packet);
-        strcpy(bodyModel, body);
-        strcpy(capModel, cap);
+struct CostumeInf : public Packet {
+    PacketType getType() override { return PacketType::COSTUMEINF; }
+
+    PacketVector serialize() override {
+        PacketWriter writer(this);
+
+        writer.writeString(bodyModel);
+        writer.writeString(capModel);
+
+        return writer.finalize();
     }
-    char bodyModel[COSTUMEBUFSIZE] = {};
-    char capModel[COSTUMEBUFSIZE] = {};
+
+    void deserialize(const PacketVector& data) override {
+        PacketReader reader(this, data.data(), data.size());
+
+        reader.readString(bodyModel);
+        reader.readString(capModel);
+
+        reader.finalize();
+    }
+
+    sead::FixedSafeString<COSTUMEBUFSIZE> bodyModel;
+    sead::FixedSafeString<COSTUMEBUFSIZE> capModel;
 };

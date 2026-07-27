@@ -66,13 +66,13 @@ struct UIDIndexNode {
  *        Drained each frame in Client::update() once mCurStageScene is valid.
  */
 struct PendingCoinCollect {
-    char placeID[0x40];
+    sead::FixedSafeString<0x40> placeID;
     int worldID;
-    char stage[0x40];
+    sead::FixedSafeString<0x40> stage;
 };
 
 struct PendingCheckpoint {
-    char objId[0x40];
+    sead::FixedSafeString<0x40> objId;
 };
 
 // ===== MAIN CLASS =====
@@ -132,7 +132,7 @@ public:
     static void sendPlayerInfPacket(const PlayerActorBase* player, bool isYukimaru);
     static void sendGameInfPacket(const PlayerActorHakoniwa* player, GameDataHolderAccessor holder);
     static void sendGameInfPacket(GameDataHolderAccessor holder);
-    static void sendCaptureInfPacket(const PlayerActorHakoniwa* player);
+    // static void sendCaptureInfPacket(const PlayerActorHakoniwa* player);
     static void sendCostumeInfPacket(const char* body, const char* cap);
     static void sendShineCollectPacket(int shineId);
     static void sendCoinCollectCollectPacket(const char* placeID, int worldID, const char* stage);
@@ -226,7 +226,7 @@ public:
     PlayerInf* getLastPlayerInfPacket() { return &this->lastPlayerInfPacket; }
     GameInf* getLastGameInfPacket() { return &this->lastGameInfPacket; }
     CostumeInf* getLastCostumeInfPacket() { return &this->lastCostumeInfPacket; }
-    CaptureInf* getLastCaptureInfPacket() { return &this->lastCaptureInfPacket; }
+    // CaptureInf* getLastCaptureInfPacket() { return &this->lastCaptureInfPacket; }
 
     static al::Sequence* getSequence() { return sInstance ? sInstance->mSequence : nullptr; }
 
@@ -248,7 +248,7 @@ private:
     void updateCostumeInfo(CostumeInf* packet);
     void updateShineInfo(ShineCollect* packet);
     void updatePlayerConnect(PlayerConnect* packet);
-    void updateCaptureInfo(CaptureInf* packet);
+    // void updateCaptureInfo(CaptureInf* packet);
     void sendToStage(ChangeStagePacket* packet);
     void disconnectPlayer(PlayerDC* packet);
     void updateCoinCollects(CoinCollectCollect* packet);
@@ -273,7 +273,6 @@ private:
     sead::FixedSafeString<0x20> mUsername;
     bool mIsConnectionActive = false;
     bool mIsFirstConnect = true;
-    bool isFirstRun = true;
 
     // ===== SERVER CONFIGURATION MEMBERS =====
     hostname mServerIP;
@@ -312,11 +311,10 @@ private:
     GameInf lastGameInfPacket = GameInf();
     GameInf emptyGameInfPacket = GameInf();
     CostumeInf lastCostumeInfPacket = CostumeInf();
-    CaptureInf lastCaptureInfPacket = CaptureInf();
+    // CaptureInf lastCaptureInfPacket = CaptureInf();
 
     // ===== UI COMPONENTS =====
     Keyboard* mKeyboard = nullptr;
-    void* _wtf_why;
     al::SimpleLayoutAppearWaitEnd* mConnectStatus = nullptr;
 
     // ===== GAME STATE MEMBERS =====

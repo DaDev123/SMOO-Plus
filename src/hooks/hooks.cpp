@@ -72,6 +72,7 @@ HkTrampoline sceneKillHook = [](TrampolineStatic(), StageScene* scene) -> void {
 
 HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* sequence) -> void {
     StageScene* stageScene = (StageScene*)sequence->mCurrentScene;
+    SpeedrunIcon::sInstance->setHolder(sequence->mGameDataHolderAccessor);
 
     static bool isCameraActive = false;
 
@@ -99,12 +100,14 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
         Client::clearStopRumble();
     }
 
-    if (gIsSceneAlive)
+    if (gIsSceneAlive) {
         updatePlayerInfo(GameDataHolderAccessor(stageScene), playerBase, isYukimaru);
+    }
 
     if (SpeedrunIcon::sInstance) {
         if (StageSceneStateModConfig::isSpeedrunModeEnabled()) {
             SpeedrunIcon::sInstance->tryStart();
+
         } else {
             SpeedrunIcon::sInstance->tryEnd();
         }

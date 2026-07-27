@@ -4,53 +4,33 @@
 
 #include "nn/swkbd/swkbd.h"
 
-#include "sead/heap/seadHeapMgr.h"
-
 #include "main.hpp"
 
-Keyboard::Keyboard(ulong strSize) : mResultString(strSize) {
-    mThread = new al::AsyncFunctorThread("Swkbd", al::FunctorV0M(this, &Keyboard::keyboardThread), 0, 16_KB,
-                                         sead::CoreId::cSub1);
-
-    sead::ScopedCurrentHeapSetter setter(gHeap);
-
+Keyboard::Keyboard()
+    : al::AsyncFunctorThread("Swkbd", al::FunctorV0M(this, &Keyboard::threadFunction), 0, 16_KB,
+                             sead::CoreId::cSub1) {
     mWorkBufSize = nn::swkbd::GetRequiredWorkBufferSize(false);
-    mWorkBuf = (char*)aligned_alloc(0x1000, mWorkBufSize);
-
-    mTextCheckSize = 0x7d4;
-    mTextCheckBuf = (char*)aligned_alloc(0x1000, mTextCheckSize);
-
-    mResultString.allocate();
+    mWorkBuf = (char*)gHeap->alloc(mWorkBufSize, 0x1000);
 }
 
-void Keyboard::keyboardThread() {
-    sead::ScopedCurrentHeapSetter setter(gHeap);
+void Keyboard::threadFunction() {
+    nn::swkbd::ShowKeyboardArg arg;
 
-    memset(&mKeyboardArg, 0, sizeof(mKeyboardArg));
-    nn::swkbd::MakePreset(&mKeyboardArg.keyboardConfig, nn::swkbd::Preset::Default);
+    nn::swkbd::MakePreset(&arg.keyboardConfig, nn::swkbd::Preset::Default);
 
-    mSetupFunc(mKeyboardArg.keyboardConfig);
+    mSetupFunc(arg.keyboardConfig);
+    arg.keyboardConfig._isUseTextCheck = false;
 
-    nn::swkbd::SetHeaderText(&mKeyboardArg.keyboardConfig, mHeaderText);
-    nn::swkbd::SetSubText(&mKeyboardArg.keyboardConfig, mSubText);
+    nn::swkbd::SetHeaderTextUtf8(&arg.keyboardConfig, mHeaderText);
+    nn::swkbd::SetSubTextUtf8(&arg.keyboardConfig, mSubText);
 
-    mKeyboardArg.workBufSize = mWorkBufSize;
-    mKeyboardArg.textCheckWorkBufSize = mTextCheckSize;
-
-    mKeyboardArg.workBuf = mWorkBuf;
-    mKeyboardArg.textCheckWorkBuf = mTextCheckBuf;
+    arg.workBufSize = mWorkBufSize;
+    arg.workBuf = mWorkBuf;
 
     if (mInitialText.calcLength() > 0) {
-        nn::swkbd::SetInitialTextUtf8(&mKeyboardArg, mInitialText.cstr());
+        nn::swkbd::SetInitialTextUtf8(&arg, mInitialText.cstr());
     }
 
-    mIsCancelled = nn::swkbd::ShowKeyboard(&mResultString, mKeyboardArg) ==
+    mIsCancelled = nn::swkbd::ShowKeyboard(&mResString, arg) ==
                    671;  // 671 = exit code for pressing x to cancel keyboard
-}
-
-void Keyboard::openKeyboard(const char* initialText, KeyboardSetup setupFunc) {
-    mInitialText = initialText;
-    mSetupFunc = setupFunc;
-
-    mThread->start();
 }
