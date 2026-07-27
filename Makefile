@@ -19,12 +19,9 @@ debug: format
 release_build: clean format
 	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPROJNAME=$(PROJNAME) -DBUILDVER=$(BUILDVER) -S . -B build && $(MAKE) -C build
 
-release: release_build file_structure
-	@echo -e ""
-	@echo -e "\e[32m════════════════════════════════════"
-	@echo -e "\e[1m         ✓ Build complete!\e[0m"
-	@echo -e "\e[32m════════════════════════════════════\e[0m"
-	@echo -e ""
+release:
+	$(MAKE) release_build
+	$(MAKE) file_structure
 
 setup:
 	python sys/tools/setup_libcxx_prepackaged.py
@@ -65,3 +62,9 @@ file_structure:
 # 	Copying romfs data
 	@cp -R romfs/ $(SCONTENTPATH)
 	@cp -R romfs/ $(ECONTENTPATH)
+
+	@echo -e ""
+	@echo -e "\e[32m════════════════════════════════════"
+	@echo -e "\e[1m         ✓ Build complete!\e[0m"
+	@echo -e "\e[32m════════════════════════════════════\e[0m"
+	@echo -e ""
