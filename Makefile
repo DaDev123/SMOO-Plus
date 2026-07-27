@@ -1,7 +1,7 @@
 .PHONY: debug clean release file_structure release_build0
 
-BUILDVER ?= SR-1.0.0-pre
-DEBUGLOG ?= 1 # defaults to enable debug logger 
+BUILDVER ?= SR-1.0.0
+DEBUGLOG ?= 0 # defaults to enable debug logger 
 SERVERIP ?= 192.168.178.41 # put debug logger server IP here
 
 PROJNAME ?= SMOO-Plus-Speedrun
@@ -19,9 +19,12 @@ debug: format
 release_build: clean format
 	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPROJNAME=$(PROJNAME) -DBUILDVER=$(BUILDVER) -S . -B build && $(MAKE) -C build
 
-release:
-	$(MAKE) release_build
-	$(MAKE) file_structure
+release: release_build file_structure
+	@echo -e ""
+	@echo -e "\e[32m════════════════════════════════════"
+	@echo -e "\e[1m         ✓ Build complete!\e[0m"
+	@echo -e "\e[32m════════════════════════════════════\e[0m"
+	@echo -e ""
 
 setup:
 	python sys/tools/setup_libcxx_prepackaged.py
@@ -62,9 +65,3 @@ file_structure:
 # 	Copying romfs data
 	@cp -R romfs/ $(SCONTENTPATH)
 	@cp -R romfs/ $(ECONTENTPATH)
-
-	@echo -e ""
-	@echo -e "\e[32m════════════════════════════════════"
-	@echo -e "\e[1m         ✓ Build complete!\e[0m"
-	@echo -e "\e[32m════════════════════════════════════\e[0m"
-	@echo -e ""
