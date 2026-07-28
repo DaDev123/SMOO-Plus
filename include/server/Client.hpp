@@ -97,8 +97,14 @@ public:
     // ===== PLAYER CONNECTION METHODS =====
     bool isPlayerConnected(int index) { return mPuppetInfoArr[index]->isConnected; }
     static int getConnectCount() {
-        if (sInstance)
-            return sInstance->mConnectCount;
+        if (sInstance) {
+            int conn = 0;
+            for (PuppetInfo* pup : sInstance->mPuppetInfoArr) {
+                if (pup->isConnected)
+                    conn++;
+            }
+            return conn;
+        }
         return 0;
     }
     static int getMaxPlayerCount() { return sInstance ? sInstance->maxPuppets + 1 : 8; }
@@ -268,7 +274,7 @@ private:
 
     // ===== CONNECTION MEMBERS =====
     al::AsyncFunctorThread* mReadThread = nullptr;
-    int mConnectCount = 0;
+
     bool mShouldStopRumble = false;
     nn::account::Uid mUserID;
     sead::FixedSafeString<0x20> mUsername;

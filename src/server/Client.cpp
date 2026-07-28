@@ -78,8 +78,6 @@ Client::Client() {
         mPuppetInfoArr[i]->puppetName.format("Puppet%zu", i);
     }
 
-    mConnectCount = 0;
-
     curCollectedShines.fill(-1);
 
     collectedShineCount = 0;
@@ -932,8 +930,6 @@ void Client::updatePlayerConnect(PlayerConnect* packet) {
         curInfo->isConnected = true;
         curInfo->puppetName = packet->clientName;
 
-        mConnectCount++;
-
         PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::CONNECT, "");
     }
 }
@@ -1002,7 +998,6 @@ void Client::disconnectPlayer(PlayerDC* packet) {
     curInfo->stageName.clear();
     curInfo->isInSameStage = false;
 
-    mConnectCount--;
     mShouldStopRumble = true;
 
     PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::DISCONNECT, "");
