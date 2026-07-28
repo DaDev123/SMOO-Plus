@@ -11,6 +11,7 @@
 
 #include "agl/common/aglDrawContext.h"
 
+#include "game/MapObj/CheckpointFlagWatcher.h"
 #include "game/System/Application.h"
 #include "game/System/GameConfigData.h"
 #include "game/System/GameDataHolderAccessor.h"
@@ -179,6 +180,15 @@ void seadPrintHook(const char* fmt, ...) {
 
 HkReplaceVarArgs replaceSeadPrintHook = seadPrintHook;
 
+// crash fix maybe
+HkTrampoline checkpointFlagWatcherHook = [](TrampolineStatic(), CheckpointFlagWatcher* thisPtr,
+                                            char* p1) -> void* {
+    if (!thisPtr || !p1)
+        return nullptr;
+
+    return orig(thisPtr, p1);
+};
+
 void installOtherHooks() {
     replaceSeadPrintHook.installAtSym<"_ZN4sead6system5PrintEPKcz">();
     drawMainHookHk.installAtSym<"_ZN10GameSystem8drawMainEv">();
@@ -190,4 +200,6 @@ void installOtherHooks() {
     saveReadHook.installAtSym<"_ZN14GameConfigData4readERKN2al9ByamlIterE">();
 
     sceneKillHook.installAtSym<"_ZN10StageScene4killEv">();
+
+    checkpointFlagWatcherHook.installAtSym<"_ZNK21CheckpointFlagWatcher21tryFindCheckpointFlagEPKc">();
 }
