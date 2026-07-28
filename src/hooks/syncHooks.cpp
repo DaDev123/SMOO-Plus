@@ -59,9 +59,8 @@ HkTrampoline sendToadetteShinePacketHook = [](TrampolineStatic(), GameDataFile* 
                                              PlayerEventLog::getAchievementMessage(name));
             }
         }
+        orig(file, name);
     }
-
-    orig(file, name);
 };
 
 HkTrampoline sendCoinCollectCollectPacketHook = [](TrampolineStatic(), GameDataFile* file,
