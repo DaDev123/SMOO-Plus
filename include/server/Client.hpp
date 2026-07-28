@@ -251,6 +251,7 @@ private:
     // void updateCaptureInfo(CaptureInf* packet);
     void sendToStage(ChangeStagePacket* packet);
     void disconnectPlayer(PlayerDC* packet);
+    void disconnectAll();
     void updateCoinCollects(CoinCollectCollect* packet);
     void updateCheckpoints(CheckpointGet* packet);
     void updateMoonRocks(MoonRockHit* packet);

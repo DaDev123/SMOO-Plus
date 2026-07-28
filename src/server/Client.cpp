@@ -52,6 +52,7 @@
 #include "logger.hpp"
 #include "main.hpp"
 #include "packets/Packet.h"
+#include "packets/PlayerDC.h"
 #include "server/SocketClient.hpp"
 
 SEAD_SINGLETON_DISPOSER_IMPL(Client)
@@ -160,7 +161,8 @@ bool Client::startThread() {
 }
 
 void Client::restartConnection() {
-    sInstance->mSocket->setSocketClientState(SocketClient::SocketClientState::RESET);
+    sInstance->disconnectAll();
+    sInstance->mSocket->signalReset();
 }
 
 /**
@@ -1006,6 +1008,18 @@ void Client::disconnectPlayer(PlayerDC* packet) {
     PlayerEventLog::addEvent(packet->mUserID, PlayerEventLog::DISCONNECT, "");
 }
 
+void Client::disconnectAll() {
+    for (s32 i = 0; i < getMaxPlayerCount() - 1; i++) {
+        PuppetInfo* curInfo = sInstance->mPuppetInfoArr[i];
+
+        if (curInfo->isConnected) {
+            PlayerDC dc;
+            dc.mUserID = curInfo->playerID;
+            disconnectPlayer(&dc);
+        }
+    }
+};
+
 /**
  * @brief Checks if a shine has already been collected this session.
  * @param shineId
@@ -1167,8 +1181,8 @@ void Client::updateMoonRocks(MoonRockHit* packet) {
         return;
     }
 
-    // sub scenarios like kfr are reflected in getScenarioNo but not in the scenario array; dont wanna warp
-    // someone out of kfr
+    // sub scenarios like kfr are reflected in getScenarioNo but not in the scenario array; dont wanna
+    // warp someone out of kfr
     bool isSubScenario = gdf->getScenarioNumArr()[packet->worldId] != gdf->getScenarioNo();
     // dont warp if youre already in the scenario
     bool isAlreadyMoonRock = gdf->getScenarioNumArr()[packet->worldId] == moonRockScenarios[packet->worldId];

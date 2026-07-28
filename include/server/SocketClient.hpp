@@ -54,8 +54,6 @@ public:
 
     SocketClientState getSocketClientState() { return mState; }
 
-    void setSocketClientState(SocketClientState state) { mState = state; }
-
 private:
     al::AsyncFunctorThread* mSocketThread = nullptr;
     al::AsyncFunctorThread* mRecvThread = nullptr;
