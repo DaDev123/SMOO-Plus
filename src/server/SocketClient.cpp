@@ -435,6 +435,8 @@ bool SocketClient::queuePacket(Packet* packet) {
         return true;
     }
 
+    delete packet;
+
     return false;
 }
 
