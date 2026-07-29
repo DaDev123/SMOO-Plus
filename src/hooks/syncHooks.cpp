@@ -1,5 +1,6 @@
 #include "hk/hook/Trampoline.h"
 
+#include "al/Library/Nerve/IUseNerve.h"
 #include "al/Library/Nerve/NerveUtil.h"
 
 #include "game/Item/ShineInfo.h"
@@ -86,12 +87,14 @@ HkTrampoline sendCheckpointGetPacketHook = [](TrampolineStatic(), CheckpointFlag
     orig(checkpoint);
 };
 
-HkTrampoline startNewGameHook = [](TrampolineStatic(), HakoniwaSequence* seq) -> void {
-    orig(seq);
+class StageSceneStateSelectMode : public al::IUseNerve {};
+HkTrampoline startNewGameHook = [](TrampolineStatic(), StageSceneStateSelectMode* thisPtr) -> void {
+    if (al::isStep(thisPtr, 5)) {
+        PlayerEventLog::addSelfEvent(PlayerEventLog::START, "");
+        Client::sendGameStartPacket();
+    }
 
-    PlayerEventLog::addSelfEvent(PlayerEventLog::START, "");
-
-    Client::sendGameStartPacket();
+    orig(thisPtr);
 };
 
 HkTrampoline moonRockHook = [](TrampolineStatic(), MoonRock* moonRock) -> void {
@@ -165,7 +168,7 @@ void installSyncHooks() {
     sendCheckpointGetPacketHook.installAtSym<"_ZN14CheckpointFlag6exeGetEv">();
 
     // StartGame Syncing
-    startNewGameHook.installAtSym<"_ZN24HakoniwaStateDemoOpening7exeLoadEv">();
+    startNewGameHook.installAtSym<"_ZN20SceneStateSelectMode9exeDecideEv">();
 
     // MoonRock Syncing
     moonRockHook.installAtSym<"_ZN8MoonRock11exeReactionEv">();
