@@ -273,9 +273,16 @@ void PlayerEventLog::tryUpdateNames() {
         if (mLog[i].mIsPlayerName)
             continue;
 
-        PuppetInfo* player = Client::findPuppetInfo(mLog[i].mPlayerId, false);
-        if (!player)
+        if (mLog[i].mPlayerId.isEmpty()) {
+            mLog[i].mPlayerName = "Server";
+            mLog[i].mIsPlayerName = true;
             continue;
+        }
+
+        PuppetInfo* player = Client::findPuppetInfo(mLog[i].mPlayerId, false);
+        if (!player) {
+            continue;
+        }
 
         mLog[i].mPlayerName = player->puppetName;
         mLog[i].mIsPlayerName = true;
