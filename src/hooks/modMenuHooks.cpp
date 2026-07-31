@@ -1,3 +1,4 @@
+#include "hk/diag/diag.h"
 #include "hk/hook/Trampoline.h"
 
 #include "sead/prim/seadSafeString.h"
@@ -54,19 +55,23 @@ HkTrampoline pauseMenuWaitHook = [](TrampolineStatic(), StageSceneStatePauseMenu
     static sead::WBufferedSafeString baseStr{buf, 0x100};
     static sead::WBufferedSafeString newStr{buf + 0x100, 0x100};
     if (al::isFirstStep(menu)) {
-        if (baseStr.isEmpty())
-            baseStr = menu->mFooterParts->mText;
-
-        menu->mSelectParts->setSelectMessage(2, u"Mod Menu");
-        bool online = Client::isSocketActive();
-
-        online ? newStr.format(u"Online: %d/%d", Client::getConnectCount() + 1, Client::getMaxPlayerCount()) :
-                 newStr.format(u"Offline");
-        newStr.append(u"\t\t\t\t\t\t\t\t");
-        newStr.append(baseStr.cstr());
-
-        menu->mFooterParts->changeText(newStr.cstr());
+        // if (baseStr.isEmpty())
+        baseStr = menu->mFooterParts->mText;
+        int idx = baseStr.rfindIndex(u"\t");
+        if (idx != -1) {
+            baseStr.format(u"%s", baseStr.cstr() + idx + 1);
+        }
     }
+    int len = baseStr.calcLength();
+
+    menu->mSelectParts->setSelectMessage(2, u"Mod Menu");
+    bool online = Client::isSocketActive();
+    online ? newStr.format(u"Online: %d/%d\t%s", Client::getConnectCount() + 1, Client::getMaxPlayerCount(),
+                           len > 150 && Client::getMaxPlayerCount() < 10 ? u"" : u"\t") :
+             newStr.format(u"Offline\t%s", len > 150 && Client::getMaxPlayerCount() < 10 ? u"" : u"\t");
+    newStr.append(baseStr.cstr());
+
+    menu->mFooterParts->changeText(newStr.cstr());
 };
 
 HkTrampoline shadowHook = [](TrampolineStatic(), void* a) -> void {
