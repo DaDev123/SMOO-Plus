@@ -51,6 +51,8 @@
 #include "layouts/SpeedrunIcon.h"
 #include "logger.hpp"
 #include "main.hpp"
+#include "packets/CostumeInf.h"
+#include "packets/GameInf.h"
 #include "packets/Packet.h"
 #include "packets/PlayerDC.h"
 #include "server/SocketClient.hpp"
@@ -220,6 +222,18 @@ bool Client::startConnection() {
                     mPuppetHolder->resizeHolder(maxPuppets);
 
                     delete curPacket;
+
+                    if (lastGameInfPacket.mUserID.IsValid()) {
+                        GameInf* g = new GameInf();
+                        *g = lastGameInfPacket;
+                        mSocket->queuePacket(g);
+                    }
+                    if (!lastCostumeInfPacket.bodyModel.isEmpty()) {
+                        CostumeInf* c = new CostumeInf();
+                        *c = lastCostumeInfPacket;
+                        mSocket->queuePacket(c);
+                    }
+
                     break;
                 }
 
