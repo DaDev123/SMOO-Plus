@@ -1,6 +1,6 @@
 .PHONY: debug clean release file_structure release_build
 
-BUILDVER ?= SR-1.0.0
+BUILDVER ?= SR-1.0.1-pre
 DEBUGLOG ?= 0 # defaults to enable debug logger 
 SERVERIP ?= 192.168.178.41 # put debug logger server IP here
 
