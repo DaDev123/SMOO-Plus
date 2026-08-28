@@ -55,7 +55,7 @@ for file in source_files:
 
         if headerFile.startswith("std"):
             data[i] = (
-                f"#include <{headerFile.removeprefix("std/llvm-project/build/include/c++/v1/").removeprefix("std/musl/include/")}>"
+                f"#include <{headerFile.removeprefix("std/llvm-project/build/include/c++/v1/").removeprefix("std/musl/include/").removeprefix("std/musl/arch/aarch64/bits/")}>"
             )
         elif headerFile.startswith("OdysseyHeaders/NintendoSDK"):
             data[i] = (
