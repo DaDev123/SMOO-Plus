@@ -1,45 +1,42 @@
-.PHONY: debug clean release file_structure release_build
-
-BUILDVER ?= SR-1.0.1-pre
-DEBUGLOG ?= 0 # defaults to enable debug logger 
-SERVERIP ?= 192.168.178.41 # put debug logger server IP here
+.PHONY: debug clean release package format
 
 PROJNAME ?= SMOO-Plus-Speedrun
+BUILDVER ?= SR-1.0.1-pre
+
+LOGGER ?= 0
+LOGGERIP ?= 192.168.178.41
+
 
 SCONTENTPATH := package/$(PROJNAME)-Switch/atmosphere/contents/0100000000010000
 ECONTENTPATH :=  package/$(PROJNAME)-Emulator/$(PROJNAME)
 
+CMAKE_FLAGS = -G "Ninja"\
+			  -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+			  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+			  -DBUILDVER=$(BUILDVER) -DPROJNAME=$(PROJNAME)
+
 #I hate Nixos (sometimes)
 export SOURCE_DATE_EPOCH = $(shell date +%s)
 
-
 debug: format
-	cmake -DCMAKE_BUILD_TYPE=Debug -DPROJNAME=$(PROJNAME) -DBUILDVER=$(BUILDVER) -DSERVERIP=$(SERVERIP) -DDEBUGLOG=$(DEBUGLOG) -S . -B build && $(MAKE) -C build
+	cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Debug -DLOGGER=$(LOGGER) -DLOGIP=$(LOGGERIP) -S . -B build/debug
+	ln -sf build/debug/compile_commands.json .
+	cmake --build build/debug
 
-release_build: clean format
-	cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DPROJNAME=$(PROJNAME) -DBUILDVER=$(BUILDVER) -S . -B build && $(MAKE) -C build
+release: format
+	cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=RelWithDebInfo -S . -B build/release
+	cmake --build build/release
+	$(MAKE) package
 
-release:
-	$(MAKE) release_build
-	$(MAKE) file_structure
-
-setup:
-	python sys/tools/setup_libcxx_prepackaged.py
-	python sys/tools/setup_sail.py
-
-format: check_includes
-	-clear
-	find src include lib/custom -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | xargs clang-format -i
-
-clean:
-	rm -rf build package
-
-check_includes:
+format:
 	-clear
 	python3 check_includes.py
+	find src include lib/custom  -type f -regex ".*\.[ch]p*" -exec clang-format -i {} '+'
 
+clean:
+	rm -rf build package compile_commands.json
 
-file_structure:
+package:
 	
 # 	Create Switch (Atmosphere) structure
 	@mkdir -p $(SCONTENTPATH)/exefs/
@@ -49,22 +46,20 @@ file_structure:
 	@mkdir -p $(ECONTENTPATH)/romfs/
 
 # 	Copy subsdk binaries
-	@cp build/$(PROJNAME).nso $(SCONTENTPATH)/exefs/subsdk4 
-	@cp build/$(PROJNAME).nso $(ECONTENTPATH)/exefs/subsdk4 
+	@cp build/release/$(PROJNAME).nso $(SCONTENTPATH)/exefs/subsdk4 
+	@cp build/release/$(PROJNAME).nso $(ECONTENTPATH)/exefs/subsdk4 
 
 # 	Copy npdm file
-	@cp build/main.npdm $(SCONTENTPATH)/exefs/main.npdm 
-	@cp build/main.npdm $(ECONTENTPATH)/exefs/main.npdm 
+	@cp build/release/main.npdm $(SCONTENTPATH)/exefs/main.npdm 
+	@cp build/release/main.npdm $(ECONTENTPATH)/exefs/main.npdm 
 
 # 	Copy NSS debug symbols
-	@cp build/$(PROJNAME).nss package/$(PROJNAME).nss
+	@cp build/release/$(PROJNAME).nss package/$(PROJNAME).nss
 	
 # 	Copying romfs data
 	@cp -R romfs/ $(SCONTENTPATH)
 	@cp -R romfs/ $(ECONTENTPATH)
 
-	@echo -e ""
-	@echo -e "\e[32m════════════════════════════════════"
+	@echo -e "\n\e[32m════════════════════════════════════"
 	@echo -e "\e[1m         ✓ Build complete!\e[0m"
 	@echo -e "\e[32m════════════════════════════════════\e[0m"
-	@echo -e ""

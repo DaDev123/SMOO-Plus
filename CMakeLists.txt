@@ -27,8 +27,13 @@ include(sys/cmake/sail.cmake)
 usesail(${PROJECT_NAME})
 
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUGLOG=${DEBUGLOG})
-target_compile_definitions(${PROJECT_NAME} PRIVATE SERVERIP="${SERVERIP}")
+option(LOGGER "Enable Logger" OFF)
+
+if(LOGGER)
+target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUGLOG)
+target_compile_definitions(${PROJECT_NAME} PRIVATE LOGIP="${LOGIP}")
+endif()
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE BUILDVER="${BUILDVER}")
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_USER_CONFIG="${CMAKE_CURRENT_SOURCE_DIR}/include/imconfig.h")
