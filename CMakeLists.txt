@@ -31,7 +31,6 @@ option(LOGGER "Enable Logger" OFF)
 
 if(LOGGER)
 target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUGLOG)
-target_compile_definitions(${PROJECT_NAME} PRIVATE LOGIP="${LOGIP}")
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE BUILDVER="${BUILDVER}")

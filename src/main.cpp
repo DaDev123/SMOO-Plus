@@ -5,6 +5,7 @@
 
 #include "main.hpp"
 
+#include "hk/diag/diag.h"
 #include "hk/gfx/ImGuiBackendNvn.h"
 
 #include "sead/gfx/seadColor.h"
@@ -304,6 +305,9 @@ void drawMain(al::Sequence* curSequence) {
 
     ImGui::End();
 }
+#ifdef DEBUGLOG
+#include "hk/diag/ipclogger.h"
+#endif
 
 extern "C" void hkMain() {
     installSyncHooks();
@@ -314,4 +318,10 @@ extern "C" void hkMain() {
     speedboot::installSpeedbootHooks();
 
     hk::gfx::ImGuiBackendNvn::instance()->installHooks(false);
+
+#ifdef DEBUGLOG
+    hk::diag::ipclogger::IpcLogger::initialize();
+
+    hk::diag::logLine("\n\n\n\n\nSMOO-Plus - Logger Initialized");
+#endif
 }

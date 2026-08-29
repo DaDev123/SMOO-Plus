@@ -20,7 +20,6 @@
 #include "imgui.h"
 #include "layouts/PlayerEventLog.h"
 #include "layouts/SpeedrunIcon.h"
-#include "logger.hpp"
 #include "main.hpp"
 #include "saveManager.h"
 #include "Scene/StageSceneStateModConfig.hpp"
@@ -172,9 +171,7 @@ HkTrampoline hakoniwaSequenceHook = [](TrampolineStatic(), HakoniwaSequence* seq
 void seadPrintHook(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    Logger::disableName();
     hk::diag::log(fmt, args);
-    Logger::enableName();
     va_end(args);
 }
 

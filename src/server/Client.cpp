@@ -49,7 +49,6 @@
 #include "helpers.hpp"
 #include "layouts/PlayerEventLog.h"
 #include "layouts/SpeedrunIcon.h"
-#include "logger.hpp"
 #include "main.hpp"
 #include "packets/CostumeInf.h"
 #include "packets/GameInf.h"
@@ -98,7 +97,6 @@ Client::Client() {
 
     nn::account::Nickname playerName;
     nn::account::GetNickname(&playerName, mUserID);
-    Logger::setLogName(playerName.m_Buffer);  // set Debug logger name to player name
 
     mUsername = playerName.m_Buffer;
 

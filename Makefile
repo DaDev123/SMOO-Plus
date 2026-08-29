@@ -4,8 +4,6 @@ PROJNAME ?= SMOO-Plus-Speedrun
 BUILDVER ?= SR-1.0.1-pre
 
 LOGGER ?= 0
-LOGGERIP ?= 192.168.178.41
-
 
 SCONTENTPATH := package/$(PROJNAME)-Switch/atmosphere/contents/0100000000010000
 ECONTENTPATH :=  package/$(PROJNAME)-Emulator/$(PROJNAME)
@@ -19,12 +17,13 @@ CMAKE_FLAGS = -G "Ninja"\
 export SOURCE_DATE_EPOCH = $(shell date +%s)
 
 debug: format
-	cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Debug -DLOGGER=$(LOGGER) -DLOGIP=$(LOGGERIP) -S . -B build/debug
+	cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=Debug -DLOGGER=$(LOGGER) -S . -B build/debug
 	ln -sf build/debug/compile_commands.json .
 	cmake --build build/debug
 
 release: format
 	cmake $(CMAKE_FLAGS) -DCMAKE_BUILD_TYPE=RelWithDebInfo -S . -B build/release
+	ln -sf build/release/compile_commands.json .
 	cmake --build build/release
 	$(MAKE) package
 
@@ -37,28 +36,29 @@ clean:
 	rm -rf build package compile_commands.json
 
 package:
-	
-# 	Create Switch (Atmosphere) structure
-	@mkdir -p $(SCONTENTPATH)/exefs/
-	
-# 	Create Emulator (SMOO-Plus) structure
-	@mkdir -p $(ECONTENTPATH)/exefs/
-	@mkdir -p $(ECONTENTPATH)/romfs/
+	@echo -e "\n\e[34m\e[1m═══════════Packaging Files══════════\e[0m\e[36m\n"
 
-# 	Copy subsdk binaries
+	@echo - Creating exefs folders
+	@mkdir -p $(SCONTENTPATH)/exefs/ $(ECONTENTPATH)/exefs/
+
+	@echo - Copying subsdk binaries
 	@cp build/release/$(PROJNAME).nso $(SCONTENTPATH)/exefs/subsdk4 
 	@cp build/release/$(PROJNAME).nso $(ECONTENTPATH)/exefs/subsdk4 
 
-# 	Copy npdm file
+	@echo - Copying npdm file
 	@cp build/release/main.npdm $(SCONTENTPATH)/exefs/main.npdm 
 	@cp build/release/main.npdm $(ECONTENTPATH)/exefs/main.npdm 
 
-# 	Copy NSS debug symbols
+	@echo - Copying NSS debug symbols
 	@cp build/release/$(PROJNAME).nss package/$(PROJNAME).nss
 	
-# 	Copying romfs data
+	@echo - Copying romfs data
 	@cp -R romfs/ $(SCONTENTPATH)
 	@cp -R romfs/ $(ECONTENTPATH)
+
+	@echo - Ziping files
+	@zip -rq package/$(PROJNAME)-Switch.zip package/$(PROJNAME)-Switch
+	@zip -rq package/$(PROJNAME)-Emulator.zip package/$(PROJNAME)-Emulator
 
 	@echo -e "\n\e[32m════════════════════════════════════"
 	@echo -e "\e[1m         ✓ Build complete!\e[0m"

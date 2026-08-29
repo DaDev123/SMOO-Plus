@@ -62,7 +62,8 @@
         "sfdnsres",
         "ssl",
         "time:u",
-        "vi:u"
+        "vi:u",
+        "hk:log"
     ],
     "service_host": [],
     "kernel_capabilities": [

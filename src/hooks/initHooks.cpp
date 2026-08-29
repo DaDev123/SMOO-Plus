@@ -18,7 +18,6 @@
 #include "game/System/GameSystem.h"
 
 #include "Imgui.hpp"
-#include "logger.hpp"
 #include "saveManager.h"
 #include "server/Client.hpp"
 
@@ -36,10 +35,6 @@ HkTrampoline gameSystemInit = [](TrampolineStatic(), GameSystem* gameSystem) -> 
 
     nn::socket::Initialize(socketPool, socketPoolSize, socketAllocPoolSize, 0xE);
     disableSocketInit.installAtSym<"_ZN2nn6socket10InitializeEPvmmi">();
-
-#ifdef DEBUGLOG
-    Logger::createInstance();
-#endif
 
     imgui::setup();
 
@@ -129,7 +124,7 @@ HkTrampoline createHeap = [](TrampolineStatic(), al::SystemKit* systemKit, sead:
                                   sead::Heap::cHeapDirection_Forward, true);
     al::addNamedHeap(gHeap, "SMOOPlusHeap");
 
-    imgui::ImHeap = sead::ExpHeap::create(MB(1.5), "ImHeap", al::getStationedHeap(), sizeof(void*),
+    imgui::ImHeap = sead::ExpHeap::create(MB(2), "ImHeap", al::getStationedHeap(), sizeof(void*),
                                           sead::Heap::cHeapDirection_Forward, true);
     al::addNamedHeap(imgui::ImHeap, "ImHeap");
 };
