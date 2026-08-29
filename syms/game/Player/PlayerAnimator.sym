@@ -1,0 +1,7 @@
+@smo:100,101,110,120
+
+_ZN14PlayerAnimator10endSubAnimEv
+_ZN14PlayerAnimator13startAnimDeadEv
+_ZN14PlayerAnimator9startAnimERKN4sead14SafeStringBaseIcEE
+_ZN14PlayerAnimator14getBlendWeightEi
+_ZN14PlayerAnimator12setAnimFrameEf

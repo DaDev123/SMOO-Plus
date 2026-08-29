@@ -1,0 +1,6 @@
+@smo:100,101,110,120
+
+_ZN4sead12PtrArrayImpl11allocBufferEiPNS_4HeapEi
+_ZN4sead12PtrArrayImpl10freeBufferEv
+_ZN4sead12PtrArrayImpl5eraseEii
+_ZN4sead12PtrArrayImpl14tryAllocBufferEiPNS_4HeapEi

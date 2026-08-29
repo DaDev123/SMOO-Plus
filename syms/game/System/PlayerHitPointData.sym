@@ -1,0 +1,6 @@
+@smo:100,101,110,120
+
+_ZNK18PlayerHitPointData13getMaxCurrentEv
+_ZN18PlayerHitPointData6damageEv
+_ZNK18PlayerHitPointData10getCurrentEv
+_ZN18PlayerHitPointData15setKidsModeFlagEb

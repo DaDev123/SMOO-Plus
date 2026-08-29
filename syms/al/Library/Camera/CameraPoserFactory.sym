@@ -1,0 +1,5 @@
+@smo:100,101,110,120
+
+_ZN2al18CameraPoserFactoryC1EPKc
+_ZN2al18CameraPoserFactoryC2EPKc
+_ZN28alCameraPoserFactoryFunction33initAndCreateTableFromOtherTable2EPN2al18CameraPoserFactoryEPKNS0_13NameToCreatorIPFPNS0_11CameraPoserEPKcEEEiSC_i

@@ -1,0 +1,11 @@
+@smo:100,101,110,120
+
+_ZTI10StageScene
+_ZNK10StageScene7isPauseEv
+_ZN10StageScene4initERKN2al13SceneInitInfoE
+_ZN10StageScene4killEv
+_ZN2rs36requestGraphicsPresetAndCubeMapPauseEPKN2al5SceneE
+
+_ZN20SceneStateSelectMode9exeDecideEv
+
+_ZNK21StageSceneStateOption16isChangeLanguageEv

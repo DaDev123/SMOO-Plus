@@ -1,0 +1,7 @@
+@smo:100,101,110,120
+
+_ZN16StageSceneLayout19startShineCountAnimEb
+_ZN16StageSceneLayout18updateCounterPartsEv
+_ZN16StageSceneLayout3endEv
+_ZN16StageSceneLayout5startEv
+_ZNK16StageSceneLayout5isEndEv

@@ -1,0 +1,6 @@
+@smo:100,101,110,120
+
+_ZN4sead6StreamC1Ev
+_ZN4sead6StreamC2Ev
+_ZN4sead6Stream7setModeENS0_5ModesE
+_ZN4sead11WriteStream5flushEv

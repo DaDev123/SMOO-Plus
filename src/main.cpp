@@ -5,7 +5,6 @@
 
 #include "main.hpp"
 
-#include "hk/diag/diag.h"
 #include "hk/gfx/ImGuiBackendNvn.h"
 
 #include "sead/gfx/seadColor.h"
@@ -143,7 +142,8 @@ void drawMain(al::Sequence* curSequence) {
             cam ? &const_cast<sead::Projection&>(al::getProjectionSead(curScene, 0)) : nullptr;
 
         if (cam && projection) {
-            PlayerActorBase* playerBase = (PlayerActorBase*)rs::getPlayerActor(curScene);
+            al::PlayerHolder* pHolder = al::getScenePlayerHolder(curScene);
+            PlayerActorBase* playerBase = (PlayerActorBase*)al::tryGetPlayerActor(pHolder, 0);
             PuppetActor* curPuppet = Client::getPuppet(debugPuppetIndex - 1);
 
             sead::PrimitiveRenderer* renderer = sead::PrimitiveRenderer::instance();

@@ -2,3 +2,5 @@
 
 _ZN10GameSystem4initEv
 _ZN10GameSystem8drawMainEv
+
+_ZN18GameSystemFunction13getGameSystemEv

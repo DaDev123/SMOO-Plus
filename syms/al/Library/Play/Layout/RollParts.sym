@@ -1,0 +1,9 @@
+@smo:100,101,110,120
+
+_ZN2al9RollParts7setDataEPPKDsibiPKc
+_ZN2al9RollParts8activateEv
+_ZN2al9RollParts15startLoopActionEPKcS2_
+_ZN2al9RollParts10deactivateEv
+_ZN2al9RollParts8rollLeftEv
+_ZN2al9RollParts9rollRightEv
+_ZN2al9RollParts14setSelectedIdxEi

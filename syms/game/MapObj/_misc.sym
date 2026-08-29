@@ -1,0 +1,10 @@
+@smo:100,101,110,120
+
+_ZN14CheckpointFlag6exeGetEv
+_ZN14CheckpointFlag8setAfterEv
+
+_ZN12GrowSeedUtil13isInDeathAreaEPKN2al9LiveActorE
+
+_ZN8DoorCity4initERKN2al13ActorInitInfoE
+
+_ZN8MoonRock11exeReactionEv

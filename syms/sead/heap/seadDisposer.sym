@@ -1,0 +1,8 @@
+@smo:100,101,110,120
+
+_ZTIN4sead9IDisposerE
+_ZN4sead9IDisposerC1EPNS_4HeapENS0_14HeapNullOptionE
+_ZN4sead9IDisposerC2EPNS_4HeapENS0_14HeapNullOptionE
+_ZN4sead9IDisposerD2Ev
+_ZN4sead9IDisposerC1Ev
+_ZN4sead9IDisposerC2Ev

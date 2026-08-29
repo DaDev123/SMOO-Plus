@@ -1,0 +1,4 @@
+@smo:100,101,110,120
+
+_ZN17CoinCollectHolder19registerCoinCollectEP11CoinCollect
+_ZN17CoinCollectHolder21registerCoinCollect2DEP13CoinCollect2D

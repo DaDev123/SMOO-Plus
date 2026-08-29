@@ -1,0 +1,6 @@
+@smo:100,101,110,120
+
+_ZN2rs31createPlayerSklRetargettingInfoEPN2al9LiveActorERKN4sead7Vector3IfEE
+_ZN2rs10isPlayer2DEPKN2al9LiveActorE
+_ZN2rs16isPlayerOnGroundEPKN2al9LiveActorE
+_ZN2rs15isPlayerInWaterEPKN2al9LiveActorE

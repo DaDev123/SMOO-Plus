@@ -1,0 +1,6 @@
+@smo:100,101,110,120
+
+_ZN14GameConfigData5writeEPN2al11ByamlWriterE
+_ZN14GameConfigData4readERKN2al9ByamlIterE
+_ZN14GameConfigDataC1Ev
+_ZN14GameConfigDataC2Ev

@@ -1,3 +1,8 @@
 @smo:100,101,110,120
 
-_ZN19PlayerActorHakoniwa7controlEv
+_ZTI19PlayerActorHakoniwa
+_ZN19PlayerActorHakoniwa16setNerveOnGroundEv
+_ZN19PlayerActorHakoniwa10initPlayerERKN2al13ActorInitInfoERK14PlayerInitInfo
+
+_ZN26PlayerStateRunHakoniwa2D3D8exeRun3DEv
+_ZN18PlayerStateRun2D3D8exeRun3DEv

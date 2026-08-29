@@ -1,0 +1,10 @@
+@smo:100,101,110,120
+
+_ZN7HackCap17startRescuePlayerEv
+_ZN7HackCap13showPuppetCapEv
+_ZN7HackCap15setupThrowStartEv
+_ZN7HackCap13hidePuppetCapEv
+_ZN7HackCap10startCatchEPKcbRKN4sead7Vector3IfEE
+_ZNK7HackCap20isEnableRescuePlayerEv
+_ZNK7HackCap8isFlyingEv
+_ZN7HackCap10forcePutOnEv

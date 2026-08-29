@@ -1,0 +1,5 @@
+@smo:100,101,110,120
+
+_ZN25HackCapJointControlKeeperC1Ev
+_ZN25HackCapJointControlKeeperC2Ev
+_ZN25HackCapJointControlKeeper19initCapJointControlEPN2al9LiveActorE

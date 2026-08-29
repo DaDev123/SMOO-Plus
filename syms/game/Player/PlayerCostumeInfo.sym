@@ -1,0 +1,7 @@
+@smo:100,101,110,120
+
+_ZN17PlayerCostumeInfoC1Ev
+_ZN17PlayerCostumeInfoC2Ev
+_ZN17PlayerCostumeInfo4initEPK21PlayerBodyCostumeInfoPK21PlayerHeadCostumeInfo
+_ZNK17PlayerCostumeInfo17isEnableHairNoCapEv
+_ZNK17PlayerCostumeInfo14isNeedBodyHairEv

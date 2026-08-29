@@ -1,0 +1,9 @@
+@smo:100,101,110,120
+
+_ZN2al10WipeHolder10startCloseEPKci
+_ZN2al10WipeHolder9startOpenEi
+_ZN2al10WipeHolderC1Ei
+_ZN2al10WipeHolderC2Ei
+_ZN2al10WipeHolder12registerWipeEPKcPNS_10WipeSimpleE
+_ZN2al10WipeHolder13tryStartCloseEPKci
+_ZNK2al10WipeHolder10isCloseEndEv

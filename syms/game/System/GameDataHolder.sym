@@ -1,0 +1,4 @@
+@smo:100,101,110,120
+
+_ZN14GameDataHolder15changeNextStageEPK15ChangeStageInfoi
+_ZN14GameDataHolder17resetLocationNameEv

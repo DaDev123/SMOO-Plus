@@ -1,0 +1,7 @@
+@smo:100,101,110,120
+
+_ZN2al10WipeSimpleC1EPKcS2_RKNS_14LayoutInitInfoES2_
+_ZN2al10WipeSimpleC2EPKcS2_RKNS_14LayoutInitInfoES2_
+_ZN2al10WipeSimple13tryStartCloseEi
+_ZN2al10WipeSimple9startOpenEi
+_ZNK2al10WipeSimple10isCloseEndEv

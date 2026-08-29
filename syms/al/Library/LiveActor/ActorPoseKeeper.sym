@@ -1,0 +1,6 @@
+@smo:100,101,110,120
+
+_ZNK2al19ActorPoseKeeperBase9getRotateEv
+_ZNK2al21ActorPoseKeeperTRGMSV9getRotateEv
+_ZNK2al20ActorPoseKeeperTRMSV9getRotateEv
+_ZNK2al19ActorPoseKeeperTRSV9getRotateEv

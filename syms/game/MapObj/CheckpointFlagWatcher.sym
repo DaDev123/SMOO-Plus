@@ -1,0 +1,6 @@
+@smo:100,101,110,120
+
+_ZN2rs21tryFindCheckpointFlagEPKN2al18IUseSceneObjHolderEPKc
+_ZN2rs32requestHideCheckpointFlagBalloonEPK14CheckpointFlag
+_ZN2rs31setTouchCheckpointFlagToWatcherEP14CheckpointFlag
+_ZNK21CheckpointFlagWatcher21tryFindCheckpointFlagEPKc

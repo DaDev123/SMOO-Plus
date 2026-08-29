@@ -1,0 +1,8 @@
+@smo:100,101,110,120
+
+_ZNK5Shine5isGotEv
+_ZN5Shine9getDirectEv
+_ZN5Shine11onSwitchGetEv
+_ZN5Shine18initAfterPlacementEv
+_ZN5Shine10receiveMsgEPKN2al9SensorMsgEPNS0_9HitSensorES5_
+_ZN5Shine14makeActorAliveEv

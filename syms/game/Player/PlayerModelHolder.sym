@@ -1,0 +1,8 @@
+@smo:100,101,110,120
+
+_ZN17PlayerModelHolderC1Ej
+_ZN17PlayerModelHolderC2Ej
+_ZN17PlayerModelHolder13registerModelEPN2al9LiveActorEPKc
+_ZN17PlayerModelHolder11changeModelEPKc
+_ZNK17PlayerModelHolder17tryFindModelActorEPKc
+_ZNK17PlayerModelHolder14findModelActorEPKc

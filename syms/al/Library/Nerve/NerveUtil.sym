@@ -1,0 +1,11 @@
+@smo:100,101,110,120
+
+_ZN2al7isNerveEPKNS_9IUseNerveEPKNS_5NerveE
+_ZN2al8setNerveEPNS_9IUseNerveEPKNS_5NerveE
+_ZN2al11isFirstStepEPKNS_9IUseNerveE
+_ZN2al6isStepEPKNS_9IUseNerveEi
+_ZN2al14initNerveStateEPNS_9IUseNerveEPNS_14NerveStateBaseEPKNS_5NerveEPKc
+_ZN2al16updateNerveStateEPNS_9IUseNerveE
+
+// Nerve Setup Util
+_ZN2al9initNerveEPNS_9LiveActorEPKNS_5NerveEi

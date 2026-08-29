@@ -1,0 +1,4 @@
+@smo:100,101,110,120
+
+_ZN4sead9FrameHeap6createEmRKNS_14SafeStringBaseIcEEPNS_4HeapEiNS5_13HeapDirectionEb
+_ZN4sead9FrameHeap8tryAllocEmi
