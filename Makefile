@@ -29,7 +29,7 @@ release: format
 
 format:
 	-clear
-	python3 check_includes.py
+	python3 scripts/check_includes.py
 	find src include lib/custom  -type f -regex ".*\.[ch]p*" -exec clang-format -i {} '+'
 
 clean:
