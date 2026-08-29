@@ -1,0 +1,4 @@
+@sdk
+
+_ZN2nn7account17GetLastOpenedUserEPNS0_3UidE
+_ZN2nn7account11GetNicknameEPNS0_8NicknameERKNS0_3UidE

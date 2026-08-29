@@ -1,3 +1,5 @@
 @sdk
 
 _ZN2nn2os11SleepThreadENS_8TimeSpanE
+_ZN2nn2os13GetSystemTickEv
+_ZN2nn2os11YieldThreadEv
